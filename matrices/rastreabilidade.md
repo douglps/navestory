@@ -904,84 +904,110 @@ que o artefato ainda não existe no repositório.
 
 ## SPEC-20260524-002 — Cadastro de Conta: Regras de Senha e Frontend (aprovado)
 
-> Atualiza SPEC-20260524-001 §4.1 (nova regra de senha) e documenta stories STORY-01 a STORY-04.
-> Nenhum código implementado.
+> Atualiza SPEC-20260524-001 §4.1 (nova regra de senha: 6 chars + letra + número + especial) e
+> documenta stories STORY-01 a STORY-04 de frontend do fluxo de cadastro.
+> Implementado em 2026-07-13 como parte da Fase 1 do roadmap (T1.1–T1.5). Schema Zod autoritativo
+> em `packages/validators/src/auth.schemas.ts` — SPEC-20260524-001 §4.1 supersedida por esta regra.
 
 | Req | Descrição | Código | Teste | Status |
 |-----|-----------|--------|-------|--------|
-| RF-01/STORY-02 | `registerInputSchema`: aceita 6+ chars com letra + número + especial | — | — | ⏳ |
-| RF-02/STORY-02 | `registerInputSchema`: rejeita senha sem letra, sem número, sem especial | — | — | ⏳ |
-| RF-03/STORY-02 | `resetPasswordInputSchema`: mesma nova regra de senha | — | — | ⏳ |
-| RF-04/STORY-02 | Mensagem inline por campo violado (não batch) | — | — | ⏳ |
-| RF-05/STORY-03 | Email duplicado (409) → bloco amarelo com email, botão login e botão recuperar senha | — | — | ⏳ |
-| RF-07/STORY-03 | Link "Recuperar senha" → `/recover-password?email={encoded}` | — | — | ⏳ |
-| RF-08/STORY-04 | Erro de sistema (não-409) → bloco vermelho com mensagem do Supabase | — | — | ⏳ |
-| RF-09/STORY-04 | Formulário NÃO resetado após erro — dados persistem para reenvio | — | — | ⏳ |
-| RF-10/STORY-01 | Email normalizado para lowercase via `.transform()` no schema Zod | — | — | ⏳ |
+| RF-01/STORY-02 | `registerInputSchema`: aceita 6+ chars com letra + número + especial | `packages/validators/src/auth.schemas.ts` | `apps/web/` (Vitest, 42 testes, 91%+ cobertura) | ✅ |
+| RF-02/STORY-02 | `registerInputSchema`: rejeita senha sem letra, sem número, sem especial | `packages/validators/src/auth.schemas.ts` | `apps/web/` (Vitest) | ✅ |
+| RF-03/STORY-02 | `resetPasswordInputSchema`: mesma nova regra de senha | `packages/validators/src/auth.schemas.ts` | `apps/web/` (Vitest) | ✅ |
+| RF-04/STORY-02 | Mensagem inline por campo violado (não batch) | `apps/web/src/app/(auth)/register/page.tsx` | `apps/web/` (Vitest) | ✅ |
+| RF-05/STORY-03 | Email duplicado (409) → bloco amarelo com email, botão login e botão recuperar senha | `apps/web/src/app/(auth)/register/page.tsx` | `apps/web/` (Vitest) | ✅ |
+| RF-07/STORY-03 | Link "Recuperar senha" → `/recover-password?email={encoded}` | `apps/web/src/app/(auth)/register/page.tsx` | `apps/web/` (Vitest) | ✅ |
+| RF-08/STORY-04 | Erro de sistema (não-409) → bloco vermelho com mensagem do Supabase | `apps/web/src/app/(auth)/register/page.tsx` | `apps/web/` (Vitest) | ✅ |
+| RF-09/STORY-04 | Formulário NÃO resetado após erro — dados persistem para reenvio | `apps/web/src/app/(auth)/register/page.tsx` | `apps/web/` (Vitest) | ✅ |
+| RF-10/STORY-01 | Email normalizado para lowercase via `.transform()` no schema Zod | `packages/validators/src/auth.schemas.ts` | `apps/web/` (Vitest) | ✅ |
 
 ---
 
 ## SPEC-20260524-001 — Autenticação e Cadastro (Unificada) (aprovado)
 
 > Consolida: `stories.md §1, §7, §8`, `ADR-003 (lifecycle)`, rate limits de SPEC-001.
-> Mudança principal: lifecycle de sessão — 30 min idle / 30 dias (com lembrar).
-> Nenhum código implementado.
+> Mudança principal: lifecycle de sessão — 30 min idle sem atividade / 7 dias com "lembrar de mim".
+> Implementado em 2026-07-13 como parte da Fase 1 do roadmap (T1.1–T1.5).
+> Rate limits de auth são autoritativos nesta spec (SPEC-20260521-001 §RF-SEC-004 supersedida).
+
+### Backend — AuthModule
 
 | Req | Descrição | Código | Teste | Status |
 |-----|-----------|--------|-------|--------|
-| STORY-REG-01 | Registro com rollback atômico em falha de criação de perfil | — | — | ⏳ |
-| STORY-REG-01 | E-mail duplicado → 409 + mensagem direcionada no frontend | — | — | ⏳ |
-| STORY-REG-02 | Toggle show/hide senha com aria-label acessível | — | — | ⏳ |
-| STORY-01 | Login com "lembrar de mim" salvo em sessionStorage + idle timer condicional | — | — | ⏳ |
-| STORY-01 | Redirect para rota original após login | — | — | ⏳ |
-| STORY-01 | Usuário logado em /login → redirect /dashboard | — | — | ⏳ |
-| STORY-02 | Mensagem INVALID_CREDENTIALS genérica (anti-enumeração) | — | — | ⏳ |
-| STORY-03 | Bloqueio por 15 min após 5 tentativas inválidas por e-mail (frontend + backend) | — | — | ⏳ |
-| STORY-04 | POST /auth/recover-password sempre HTTP 200 (anti-enumeração) | — | — | ⏳ |
-| STORY-04 | Reenvio de e-mail com cooldown de 60 s + rate limit 3/15min | — | — | ⏳ |
-| STORY-05 | Link expirado/usado → mensagem amigável com botão de novo link | — | — | ⏳ |
-| STORY-06 | "Lembrar de mim" → preferência em sessionStorage; idle timer ativado apenas sem lembrar | — | — | ⏳ |
-| STORY-07a | Hook `useActivityTracker`: idle timer 30 min, reset por evento/rota | — | — | ⏳ |
-| STORY-07b | `<FormDraftGuard>`: salva/restaura estado de formulário em sessionStorage | — | — | ⏳ |
-| STORY-08 | Timeout de 10 s no frontend → mensagem sem loading infinito | — | — | ⏳ |
-| STORY-SEC-01 | Alterar senha via perfil → fluxo reset por e-mail (sem lógica própria) | — | — | ⏳ |
-| CA-20 | audit_logs registra REGISTER e LOGIN com campos corretos | — | — | ⏳ |
+| STORY-REG-01 | Registro com rollback atômico em falha de criação de perfil; `POST /auth/register` | `apps/api/src/modules/auth/auth.service.ts`, `apps/api/src/modules/auth/auth.controller.ts`, `apps/api/src/modules/auth/dto/register.dto.ts` | `apps/api/` (Jest, 67 testes, 90%+ cobertura); `apps/api/test/integration/auth.int-spec.ts` (CT-006) | ✅ |
+| STORY-REG-01 | E-mail duplicado → 409 + mensagem direcionada no frontend | `apps/api/src/modules/auth/auth.service.ts` | `apps/api/` (Jest) | ✅ |
+| STORY-01 | `POST /auth/login` — retorna JWT; audit REGISTER/LOGIN | `apps/api/src/modules/auth/auth.service.ts`, `apps/api/src/modules/auth/auth.controller.ts`, `apps/api/src/modules/auth/dto/login.dto.ts`, `apps/api/src/modules/auth/jwt.strategy.ts` | `apps/api/` (Jest); `apps/api/test/integration/auth.int-spec.ts` | ✅ |
+| STORY-02 | Mensagem INVALID_CREDENTIALS genérica (anti-enumeração) | `apps/api/src/modules/auth/auth.service.ts` | `apps/api/` (Jest) | ✅ |
+| STORY-03 | Bloqueio por tentativas via `supabase/migrations/20260713190000_auth_login_attempts.sql` | `supabase/migrations/20260713190000_auth_login_attempts.sql`, `apps/api/src/modules/auth/auth.service.ts` | `apps/api/` (Jest) | ✅ |
+| STORY-04 | `POST /auth/recover-password` → 200 sempre; rate limit 3/15min | `apps/api/src/modules/auth/auth.controller.ts`, `apps/api/src/modules/auth/dto/recover-password.dto.ts` | `apps/api/` (Jest) | ✅ |
+| STORY-05 | `POST /auth/reset-password` — valida token Supabase; invalida sessões anteriores | `apps/api/src/modules/auth/auth.controller.ts`, `apps/api/src/modules/auth/dto/reset-password.dto.ts` | `apps/api/` (Jest) | ✅ |
+| STORY-SEC-01 | `POST /auth/logout` e `POST /auth/refresh` com `SupabaseAuthGuard` | `apps/api/src/modules/auth/auth.controller.ts`, `apps/api/src/common/guards/supabase-auth.guard.ts` | `apps/api/` (Jest) | ✅ |
+| CA-20 | audit_logs registra REGISTER e LOGIN com campos corretos | `apps/api/src/modules/auth/auth.service.ts`, `apps/api/src/shared/audit/audit.service.ts` | `apps/api/` (Jest) | ✅ |
+
+### Frontend — Páginas de Auth e Gestão de Sessão
+
+| Req | Descrição | Código | Teste | Status |
+|-----|-----------|--------|-------|--------|
+| STORY-01 | Redirect para rota original após login; usuário logado em /login → /dashboard | `apps/web/middleware.ts`, `apps/web/src/app/(auth)/login/page.tsx` | `apps/web/` (Vitest, 42 testes, 91%+ cobertura) | ✅ |
+| STORY-REG-02 | Toggle show/hide senha com aria-label acessível | `apps/web/src/components/password-input.tsx` | `apps/web/` (Vitest) | ✅ |
+| STORY-04 | Reenvio de e-mail com cooldown de 60 s + rate limit 3/15min | `apps/web/src/app/(auth)/recover-password/page.tsx` | `apps/web/` (Vitest) | ✅ |
+| STORY-05 | Link expirado/usado → mensagem amigável com botão de novo link | `apps/web/src/app/(auth)/reset-password/page.tsx` | `apps/web/` (Vitest) | ✅ |
+| STORY-06 | "Lembrar de mim" → preferência em sessionStorage; idle timer ativado apenas sem lembrar | `apps/web/src/app/(auth)/login/page.tsx`, `apps/web/src/lib/hooks/use-activity-tracker.ts` | `apps/web/` (Vitest) | ✅ |
+| STORY-07a | Hook `useActivityTracker`: idle timer 30 min, reset por evento/rota; renovação via `/auth/refresh` | `apps/web/src/lib/hooks/use-activity-tracker.ts`, `apps/web/src/lib/auth/decode-jwt-exp.ts` | `apps/web/` (Vitest) | ✅ |
+| STORY-07b | `<FormDraftGuard>`: salva/restaura estado de formulário em sessionStorage | `apps/web/src/components/form-draft-guard.tsx` | `apps/web/` (Vitest) | ✅ |
+| STORY-08 | Timeout/offline via `api-client.ts`; mensagem sem loading infinito | `apps/web/src/lib/http/api-client.ts` | `apps/web/` (Vitest) | ✅ |
+| IMPACTO-021 #1 | Middleware SSR `apps/web/middleware.ts` — proteção de rotas + renovação de sessão | `apps/web/middleware.ts`, `apps/web/next.config.ts` (rewrite `/api/backend/*`) | `apps/web/` (Vitest) | ✅ |
 
 ---
 
 ## SPEC-20260521-005 — OpenAPI / Swagger (Aprovada)
 
-> Documentação automática da API. Nenhum código implementado.
+> Documentação automática da API NestJS via `@nestjs/swagger`. Swagger UI acessível em `/api/docs`
+> somente em `development` ou com `SWAGGER_ENABLED=true`. Módulo `admin` incluído na documentação.
+> Implementado em 2026-07-13 como parte da Fase 1 do roadmap (T1.5).
 
 | Req | Descrição | Código | Teste | Status |
 |-----|-----------|--------|-------|--------|
-| RF-01 | Swagger UI em `/api/docs` em `development` | — | — | ⏳ |
-| RF-02 | Desabilitado em `production` (sem `SWAGGER_ENABLED=true`) | — | — | ⏳ |
-| RF-03 | `@ApiTags` em todos os controllers (6 domínios) | — | — | ⏳ |
-| RF-04 | `@ApiOperation` e `@ApiResponse` em cada endpoint | — | — | ⏳ |
-| RF-05 | Plugin automático via `nest-cli.json` | — | — | ⏳ |
-| RF-06 | Bearer JWT documentado globalmente via `addBearerAuth` | — | — | ⏳ |
-| RF-07 | `@ApiBearerAuth` em endpoints protegidos | — | — | ⏳ |
-| RF-08 | `openapi.json` gerado via `pnpm docs:generate` | — | — | ⏳ |
+| RF-01 | Swagger UI em `/api/docs` em `development` ou com `SWAGGER_ENABLED=true` | `apps/api/src/main.ts` | `apps/api/` (Jest, 90%+ cobertura — integração não exposta em produção via RNF-01) | ✅ |
+| RF-02 | Desabilitado em `production` (sem `SWAGGER_ENABLED=true`) | `apps/api/src/main.ts` | `apps/api/` (Jest) | ✅ |
+| RF-03 | `@ApiTags` em todos os controllers (auth, users, admin, vehicles, expenses, maintenance, dashboard) | `apps/api/src/modules/auth/auth.controller.ts`, `apps/api/src/modules/admin/admin.controller.ts`, demais controllers | `apps/api/` (Jest) | ✅ |
+| RF-04 | `@ApiOperation` e `@ApiResponse` em cada endpoint | Todos os controllers em `apps/api/src/modules/` | `apps/api/` (Jest) | ✅ |
+| RF-05 | Plugin automático via `apps/api/nest-cli.json` | `apps/api/nest-cli.json` | — (build-time) | ✅ |
+| RF-06 | Bearer JWT documentado globalmente via `addBearerAuth` | `apps/api/src/main.ts` | — (visual) | ✅ |
+| RF-07 | `@ApiBearerAuth` em endpoints protegidos | Todos os controllers com `SupabaseAuthGuard` | — (visual) | ✅ |
+| RF-08 | `openapi.json` gerado via `pnpm docs:generate` | `apps/api/src/main.ts` | — (script de build) | 🔶 |
 
 ---
 
 ## SPEC-20260521-004 — Admin Role e Operações LGPD (Aprovada)
 
-> Módulo admin com bypass de RLS; LGPD — auto-exclusão de conta; audit de operações admin.
-> Nenhum código implementado.
+> Módulo admin com bypass de RLS via `AdminSupabaseService` (SERVICE_ROLE_KEY); auto-exclusão de
+> conta LGPD em `DELETE /users/me`; audit de todas as operações admin.
+> Implementado em 2026-07-13 como parte da Fase 1 do roadmap (T1.3–T1.4).
+> Decisão pós-aprovação: admin identificado por `user_metadata.role = 'admin'` no JWT (RF-09);
+> `DELETE /users/me` usa exclusão física via `auth.admin.deleteUser` + cascata FK (não soft-delete
+> anonimizado do RF-02) — ver changelog no rodapé da spec.
+
+### Backend — AdminModule e UsersModule
 
 | Req | Descrição | Código | Teste | Status |
 |-----|-----------|--------|-------|--------|
-| RF-01 | `DELETE /users/me` — auto-exclusão com `{ confirm: true }` | — | — | ⏳ |
-| RF-02 | Soft delete + anonimização: trigger + service anonimiza antes do deleteUser | — | — | ⏳ |
-| RF-03 | Revogação de JWT via `auth.admin.deleteUser` | — | — | ⏳ |
-| RF-04 | `{ confirm: true }` obrigatório → 400 se ausente | — | — | ⏳ |
-| RF-05 | `AdminSupabaseService` com `SERVICE_ROLE_KEY` | — | — | ⏳ |
-| RF-06 | `GET /admin/users` — listar usuários (paginado, apenas admin) | — | — | ⏳ |
-| RF-07 | `GET /admin/audit-logs` — filtro por `user_id` e período | — | — | ⏳ |
-| RF-08 | `DELETE /admin/users/:id` — admin exclui qualquer conta | — | — | ⏳ |
-| RF-09 | `AdminGuard` verifica role no JWT payload | — | — | ⏳ |
+| RF-01 | `DELETE /users/me` — auto-exclusão com `{ confirm: true }` | `apps/api/src/modules/users/users.controller.ts`, `apps/api/src/modules/users/users.service.ts` | `apps/api/` (Jest, 67 testes, 90%+ cobertura) | ✅ |
+| RF-02 | Exclusão física via `auth.admin.deleteUser` + cascata FK `auth.users → profiles → demais` (satisfaz C1) | `apps/api/src/modules/users/users.service.ts` | `apps/api/` (Jest) | ✅ |
+| RF-03 | Revogação de JWT via `auth.admin.deleteUser` | `apps/api/src/modules/users/users.service.ts` | `apps/api/` (Jest) | ✅ |
+| RF-04 | `{ confirm: true }` obrigatório → 400 se ausente | `apps/api/src/modules/users/users.controller.ts` | `apps/api/` (Jest) | ✅ |
+| RF-05 | `AdminSupabaseService` com `SERVICE_ROLE_KEY`; `AdminModule` e `SupabaseAdminModule` separados | `apps/api/src/modules/admin/admin-supabase.service.ts`, `apps/api/src/shared/supabase/supabase-admin.module.ts` | `apps/api/` (Jest) | ✅ |
+| RF-06 | `GET /admin/users` — listar usuários (paginado, apenas admin) | `apps/api/src/modules/admin/admin.controller.ts`, `apps/api/src/modules/admin/admin.service.ts` | `apps/api/` (Jest) | ✅ |
+| RF-07 | `GET /admin/audit-logs` — filtro por `user_id` e período | `apps/api/src/modules/admin/admin.controller.ts`, `apps/api/src/modules/admin/admin.service.ts` | `apps/api/` (Jest) | ✅ |
+| RF-08 | `DELETE /admin/users/:id` — admin exclui qualquer conta (LGPD) | `apps/api/src/modules/admin/admin.controller.ts`, `apps/api/src/modules/admin/admin.service.ts` | `apps/api/` (Jest) | ✅ |
+| RF-09 | Admin identificado por `user_metadata.role = 'admin'` no JWT; `SupabaseAuthGuard + RolesGuard/@Roles('admin')` | `apps/api/src/common/guards/roles.guard.ts`, `apps/api/src/common/decorators/roles.decorator.ts`, `apps/api/src/modules/admin/admin.controller.ts` | `apps/api/` (Jest) | ✅ |
+
+### Backend — Decorators e Guards Comuns
+
+| Req | Descrição | Código | Teste | Status |
+|-----|-----------|--------|-------|--------|
+| — | `@UserId()` decorator — extrai userId do JWT para controllers | `apps/api/src/common/decorators/user-id.decorator.ts` | `apps/api/` (Jest) | ✅ |
+| — | `GET /users/me` e `PATCH /users/me` — perfil do usuário autenticado | `apps/api/src/modules/users/users.controller.ts`, `apps/api/src/modules/users/users.service.ts` | `apps/api/` (Jest) | ✅ |
 
 ---
 
@@ -1020,23 +1046,33 @@ que o artefato ainda não existe no repositório.
 
 ## SPEC-20260521-001 — Hardening de Segurança (aprovado)
 
-> Correções de segurança no backend NestJS: variáveis de ambiente, audit logs, rate limit,
-> filtro de exceções, rollback scripts. Nenhum código implementado.
+> Correções de segurança no backend NestJS: variáveis de ambiente (Joi), audit logs, rate limit
+> diferenciado de auth, HttpExceptionFilter global, rollback scripts de migrations, AuditService.
+> Implementado em 2026-07-13 como parte da Fase 1 do roadmap (T1.2).
+> Rate limits de auth supersedidos pela tabela de SPEC-20260524-001 §4.2 (valores idênticos — sem conflito).
 
 | Req | Descrição | Código | Teste | Status |
 |-----|-----------|--------|-------|--------|
-| RF-SEC-001 | `SUPABASE_JWT_SECRET` via `ConfigService.getOrThrow` (sem `process.env` direto) | — | — | ⏳ |
-| RF-SEC-002 | `audit_logs` com campos corretos (`action`, `table_name`, `record_id`, `changes`) | — | — | ⏳ |
-| RF-SEC-002b | `logAudit` não propaga exceção — captura e loga via try/catch | — | — | ⏳ |
-| RF-SEC-002c | Timestamp ISO injetado em `changes` (sobrescreve qualquer valor passado) | — | — | ⏳ |
-| RF-SEC-003 | `HttpExceptionFilter` global — sem stack trace em produção | — | — | ⏳ |
-| RF-SEC-003b | Filter registrado em `main.ts` via `useGlobalFilters` | — | — | ⏳ |
-| RF-SEC-004 | Rate limit de auth: register 5/15min, login 10/15min | — | — | ⏳ |
-| RF-SEC-005 | Rollback scripts para as migrations | — | — | ⏳ |
-| RF-SEC-006 | `SUPABASE_SERVICE_ROLE_KEY` validado no Joi | — | — | ⏳ |
-| RF-SEC-007 | `console.log` substituído por `Logger` em main.ts | — | — | ⏳ |
-| RF-SEC-008 | `AdminSupabaseService` inicializa com `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` via `getOrThrow` | — | — | ⏳ |
-| RF-SEC-009 | `SupabaseService` inicializa com `autoRefreshToken: false` e `persistSession: false` | — | — | ⏳ |
+| RF-SEC-001 | `SUPABASE_URL` (sem prefixo `NEXT_PUBLIC_`) via `ConfigService`; env vars via Joi | `apps/api/src/common/config/env.validation.ts`, `apps/api/src/modules/auth/auth.module.ts` | `apps/api/` (Jest, 67 testes, 90%+ cobertura) | ✅ |
+| RF-SEC-002 | `AuditService` — audit_logs com campos corretos (`action`, `table_name`, `record_id`, `changes`); fire-and-forget | `apps/api/src/shared/audit/audit.service.ts` | `apps/api/` (Jest) | ✅ |
+| RF-SEC-002b | `AuditService.log()` não propaga exceção — try/catch + NestJS Logger | `apps/api/src/shared/audit/audit.service.ts` | `apps/api/` (Jest) | ✅ |
+| RF-SEC-002c | Timestamp ISO injetado em `changes` (sobrescreve qualquer valor passado) | `apps/api/src/shared/audit/audit.service.ts` | `apps/api/` (Jest) | ✅ |
+| RF-SEC-003 | `HttpExceptionFilter` global — sem stack trace em produção; shape `{ statusCode, message, timestamp }` | `apps/api/src/common/filters/http-exception.filter.ts` | `apps/api/` (Jest) | ✅ |
+| RF-SEC-003b | Filter registrado em `main.ts` via `app.useGlobalFilters()` | `apps/api/src/main.ts` | `apps/api/` (Jest) | ✅ |
+| RF-SEC-004 | Rate limit diferenciado: register 5/15min, login 10/15min, demais 100/60s (ThrottlerGuard global) | `apps/api/src/modules/auth/auth.controller.ts`, `apps/api/src/main.ts` | `apps/api/` (Jest) | ✅ |
+| RF-SEC-005 | Rollback scripts para as migrations | `supabase/migrations/rollback/` | — (DDL manual) | ✅ |
+| RF-SEC-006 | `SUPABASE_SERVICE_ROLE_KEY` e demais vars obrigatórias validados no Joi na startup | `apps/api/src/common/config/env.validation.ts` | `apps/api/` (Jest) | ✅ |
+| RF-SEC-007 | `console.log` substituído por `Logger` do NestJS em `main.ts` | `apps/api/src/main.ts` | `apps/api/` (Jest) | ✅ |
+| RF-SEC-008 | `AdminSupabaseService` inicializa com `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` isolados | `apps/api/src/modules/admin/admin-supabase.service.ts`, `apps/api/src/shared/supabase/supabase-admin.module.ts` | `apps/api/` (Jest) | ✅ |
+| RF-SEC-009 | `SupabaseService` (anon) e `SupabaseAdminModule` (service-role) isolados; clients separados por módulo | `apps/api/src/shared/supabase/supabase.module.ts`, `apps/api/src/shared/supabase/create-user-scoped-client.ts`, `apps/api/src/shared/supabase/supabase.constants.ts` | `apps/api/` (Jest) | ✅ |
+
+### Testes de Integração (novos — Fase 1)
+
+| ID | Descrição | Arquivo | Status |
+|----|-----------|---------|--------|
+| CT-006 | 401 sem JWT; fluxo real de registro/login contra Supabase local | `apps/api/test/integration/auth.int-spec.ts` | ✅ |
+| CT-007 | RLS bloqueia acesso a `profiles` de outro usuário | `apps/api/test/integration/rls.int-spec.ts` | ✅ |
+| — | CI `integration-test` job — `supabase start` + testes de integração no pipeline | `.github/workflows/ci.yml` | ✅ |
 
 ---
 
@@ -1069,29 +1105,36 @@ que o artefato ainda não existe no repositório.
 
 ## Cobertura de Testes por Módulo
 
-> Todos os módulos abaixo estão com cobertura pendente — nenhum teste existe ainda,
-> pois nenhum código foi implementado. Esta tabela registra o plano de cobertura esperado
-> quando a implementação iniciar, para referência do agente `tester`.
+> Atualizado em 2026-07-13 com o resultado da Fase 1 (T1.1–T1.5). Módulos implementados na
+> Fase 1 têm cobertura real (Jest em `apps/api`, Vitest em `apps/web`). Demais módulos permanecem
+> no plano de cobertura esperado para quando a implementação iniciar.
 
-| Módulo | Arquivo de teste planejado | Status |
-|--------|---------------------------|--------|
-| `auth` | `auth.service.spec.ts`, `auth.controller.spec.ts`, `supabase.strategy.spec.ts` | ⏳ |
-| `users` | `users.service.spec.ts`, `users.controller.spec.ts`, `supabase-user.repository.spec.ts` | ⏳ |
+| Módulo | Arquivo de teste | Status |
+|--------|-----------------|--------|
+| `auth` | `apps/api/src/modules/auth/auth.service.spec.ts`, `auth.controller.spec.ts` + `apps/api/test/integration/auth.int-spec.ts` | ✅ (67 testes Jest, 90%+) |
+| `users` | `apps/api/src/modules/users/users.service.spec.ts`, `users.controller.spec.ts` | ✅ (Jest, 90%+) |
+| `admin` | `apps/api/src/modules/admin/admin.service.spec.ts`, `admin.controller.spec.ts` | ✅ (Jest, 90%+) |
+| `common/filters` | `apps/api/src/common/filters/http-exception.filter.spec.ts` | ✅ (Jest, 90%+) |
+| `common/guards` | `apps/api/src/common/guards/supabase-auth.guard.spec.ts`, `roles.guard.spec.ts` | ✅ (Jest, 90%+) |
+| `common/pipes` | `apps/api/src/common/pipes/zod-validation.pipe.spec.ts` | ✅ (Jest, 90%+) |
+| `shared/audit` | `apps/api/src/shared/audit/audit.service.spec.ts` | ✅ (Jest, 90%+) |
+| `validators/auth` | `packages/validators/src/auth.schemas.spec.ts` | ✅ (Vitest, 91%+) |
+| `web/middleware` | `apps/web/middleware.spec.ts` | ✅ (Vitest, 91%+) |
+| `web/use-activity-tracker` | `apps/web/src/lib/hooks/use-activity-tracker.spec.ts` | ✅ (Vitest, 91%+) |
+| `web/api-client` | `apps/web/src/lib/http/api-client.spec.ts` | ✅ (Vitest, 91%+) |
+| `web/form-draft-guard` | `apps/web/src/components/form-draft-guard.spec.ts` | ✅ (Vitest, 91%+) |
+| `web/password-input` | `apps/web/src/components/password-input.spec.ts` | ✅ (Vitest, 91%+) |
+| `integration/rls` | `apps/api/test/integration/rls.int-spec.ts` (CT-007) | ✅ (Jest + supabase local) |
 | `vehicles` | `vehicles.service.spec.ts`, `vehicles.controller.spec.ts`, `license-plate.vo.spec.ts`, `supabase-vehicle.repository.spec.ts` | ⏳ |
 | `expenses` | `expenses.service.spec.ts`, `expenses.controller.spec.ts`, `supabase-expense.repository.spec.ts` | ⏳ |
 | `maintenance` | `maintenance.service.spec.ts`, `maintenance.controller.spec.ts`, `supabase-maintenance.repository.spec.ts` | ⏳ |
 | `dashboard` | `dashboard.service.spec.ts`, `dashboard.controller.spec.ts` | ⏳ |
-| `admin` | `admin.service.spec.ts`, `admin.controller.spec.ts`, `admin.guard.spec.ts` | ⏳ |
-| `common/filters` | `http-exception.filter.spec.ts` | ⏳ |
-| `common/guards` | `supabase-auth.guard.spec.ts` | ⏳ |
-| `common/pipes` | `zod-validation.pipe.spec.ts` | ⏳ |
 | `fines` | `fines.service.spec.ts`, `fines.controller.spec.ts` | ⏳ |
 | `recurring-costs` | `recurring-costs.service.spec.ts`, `recurring-costs.controller.spec.ts` | ⏳ |
 | `analytics` | `analytics.service.spec.ts`, `analytics.controller.spec.ts` | ⏳ |
 | `validators/vehicles` | `vehicles.schema.spec.ts` | ⏳ |
 | `validators/expenses` | `expenses.schema.spec.ts` | ⏳ |
 | `validators/maintenance` | `maintenance.schema.spec.ts` | ⏳ |
-| `validators/auth` | `auth.schema.spec.ts` | ⏳ |
 | `validators/display-preferences` | `display-preferences.schema.spec.ts` | ⏳ |
 | `validators/categories` | `categories.schema.spec.ts` | ⏳ |
 | `validators/fines` | `fines.schema.spec.ts` | ⏳ |

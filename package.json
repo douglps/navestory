@@ -8,6 +8,7 @@
   },
   "packageManager": "pnpm@11.1.3",
   "scripts": {
+    "lab": "node scripts/lab.mjs",
     "dev": "turbo run dev",
     "build": "turbo run build",
     "lint": "turbo run lint",

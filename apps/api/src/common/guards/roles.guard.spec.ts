@@ -1,0 +1,63 @@
+import type { ExecutionContext } from "@nestjs/common";
+import { Reflector } from "@nestjs/core";
+import { RolesGuard } from "./roles.guard";
+
+describe("RolesGuard", () => {
+  it("permite acesso quando a rota não exige role (@Roles ausente)", () => {
+    const reflector = { getAllAndOverride: jest.fn().mockReturnValue(undefined) } as unknown as Reflector;
+    const guard = new RolesGuard(reflector);
+    const context = {
+      switchToHttp: () => ({ getRequest: () => ({}) }),
+      getHandler: () => undefined,
+      getClass: () => undefined,
+    } as unknown as ExecutionContext;
+
+    expect(guard.canActivate(context)).toBe(true);
+  });
+
+  it("bloqueia usuário comum em rota @Roles('admin') (RNF-01)", () => {
+    const reflector = {
+      getAllAndOverride: jest.fn().mockReturnValue(["admin"]),
+    } as unknown as Reflector;
+    const guard = new RolesGuard(reflector);
+    const context = {
+      switchToHttp: () => ({
+        getRequest: () => ({ user: { sub: "u1", user_metadata: { role: "user" } } }),
+      }),
+      getHandler: () => undefined,
+      getClass: () => undefined,
+    } as unknown as ExecutionContext;
+
+    expect(guard.canActivate(context)).toBe(false);
+  });
+
+  it("permite admin em rota @Roles('admin')", () => {
+    const reflector = {
+      getAllAndOverride: jest.fn().mockReturnValue(["admin"]),
+    } as unknown as Reflector;
+    const guard = new RolesGuard(reflector);
+    const context = {
+      switchToHttp: () => ({
+        getRequest: () => ({ user: { sub: "u1", user_metadata: { role: "admin" } } }),
+      }),
+      getHandler: () => undefined,
+      getClass: () => undefined,
+    } as unknown as ExecutionContext;
+
+    expect(guard.canActivate(context)).toBe(true);
+  });
+
+  it("bloqueia (fail-safe) quando não há usuário no request", () => {
+    const reflector = {
+      getAllAndOverride: jest.fn().mockReturnValue(["admin"]),
+    } as unknown as Reflector;
+    const guard = new RolesGuard(reflector);
+    const context = {
+      switchToHttp: () => ({ getRequest: () => ({}) }),
+      getHandler: () => undefined,
+      getClass: () => undefined,
+    } as unknown as ExecutionContext;
+
+    expect(guard.canActivate(context)).toBe(false);
+  });
+});

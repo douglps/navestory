@@ -27,10 +27,11 @@ _Consulte estes arquivos para implementação técnica detalhada:_
 | 🎨 **Design System**       | [`design-system.md`](./design-system.md)           | @design-team   |
 | ♿ **Acessibilidade**      | [`accessibility.md`](./accessibility.md)           | @a11y-team     |
 | 🧪 **Testes & QA**         | [`testing.md`](./testing.md)                       | @qa-team       |
-| 🔒 **Segurança & Dados**   | [`security.md`](./security.md) _(A Criar/Extrair)_ | @security-team |
-| 🛠 **Stack & Ferramentas** | [`stack.md`](./stack.md) _(A Criar/Extrair)_       | @arch-team     |
+| 🔒 **Segurança & Dados**   | [`security.md`](./security.md)                     | @security-team |
+| 🛠 **Stack & Ferramentas** | [`stack.md`](./stack.md)                           | @arch-team     |
 | 🚗 **Domínio Frota**       | [`fleet-components.md`](./fleet-components.md)     | @fleet-team    |
 | 📚 **Uso de IA/Context7**  | [`rules.md`](./rules.md)                           | @dev-team      |
+| 📋 **Regras de domínio (R/S/P/C)** | [`specs/RULES.md`](../../specs/RULES.md) | @tech-lead     |
 
 ## 🤖 Protocolo de Agente (IA)
 

@@ -6,15 +6,17 @@ trigger: always_on
 Versão: 2.0 (Alinhado ao DS v3.0 Calm UI) | Domínio: Gestão de Veículos
 Data: 13/03/2026 | Conformidade: ✅ 100% Design System & Anti-Ansiedade
 
-### 📊 Status Atual (Auditoria)
+### 📊 Status de Implementação (Checklist — a implementar)
 
-| Requisito         | Status | Implementação Corrigida                                      |
-| :---------------- | :----- | :----------------------------------------------------------- |
-| **KPI Cards**     | ✅     | `FleetStatsCard` (Composição + Tipografia Mono)              |
-| **Mapas**         | ✅     | `VehicleMap` com Token `h-map-container` + Skeleton CLS Zero |
-| **Status Badges** | ✅     | Padrão `bg-{color}/10 text-{color}` (Calm UI)                |
-| **Timeline**      | ✅     | `TripTimeline` (Componente de Domínio)                       |
-| **Tabelas**       | ✅     | `DataTable` com densidade controlada                         |
+> Estado real do projeto: 0% implementado em 2026-07-13. Tabela mantida como checklist de progresso.
+
+| Requisito         | Status   | Referência de Implementação                                  |
+| :---------------- | :------- | :----------------------------------------------------------- |
+| **KPI Cards**     | pendente | `FleetStatsCard` (Composição + Tipografia Mono)              |
+| **Mapas**         | pendente | `VehicleMap` com Token `h-map-container` + Skeleton CLS Zero |
+| **Status Badges** | pendente | Padrão `bg-{color}/10 text-{color}` (Calm UI)                |
+| **Timeline**      | pendente | `TripTimeline` (Componente de Domínio)                       |
+| **Tabelas**       | pendente | `DataTable` com densidade controlada                         |
 
 ---
 

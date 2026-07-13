@@ -75,7 +75,11 @@
 | Dashboard | GET | `/dashboard/export` | Export CSV de despesas |
 | Users | GET | `/users/me` | Perfil do usuário autenticado |
 | Users | PATCH | `/users/me` | Atualiza perfil |
-| Users | DELETE | `/users/me` | Exclusão de conta (C1) |
+| Users | DELETE | `/users/me` | Exclusão física de conta via cascata FK (C1) — exige `{ confirm: true }` |
+| Admin | GET | `/admin/users` | Lista todos os usuários — somente `admin` (`SupabaseAuthGuard + RolesGuard/@Roles('admin')`) |
+| Admin | DELETE | `/admin/users/:id` | Exclui qualquer conta (LGPD) — somente `admin`; registra em `audit_logs` |
+| Admin | GET | `/admin/audit-logs` | Lista audit logs com filtros `user_id`, `period` — somente `admin` |
+| Docs | GET | `/api/docs` | Swagger UI — disponível apenas em `NODE_ENV=development` ou `SWAGGER_ENABLED=true` (SPEC-20260521-005) |
 
 ---
 

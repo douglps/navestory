@@ -1,6 +1,6 @@
 # Matriz de Impacto — Nave SaaS
 
-> **AVISO DE CORRECAO — 2026-07-12 (rev. 21)**
+> **AVISO DE CORRECAO — 2026-07-12 (rev. 21); atualizado 2026-07-13 (rev. 22 — IMPACTO-028 e IMPACTO-029 adicionados)**
 > Esta matriz foi reescrita em 2026-07-12 para refletir o estado real do projeto.
 > Versões anteriores (rev. 1 a rev. 20) misturavam análises genuínas de planejamento com
 > entradas que afirmavam que mudanças haviam sido "implementadas" (com commits, datas de
@@ -687,6 +687,59 @@ para sincronizar `matrices/rastreabilidade.md`.
 |---------|----|---------|
 | **Nave** (novo) | `sfkefpoanmoiagwxbwld` | Schema de referência limpo, `get_advisors` sem achados, sem dados de usuário, sem migrations locais (schema aplicado diretamente via MCP) |
 | **NaveSaaS** (legado) | `uetaprnvukgqtxlbfedk` | **Permanece intocado** — 33 migrations aplicadas, dados reais (6 veículos, 12 despesas etc.), todos os achados do IMPACTO-026 ainda presentes. Não há plano de migração de dados definido. Não há prazo ou decisão de descomissionamento. Estas são decisões em aberto a serem tomadas posteriormente. |
+
+---
+
+### IMPACTO-028 — Bug de Produção: `handle_new_user()` quebrava 100% dos cadastros (corrigido) (2026-07-13)
+
+| Campo | Valor |
+|-------|-------|
+| **Spec** | SPEC-20260524-001 (auth register), SPEC-20260521-001 (hardening S9) |
+| **Status** | **Corrigido em 2026-07-13** via migration `supabase/migrations/20260713200000_fix_handle_new_user_search_path.sql` |
+| **Risco geral** | Crítico → fechado |
+| **Descoberto por** | Testes de integração reais contra Supabase local (`apps/api/test/integration/auth.int-spec.ts`, CT-006) |
+
+**Descrição do bug:**
+
+A migration de hardening S9 (IMPACTO-027, item 1) adicionou `SET search_path = ''` a todas as funções `SECURITY DEFINER`, incluindo a trigger function `handle_new_user()` (em `supabase/migrations/20260712171941_trigger_functions.sql`). Esta função é disparada pelo trigger `on_auth_user_created` sempre que um novo usuário é criado no Supabase Auth.
+
+Com `search_path = ''`, todas as referências de tipo devem ser totalmente qualificadas com o schema. O código da função fazia cast `::profile_type` sem qualificar o schema, causando o erro Postgres:
+
+```
+ERROR: type "profile_type" does not exist (SQLSTATE 42704)
+```
+
+O GoTrue reportava esse erro silenciosamente como HTTP 500 genérico, impedindo **100% dos cadastros novos** — qualquer chamada a `POST /auth/register` falhava na etapa de criação do perfil.
+
+| # | Mudança | Módulos afetados | Risco | Status |
+|---|---------|-----------------|-------|--------|
+| 1 | `supabase/migrations/20260713200000_fix_handle_new_user_search_path.sql`: `CREATE OR REPLACE FUNCTION handle_new_user()` com cast corrigido para `public.profile_type` (schema qualificado) | DB (trigger `on_auth_user_created`), `profiles`, fluxo de registro | Crítico → fechado | Aplicado em 2026-07-13 |
+
+**Causa raiz:** Regra S9 (hardening de `search_path`) foi aplicada corretamente em IMPACTO-027, mas o corpo da função `handle_new_user()` não foi revisado para qualificar todos os tipos com schema explícito. A combinação `SET search_path = '' + cast não qualificado` é um padrão de risco documentado no PostgreSQL — qualquer função com `SECURITY DEFINER` e `search_path = ''` deve usar nomes totalmente qualificados no corpo.
+
+**Lição:** Ao aplicar `SET search_path = ''` em funções existentes, revisar todos os casts de tipo e referências de tabela/função no corpo para garantir qualificação completa de schema.
+
+---
+
+### IMPACTO-029 — Trigger `soft_delete_profile()` com efeito nulo no fluxo de exclusão de conta (2026-07-13)
+
+| Campo | Valor |
+|-------|-------|
+| **Spec** | SPEC-20260521-004 RF-02 |
+| **Status** | Observação documentada — nenhuma ação corretiva urgente; decisão de remoção ou reatribuição adiada |
+| **Risco geral** | Baixo (comportamento correto; trigger apenas não tem efeito no fluxo atual) |
+
+**Descrição:**
+
+O `DELETE /users/me` foi implementado na Fase 1 usando exclusão física via `auth.admin.deleteUser(userId)`, que deleta o registro em `auth.users`. A FK `auth.users → profiles` com `ON DELETE CASCADE` então remove `profiles` automaticamente, o que por sua vez cascateia para as demais tabelas filhas.
+
+A trigger `soft_delete_profile()` (em `supabase/migrations/`) está declarada para disparar em `BEFORE DELETE ON profiles`. No entanto, a exclusão do perfil ocorre via cascade de FK disparada pela deleção em `auth.users` — não via `DELETE` direto na tabela `profiles`. O comportamento de triggers em cascatas de FK é definido pelo PostgreSQL: a trigger **dispara normalmente** em deletes por cascade (FK), mas como a exclusão já vem de `auth.admin.deleteUser` que remove `auth.users`, o cascade remove `profiles` e a trigger `soft_delete_profile()` dispara — porém neste contexto ela executaria um soft-delete em uma linha que está prestes a ser deletada de qualquer forma.
+
+**Efeito prático:** A anonimização que `soft_delete_profile()` faz (limpar nome, preferences etc.) pode ocorrer antes do cascade DELETE, mas o resultado final é que a linha em `profiles` é deletada de qualquer forma. A trigger não tem efeito útil no fluxo de `DELETE /users/me` via `auth.admin.deleteUser`.
+
+**Impacto:** A regra C1 (LGPD — exclusão completa via cascata) é satisfeita pela exclusão física. A anonimização de `soft_delete_profile()` torna-se irrelevante quando a linha é deletada. Qualquer fluxo futuro que dependa de `profiles.deleted_at` ou de campos anonimizados deve ser revisado para verificar se a trigger adiciona valor real.
+
+**Decisão adiada:** Remover, manter (com documentação clara de efeito nulo) ou reatribuir a trigger para outro propósito. Registrar como débito técnico a ser resolvido antes da Fase 2.
 
 ---
 

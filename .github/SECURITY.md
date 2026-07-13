@@ -19,3 +19,8 @@
 - Secret Scanning: Ativado
 - Dependabot: Ativado
 - CodeQL: Ativado
+
+## Processo
+
+- Revisão trimestral do OWASP Checklist em `docs/architecture/security/`
+- Divulgação Responsável: não publicar o incidente até que haja patch de correção aplicado

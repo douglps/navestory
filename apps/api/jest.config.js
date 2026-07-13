@@ -11,7 +11,12 @@ module.exports = {
     "main.ts$",
     "\\.module\\.ts$",
     "jwt.strategy.ts$",
-    "jwt-auth.guard.ts$",
+    "supabase-auth.guard.ts$",
+    "\\.dto\\.ts$",
+    "supabase.constants.ts$",
+    "supabase.module.ts$",
+    "supabase-admin.module.ts$",
+    "create-user-scoped-client.ts$",
   ],
   coverageThreshold: {
     global: {

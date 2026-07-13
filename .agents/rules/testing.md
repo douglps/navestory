@@ -19,7 +19,7 @@ trigger: always_on
 | A11y      | axe-core   | 4.8+   | `/dequelabs/axe-core`     |
 | Visual    | Chromatic  | 8.0+   | `/chromaui/chromatic-cli` |
 | Storybook | Storybook  | 8.0+   | `/storybookjs/storybook`  |
-| Coverage  | Istanbul   | 5.0+   | `/istanbuljs/istanbuljs`  |
+| Coverage  | v8 (Node)  | nativo | provider nativo do V8/Node — sem Istanbul |
 
 ---
 

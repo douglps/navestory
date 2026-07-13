@@ -2,7 +2,7 @@
 
 ## Compromisso
 
-Ambiente aberto, acolhedor e inclusivo.
+Nos comprometemos a promover um ambiente aberto, acolhedor e inclusivo para todos, independentemente do nível de experiência, gênero, orientação sexual, deficiência, aparência, tamanho, raça, etnia, idade, religião ou nacionalidade.
 
 ## Comportamento Esperado
 

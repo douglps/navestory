@@ -4,6 +4,8 @@ trigger: always_on
 
 # 🔒 Security & Data Rules - Nave SaaS
 
+> **Regras canônicas com IDs estáveis (S1–S9):** `specs/RULES.md` — seção "Regras de Segurança (S)". Este arquivo contém apenas orientações de implementação operacional para agentes. Em caso de conflito, `specs/RULES.md` prevalece.
+
 Standard: OWASP Top 10 + LGPD
 
 ## 🛡️ Row Level Security (RLS) é a Lei

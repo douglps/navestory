@@ -1,10 +1,7 @@
-# Política de Segurança e Divulgação (Security Policy)
+# Política de Segurança
 
-## Relatando Vulnerabilidades
-Por favor, **não** reporte problemas de segurança via issues públicas do GitHub. Em vez disso, envie um email diretamente para a liderança técnica do projeto (ex: `security@nave.app`).
+O processo de divulgação responsável (contato, SLA por severidade, ferramentas ativas) está em [`.github/SECURITY.md`](../.github/SECURITY.md), detectado automaticamente pelo GitHub em "Security Policy".
 
-Responderemos em até 48 horas com o status da tratativa e plano de mitigação. Nós prezamos profundamente pela Divulgação Responsável e agradeceremos se não divulgar o incidente publicamente até termos patch de correção aplicado.
+Contato: `lps.doug@protonmail.com` | Resposta: até 72h (RCE/SQLi em 24h — ver tabela de severidade no arquivo acima).
 
-## Políticas
-- Revisão trimestral do `OWASP Checklist` em `docs/architecture/security/`.
-- Dependências gerenciadas ativamente por dependabots e scanners de CVEs em pipelines CI.
+As regras de segurança do domínio com IDs estáveis (S1–S9) estão em [`specs/RULES.md`](../specs/RULES.md#regras-de-segurança-s).

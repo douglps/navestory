@@ -4,19 +4,23 @@ trigger: always_on
 
 # ♿ Accessibility Rules - Nave SaaS
 
-**Versão:** 1.0 | **Standard:** WCAG 2.2+ AA | **Compliance:** European Accessibility Act 2025
+**Versão:** 1.1 | **Standard:** WCAG 2.2+ AA | **Compliance:** European Accessibility Act 2025
 
 ---
 
-## 📊 Status Atual (Auditoria 13/03/2026)
+## 📊 Status de Implementação (Checklist — a implementar)
 
-| Métrica                     | Status                        | Meta         |
-| --------------------------- | ----------------------------- | ------------ |
-| ARIA labels em botões ícone | ❌ Faltante (btn-plus-action) | 100%         |
-| Navegação por teclado       | ⚠️ Não testado                | 100%         |
-| Contraste de cores          | ⚠️ OKLCH ajuda                | 4.5:1 mínimo |
-| Screen reader test          | ❌ Não avaliado               | Pass         |
-| Focus visible               | ⚠️ Parcial                    | 100%         |
+> Estado real do projeto: 0% implementado em 2026-07-13. Tabela mantida como checklist de progresso.
+
+| Métrica                     | Status              | Meta         |
+| --------------------------- | ------------------- | ------------ |
+| ARIA labels em botões ícone | pendente            | 100%         |
+| Navegação por teclado       | pendente            | 100%         |
+| Contraste de cores          | pendente            | 4.5:1 mínimo |
+| Screen reader test          | pendente            | Pass         |
+| Focus visible               | pendente            | 100%         |
+| High Contrast Mode          | pendente            | Pass         |
+| Suporte P3 (telas modernas) | pendente            | Pass         |
 
 ---
 
@@ -46,11 +50,13 @@ trigger: always_on
 ### Estados de Interação
 
 ```css
-/* Focus State */
+/* Focus State — globals.css (CSS puro) */
 :focus-visible {
   outline: 2px solid var(--primary);
   outline-offset: 2px;
 }
+
+/* Equivalente Tailwind em componente: focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 */
 
 /* Hover State */
 :hover {
@@ -107,7 +113,7 @@ trigger: always_on
 
 ---
 
-## 🎨 Contraste de Cores
+## 🎨 Contraste e Modos
 
 ### Requisitos WCAG 2.2+
 
@@ -116,21 +122,6 @@ trigger: always_on
 | Texto normal (<18px) | 4.5:1        | `--on-surface`        |
 | Texto grande (≥18px) | 3:1          | `--on-surface-muted`  |
 | Texto decorativo     | N/A          | `--on-surface-subtle` |
-
-### Validação Automática
-
-```bash
-# Instalar axe-core
-npm install -D axe-core @axe-core/react
-
-# Configurar em testes
-import { axe } from 'vitest-axe'
-
-it('should have no accessibility violations', async () => {
-  const { container } = render(<Component />)
-  expect(await axe(container)).toHaveNoViolations()
-})
-```
 
 ### Tokens de Contraste Aprovados
 
@@ -145,6 +136,31 @@ it('should have no accessibility violations', async () => {
   --on-surface: oklch(0.95 0.01 250); /* 14.1:1 em --surface */
   --on-surface-muted: oklch(0.7 0.01 250); /* 7.8:1 em --surface */
 }
+```
+
+### High Contrast Mode
+
+Suporte obrigatório via media query `@media (prefers-contrast: high)`.
+- Primary Contrast: aumentado para 7:1+ em modo de alto contraste.
+- Borders: reforçadas para definição clara de componentes.
+
+### Suporte P3 (Telas Modernas)
+
+Cores otimizadas para gamut P3, garantindo que o brilho perceptual permaneça constante mesmo em telas de alta performance sem comprometer a acessibilidade. Os tokens OKLCH já garantem isso nativamente — nenhuma regra extra necessária além de usar os tokens canônicos.
+
+### Validação Automática
+
+```bash
+# Instalar axe-core
+npm install -D axe-core @axe-core/react
+
+# Configurar em testes
+import { axe } from 'vitest-axe'
+
+it('should have no accessibility violations', async () => {
+  const { container } = render(<Component />)
+  expect(await axe(container)).toHaveNoViolations()
+})
 ```
 
 ---
@@ -180,7 +196,7 @@ it('should have no accessibility violations', async () => {
   Pular para conteúdo principal
 </a>
 
-<main id="main-content">...</main>
+<main id="main-content" tabIndex={-1}>...</main>
 ```
 
 ---
@@ -243,9 +259,7 @@ describe('Button', () => {
 
 ---
 
-## ✅ Checklist de Review
-
-Antes de merge, verificar:
+## ✅ Checklist de Review (antes de merge)
 
 - [ ] ARIA labels em todos botões com ícone
 - [ ] Focus visible em todos interativos
@@ -253,13 +267,9 @@ Antes de merge, verificar:
 - [ ] Navegação por teclado testada
 - [ ] Screen reader compatibility verificada
 - [ ] Touch targets 44x44px (mobile)
+- [ ] Skip Link aparece no primeiro Tab
 
 ---
 
-**Última atualização:** 13/03/2026  
-**Próxima review:** 13/06/2026  
+**Última atualização:** 2026-07-13 (reconciliação de documentação dispersa)
 **Owner:** @a11y-team
-
-```
-
-```

@@ -37,6 +37,31 @@ jobs:
       - uses: ./.github/actions/setup
       - run: pnpm test:coverage
 
+  integration-test:
+    name: Integration test (Supabase local — CT-006, CT-007)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - run: supabase start
+      - name: Exportar credenciais do Supabase local para .env.test
+        working-directory: apps/api
+        run: |
+          eval "$(supabase status -o env | sed 's/^/export /')"
+          cat > .env.test <<EOF
+          NODE_ENV=test
+          PORT=3001
+          SUPABASE_URL=${API_URL}
+          SUPABASE_ANON_KEY=${ANON_KEY}
+          SUPABASE_JWT_SECRET=${JWT_SECRET}
+          SUPABASE_SERVICE_ROLE_KEY=${SERVICE_ROLE_KEY}
+          SWAGGER_ENABLED=false
+          EOF
+      - run: pnpm --filter @nave/api test:integration
+
   build:
     name: Build
     runs-on: ubuntu-latest

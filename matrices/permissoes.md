@@ -1,7 +1,7 @@
 # Matriz de Permissões — Nave SaaS
 
-> Última atualização: 2026-07-11 (rev. 7)
-> Responsável: doc-keeper — seção `Ciclos de Odômetro` adicionada (SPEC-20260711-001, R-ODO-05); RLS de `vehicle_odometer_cycles` registrado; seção de analytics mantida (rev. 6 anterior preservada)
+> Última atualização: 2026-07-13 (rev. 8)
+> Responsável: doc-keeper — Fase 1 implementada: guards `/admin` reconciliados com `SupabaseAuthGuard + RolesGuard/@Roles('admin')` (substituem referência ao `AdminGuard` único que não existe como classe); rotas `/auth/recover-password` e `/auth/reset-password` adicionadas; ALERTA órfão de middleware SSR removido e substituído por nota de fechamento confirmando `apps/web/middleware.ts` implementado e testado; rev. 7 anterior preservada
 
 ---
 
@@ -16,7 +16,7 @@
 | `workspace_member` | Convidado de um workspace | Aceita convite do owner — **Fase 4** |
 
 > **Nota MVP:** A atribuição do role `admin` é manual via Supabase Dashboard. Não há UI de gestão de roles no MVP (previsto para Fase 2).
-> **ALERTA 2026-06-22 (IMPACTO-021 #1):** O arquivo `apps/web/middleware.ts` (Next.js Middleware) esta ausente do repositorio. Sem ele, o refresh de token SSR e a protecao de rotas no lado web nao estao ativos. O helper `apps/web/lib/supabase/middleware.ts` existe mas nao e invocado. Correcao prioritaria.
+> **2026-07-13 (fechamento IMPACTO-021 #1):** O `apps/web/middleware.ts` foi implementado e testado na Fase 1 (T1.1). Ele protege rotas SSR, redireciona para `/login` quando não autenticado e renova sessão via `POST /auth/refresh`. O acesso `/api/backend/*` é reescrito para a API local via `apps/web/next.config.ts`, resolvendo o cross-origin de cookie em dev. O arquivo `apps/web/lib/supabase/middleware.ts` não existe neste repositório — era referência de documentação anterior de outro ciclo; nunca foi criado aqui.
 > **Nota Fase 4:** Os roles `workspace_owner` e `workspace_member` foram definidos na SPEC-20260620-001 (Business Strategy Stories) e serao implementados na Fase 4 (Enterprise). O `workspace_member` ve apenas veiculos atribuidos pelo owner via `workspace_vehicle_assignments`.
 
 ---
@@ -41,6 +41,8 @@
 | `/auth/login` | POST | ✅ | ✅ | ✅ | — | 10 req/15min por IP |
 | `/auth/logout` | POST | ❌ | ✅ | ✅ | `SupabaseAuthGuard` | 100 req/60s (global) |
 | `/auth/refresh` | POST | ❌ | ✅ | ✅ | `SupabaseAuthGuard` | 100 req/60s (global) |
+| `/auth/recover-password` | POST | ✅ | ✅ | ✅ | — | 3 req/15min por IP |
+| `/auth/reset-password` | POST | ✅ | ✅ | ✅ | — | 100 req/60s (global) |
 
 ---
 
@@ -179,13 +181,14 @@
 
 ## Admin (`/admin`)
 
-| Endpoint | Método | anonymous | user | admin | Guard | Observação |
-|----------|--------|-----------|------|-------|-------|-----------|
-| `/admin/users` | GET | ❌ | ❌ | ✅ | `AdminGuard` | Lista todos os usuários (paginado) |
-| `/admin/users/:id` | DELETE | ❌ | ❌ | ✅ | `AdminGuard` | Exclusão de qualquer conta (LGPD) |
-| `/admin/audit-logs` | GET | ❌ | ❌ | ✅ | `AdminGuard` | Filtros: `user_id`, `period` |
+| Endpoint | Método | anonymous | user | admin | Guards | Observação |
+|----------|--------|-----------|------|-------|--------|-----------|
+| `/admin/users` | GET | ❌ | ❌ | ✅ | `SupabaseAuthGuard` + `RolesGuard` + `@Roles('admin')` | Lista todos os usuários (paginado) |
+| `/admin/users/:id` | DELETE | ❌ | ❌ | ✅ | `SupabaseAuthGuard` + `RolesGuard` + `@Roles('admin')` | Exclusão de qualquer conta (LGPD); registro em `audit_logs` |
+| `/admin/audit-logs` | GET | ❌ | ❌ | ✅ | `SupabaseAuthGuard` + `RolesGuard` + `@Roles('admin')` | Filtros: `user_id`, `period` |
 
-> **Segurança:** `AdminGuard` usa `AdminSupabaseService` (SERVICE_ROLE_KEY) — nunca compartilhado com SupabaseService (anon key). Toda operação admin é registrada em `audit_logs` com o `user_id` do administrador executor.
+> **Composição de guards:** Não existe uma classe `AdminGuard` única. A proteção de endpoints admin usa a composição `@UseGuards(SupabaseAuthGuard, RolesGuard)` com o decorator `@Roles('admin')` — dois guards distintos, aplicados em sequência. `SupabaseAuthGuard` autentica o JWT; `RolesGuard` verifica `user_metadata.role === 'admin'` no payload.
+> **Segurança:** `AdminSupabaseService` usa `SERVICE_ROLE_KEY` (bypass de RLS) — nunca compartilhado com `SupabaseService` (anon key). Isolamento garantido por módulo NestJS. Toda operação admin é registrada em `audit_logs` com o `user_id` do administrador executor.
 
 ---
 

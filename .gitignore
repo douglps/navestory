@@ -1,0 +1,48 @@
+# Dependências
+node_modules/
+.pnpm-store/
+
+# Build / output
+.next/
+dist/
+build/
+out/
+.turbo/
+storybook-static/
+
+# Variáveis de ambiente e segredos
+.env
+.env.*
+!.env.example
+
+# Supabase local
+.supabase/
+supabase/.branches/
+supabase/.temp/
+
+# Testes e cobertura
+coverage/
+.nyc_output/
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Editor / IDE (estado pessoal)
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+.idea/
+
+# Claude Code (estado local/pessoal)
+.claude/settings.local.json
+.claude/scheduled_tasks.lock
+
+# Sistema operacional
+.DS_Store
+Thumbs.db
+
+# Diversos
+*.tsbuildinfo
+.eslintcache

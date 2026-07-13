@@ -1,0 +1,153 @@
+-- @spec docs/architecture/entities.md — núcleo do domínio (profiles, vehicles, expenses, maintenances, fines, audit_logs)
+
+create table public.profiles (
+  id uuid primary key references auth.users(id) on delete cascade,
+  name text not null,
+  profile_type profile_type not null default 'autonomous',
+  expense_categories text[],
+  preferences jsonb not null default '{}'::jsonb,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  deleted_at timestamptz
+);
+
+create table public.vehicles (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references public.profiles(id) on delete cascade,
+  plate varchar(10) not null,
+  make text,
+  model text,
+  year integer,
+  model_year integer,
+  nickname text check (char_length(nickname) <= 50),
+  color text,
+  photo_url text,
+  photo_thumbnail_url text,
+  photo_object_position text not null default 'center',
+  photo_zoom double precision not null default 1.0,
+  odometer numeric default 0,
+  fuel_type text check (fuel_type is null or fuel_type = any (array['gasoline','gasoline_premium','ethanol','diesel','diesel_s10','gnv','electric','hybrid'])),
+  favorite_fuel_type text check (favorite_fuel_type is null or favorite_fuel_type = any (array['gasoline','gasoline_premium','ethanol','diesel','diesel_s10','gnv','electric','hybrid'])),
+  fuel_efficiency numeric default 0,
+  fuel_liters_capacity numeric default 50,
+  fuel_liters_current numeric default 0,
+  vehicle_type vehicle_type not null default 'carro',
+  status vehicle_operational_status not null default 'parking',
+  renavam varchar(11),
+  chassi varchar(17),
+  fipe_code text,
+  fipe_updated_at timestamptz,
+  ipva_due_date date,
+  insurance_expires_at date,
+  crlv_expires_at date,
+  engine_displacement_cc integer,
+  engine_power_cv integer,
+  engine_torque_kgm numeric,
+  engine_config varchar,
+  engine_cylinders integer,
+  engine_gears integer,
+  transmission text,
+  drive_type text,
+  is_turbo boolean not null default false,
+  brake_front text,
+  brake_rear text,
+  suspension_type text,
+  steering_type text,
+  cooling_type text,
+  tire_size text,
+  oil_capacity_l numeric,
+  weight_gross_kg integer,
+  weight_curb_kg integer,
+  dimension_length_mm integer,
+  dimension_width_mm integer,
+  dimension_height_mm integer,
+  health_score numeric check (health_score is null or (health_score >= 0 and health_score <= 100)),
+  eco_score integer default 100,
+  current_level integer default 1,
+  current_xp integer default 0,
+  max_xp integer default 100,
+  streak_days integer default 0,
+  achievements text[] default '{}',
+  fuel_level integer default 100,
+  next_maintenance_km integer default 10000,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  deleted_at timestamptz
+);
+
+create table public.expenses (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references public.profiles(id) on delete cascade,
+  vehicle_id uuid not null references public.vehicles(id) on delete cascade,
+  category text not null,
+  amount numeric(10,2) not null,
+  date date not null,
+  description text,
+  odometer_km integer,
+  liters numeric,
+  fuel_type text check (fuel_type is null or fuel_type = any (array['gasoline','gasoline_premium','ethanol','diesel','diesel_s10','gnv','electric','hybrid'])),
+  full_tank boolean,
+  supplier text check (supplier is null or char_length(supplier) <= 100),
+  source_type text check (source_type is null or source_type = any (array['maintenance','fine','recurring_cost'])),
+  source_id uuid,
+  is_readonly boolean not null default false,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  deleted_at timestamptz,
+  constraint expenses_source_coherence_check check (
+    (source_type is null and source_id is null) or (source_type is not null and source_id is not null)
+  )
+);
+
+create table public.maintenances (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references public.profiles(id) on delete cascade,
+  vehicle_id uuid not null references public.vehicles(id) on delete cascade,
+  description text not null,
+  status maintenance_status not null default 'scheduled',
+  scheduled_date date not null,
+  completion_date date,
+  cost numeric(12,2),
+  odometer_km integer,
+  alert_sent boolean not null default false,
+  metadata jsonb not null default '{}'::jsonb,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  deleted_at timestamptz,
+  constraint maintenances_odometer_required_when_completed check (
+    status <> 'completed' or odometer_km is not null
+  )
+);
+
+create table public.fines (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references public.profiles(id) on delete cascade,
+  vehicle_id uuid not null references public.vehicles(id) on delete cascade,
+  auto_number text,
+  description text not null,
+  infraction_code text,
+  amount numeric(10,2) not null,
+  amount_with_discount numeric(10,2),
+  occurred_at date not null,
+  due_date date,
+  paid_at date,
+  appeal_deadline date,
+  location text,
+  odometer_km integer,
+  driver_name text,
+  status fine_status not null default 'pending',
+  notes text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  deleted_at timestamptz
+);
+
+create table public.audit_logs (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references public.profiles(id) on delete set null,
+  action text not null,
+  table_name text not null,
+  record_id uuid not null,
+  changes jsonb,
+  created_at timestamptz not null default now()
+);

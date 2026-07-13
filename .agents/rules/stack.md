@@ -4,14 +4,14 @@ trigger: always_on
 
 # 🛠 Stack & Architecture Rules - Nave SaaS
 
-Core: Next.js 15 + Supabase
+Core: Next.js 16 + Supabase
 
 ## 🏗️ Arquitetura
 
 - **Padrão:** Clean Architecture adaptada para Serverless.
-- **Frontend:** Next.js 15 (App Router), PWA Offline-first.
+- **Frontend:** Next.js 16 (App Router), PWA Offline-first.
 - **Backend/BaaS:** Supabase (PostgreSQL, Auth, Storage, Edge Functions).
-- **Estado:** TanStack Query (Server State, Cache, Offline Sync). Evitar Zustand/Redux para dados do servidor.
+- **Estado:** dividido por responsabilidade (ver ADR-008) — **TanStack Query** para todo estado de servidor (cache, sync, offline mutation pause); **Zustand** apenas para estado de UI puramente client-side (modais, wizards, tema). Nunca espelhar dado de servidor em um store Zustand.
 
 ## 💻 TypeScript
 
@@ -22,14 +22,14 @@ Core: Next.js 15 + Supabase
 ## 📦 Gerenciamento de Dependências
 
 - **Regra de Ouro:** Nenhuma lib externa sem validação prévia no **Context7**.
-- **Objetivo:** Validar compatibilidade (Next.js 15), tamanho do bundle e manutenção ativa.
+- **Objetivo:** Validar compatibilidade (Next.js 16), tamanho do bundle e manutenção ativa.
 - **Comando Mental:** "Antes de importar, consulte o Context7."
 
 ## 🧪 Estratégia de Testes
 
 - **Unit/Integration:** Vitest (foco em Utils, Hooks e Policies RLS).
 - **E2E:** Playwright (Fluxos críticos de negócio).
-- **Cobertura:** Meta de 80% em componentes e hooks.
+- **Cobertura:** Meta de 88% (unitário), conforme `specs/TESTS_SPEC.md`.
 
 ---
 

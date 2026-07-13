@@ -1,0 +1,32 @@
+{
+  "name": "nave",
+  "private": true,
+  "version": "0.0.0",
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=8.15.0"
+  },
+  "packageManager": "pnpm@11.1.3",
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "type-check": "turbo run type-check",
+    "test": "turbo run test",
+    "test:coverage": "turbo run test:coverage",
+    "db:migrate": "supabase db push",
+    "db:generate": "supabase gen types typescript --local > packages/database/src/types.ts"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.17.0",
+    "eslint": "^9.17.0",
+    "eslint-plugin-jsx-a11y": "^6.10.2",
+    "eslint-plugin-react": "^7.37.2",
+    "eslint-plugin-react-hooks": "^5.1.0",
+    "eslint-plugin-security": "^3.0.1",
+    "globals": "^15.14.0",
+    "turbo": "^2.3.0",
+    "typescript": "^5.7.0",
+    "typescript-eslint": "^8.19.0"
+  }
+}

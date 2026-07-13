@@ -1,0 +1,11 @@
+import { Module } from "@nestjs/common";
+import { PassportModule } from "@nestjs/passport";
+import { JwtAuthGuard } from "./jwt-auth.guard";
+import { JwtStrategy } from "./jwt.strategy";
+
+@Module({
+  imports: [PassportModule],
+  providers: [JwtStrategy, JwtAuthGuard],
+  exports: [JwtAuthGuard],
+})
+export class AuthModule {}

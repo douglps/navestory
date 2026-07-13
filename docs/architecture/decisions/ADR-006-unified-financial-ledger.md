@@ -27,7 +27,7 @@ Regras de domínio derivadas desta decisão (registradas em `specs/RULES.md`):
 - **R-LED-01**: Expenses com `source_type IS NOT NULL` têm `is_readonly = true`; tentativas de PATCH ou DELETE retornam 403.
 - **R-LED-02**: Criação de expense vinculada ocorre automaticamente ao criar uma multa (via `POST /fines`) ou ao concluir uma manutenção com custo.
 - **R-LED-03**: Cancelamento do registro de origem (`cancelled`) soft-deleta a expense vinculada via `softDeleteBySource`.
-- **R-LED-04**: `source_type` e `source_id` são sempre definidos juntos — enforced por constraint CHECK no banco.
+- **R-LED-04**: `source_type` e `source_id` são sempre definidos juntos — enforced pela constraint `expenses_source_coherence_check` no banco. Essa constraint não existia no banco legado `NaveSaaS` (achado do IMPACTO-026, descontinuado); no projeto atual `Nave` ela já foi criada e verificada (IMPACTO-027 #5).
 - **R-LED-05**: `vehicle_recurring_costs` com `paid_at` preenchido cria expense vinculada com `source_type = 'recurring_cost'`.
 - **R-HUB-01**: Soft-delete de multa ou custo recorrente também soft-deleta a expense vinculada.
 - **R-HUB-02**: `UNIQUE INDEX uq_expenses_source` garante no máximo uma expense ativa por `(source_type, source_id)` — operação idempotente.
@@ -48,14 +48,12 @@ Regras de domínio derivadas desta decisão (registradas em `specs/RULES.md`):
 
 **Trade-offs aceitos:**
 - A ausência de FK polimórfica é compensada pelo design de serviço: `createFromSource` e `softDeleteBySource` são os únicos pontos de escrita, evitando writes diretos à tabela. O `UNIQUE INDEX` atua como rede de segurança para criação dupla acidental.
-- A constraint de unicidade sem `deleted_at` foi aceita porque o fluxo de cancelamento sempre chama `softDeleteBySource` antes da possível reativação. Caso esse invariante seja violado em futuras features, o índice deverá ser convertido para índice parcial (`WHERE deleted_at IS NULL`).
+- O índice já nasce parcial (`WHERE deleted_at IS NULL`, confirmado em IMPACTO-016 #3 e aplicado de fato em IMPACTO-027 #5) — isso é intencional, não uma limitação aceita: soft-deletar o registro de origem (ex: cancelar uma multa) libera o slot de unicidade automaticamente, permitindo recriar a expense vinculada se a mesma origem for reaberta, sem exigir hard-delete.
 
 ## References
 
 - `specs/RULES.md` — R-LED-01 a R-LED-05, R-HUB-01, R-HUB-02, R-REC-01, R-REC-02
-- `supabase/migrations/20260608000000_unified_ledger.sql` — DDL da migration
-- `apps/api/src/modules/expenses/expenses.service.ts` — `createFromSource`, `softDeleteBySource`
-- `apps/api/src/modules/fines/fines.service.ts` — consumidor do ledger
-- `apps/api/src/modules/recurring-costs/recurring-costs.service.ts` — consumidor do ledger
-- `matrices/impacto.md` — IMPACTO-016
+- `matrices/impacto.md` — IMPACTO-016 (decisão original), IMPACTO-026 (achado no legado `NaveSaaS`), IMPACTO-027 #5 (constraint aplicada e verificada no projeto `Nave`)
 - `matrices/rastreabilidade.md` — seção EPIC-FIN-001
+
+**Nota:** o projeto ainda não tem código-fonte (ver `docs/IMPLEMENTATION_STRATEGY.md`, Fase 3). Os caminhos-alvo de implementação (migration, `ExpensesService.createFromSource`/`softDeleteBySource`, consumidores em `FinesModule`/`RecurringCostsModule`) serão criados nessa fase — não referenciados aqui como se já existissem.

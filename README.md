@@ -1,6 +1,6 @@
 # Nave - Gestão Inteligente de Veículos
 
-[![CI](https://github.com/seu-username/nave-saas/actions/workflows/ci.yml/badge.svg)](https://github.com/seu-username/nave-saas/actions/workflows/ci.yml)
+[![CI](https://github.com/douglps/nave/actions/workflows/ci.yml/badge.svg)](https://github.com/douglps/nave/actions/workflows/ci.yml)
 
 > SaaS proprietário para gestão de veículos, despesas e manutenções. Mobile-first PWA com isolamento por RLS no banco de dados.
 
@@ -27,8 +27,8 @@ npm install -g pnpm
 
 ```bash
 # 1. Clone o repositório
-git clone git@github.com:seu-username/nave-saas.git
-cd nave-saas
+git clone git@github.com:douglps/nave.git
+cd nave
 
 # 2. Instale as dependências
 pnpm install
@@ -76,7 +76,7 @@ pnpm lint
 nave-saas/
 ├── apps/
 │   ├── api/          # Backend NestJS 11 (auth, vehicles, expenses, maintenance, fines, recurring-costs, categories, dashboard, analytics, users, admin)
-│   └── web/          # Frontend Next.js 15 PWA (React 19, TailwindCSS, Zustand)
+│   └── web/          # Frontend Next.js 16 PWA (React 19, TailwindCSS, TanStack Query, Zustand)
 ├── packages/
 │   ├── database/     # Tipos auto-gerados do Supabase
 │   ├── ui/           # Design System (Shadcn + Storybook)
@@ -99,7 +99,7 @@ nave-saas/
 
 | Camada | Tecnologia |
 |--------|-----------|
-| Frontend | Next.js 15.2, React 19, TailwindCSS 3.3, Zustand 5 |
+| Frontend | Next.js 16, React 19, TailwindCSS 3.3, TanStack Query + Zustand 5 (ver ADR-008) |
 | Forms | React Hook Form 7 + Zod 3.22 |
 | PWA | Serwist 9.5 (service worker + manifest) |
 | Backend | NestJS 11, TypeScript 5, Passport JWT |

@@ -4,18 +4,9 @@ trigger: always_on
 
 # 🧪 Testing Rules - Nave SaaS
 
-**Versão:** 1.0 | **Stack:** Vitest + Playwright + axe-core | **Meta:** 80% cobertura
+**Versão:** 1.1 | **Stack:** Vitest (web/ui/validators) + Jest (api) + Playwright + axe-core | **Meta:** 88% cobertura unitário (fonte única: `specs/TESTS_SPEC.md`)
 
----
-
-## 📊 Status Atual (Auditoria 13/03/2026)
-
-| Métrica                | Status | Meta 30 dias | Meta 90 dias |
-| ---------------------- | ------ | ------------ | ------------ |
-| Componentes com testes | ❌ 0%  | 30%          | 80%          |
-| Storybook stories      | ❌ 0%  | 50%          | 100%         |
-| A11y tests (axe-core)  | ❌ 0%  | 50%          | 100%         |
-| E2E tests              | ❌ 0%  | 20%          | 60%          |
+> A tabela de "Status Atual" e a auditoria datada 13/03/2026 foram removidas nesta reconciliação (Tarefa T0.6 de `docs/IMPLEMENTATION_STRATEGY.md`): eram resíduo de um ciclo anterior/diferente deste greenfield e não refletiam o estado real do projeto (0% de código implementado até 2026-07-13). O gate de cobertura real está ativo em CI desde a Tarefa T0.5 (`.github/workflows/ci.yml`, job "Test").
 
 ---
 
@@ -38,7 +29,7 @@ trigger: always_on
 
 - [ ] `.test.tsx` com Vitest + Testing Library
 - [ ] `.stories.tsx` para Storybook
-- [ ] Cobertura mínima 80%
+- [ ] Cobertura mínima 88% (gate global de CI)
 - [ ] axe-core sem violações críticas
 
 ### Estrutura de Arquivos
@@ -207,17 +198,15 @@ test.describe('Dashboard', () => {
 
 ## 📊 Coverage Requirements
 
-### Metas por Tipo de Código
+### Meta única: 88% global por workspace
 
-| Tipo           | Cobertura Mínima | Ferramenta        |
-| -------------- | ---------------- | ----------------- |
-| Componentes UI | 80%              | Vitest + Istanbul |
-| Hooks Custom   | 90%              | Vitest + Istanbul |
-| Utils          | 95%              | Vitest + Istanbul |
-| Pages/Routes   | 60%              | Playwright        |
-| E2E Flows      | 40%              | Playwright        |
+O breakdown anterior por tipo de código (UI 80%/Hooks 90%/Utils 95%/Pages 60%/E2E 40%) foi **removido** nesta reconciliação: o gate real implementado em CI (`jest.config.js` em `apps/api`, `vitest.config.ts` em `apps/web`, `packages/ui`, `packages/validators`) aplica um único threshold global de **88%** (statements/branches/functions/lines) por workspace — não há mecanismo de enforcement diferenciado por camada hoje. Se um refinamento por camada for reintroduzido no futuro, deve nascer como mudança de ferramenta/config real (não como tabela aspiracional desacompanhada de gate), e citada aqui só depois de implementada.
 
-### Configuração vitest.config.ts
+Arquivos de wiring/composição sem lógica de negócio (`layout.tsx`, `page.tsx` do App Router, barrels `index.ts`, guards/strategies stub de 1 linha) são excluídos da coleta de cobertura — consistente com "código trivial sem lógica" em `specs/TESTS_SPEC.md` § O que NÃO Testar.
+
+### Configuração real (provider v8, não Istanbul)
+
+O provider efetivamente usado é **v8** (nativo do V8/Node, mais rápido que Istanbul e sem necessidade de instrumentação via Babel). Ver `apps/web/vitest.config.ts` como referência canônica:
 
 ```typescript
 import { defineConfig } from 'vitest/config';
@@ -225,21 +214,20 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
   test: {
     coverage: {
-      provider: 'istanbul',
-      reporter: ['text', 'json', 'html'],
+      reporter: ['text', 'lcov'],
+      exclude: ['src/app/layout.tsx', 'src/app/page.tsx', 'next-env.d.ts', '**/*.spec.tsx', '**/*.config.*'],
       thresholds: {
-        global: {
-          statements: 80,
-          branches: 80,
-          functions: 80,
-          lines: 80,
-        },
+        lines: 88,
+        statements: 88,
+        functions: 88,
+        branches: 88,
       },
-      exclude: ['node_modules/', '.storybook/', '**/*.stories.tsx', '**/*.config.ts'],
     },
   },
 });
 ```
+
+Para `apps/api` (Jest), o equivalente é `coverageThreshold.global` em `jest.config.js`, com `coveragePathIgnorePatterns` cobrindo `main.ts`, `*.module.ts` e stubs de auth sem lógica.
 
 ---
 
@@ -308,16 +296,12 @@ Antes de merge, verificar:
 - [ ] Testes unitários criados para componentes novos
 - [ ] Storybook story criada
 - [ ] axe-core sem violações críticas
-- [ ] Cobertura >80% para componentes UI
+- [ ] Cobertura >=88% (gate global de CI)
 - [ ] Testes responsivos (375px, 768px, 1280px)
 - [ ] E2E para fluxos críticos (se aplicável)
 
 ---
 
-**Última atualização:** 13/03/2026  
-**Próxima review:** 13/06/2026  
+**Última atualização:** 13/07/2026 (reconciliação T0.6)  
+**Próxima review:** 13/10/2026  
 **Owner:** @qa-team
-
-```
-
-```

@@ -1,0 +1,10 @@
+title = "Nave gitleaks config"
+
+[extend]
+useDefault = true
+
+[allowlist]
+paths = [
+  '''pnpm-lock\.yaml''',
+  '''\.env\.example$''',
+]

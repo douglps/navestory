@@ -124,8 +124,8 @@ Cada tarefa é dimensionada para ser um PR pequeno (uma sessão de implementaç�
 
 | # | Spec | Tarefa |
 |---|---|---|
-| T2.1 | SPEC-20260602-002 | CRUD de veículos |
-| T2.2 | SPEC-20260602-003 | Grupos de veículos |
+| T2.1 ✅ | SPEC-20260602-002 | CRUD de veículos — **concluído em 2026-07-13** (core apenas); itens de prioridade Baixa/Média pendentes rastreados em `matrices/rastreabilidade.md` |
+| T2.2 ✅ | SPEC-20260602-003 | Grupos de veículos — **concluído em 2026-07-13** (core: `VehicleGroupsModule` REST + frontend mínimo); itens que dependem do dashboard/Em Foco (Fase 5) ficam ⏳, rastreados em `matrices/rastreabilidade.md` |
 | T2.3 | SPEC-20260602-004 | Categorias personalizadas de despesa |
 | T2.4 | SPEC-20260711-001 (ADR-007) | Ciclos de odômetro |
 | T2.5 | SPEC-20260603-004 | Migration `user_preferences` |
@@ -205,3 +205,4 @@ Fase 0 → Fase 1 → Fase 2 → Fase 3 → Fase 4 → Fase 5 → Fase 6 → Fas
 ## Changelog
 
 - **2026-07-13**: criação do documento. Decisões de ADR-008 (state management), versão Next.js 16, cobertura 88% e descarte do legado `NaveSaaS` incorporadas.
+- **2026-07-13**: T2.2 (Grupos de veículos) concluída — core via REST API, itens dependentes do dashboard rastreados como pendentes.

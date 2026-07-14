@@ -1,0 +1,120 @@
+"use client";
+
+import { createGroupInputSchema, PRESET_GROUP_COLORS } from "@nave/validators";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
+import { useState, type FormEvent, type ReactNode } from "react";
+import { apiClient } from "@/lib/http/api-client";
+
+interface Vehicle {
+  id: string;
+  plate: string;
+  make: string | null;
+  model: string | null;
+}
+
+interface GroupResponse {
+  id: string;
+}
+
+/**
+ * @spec SPEC-20260602-003 RF-01, RF-05, RF-09
+ */
+export default function NewVehicleGroupPage(): ReactNode {
+  const router = useRouter();
+  const [name, setName] = useState("");
+  const [color, setColor] = useState<string>(PRESET_GROUP_COLORS[0]);
+  const [selectedVehicleIds, setSelectedVehicleIds] = useState<string[]>([]);
+  const [fieldError, setFieldError] = useState<string | null>(null);
+
+  const { data: vehicles } = useQuery({
+    queryKey: ["vehicles"],
+    queryFn: () => apiClient<Vehicle[]>("/vehicles"),
+    retry: false,
+  });
+
+  const mutation = useMutation({
+    mutationFn: async () => {
+      const group = await apiClient<GroupResponse>("/vehicle-groups", {
+        method: "POST",
+        body: { name, color },
+      });
+      if (selectedVehicleIds.length > 0) {
+        await apiClient(`/vehicle-groups/${group.id}/members`, {
+          method: "PUT",
+          body: { vehicleIds: selectedVehicleIds },
+        });
+      }
+      return group;
+    },
+    onSuccess: () => router.push("/vehicle-groups"),
+  });
+
+  function toggleVehicle(vehicleId: string): void {
+    setSelectedVehicleIds((current) =>
+      current.includes(vehicleId)
+        ? current.filter((id) => id !== vehicleId)
+        : [...current, vehicleId],
+    );
+  }
+
+  function handleSubmit(event: FormEvent): void {
+    event.preventDefault();
+    setFieldError(null);
+
+    const result = createGroupInputSchema.safeParse({ name, color });
+    if (!result.success) {
+      setFieldError(result.error.issues[0]?.message ?? "Dados inválidos");
+      return;
+    }
+
+    mutation.mutate();
+  }
+
+  return (
+    <main className="mx-auto flex max-w-sm flex-col gap-4 p-8">
+      <h1 className="text-xl font-semibold">Novo grupo de veículos</h1>
+      <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+        <label htmlFor="name">Nome</label>
+        <input id="name" value={name} onChange={(event) => setName(event.target.value)} required />
+
+        <label htmlFor="color">Cor</label>
+        <div className="flex gap-2">
+          {PRESET_GROUP_COLORS.map((preset) => (
+            <button
+              key={preset}
+              type="button"
+              aria-label={preset}
+              aria-pressed={color === preset}
+              onClick={() => setColor(preset)}
+              className="h-6 w-6 rounded-full border"
+              style={{ backgroundColor: preset }}
+            />
+          ))}
+        </div>
+        <input id="color" value={color} onChange={(event) => setColor(event.target.value)} />
+
+        <fieldset className="flex flex-col gap-1">
+          <legend>Veículos membros</legend>
+          {vehicles?.map((vehicle) => (
+            <label key={vehicle.id} className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={selectedVehicleIds.includes(vehicle.id)}
+                onChange={() => toggleVehicle(vehicle.id)}
+              />
+              {vehicle.make} {vehicle.model} — {vehicle.plate}
+            </label>
+          ))}
+        </fieldset>
+
+        {fieldError && <p role="alert">{fieldError}</p>}
+        {mutation.isError && <p role="alert">Não foi possível criar o grupo.</p>}
+
+        <button type="submit" disabled={mutation.isPending}>
+          {mutation.isPending ? "Salvando..." : "Criar grupo"}
+        </button>
+      </form>
+    </main>
+  );
+}

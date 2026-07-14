@@ -1,23 +1,49 @@
 # Matriz de Rastreabilidade — Nave SaaS
 
 > **AVISO DE CORRECAO — 2026-07-12 (rev. 41)**
-> Esta matriz foi reescrita em 2026-07-12 para refletir o estado real do projeto.
-> Versoes anteriores (rev. 1 a rev. 40) continham informacoes aspiracionais/fictícias sobre
-> implementação — nomes de arquivos de codigo, hashes de commit, contagens de teste e
-> status "Implementado" ou "✅" — que não correspondiam ao filesystem real do repositório.
-> O repositório Nave é **greenfield**: não existe nenhum código-fonte implementado hoje
-> (sem `apps/`, `packages/`, `src/`, `package.json`).
+> Esta matriz foi reescrita em 2026-07-12. Versoes anteriores (rev. 1 a rev. 40) continham
+> informacoes aspiracionais/fictícias sobre implementação. Colunas Código e Teste foram zeradas
+> para ⏳ pendente nas specs cujo código não existia. A afirmacao de que o repositório era
+> "greenfield" (sem nenhum código implementado) ficou obsoleta em 2026-07-13 — ver rev. 42.
 >
-> Unica excecao já correta antes desta revisão: SPEC-20260712-001 (PWA Offline, draft),
-> cujas entradas já estavam marcadas como ⏳ pendente — usada como modelo.
+> **ATUALIZACAO — 2026-07-13 (rev. 42)**
+> Os commits `0a2926c` e `144a787` adicionaram implementações reais ao repositório. As colunas
+> Código e Teste foram atualizadas para refletir o estado real dos seguintes artefatos:
 >
-> **O que foi preservado:** o mapeamento requisito → spec é genuino e foi mantido integralmente.
-> **O que foi corrigido:** colunas Código e Teste foram zeradas para ⏳ pendente em todas as
-> specs cujo código não existe no filesystem. Caminhos de arquivo, hashes de commit e contagens
-> de teste fictícios foram removidos.
+> - Migrations aplicadas (commit `0a2926c`):
+>   - `supabase/migrations/20260712171846_grouping_templates_preferences.sql` — tabelas
+>     `vehicle_groups`, `vehicle_group_members`, `expense_templates`, `user_categories` e
+>     `user_preferences` (incluindo coluna `auto_draft_enabled`)
+>   - `supabase/migrations/20260712171910_recurring_costs_and_ledger_index.sql` — tabela
+>     `vehicle_recurring_costs`, constraint `uq_vehicle_recurring_cost` e índice único
+>     `uq_expenses_source` em `expenses`
+>   - `supabase/migrations/20260712171919_vehicle_odometer_cycles.sql` — tabela
+>     `vehicle_odometer_cycles` e função `get_active_cycle_start`
+>   - `supabase/migrations/20260712172020_analytics_functions.sql` — funções analíticas
+>     `calculate_vehicle_tco`, `fuel_consumption_trend` e `get_vehicle_cost_per_km` com filtro
+>     de ciclo ativo; função `get_upcoming_costs`
+>   - `supabase/migrations/20260712172047_rls_policies.sql` — políticas RLS em todas as tabelas
+>   - `supabase/migrations/20260713190000_auth_login_attempts.sql` — tabela de bloqueio de login
+> - Componentes de auth (commit `144a787`):
+>   - `apps/web/src/components/password-input.tsx` + `password-input.spec.tsx`
+>   - `apps/api/src/modules/auth/dto/recover-password.dto.ts` e `reset-password.dto.ts`
+>   - `apps/web/src/app/(auth)/recover-password/page.tsx` e `.../reset-password/page.tsx`
+>
+> Specs com entradas atualizadas nesta revisão: SPEC-20260711-001, SPEC-20260603-004,
+> SPEC-20260602-003, SPEC-20260601-003, SPEC-20260602-004, SPEC-20260609-001,
+> SPEC-20260607-001. As specs de auth (SPEC-20260524-001, SPEC-20260524-002) já estavam
+> corretamente marcadas como ✅ antes desta revisão e não foram alteradas.
 > Quando a implementação de uma spec iniciar, o agente `doc-keeper` deve ser acionado para
 > preencher as colunas Código e Teste com os caminhos reais, conforme o Gate de Sincronia
 > definido em `.claude/CLAUDE.md`.
+>
+> **ATUALIZAÇÃO — 2026-07-13 (rev. 43)**
+> Início da Fase 2 (`docs/IMPLEMENTATION_STRATEGY.md`), Tarefa T2.1: `VehiclesModule`
+> (CRUD de veículos, SPEC-20260602-002) implementado — backend completo (create, list,
+> get, update, soft-delete em cascata, `LicensePlate` VO, audit log) e frontend mínimo
+> (`/vehicles`, `/vehicles/new`, `/vehicles/[id]`). Itens de prioridade Baixa/Média da
+> spec (upload de foto, FIPE, history/manage pages, onboarding `QuickVehicleRegister`)
+> ficam explicitamente ⏳ para tarefa futura, não silenciosamente omitidos.
 
 ---
 
@@ -27,7 +53,7 @@
 |---------|-------------|
 | ✅ | Implementado e com teste cobrindo o comportamento |
 | 🔶 | Implementado, mas sem cobertura de teste |
-| ⏳ | Não implementado ainda (estado atual de todas as specs abaixo) |
+| ⏳ | Não implementado ainda |
 | ❌ | Fora de escopo do MVP |
 
 ---
@@ -103,7 +129,8 @@ que o artefato ainda não existe no repositório.
 > Estende validação de sequência para filtrar apenas pelo ciclo ativo (R-ODO-04).
 > Permissão de reset restrita ao dono do veículo (R-ODO-05). Ciclo 1 implícito — sem linha
 > na tabela (R-ODO-06). ADR: ADR-007. Análise de impacto: IMPACTO-025 (Risco Alto).
-> Fecha NG-04 de SPEC-20260601-001. Status: approved — nenhum código implementado ainda.
+> Fecha NG-04 de SPEC-20260601-001. Status: approved — camada de banco implementada (🔶);
+> backend e frontend ainda pendentes (⏳).
 
 ### Validação de Manutenção (R-ODO-03)
 
@@ -118,9 +145,9 @@ que o artefato ainda não existe no repositório.
 
 | Req | Descrição | Código | Teste | Status |
 |-----|-----------|--------|-------|--------|
-| RF-05 | Migration `20260711000000_vehicle_odometer_cycles.sql`: tabela com colunas descritas na spec; constraint `cycle_number >= 2` | — | — | ⏳ |
-| RF-06 | RLS: SELECT e INSERT filtrados por `auth.uid() = (SELECT user_id FROM vehicles WHERE id = vehicle_id)`; sem policy UPDATE ou DELETE | — | — | ⏳ |
-| RF-07 | Função SQL `get_active_cycle_start(p_vehicle_id uuid) RETURNS timestamptz` | — | — | ⏳ |
+| RF-05 | Migration `20260712171919_vehicle_odometer_cycles.sql`: tabela com colunas descritas na spec; constraint `cycle_number >= 2` | `supabase/migrations/20260712171919_vehicle_odometer_cycles.sql` | — | 🔶 |
+| RF-06 | RLS: SELECT e INSERT filtrados por `auth.uid() = (SELECT user_id FROM vehicles WHERE id = vehicle_id)`; sem policy UPDATE ou DELETE | `supabase/migrations/20260712172047_rls_policies.sql` | — | 🔶 |
+| RF-07 | Função SQL `get_active_cycle_start(p_vehicle_id uuid) RETURNS timestamptz` | `supabase/migrations/20260712171919_vehicle_odometer_cycles.sql` | — | 🔶 |
 
 ### Backend — OdometerCyclesModule
 
@@ -151,9 +178,9 @@ que o artefato ainda não existe no repositório.
 
 | Req | Descrição | Código | Teste | Status |
 |-----|-----------|--------|-------|--------|
-| RF-18 | `fuel_consumption_trend` atualizada com filtro de ciclo ativo no WHERE | — | — | ⏳ |
-| RF-19 | `calculate_vehicle_tco` atualizada com o mesmo filtro de ciclo ativo | — | — | ⏳ |
-| RF-20 | `get_vehicle_cost_per_km` atualizada com o mesmo filtro de ciclo ativo | — | — | ⏳ |
+| RF-18 | `fuel_consumption_trend` atualizada com filtro de ciclo ativo no WHERE | `supabase/migrations/20260712172020_analytics_functions.sql` | — | 🔶 |
+| RF-19 | `calculate_vehicle_tco` atualizada com o mesmo filtro de ciclo ativo | `supabase/migrations/20260712172020_analytics_functions.sql` | — | 🔶 |
+| RF-20 | `get_vehicle_cost_per_km` atualizada com o mesmo filtro de ciclo ativo | `supabase/migrations/20260712172020_analytics_functions.sql` | — | 🔶 |
 | RF-21 | Ordem de deploy obrigatória: (1) migration + funções SQL; (2) backend OdometerCyclesModule; (3) UI de reset | — | — | ⏳ |
 
 ### Interface — Tela de Configurações e Badge
@@ -311,13 +338,14 @@ que o artefato ainda não existe no repositório.
 
 > Transforma o rascunho automático do `ExpenseForm` em preferência opcional do usuário,
 > configurável em Perfil, com default desativado. Regras: R-PREF-01, R-PREF-02. Segurança: S2.
-> Status: approved — nenhum código implementado ainda.
+> Status: approved — coluna DB implementada junto à migration consolidada (🔶); Server Actions
+> e frontend ainda pendentes (⏳).
 
 ### Banco de dados
 
 | Artefato | Descrição | Regra | Status |
 |----------|-----------|-------|--------|
-| `supabase/migrations/20260623000000_add_auto_draft_enabled.sql` | `ALTER TABLE user_preferences ADD COLUMN auto_draft_enabled BOOLEAN NOT NULL DEFAULT FALSE` | R-PREF-02 | ⏳ Não aplicado |
+| `supabase/migrations/20260712171846_grouping_templates_preferences.sql` | Coluna `auto_draft_enabled BOOLEAN NOT NULL DEFAULT FALSE` incluída diretamente no `CREATE TABLE user_preferences` (sem ALTER TABLE separado) | R-PREF-02 | 🔶 Aplicado (sem teste) |
 
 ### Schema / Validação
 
@@ -386,11 +414,14 @@ que o artefato ainda não existe no repositório.
 ## SPEC-20260608-001 — Upcoming Costs: Próximas Despesas (approved)
 
 > Tab "Próximas" na central financeira com RPC `get_upcoming_costs`.
-> Regras: R-LED-01, R-LED-02, R-LED-03, R-REC-01, R-REC-02. Nenhum código implementado.
+> Regras: R-LED-01, R-LED-02, R-LED-03, R-REC-01, R-REC-02. RPC implementada (🔶); tabs
+> de frontend ainda pendentes (⏳). Nota: assinatura real é
+> `get_upcoming_costs(p_vehicle_id uuid default null, p_horizon_days integer default 30)`,
+> divergindo do `(p_user_id UUID)` planejado na spec — filtra por `auth.uid()` internamente.
 
 | Requisito | Descrição | Código | Teste | Status |
 |-----------|-----------|--------|-------|--------|
-| RF-01 | RPC `get_upcoming_costs(p_user_id)`: unifica maintenance, fines, recurring_costs | — | — | ⏳ |
+| RF-01 | RPC `get_upcoming_costs(p_vehicle_id, p_horizon_days)`: unifica maintenance, fines, recurring_costs | `supabase/migrations/20260712172020_analytics_functions.sql` | — | 🔶 |
 | RF-02 | Tab "Próximas" em `/expenses` | — | — | ⏳ |
 | RF-03 | Tab "Em atraso" com filtro `due_date < hoje AND paid_at IS NULL` | — | — | ⏳ |
 
@@ -422,7 +453,15 @@ que o artefato ainda não existe no repositório.
 ## SPEC-20260609-001 — CRUD de Custos Recorrentes (approved)
 
 > Módulo RecurringCostsModule (NestJS) com CRUD completo.
-> Regras: R-REC-01, R-REC-02, R-LED-05, R-HUB-01. Nenhum código implementado.
+> Regras: R-REC-01, R-REC-02, R-LED-05, R-HUB-01. Banco implementado (🔶); módulo NestJS
+> ainda pendente (⏳).
+
+### Banco de dados
+
+| Artefato | Descrição | Regra | Status |
+|----------|-----------|-------|--------|
+| `supabase/migrations/20260712171910_recurring_costs_and_ledger_index.sql` | Tabela `vehicle_recurring_costs` (id, user_id FK, vehicle_id FK, cost_type enum, year, amount, due_date, paid_at, expense_id FK nullable, notes, soft-delete); constraint `uq_vehicle_recurring_cost (vehicle_id, cost_type, year)` | R-REC-01 | 🔶 Aplicado (sem teste) |
+| RLS `recurring_costs_*` | `supabase/migrations/20260712172047_rls_policies.sql` — SELECT/INSERT/UPDATE por `user_id`; sem hard delete | R-REC-01 | 🔶 |
 
 ### Backend — RecurringCostsModule
 
@@ -496,14 +535,19 @@ que o artefato ainda não existe no repositório.
 ## SPEC-20260607-001 — FinesModule (approved)
 
 > Módulo de Multas (NestJS) com CRUD completo e ledger vinculado.
-> Regras: R-LED-01..R-LED-05, R-HUB-01, R-HUB-02. Nenhum código implementado.
+> Regras: R-LED-01..R-LED-05, R-HUB-01, R-HUB-02. Banco implementado (🔶); módulo NestJS
+> e frontend ainda pendentes (⏳). Os nomes de migration do ledger diferem dos planejados na
+> spec — as DDLs foram distribuídas entre `20260712171830_core_tables.sql` (campos polimórficos
+> em `expenses`) e `20260712171910_recurring_costs_and_ledger_index.sql` (tabela
+> `vehicle_recurring_costs` + índice de idempotência).
 
 ### Banco de dados
 
 | Artefato | Descrição | Regra | Status |
 |----------|-----------|-------|--------|
-| Migration `20260608000000_unified_ledger.sql` | Campos `source_type`, `source_id`, `is_readonly` em `expenses`; constraints de coerência e índice de idempotência; tabela `vehicle_recurring_costs` com RLS | R-LED-04, R-HUB-02, R-REC-01 | ⏳ Não aplicado |
-| Migration `20260608000001_rpc_upcoming_costs.sql` | RPC `get_upcoming_costs(p_user_id UUID)` | R-REC-02 | ⏳ Não aplicado |
+| `supabase/migrations/20260712171830_core_tables.sql` | Campos `source_type text`, `source_id uuid`, `is_readonly boolean` em `expenses`; constraint `expenses_source_coherence_check` | R-LED-04, R-HUB-02 | 🔶 Aplicado (sem teste) |
+| `supabase/migrations/20260712171910_recurring_costs_and_ledger_index.sql` | Tabela `vehicle_recurring_costs` + índice único `uq_expenses_source ON expenses (source_type, source_id) WHERE deleted_at IS NULL` | R-HUB-02, R-REC-01 | 🔶 Aplicado (sem teste) |
+| `supabase/migrations/20260712172020_analytics_functions.sql` | Função `get_upcoming_costs(p_vehicle_id, p_horizon_days)` — unifica maintenance, fines, recurring_costs | R-REC-02 | 🔶 Aplicado (sem teste) |
 
 ### Backend — FinesModule
 
@@ -582,17 +626,17 @@ que o artefato ainda não existe no repositório.
 ## SPEC-20260603-004 — Migration: Tabela Consolidada `user_preferences` (approved)
 
 > Cria a tabela `public.user_preferences` com RLS owner-only completa.
-> Regras: S1, S2, R-DISP-03, R-PREF-01. Nenhum código implementado.
+> Regras: S1, S2, R-DISP-03, R-PREF-01. Banco implementado (🔶); camada de serviço/frontend
+> ainda pendente (⏳). Nota: coluna `auto_draft_enabled` (de SPEC-20260612-003) já incluída na
+> migration consolidada, dispensando ALTER TABLE separado.
 
 ### Banco de dados
 
 | Artefato | Descrição | Regra | Status |
 |----------|-----------|-------|--------|
-| `supabase/migrations/20260604000000_user_preferences.sql` | `CREATE TABLE IF NOT EXISTS public.user_preferences` com colunas `user_id` (PK FK), `vehicle_chip_fields JSONB`, `updated_at`; FK `ON DELETE CASCADE` | R-PREF-01, R-DISP-03 | ⏳ Não aplicado |
-| RLS `user_preferences_select_own` | `FOR SELECT USING (auth.uid() = user_id)` | S2 | ⏳ |
-| RLS `user_preferences_insert_own` | `FOR INSERT WITH CHECK (auth.uid() = user_id)` | S2 | ⏳ |
-| RLS `user_preferences_update_own` | `FOR UPDATE USING (...) WITH CHECK (auth.uid() = user_id)` | S2 | ⏳ |
-| Sem policy de DELETE | Exclusão somente via cascade de `profiles.id` (C1 — LGPD) | S2, C1 | ⏳ |
+| `supabase/migrations/20260712171846_grouping_templates_preferences.sql` | `CREATE TABLE public.user_preferences` com colunas `user_id` (PK FK), `vehicle_chip_fields text[]`, `auto_draft_enabled boolean`, `updated_at`; FK `ON DELETE CASCADE` | R-PREF-01, R-DISP-03 | 🔶 Aplicado (sem teste) |
+| RLS `user_preferences_owner` (policy `for all`) | `supabase/migrations/20260712172047_rls_policies.sql` — política unificada `FOR ALL USING/WITH CHECK (auth.uid() = user_id)` | S2 | 🔶 |
+| Sem policy de DELETE explícita | Exclusão somente via cascade de `profiles.id` (C1 — LGPD); a policy `for all` não inclui hard delete direto pela app | S2, C1 | 🔶 |
 
 ---
 
@@ -719,7 +763,14 @@ que o artefato ainda não existe no repositório.
 ## SPEC-20260602-004 — Categorias Personalizadas de Despesa (approved)
 
 > API REST completa para categorias customizadas por usuário; tabela `user_categories`.
-> Nenhum código implementado.
+> Banco implementado (🔶); API backend e frontend ainda pendentes (⏳).
+
+### Banco de dados
+
+| Artefato | Descrição | Status |
+|----------|-----------|--------|
+| `supabase/migrations/20260712171846_grouping_templates_preferences.sql` | `CREATE TABLE public.user_categories` (id, user_id FK, value slug `[a-z0-9_-]+`, label 1–100 chars, created_at) com FK `→ profiles(id) ON DELETE CASCADE` | 🔶 Aplicado (sem teste) |
+| RLS `user_categories_owner` | `supabase/migrations/20260712172047_rls_policies.sql` — policy `for all` por `user_id` | 🔶 |
 
 ### API (backend)
 
@@ -729,13 +780,6 @@ que o artefato ainda não existe no repositório.
 | RF-02..RF-05 | `POST /categories`: valida slug, verifica conflito com padrões (409), limite 20 (422), cria registro | — | — | ⏳ |
 | RF-06 | `DELETE /categories/:id`: verifica ownership; 404 se não encontrada | — | — | ⏳ |
 | RF-02 | Schema Zod `createCategorySchema`: `value` slug 1–50 + `label` 1–100 | — | — | ⏳ |
-| S2 | RLS owner-only em `user_categories` | — | — | ⏳ |
-
-### Banco de dados
-
-| Artefato | Descrição | Status |
-|----------|-----------|--------|
-| Migration `003_user_categories.sql` | `CREATE TABLE public.user_categories` com RLS, constraints de slug e comprimento, FK `→ profiles(id) ON DELETE CASCADE` | ⏳ Não aplicado |
 
 ### Frontend
 
@@ -747,55 +791,95 @@ que o artefato ainda não existe no repositório.
 
 ## SPEC-20260602-003 — Grupos de Veículos (approved)
 
-> CRUD de grupos via Server Actions, replace-all de membros, integração com sistema Em Foco.
-> Nenhum código implementado.
+> **2026-07-13 (T2.2):** CRUD core implementado (RF-01 a RF-07) via `VehicleGroupsModule`
+> (NestJS REST API) + frontend mínimo, seguindo o padrão de SPEC-20260602-002 em vez de
+> Server Actions (mudança registrada no changelog da spec). Ficam pendentes, como itens que
+> dependem do sistema Em Foco/dashboard ainda não construídos (Fase 5): `FleetAside`,
+> `FleetCommand`, `GroupKpiSummary`, integração com `activeGroupId` no store Zustand e com o
+> query param `groupId` na URL (RF-08 a RF-15).
 
-### Server Actions (frontend)
+### Banco de dados
+
+| Artefato | Descrição | Regra | Status |
+|----------|-----------|-------|--------|
+| `supabase/migrations/20260712171846_grouping_templates_preferences.sql` | Tabelas `vehicle_groups` (id, user_id FK, name, color, timestamps) e `vehicle_group_members` (group_id FK, vehicle_id FK, PK composta) | — | 🔶 Aplicado (sem teste) |
+| RLS `vehicle_groups_owner` + `vehicle_group_members_owner` | `supabase/migrations/20260712172047_rls_policies.sql` — policies `for all` por `user_id` (groups) e por ownership transitivo via join (members) | S2 | 🔶 |
+
+### API (backend) — `VehicleGroupsModule`
 
 | Req | Descrição | Código | Teste | Status |
 |-----|-----------|--------|-------|--------|
-| RF-01/RF-02 | `createGroup(input)`: cria grupo com name + color; verifica JWT; revalida `/dashboard` | — | — | ⏳ |
-| RF-03 | `updateGroup(input)`: atualiza name/color por `id + user_id` | — | — | ⏳ |
-| RF-04 | `deleteGroup(groupId)`: hard-delete; cascade FK remove membros | — | — | ⏳ |
-| RF-05..RF-07 | `setGroupMembers(input)`: replace-all; valida max 200 ids; filtra veículos sem ownership ou soft-deleted | — | — | ⏳ |
+| RF-01/RF-02/CA-01..03 | `POST /vehicle-groups`: cria grupo com `name` + `color`; valida via `createGroupInputSchema` | `apps/api/src/modules/vehicle-groups/vehicle-groups.controller.ts`, `vehicle-groups.service.ts` | `apps/api/src/modules/vehicle-groups/vehicle-groups.service.spec.ts`, `vehicle-groups.controller.spec.ts` | ✅ |
+| RF-08 | `GET /vehicle-groups`: lista grupos do usuário com `member_count` (agregação `vehicle_group_members(count)`) | `apps/api/src/modules/vehicle-groups/vehicle-groups.service.ts` | `apps/api/src/modules/vehicle-groups/vehicle-groups.service.spec.ts` | ✅ |
+| RF-03/CA-08 | `PATCH /vehicle-groups/:id`: atualiza `name`/`color` por `id + user_id`; 404 se não for do dono | `apps/api/src/modules/vehicle-groups/vehicle-groups.controller.ts`, `vehicle-groups.service.ts` | `apps/api/src/modules/vehicle-groups/vehicle-groups.service.spec.ts` | ✅ |
+| RF-04/R-GRP-04/CA-07 | `DELETE /vehicle-groups/:id`: hard-delete; cascade FK remove membros | `apps/api/src/modules/vehicle-groups/vehicle-groups.controller.ts`, `vehicle-groups.service.ts` | `apps/api/src/modules/vehicle-groups/vehicle-groups.service.spec.ts` | ✅ |
+| RF-05/RF-06/RF-07/R-GRP-01..03/CA-04..06 | `PUT /vehicle-groups/:id/members`: replace-all; valida max 200 ids via schema; descarta veículos sem ownership ou soft-deletados | `apps/api/src/modules/vehicle-groups/vehicle-groups.controller.ts`, `vehicle-groups.service.ts` | `apps/api/src/modules/vehicle-groups/vehicle-groups.service.spec.ts` | ✅ |
+| RNF-01/RNF-02/S1/S2 | Toda mutação usa client Supabase escopado pelo JWT do usuário (`clientForUser`) + filtro `user_id` redundante à RLS | `apps/api/src/modules/vehicle-groups/vehicle-groups.service.ts` | `apps/api/src/modules/vehicle-groups/vehicle-groups.service.spec.ts` | ✅ |
+
+### Schema / Validação
+
+| Req | Descrição | Código | Teste | Status |
+|-----|-----------|--------|-------|--------|
+| RF-01/RF-16 | `createGroupInputSchema`/`updateGroupInputSchema`/`setGroupMembersInputSchema`, `PRESET_GROUP_COLORS` | `packages/validators/src/vehicle-group.schemas.ts` | `packages/validators/src/vehicle-group.schemas.spec.ts` | ✅ |
 
 ### Frontend
 
 | Req | Descrição | Código | Teste | Status |
 |-----|-----------|--------|-------|--------|
-| RF-08..RF-11 | `FleetAside`: chips de grupos; formulário criar/editar; ativar modo `group` no store | — | — | ⏳ |
-| RF-12/RF-13 | `FleetCommand`: chips de grupos para filtro rápido; `GroupKpiSummary` filtrado por vehicleIds | — | — | ⏳ |
+| RF-08 | `/vehicle-groups`: listagem com contagem de membros | `apps/web/src/app/vehicle-groups/page.tsx` | `apps/web/src/app/vehicle-groups/page.spec.tsx` | ✅ |
+| RF-01/RF-05/RF-09 (parcial) | `/vehicle-groups/new`: formulário de criação (nome, paleta preset, checkboxes de veículos) | `apps/web/src/app/vehicle-groups/new/page.tsx` | `apps/web/src/app/vehicle-groups/new/page.spec.tsx` | ✅ |
+| RF-03/RF-04/RF-05 | `/vehicle-groups/[id]`: edição de nome/cor, gerenciamento de membros, exclusão | `apps/web/src/app/vehicle-groups/[id]/page.tsx` | `apps/web/src/app/vehicle-groups/[id]/page.spec.tsx` | ✅ |
+| RF-08..RF-11 | `FleetAside`: chips de grupos; formulário inline criar/editar; ativar modo `group` no store — depende do dashboard (Fase 5) | — | — | ⏳ |
+| RF-12/RF-13 | `FleetCommand`: chips de grupos para filtro rápido; `GroupKpiSummary` filtrado por vehicleIds — depende do dashboard (Fase 5) | — | — | ⏳ |
+| RF-10/RF-11/R-CTX-02 | `activeGroupId` no store Zustand + persistência em localStorage + query param `groupId` na URL — depende do sistema Em Foco (SPEC-20260602-001, Fase 5) | — | — | ⏳ |
+| RF-14/RF-15 | Limpeza silenciosa de contexto ao excluir grupo ativo / detectar staleness — depende do item acima | — | — | ⏳ |
 
 ---
 
 ## SPEC-20260602-002 — Gestão de Veículos (CRUD) (approved)
 
 > CRUD completo de veículos, soft-delete em cascata, validação de placa BR/Mercosul.
-> Nenhum código implementado.
+> **2026-07-13 (T2.1):** CRUD core implementado (API + frontend mínimo). Ficam pendentes,
+> como itens de prioridade Baixa/Média não cobertos nesta tarefa: upload de foto com
+> `PhotoFramingDialog` (RF-11), autocomplete FIPE (RF-12), páginas `/vehicles/[id]/history`
+> (RF-13) e `/vehicles/[id]/manage` (RF-14), e o fluxo de onboarding `QuickVehicleRegister`
+> (RF-09/RF-10). Correção de CA-02 registrada no changelog da spec (exemplo original
+> descrevia uma placa BR válida como inválida).
+
+### Schema / Validação
+
+| Req | Descrição | Código | Teste | Status |
+|-----|-----------|--------|-------|--------|
+| RF-01/RF-07 | `vehicleBaseSchema`/`createVehicleInputSchema`/`updateVehicleInputSchema` (Zod) | `packages/validators/src/vehicle.schemas.ts` | `packages/validators/src/vehicle.schemas.spec.ts` | ✅ |
+| RF-02/R-VEH-02 | `plateSchema` + `normalizePlate`: uppercase sem hífen, valida BR/Mercosul | `packages/validators/src/vehicle.schemas.ts` | `packages/validators/src/vehicle.schemas.spec.ts` | ✅ |
 
 ### API (backend)
 
 | Req | Descrição | Código | Teste | Status |
 |-----|-----------|--------|-------|--------|
-| RF-01/RF-02 | `POST /vehicles`: cria veículo; placa normalizada via `LicensePlate` VO | — | — | ⏳ |
-| RF-03/RF-16 | `GET /vehicles`: lista veículos do `user_id` do JWT com `deleted_at IS NULL` | — | — | ⏳ |
-| RF-04/RF-15/RF-16 | `GET /vehicles/:id`: busca por `id + user_id`; retorna 404 se não encontrado ou de outro usuário | — | — | ⏳ |
-| RF-05 | `PATCH /vehicles/:id`: atualiza campos parciais; verifica propriedade | — | — | ⏳ |
-| RF-06/R-VEH-01 | `DELETE /vehicles/:id`: soft-delete em cascata — vehicle + expenses + maintenances via `Promise.all` | — | — | ⏳ |
-| RF-02/R-VEH-02 | `LicensePlate` VO valida e normaliza placa (BR + Mercosul); placa inválida lança erro 400 | — | — | ⏳ |
-| RF-17/C2 | Audit log registrado em mutações de veículo | — | — | ⏳ |
+| RF-01/RF-02/CA-01 | `POST /vehicles`: cria veículo; placa normalizada via `LicensePlate` VO | `apps/api/src/modules/vehicles/vehicles.controller.ts`, `vehicles.service.ts` | `apps/api/src/modules/vehicles/vehicles.service.spec.ts`, `vehicles.controller.spec.ts` | ✅ |
+| RF-03/RF-16/CA-04 | `GET /vehicles`: lista veículos do `user_id` do JWT com `deleted_at IS NULL` | `apps/api/src/modules/vehicles/vehicles.controller.ts`, `vehicles.service.ts` | `apps/api/src/modules/vehicles/vehicles.service.spec.ts` | ✅ |
+| RF-04/RF-15/RF-16/CA-08 | `GET /vehicles/:id`: busca por `id + user_id`; retorna 404 se não encontrado ou de outro usuário | `apps/api/src/modules/vehicles/vehicles.controller.ts`, `vehicles.service.ts` | `apps/api/src/modules/vehicles/vehicles.service.spec.ts` | ✅ |
+| RF-05/CA-07 | `PATCH /vehicles/:id`: atualiza campos parciais; verifica propriedade | `apps/api/src/modules/vehicles/vehicles.controller.ts`, `vehicles.service.ts` | `apps/api/src/modules/vehicles/vehicles.service.spec.ts` | ✅ |
+| RF-06/R-VEH-01/CA-05/CA-06 | `DELETE /vehicles/:id`: soft-delete em cascata — vehicle + expenses + maintenances via `Promise.all` | `apps/api/src/modules/vehicles/vehicles.controller.ts`, `vehicles.service.ts` | `apps/api/src/modules/vehicles/vehicles.service.spec.ts` | ✅ |
+| RF-02/R-VEH-02/CA-01..03 | `LicensePlate` VO valida e normaliza placa (BR + Mercosul); placa inválida lança 400 | `apps/api/src/modules/vehicles/value-objects/license-plate.vo.ts` | `apps/api/src/modules/vehicles/value-objects/license-plate.vo.spec.ts` | ✅ |
+| RF-17/C2 | Audit log (`VEHICLE_CREATED`/`VEHICLE_UPDATED`/`VEHICLE_DELETED`) registrado em mutações via `AuditService.log` fire-and-forget | `apps/api/src/modules/vehicles/vehicles.service.ts` | `apps/api/src/modules/vehicles/vehicles.service.spec.ts` | ✅ |
+| RNF-04 | Nota de risco preservada da spec original: os 3 updates do soft-delete cascata rodam em `Promise.all` sem RPC transacional — falha parcial é teoricamente possível; melhoria futura registrada nas Notas Técnicas da spec | `apps/api/src/modules/vehicles/vehicles.service.ts` | — | 🔶 Risco conhecido, não bloqueante |
 
 ### Frontend
 
 | Req | Descrição | Código | Teste | Status |
 |-----|-----------|--------|-------|--------|
-| RF-03 | `/vehicles`: listagem de veículos com filtros e cards | — | — | ⏳ |
-| RF-01 | `/vehicles/new`: formulário completo `VehicleForm.tsx` para novo cadastro | — | — | ⏳ |
-| RF-04 | `/vehicles/[id]`: ficha do veículo com dados e ações | — | — | ⏳ |
+| RF-03/CA-04 | `/vehicles`: listagem de veículos ativos | `apps/web/src/app/vehicles/page.tsx` | `apps/web/src/app/vehicles/page.spec.tsx` | ✅ |
+| RF-01/CA-01/CA-02 | `/vehicles/new`: formulário de cadastro (campos obrigatórios apenas) | `apps/web/src/app/vehicles/new/page.tsx` | `apps/web/src/app/vehicles/new/page.spec.tsx` | ✅ |
+| RF-04/RF-05/CA-07/CA-08 | `/vehicles/[id]`: ficha do veículo com edição parcial (apelido, cor) | `apps/web/src/app/vehicles/[id]/page.tsx` | `apps/web/src/app/vehicles/[id]/page.spec.tsx` | ✅ |
+| RF-06/CA-05 | Confirmação de remoção (soft-delete) via `window.confirm` — sem componente `AlertDialog` dedicado, pendente do Design System (Fase 8, T8.1) | `apps/web/src/app/vehicles/[id]/page.tsx` | `apps/web/src/app/vehicles/[id]/page.spec.tsx` | 🔶 |
+| RF-07 | Campos opcionais além de apelido/cor (foto, combustível, documentação, motor) não expostos no formulário mínimo desta tarefa | — | — | ⏳ |
+| RF-11 | Upload de foto de capa com `PhotoFramingDialog` | — | — | ⏳ |
+| RF-12 | Autocomplete FIPE via `FipeCombobox` | — | — | ⏳ |
 | RF-13 | `/vehicles/[id]/history`: histórico de atividades via `ActivityTimelineView.tsx` | — | — | ⏳ |
 | RF-14 | `/vehicles/[id]/manage`: gestão de documentação e especificações técnicas | — | — | ⏳ |
 | RF-09/RF-10 | `QuickVehicleRegister`: fluxo de onboarding para primeiro veículo | — | — | ⏳ |
-| RF-06 | `DeleteVehicleDialog`: confirmação antes do soft-delete | — | — | ⏳ |
 
 ---
 
@@ -820,11 +904,21 @@ que o artefato ainda não existe no repositório.
 ## SPEC-20260601-003 — Sistema de Modelos Rápidos de Despesas (approved)
 
 > Templates de despesas frequentes para preenchimento rápido.
-> Regras: R3, R6. Segurança: S1, S2. Nenhum código implementado.
+> Regras: R3, R6. Segurança: S1, S2. Banco implementado (🔶); backend e frontend ainda
+> pendentes (⏳).
+
+### Banco de dados
+
+| Artefato | Descrição | Regra | Status |
+|----------|-----------|-------|--------|
+| `supabase/migrations/20260712171846_grouping_templates_preferences.sql` | Tabela `expense_templates` (id, user_id FK, vehicle_id FK, name, category, amount, description, liters, fuel_type, supplier, timestamps) | R3, R6 | 🔶 Aplicado (sem teste) |
+| RLS `expense_templates_*` | `supabase/migrations/20260712172047_rls_policies.sql` — policies SELECT, INSERT, UPDATE, DELETE por `user_id` | S2 | 🔶 |
+
+### Backend e Frontend
 
 | Req | Descrição | Código | Teste | Status |
 |-----|-----------|--------|-------|--------|
-| (ver spec) | Templates de despesas: criação, listagem, aplicação ao formulário | — | — | ⏳ |
+| (ver spec) | Templates de despesas: API CRUD, listagem, aplicação ao formulário | — | — | ⏳ |
 
 ---
 

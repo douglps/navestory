@@ -128,8 +128,8 @@ Cada tarefa é dimensionada para ser um PR pequeno (uma sessão de implementaç�
 | T2.2 ✅ | SPEC-20260602-003 | Grupos de veículos — **concluído em 2026-07-13** (core: `VehicleGroupsModule` REST + frontend mínimo); itens que dependem do dashboard/Em Foco (Fase 5) ficam ⏳, rastreados em `matrices/rastreabilidade.md` |
 | T2.3 ✅ | SPEC-20260602-004 | Categorias personalizadas de despesa — **concluído em 2026-07-13** (`CategoriesModule` REST completo); integração com `ExpenseForm` (RF-07/RF-08) fica ⏳ até o módulo de despesas existir (Fase 3) |
 | T2.4 ✅ | SPEC-20260711-001 (ADR-007) | Ciclos de odômetro — **concluído em 2026-07-13** (`OdometerCyclesModule` REST + tela de configurações mínima); RF-01–04, RF-12–17, RF-23, RF-24 ficam ⏳ até os módulos de despesas (Fase 3) e manutenções (Fase 4) existirem |
-| T2.5 | SPEC-20260603-004 | Migration `user_preferences` |
-| T2.6 | SPEC-20260612-003 | Preferência de rascunho automático |
+| T2.5 ✅ | SPEC-20260603-004 | Migration `user_preferences` — banco já aplicado em 2026-07-13 (`20260712171846_grouping_templates_preferences.sql`, schema divergente do texto original da spec: `vehicle_chip_fields text[]` em vez de `jsonb`, sem colunas `theme`/`notifications_config`); camada de serviço formalizada em 2026-07-14 via `PreferencesModule` (GET/PATCH `/preferences`) |
+| T2.6 🟡 | SPEC-20260612-003 | Preferência de rascunho automático — **concluída parcialmente em 2026-07-14**: RF-01 (`PreferencesModule` REST) e RF-02 (toggle em `/settings/preferences`) prontos; RF-03 (integração com `ExpenseForm`) fica ⏳ até o módulo de despesas existir (Fase 3) |
 | T2.7 📝 | SPEC-20260603-003 (draft) | Preferências de exibição do veículo no chip — **promover a approved antes de codar** |
 
 ### Fase 3 — Épico Ledger Financeiro Unificado (ADR-006)
@@ -208,3 +208,4 @@ Fase 0 → Fase 1 → Fase 2 → Fase 3 → Fase 4 → Fase 5 → Fase 6 → Fas
 - **2026-07-13**: T2.2 (Grupos de veículos) concluída — core via REST API, itens dependentes do dashboard rastreados como pendentes.
 - **2026-07-13**: T2.3 (Categorias personalizadas) concluída — `CategoriesModule` REST completo; migration faltante `UNIQUE(user_id, value)` corrigida e aplicada no banco remoto (junto com 2 migrations de auth que já estavam commitadas mas nunca haviam sido aplicadas).
 - **2026-07-13**: T2.4 (Ciclos de odômetro) concluída parcialmente — `OdometerCyclesModule` REST + tela de configurações; requisitos que dependem dos módulos de despesas/manutenções (ainda não construídos) ficam explicitamente pendentes.
+- **2026-07-14**: T2.5 (Migration `user_preferences`) e T2.6 RF-01/RF-02 (Preferência de rascunho automático) concluídas — `PreferencesModule` REST (`apps/api/src/modules/preferences`) + tela `/settings/preferences`. Decisão confirmada com o usuário: preferências seguem o padrão NestJS REST + React Query já estabelecido em T2.1–T2.4, não o padrão de server actions Next.js descrito originalmente em SPEC-20260603-004/SPEC-20260612-003 (ver changelog dessas specs). T2.6 RF-03 (integração com `ExpenseForm`) permanece ⏳ até a Fase 3.

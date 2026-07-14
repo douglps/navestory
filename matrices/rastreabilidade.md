@@ -339,9 +339,10 @@ que o artefato ainda não existe no repositório.
 ## SPEC-20260612-003 — Preferência de Rascunho Automático (approved)
 
 > Transforma o rascunho automático do `ExpenseForm` em preferência opcional do usuário,
-> configurável em Perfil, com default desativado. Regras: R-PREF-01, R-PREF-02. Segurança: S2.
-> Status: approved — coluna DB implementada junto à migration consolidada (🔶); Server Actions
-> e frontend ainda pendentes (⏳).
+> configurável em Preferências, com default desativado. Regras: R-PREF-01, R-PREF-02. Segurança: S2.
+> Status: approved — RF-01/RF-02 concluídos em 2026-07-14 via `PreferencesModule` REST (NestJS)
+> + React Query, não server actions Next.js como originalmente descrito (ver changelog da spec).
+> RF-03 (integração com `ExpenseForm`) ⏳ até a Fase 3 (módulo de despesas ainda não existe).
 
 ### Banco de dados
 
@@ -353,28 +354,26 @@ que o artefato ainda não existe no repositório.
 
 | Req | Descrição | Código | Teste | Status |
 |-----|-----------|--------|-------|--------|
-| RF-01 | Campo `auto_draft_enabled` adicionado ao schema; constante `DEFAULT_AUTO_DRAFT_ENABLED = false` exportada | — | — | ⏳ |
+| RF-01 | Campo `auto_draft_enabled` no schema; `DEFAULT_AUTO_DRAFT_ENABLED = false` exportado | `packages/validators/src/preferences.schemas.ts` | `packages/validators/src/preferences.schemas.spec.ts` | ✅ |
 
-### Server Actions (frontend)
+### API REST (backend) — substitui Server Actions da spec original
 
 | Req | Descrição | Código | Regra | Teste | Status |
 |-----|-----------|--------|-------|-------|--------|
-| RF-02 | `getAutoDraftPreference()`: lê `auto_draft_enabled` de `user_preferences`; retorna `false` como fallback | — | R-PREF-01 | — | ⏳ |
-| RF-02 | `updateAutoDraftPreference(enabled)`: persiste em `user_preferences.auto_draft_enabled` | — | R-PREF-02 | — | ⏳ |
+| RF-01.3 | `GET /preferences`: lê `auto_draft_enabled`; retorna `false` como fallback quando ausente | `apps/api/src/modules/preferences/preferences.{controller,service}.ts` | R-PREF-01 | `apps/api/src/modules/preferences/preferences.{controller,service}.spec.ts` | ✅ |
+| RF-01.3 | `PATCH /preferences`: upsert idempotente de `auto_draft_enabled` por `user_id` | `apps/api/src/modules/preferences/preferences.{controller,service}.ts` | R-PREF-02 | `apps/api/src/modules/preferences/preferences.{controller,service}.spec.ts` | ✅ |
 
 ### Componente de Preferência
 
 | Req | Descrição | Código | Teste | Status |
 |-----|-----------|--------|-------|--------|
-| RF-03 | `AutoDraftPreference`: toggle com label e descrição; chama `updateAutoDraftPreference` | — | — | ⏳ |
-| RF-03 | Seção "Formulários" adicionada à página de perfil com o toggle | — | — | ⏳ |
+| RF-02 | Toggle "Rascunho automático" com label e descrição; estado local + `isDirty` + `safeParse` + feedback "Salvando…"/"✓ Salvo" | `apps/web/src/app/settings/preferences/page.tsx` | `apps/web/src/app/settings/preferences/page.spec.tsx` | ✅ |
 
 ### Integração com ExpenseForm
 
 | Req | Descrição | Código | Teste | Status |
 |-----|-----------|--------|-------|--------|
-| RF-04 | `ExpenseForm` recebe prop `autoDraftEnabled`; draft condicionado à essa prop | — | — | ⏳ |
-| RF-04 | `/expenses/new` carrega preferência via `getAutoDraftPreference()` e passa ao form | — | — | ⏳ |
+| RF-03/RF-04 | `ExpenseForm` recebe prop `autoDraftEnabled`; draft condicionado à essa prop; página de nova despesa carrega a preferência via `GET /preferences` | — | — | ⏳ Depende da Fase 3 (`ExpenseForm` ainda não existe) |
 
 ---
 
@@ -628,9 +627,11 @@ que o artefato ainda não existe no repositório.
 ## SPEC-20260603-004 — Migration: Tabela Consolidada `user_preferences` (approved)
 
 > Cria a tabela `public.user_preferences` com RLS owner-only completa.
-> Regras: S1, S2, R-DISP-03, R-PREF-01. Banco implementado (🔶); camada de serviço/frontend
-> ainda pendente (⏳). Nota: coluna `auto_draft_enabled` (de SPEC-20260612-003) já incluída na
-> migration consolidada, dispensando ALTER TABLE separado.
+> Regras: S1, S2, R-DISP-03, R-PREF-01. Banco implementado (🔶, sem teste dedicado; schema
+> divergente do texto original da spec — ver changelog v1.1). Camada de serviço para `auto_draft_enabled` concluída
+> em 2026-07-14 via `PreferencesModule` REST (ver SPEC-20260612-003). Camada de serviço para
+> `vehicle_chip_fields` (SPEC-20260603-003, draft) segue ⏳. Nota: coluna `auto_draft_enabled`
+> (de SPEC-20260612-003) já incluída na migration consolidada, dispensando ALTER TABLE separado.
 
 ### Banco de dados
 

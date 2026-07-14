@@ -7,6 +7,7 @@ import { HealthModule } from "./health/health.module";
 import { AdminModule } from "./modules/admin/admin.module";
 import { AuthModule } from "./modules/auth/auth.module";
 import { CategoriesModule } from "./modules/categories/categories.module";
+import { OdometerCyclesModule } from "./modules/odometer-cycles/odometer-cycles.module";
 import { UsersModule } from "./modules/users/users.module";
 import { VehicleGroupsModule } from "./modules/vehicle-groups/vehicle-groups.module";
 import { VehiclesModule } from "./modules/vehicles/vehicles.module";
@@ -36,6 +37,7 @@ import { SupabaseModule } from "./shared/supabase/supabase.module";
     VehiclesModule,
     VehicleGroupsModule,
     CategoriesModule,
+    OdometerCyclesModule,
   ],
   providers: [
     {

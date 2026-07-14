@@ -506,6 +506,7 @@ Ao implementar esta spec, respeite as seguintes diretrizes para manter consistê
 | Versão | Data | Autor | Mudanças |
 |--------|------|-------|---------|
 | 1.0 | 2026-07-11 | douglps | Criação inicial; formaliza ADR-007 como spec de implementação |
+| 1.1 | 2026-07-13 | douglps | Mudança pequena (clarificação, sem alterar requisitos): T2.4 implementou Fase 1 (já existente) + Fase 2 parcial (`OdometerCyclesModule`, RF-05 a RF-11) + Fase 3 parcial (tela de configurações, RF-22). RF-01 a RF-04, RF-12 a RF-17, RF-23 e RF-24 continuam ⏳ pois dependem dos módulos de despesas (Fase 3 do roadmap de implementação) e manutenções (Fase 4), que ainda não existem neste repositório greenfield — rastreado em `matrices/rastreabilidade.md`. `previous_cycle_max` foi calculado consultando `expenses.odometer_km` diretamente (não via `ExpenseRepositoryPort.findMaxOdometerByVehicle`, que não existe ainda) — mesmo resultado, implementação provisória a ser substituída quando o módulo de despesas for implementado. |
 
 ---
 

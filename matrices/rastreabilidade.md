@@ -129,17 +129,19 @@ que o artefato ainda não existe no repositório.
 > Estende validação de sequência para filtrar apenas pelo ciclo ativo (R-ODO-04).
 > Permissão de reset restrita ao dono do veículo (R-ODO-05). Ciclo 1 implícito — sem linha
 > na tabela (R-ODO-06). ADR: ADR-007. Análise de impacto: IMPACTO-025 (Risco Alto).
-> Fecha NG-04 de SPEC-20260601-001. Status: approved — camada de banco implementada (🔶);
-> backend e frontend ainda pendentes (⏳).
+> Fecha NG-04 de SPEC-20260601-001. **2026-07-13 (T2.4):** `OdometerCyclesModule` (RF-05 a
+> RF-11) e frontend mínimo (RF-22) implementados. RF-01 a RF-04, RF-12 a RF-17, RF-23 e RF-24
+> permanecem ⏳ — dependem dos módulos de despesas e manutenções (Fases 3/4) e do dashboard
+> (`VehicleContextChip`, Fase 5), nenhum dos quais existe ainda neste repositório greenfield.
 
 ### Validação de Manutenção (R-ODO-03)
 
 | Req | Descrição | Código | Teste | Status |
 |-----|-----------|--------|-------|--------|
-| RF-01 | `updateMaintenanceInputSchema` com `superRefine`: `odometer_km` obrigatório quando `status === 'completed'` | — | — | ⏳ |
-| RF-02 | `MaintenanceService.update()` rejeita HTTP 422 quando `status = completed` sem `odometer_km` válido | — | — | ⏳ |
-| RF-03 | Correção de bug pré-existente em `createMaintenanceAction`: `odometer_km` do FormData não era mapeado para o corpo do request | — | — | ⏳ |
-| RF-04 | Validação de sequência de odômetro em manutenções via `MaintenanceWarningException`; usa `findMaxOdometerByVehicle` filtrado pelo ciclo ativo | — | — | ⏳ |
+| RF-01 | `updateMaintenanceInputSchema` com `superRefine`: `odometer_km` obrigatório quando `status === 'completed'` | — | — | ⏳ Depende do módulo de manutenções (Fase 4) |
+| RF-02 | `MaintenanceService.update()` rejeita HTTP 422 quando `status = completed` sem `odometer_km` válido | — | — | ⏳ Depende do módulo de manutenções (Fase 4) |
+| RF-03 | Correção de bug pré-existente em `createMaintenanceAction`: `odometer_km` do FormData não era mapeado para o corpo do request | — | — | ⏳ Depende do módulo de manutenções (Fase 4) |
+| RF-04 | Validação de sequência de odômetro em manutenções via `MaintenanceWarningException`; usa `findMaxOdometerByVehicle` filtrado pelo ciclo ativo | — | — | ⏳ Depende do módulo de manutenções (Fase 4) |
 
 ### Modelo de Dados — `vehicle_odometer_cycles` (R-ODO-05, R-ODO-06)
 
@@ -149,30 +151,30 @@ que o artefato ainda não existe no repositório.
 | RF-06 | RLS: SELECT e INSERT filtrados por `auth.uid() = (SELECT user_id FROM vehicles WHERE id = vehicle_id)`; sem policy UPDATE ou DELETE | `supabase/migrations/20260712172047_rls_policies.sql` | — | 🔶 |
 | RF-07 | Função SQL `get_active_cycle_start(p_vehicle_id uuid) RETURNS timestamptz` | `supabase/migrations/20260712171919_vehicle_odometer_cycles.sql` | — | 🔶 |
 
-### Backend — OdometerCyclesModule
+### Backend — `OdometerCyclesModule`
 
 | Req | Descrição | Código | Teste | Status |
 |-----|-----------|--------|-------|--------|
-| RF-08 | `POST /vehicles/:vehicleId/odometer-cycles`: valida ownership, aceita `{ starting_value, reason }`, persiste, dispara audit fire-and-forget (R-ODO-05) | — | — | ⏳ |
-| RF-09 | `GET /vehicles/:vehicleId/odometer-cycles`: retorna ciclos do veículo paginados (padrão 20, máx 100 — P1) | — | — | ⏳ |
-| RF-10 | `OdometerCyclesService.getActiveCycleStart(vehicleId, userId)`: retorna `started_at` ISO 8601 do ciclo mais recente ou `null` | — | — | ⏳ |
-| RF-11 | Validação de `reason`: obrigatório, 3–500 chars; retorna 400 com `fieldErrors.reason` se ausente ou fora do intervalo | — | — | ⏳ |
+| RF-08/R-ODO-05 | `POST /vehicles/:vehicleId/odometer-cycles`: valida ownership via `VehiclesService.findOne`, calcula `cycle_number` e `previous_cycle_max` (via `expenses.odometer_km`), persiste, dispara audit fire-and-forget omitindo `reason` (D8) | `apps/api/src/modules/odometer-cycles/odometer-cycles.controller.ts`, `odometer-cycles.service.ts` | `apps/api/src/modules/odometer-cycles/odometer-cycles.service.spec.ts`, `odometer-cycles.controller.spec.ts` | ✅ |
+| RF-09/P1 | `GET /vehicles/:vehicleId/odometer-cycles`: retorna ciclos ordenados por `cycle_number ASC`, paginados (padrão 20, máx 100, clamp aplicado) | `apps/api/src/modules/odometer-cycles/odometer-cycles.service.ts` | `apps/api/src/modules/odometer-cycles/odometer-cycles.service.spec.ts` | ✅ |
+| RF-10/R-ODO-04 | `OdometerCyclesService.getActiveCycleStart(accessToken, userId, vehicleId)`: chama RPC `get_active_cycle_start`; degrada graciosamente (`null`) em caso de falha (D6) — ainda não consumido por nenhum service, pois `ExpensesService`/`MaintenanceService` não existem | `apps/api/src/modules/odometer-cycles/odometer-cycles.service.ts` | `apps/api/src/modules/odometer-cycles/odometer-cycles.service.spec.ts` | ✅ |
+| RF-11/R-SAN-01/R-SAN-02 | `createOdometerCycleInputSchema`: `reason` obrigatório 3–500 chars com `.trim().normalize('NFC')`; `starting_value` não-negativo, default 0 | `packages/validators/src/odometer-cycle.schemas.ts` | `packages/validators/src/odometer-cycle.schemas.spec.ts` | ✅ |
 
 ### Extensão de `findMaxOdometerByVehicle` — Filtro por Ciclo Ativo (R-ODO-04)
 
 | Req | Descrição | Código | Teste | Status |
 |-----|-----------|--------|-------|--------|
-| RF-12 | `ExpenseRepositoryPort.findMaxOdometerByVehicle` recebe parâmetro opcional `sinceDate?: string`; zero breaking change para callers existentes | — | — | ⏳ |
-| RF-13 | `MaintenanceRepositoryPort.findMaxOdometerByVehicle(vehicleId, userId, excludeMaintenanceId?, sinceDate?)`: análogo ao de expenses | — | — | ⏳ |
-| RF-14 | `ExpensesService` consulta `OdometerCyclesService.getActiveCycleStart()` antes da verificação de sequência e passa resultado como `sinceDate` | — | — | ⏳ |
-| RF-15 | `MaintenanceService` aplica o mesmo padrão de RF-14 para o repositório de manutenções (R-ODO-04) | — | — | ⏳ |
+| RF-12 | `ExpenseRepositoryPort.findMaxOdometerByVehicle` recebe parâmetro opcional `sinceDate?: string`; zero breaking change para callers existentes | — | — | ⏳ Depende do módulo de despesas (Fase 3) |
+| RF-13 | `MaintenanceRepositoryPort.findMaxOdometerByVehicle(vehicleId, userId, excludeMaintenanceId?, sinceDate?)`: análogo ao de expenses | — | — | ⏳ Depende do módulo de manutenções (Fase 4) |
+| RF-14 | `ExpensesService` consulta `OdometerCyclesService.getActiveCycleStart()` antes da verificação de sequência e passa resultado como `sinceDate` | — | — | ⏳ Depende do módulo de despesas (Fase 3) |
+| RF-15 | `MaintenanceService` aplica o mesmo padrão de RF-14 para o repositório de manutenções (R-ODO-04) | — | — | ⏳ Depende do módulo de manutenções (Fase 4) |
 
 ### Mensagem de Confirmação e Atalho para Novo Ciclo (R-ODO-06)
 
 | Req | Descrição | Código | Teste | Status |
 |-----|-----------|--------|-------|--------|
-| RF-16 | Warning de odômetro exibe `AlertDialog` com botões "Confirmar retroativo" e "Cancelar" | — | — | ⏳ |
-| RF-17 | Quando `odometer_km <= 100` OU queda >= 50%: UI exibe caminho "Iniciar novo ciclo" (R-ODO-06) | — | — | ⏳ |
+| RF-16 | Warning de odômetro exibe `AlertDialog` com botões "Confirmar retroativo" e "Cancelar" | — | — | ⏳ Depende do `ExpenseForm`/`MaintenanceForm` (Fases 3/4) |
+| RF-17 | Quando `odometer_km <= 100` OU queda >= 50%: UI exibe caminho "Iniciar novo ciclo" (R-ODO-06) | — | — | ⏳ Depende do `ExpenseForm`/`MaintenanceForm` (Fases 3/4) |
 
 ### Atualização das Funções SQL Analíticas
 
@@ -181,15 +183,15 @@ que o artefato ainda não existe no repositório.
 | RF-18 | `fuel_consumption_trend` atualizada com filtro de ciclo ativo no WHERE | `supabase/migrations/20260712172020_analytics_functions.sql` | — | 🔶 |
 | RF-19 | `calculate_vehicle_tco` atualizada com o mesmo filtro de ciclo ativo | `supabase/migrations/20260712172020_analytics_functions.sql` | — | 🔶 |
 | RF-20 | `get_vehicle_cost_per_km` atualizada com o mesmo filtro de ciclo ativo | `supabase/migrations/20260712172020_analytics_functions.sql` | — | 🔶 |
-| RF-21 | Ordem de deploy obrigatória: (1) migration + funções SQL; (2) backend OdometerCyclesModule; (3) UI de reset | — | — | ⏳ |
+| RF-21 | Ordem de deploy obrigatória: (1) migration + funções SQL; (2) backend OdometerCyclesModule; (3) UI de reset | Respeitada — migration+funções (2026-07-12) precederam `OdometerCyclesModule` (2026-07-13, T2.4) | — | ✅ |
 
 ### Interface — Tela de Configurações e Badge
 
 | Req | Descrição | Código | Teste | Status |
 |-----|-----------|--------|-------|--------|
-| RF-22 | Rota `/settings/vehicles/[vehicleId]/odometer-cycles`: tabela de histórico + modal "Reiniciar odômetro" | — | — | ⏳ |
-| RF-23 | `VehicleContextChip` exibe badge "Ciclo {N}" somente quando `cycle_number >= 2`; Ciclo 1 implícito não exibe badge (R-ODO-06) | — | — | ⏳ |
-| RF-24 | `MaintenanceForm`: campo `odometer_km` torna-se visualmente obrigatório quando `status = completed` (R-ODO-03) | — | — | ⏳ |
+| RF-22 | Rota `/settings/vehicles/[vehicleId]/odometer-cycles`: tabela de histórico + modal "Reiniciar odômetro" (sem dirty-check `AlertDialog` dedicado — mesma limitação de T2.1, pendente do Design System) | `apps/web/src/app/settings/vehicles/[vehicleId]/odometer-cycles/page.tsx` | `apps/web/src/app/settings/vehicles/[vehicleId]/odometer-cycles/page.spec.tsx` | 🔶 |
+| RF-23 | `VehicleContextChip` exibe badge "Ciclo {N}" somente quando `cycle_number >= 2`; Ciclo 1 implícito não exibe badge (R-ODO-06) | — | — | ⏳ Depende do dashboard/Em Foco (Fase 5) |
+| RF-24 | `MaintenanceForm`: campo `odometer_km` torna-se visualmente obrigatório quando `status = completed` (R-ODO-03) | — | — | ⏳ Depende do módulo de manutenções (Fase 4) |
 
 ---
 

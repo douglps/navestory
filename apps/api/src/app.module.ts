@@ -7,6 +7,7 @@ import { HealthModule } from "./health/health.module";
 import { AdminModule } from "./modules/admin/admin.module";
 import { AuthModule } from "./modules/auth/auth.module";
 import { UsersModule } from "./modules/users/users.module";
+import { VehiclesModule } from "./modules/vehicles/vehicles.module";
 import { AuditModule } from "./shared/audit/audit.module";
 import { SupabaseAdminModule } from "./shared/supabase/supabase-admin.module";
 import { SupabaseModule } from "./shared/supabase/supabase.module";
@@ -30,6 +31,7 @@ import { SupabaseModule } from "./shared/supabase/supabase.module";
     AuthModule,
     UsersModule,
     AdminModule,
+    VehiclesModule,
   ],
   providers: [
     {

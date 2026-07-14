@@ -4,6 +4,7 @@ Regras: R1, R2, R3, R4, R5, R6, R-CAT-01..04, R-FUEL-01..06, R-LED-01..05, R-HUB
 
 | Spec | Título | Status |
 |------|--------|--------|
+| [SPEC-20260714-001](SPEC-20260714-001-expenses-crud.md) | CRUD Base de Despesas (ExpensesModule) | Aprovada |
 | [SPEC-20260521-003](SPEC-20260521-003.md) | Export CSV — Dashboard | Aprovada |
 | [SPEC-20260601-001](SPEC-20260601-001-odometer-validation.md) | Validação de Sequência de Odômetro | Aprovada |
 | [SPEC-20260601-002](SPEC-20260601-002-duplicate-detection.md) | Detecção de Duplicata de Despesa | Aprovada |

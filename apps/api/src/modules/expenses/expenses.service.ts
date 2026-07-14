@@ -1,0 +1,226 @@
+import { ForbiddenException, Inject, Injectable, NotFoundException } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import { AuditService } from "../../shared/audit/audit.service";
+import { createUserScopedClient } from "../../shared/supabase/create-user-scoped-client";
+import { SUPABASE_ADMIN_CLIENT } from "../../shared/supabase/supabase.constants";
+import type { CreateExpenseDto } from "./dto/create-expense.dto";
+import type { ListExpensesDto } from "./dto/list-expenses.dto";
+import type { UpdateExpenseDto } from "./dto/update-expense.dto";
+
+export interface Expense {
+  id: string;
+  user_id: string;
+  vehicle_id: string;
+  category: string;
+  amount: number;
+  date: string;
+  description: string | null;
+  odometer_km: number | null;
+  liters: number | null;
+  fuel_type: string | null;
+  full_tank: boolean | null;
+  supplier: string | null;
+  source_type: string | null;
+  source_id: string | null;
+  is_readonly: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PaginatedExpenses {
+  data: Expense[];
+  meta: { total: number; page: number; limit: number; has_next: boolean };
+}
+
+const EXPENSE_COLUMNS = `id, user_id, vehicle_id, category, amount, date, description, odometer_km,
+  liters, fuel_type, full_tank, supplier, source_type, source_id, is_readonly, created_at, updated_at`;
+
+/**
+ * @spec SPEC-20260714-001
+ */
+@Injectable()
+export class ExpensesService {
+  constructor(
+    @Inject(SUPABASE_ADMIN_CLIENT) private readonly supabaseAdmin: SupabaseClient,
+    private readonly configService: ConfigService,
+    private readonly auditService: AuditService,
+  ) {}
+
+  private clientForUser(accessToken: string): SupabaseClient {
+    return createUserScopedClient(
+      this.configService.getOrThrow<string>("SUPABASE_URL"),
+      this.configService.getOrThrow<string>("SUPABASE_ANON_KEY"),
+      accessToken,
+    );
+  }
+
+  /**
+   * @spec SPEC-20260714-001 RF-01, RF-02, RF-09, RNF-04
+   */
+  async create(accessToken: string, userId: string, dto: CreateExpenseDto): Promise<Expense> {
+    const client = this.clientForUser(accessToken);
+
+    const { data: vehicle, error: vehicleError } = await client
+      .from("vehicles")
+      .select("id")
+      .eq("id", dto.vehicle_id)
+      .eq("user_id", userId)
+      .is("deleted_at", null)
+      .maybeSingle();
+
+    if (vehicleError || !vehicle) {
+      throw new NotFoundException("Veículo não encontrado");
+    }
+
+    const { data, error } = await client
+      .from("expenses")
+      .insert({ ...dto, user_id: userId, is_readonly: false })
+      .select(EXPENSE_COLUMNS)
+      .single();
+
+    if (error || !data) {
+      throw new NotFoundException("Não foi possível criar a despesa");
+    }
+
+    void this.auditService.log({
+      userId,
+      action: "EXPENSE_CREATED",
+      tableName: "expenses",
+      recordId: (data as Expense).id,
+    });
+
+    return data as Expense;
+  }
+
+  /**
+   * @spec SPEC-20260714-001 RF-03, RNF-01, P1
+   */
+  async findAll(
+    accessToken: string,
+    userId: string,
+    query: ListExpensesDto,
+  ): Promise<PaginatedExpenses> {
+    const client = this.clientForUser(accessToken);
+    const { page, limit, vehicle_id, category, date_from, date_to } = query;
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
+
+    let builder = client
+      .from("expenses")
+      .select(EXPENSE_COLUMNS, { count: "exact" })
+      .eq("user_id", userId)
+      .is("deleted_at", null);
+
+    if (vehicle_id) {
+      builder = builder.eq("vehicle_id", vehicle_id);
+    }
+    if (category) {
+      builder = builder.eq("category", category);
+    }
+    if (date_from) {
+      builder = builder.gte("date", date_from);
+    }
+    if (date_to) {
+      builder = builder.lte("date", date_to);
+    }
+
+    const { data, error, count } = await builder
+      .order("date", { ascending: false })
+      .range(from, to);
+
+    if (error) {
+      throw new NotFoundException("Não foi possível listar as despesas");
+    }
+
+    const total = count ?? 0;
+    return {
+      data: (data ?? []) as Expense[],
+      meta: { total, page, limit, has_next: from + (data?.length ?? 0) < total },
+    };
+  }
+
+  /**
+   * @spec SPEC-20260714-001 RF-04
+   */
+  async findOne(accessToken: string, userId: string, expenseId: string): Promise<Expense> {
+    const { data, error } = await this.clientForUser(accessToken)
+      .from("expenses")
+      .select(EXPENSE_COLUMNS)
+      .eq("id", expenseId)
+      .eq("user_id", userId)
+      .is("deleted_at", null)
+      .maybeSingle();
+
+    if (error || !data) {
+      throw new NotFoundException("Despesa não encontrada");
+    }
+    return data as Expense;
+  }
+
+  /**
+   * @spec SPEC-20260714-001 RF-05, RF-07, R-LED-01
+   */
+  async update(
+    accessToken: string,
+    userId: string,
+    expenseId: string,
+    dto: UpdateExpenseDto,
+  ): Promise<Expense> {
+    const existing = await this.findOne(accessToken, userId, expenseId);
+    if (existing.is_readonly) {
+      throw new ForbiddenException("Despesa vinculada ao ledger não pode ser editada");
+    }
+
+    const { data, error } = await this.clientForUser(accessToken)
+      .from("expenses")
+      .update(dto)
+      .eq("id", expenseId)
+      .eq("user_id", userId)
+      .is("deleted_at", null)
+      .select(EXPENSE_COLUMNS)
+      .maybeSingle();
+
+    if (error || !data) {
+      throw new NotFoundException("Despesa não encontrada");
+    }
+
+    void this.auditService.log({
+      userId,
+      action: "EXPENSE_UPDATED",
+      tableName: "expenses",
+      recordId: expenseId,
+      changes: dto,
+    });
+
+    return data as Expense;
+  }
+
+  /**
+   * @spec SPEC-20260714-001 RF-06, RF-07, R-LED-01, R5
+   */
+  async remove(accessToken: string, userId: string, expenseId: string): Promise<void> {
+    const existing = await this.findOne(accessToken, userId, expenseId);
+    if (existing.is_readonly) {
+      throw new ForbiddenException("Despesa vinculada ao ledger não pode ser removida");
+    }
+
+    const { error } = await this.clientForUser(accessToken)
+      .from("expenses")
+      .update({ deleted_at: new Date().toISOString() })
+      .eq("id", expenseId)
+      .eq("user_id", userId)
+      .is("deleted_at", null);
+
+    if (error) {
+      throw new NotFoundException("Não foi possível remover a despesa");
+    }
+
+    void this.auditService.log({
+      userId,
+      action: "EXPENSE_DELETED",
+      tableName: "expenses",
+      recordId: expenseId,
+    });
+  }
+}

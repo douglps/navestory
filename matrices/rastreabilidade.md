@@ -60,6 +60,13 @@
 >   `apps/web/src/lib/vehicle-chip.ts` (`resolveChipValue`/`formatChipPreview`) — ver seção
 >   SPEC-20260603-003 abaixo. RF-01/RF-04/RF-05 (renderização do `VehicleContextChip` real
 >   no subheader) permanecem ⏳ até `SPEC-20260603-001` (Fase 5).
+>
+> **ATUALIZAÇÃO — 2026-07-14 (rev. 45)**
+> Início da Fase 3 (`docs/IMPLEMENTATION_STRATEGY.md`, EPIC-FIN-001/ADR-006). Lacuna identificada:
+> nenhuma das 14 specs de `specs/expenses/` cobria o CRUD base de despesas — todas assumiam o
+> `ExpensesModule` como pré-existente. Spec nova **SPEC-20260714-001** criada, aprovada e
+> implementada (backend + validators + frontend mínimo) como pré-requisito de T3.1 (Export CSV,
+> SPEC-20260521-003). Ver seção SPEC-20260714-001 abaixo para o detalhamento Código/Teste.
 
 ---
 
@@ -777,6 +784,52 @@ que o artefato ainda não existe no repositório.
 | RF-11 | KPI cards: Total, Veículos, Despesas, Manutenções | — | — | ⏳ |
 | RF-12..RF-14 | Tabela: Quando (relativo), Ação (badge colorido), Domínio (ícone), Detalhes | — | — | ⏳ |
 | RF-16 | Card "Monitor" + `ShieldCheck` nas Ações Rápidas do dashboard | — | — | ⏳ |
+
+---
+
+## SPEC-20260714-001 — CRUD Base de Despesas (ExpensesModule) (approved)
+
+> **2026-07-14 (T3.0, pré-requisito da Fase 3):** `ExpensesModule` implementado — API REST
+> completa (create, list paginado, get, update, soft-delete), schemas Zod e frontend mínimo
+> (`/expenses`, `/expenses/new`, `/expenses/[id]`). RF-08 (checagem de sequência de odômetro,
+> R1) fica ⏳ deliberadamente — objeto de SPEC-20260601-001 (T3.2). RF-14 (campo `computed` de
+> consumo) fica ⏳ — objeto de SPEC-20260606-001 (fuel enrichment).
+
+### Banco de dados
+
+| Artefato | Descrição | Regra | Status |
+|----------|-----------|-------|--------|
+| `supabase/migrations/20260712171830_core_tables.sql` | `CREATE TABLE public.expenses` — já aplicado, schema não alterado por esta spec | R1, R-LED-04 | ✅ (schema já existente) |
+
+### API (backend) — `ExpensesModule`
+
+| Req | Descrição | Código | Teste | Status |
+|-----|-----------|--------|-------|--------|
+| RF-01/RF-02/CA-01 | `POST /expenses` cria despesa manual | `apps/api/src/modules/expenses/expenses.service.ts`, `expenses.controller.ts` | `apps/api/src/modules/expenses/expenses.service.spec.ts`, `expenses.controller.spec.ts` | ✅ |
+| RF-03/CA-06/CA-07/CA-17 | `GET /expenses` lista paginada, filtros, isolamento por usuário | `apps/api/src/modules/expenses/expenses.service.ts` (`findAll`) | `apps/api/src/modules/expenses/expenses.service.spec.ts` | ✅ |
+| RF-04/CA-08 | `GET /expenses/:id` | `apps/api/src/modules/expenses/expenses.service.ts` (`findOne`) | `apps/api/src/modules/expenses/expenses.service.spec.ts` | ✅ |
+| RF-05/CA-13 | `PATCH /expenses/:id` | `apps/api/src/modules/expenses/expenses.service.ts` (`update`) | `apps/api/src/modules/expenses/expenses.service.spec.ts` | ✅ |
+| RF-06/CA-11 | `DELETE /expenses/:id` soft-delete | `apps/api/src/modules/expenses/expenses.service.ts` (`remove`) | `apps/api/src/modules/expenses/expenses.service.spec.ts` | ✅ |
+| RF-07/CA-09/CA-10/R-LED-01 | Bloqueio de PATCH/DELETE em despesas `is_readonly` (403) | `apps/api/src/modules/expenses/expenses.service.ts` (`update`, `remove`) | `apps/api/src/modules/expenses/expenses.service.spec.ts` | ✅ |
+| RF-08/CA-05 | `odometer_km` persistido sem checagem de sequência (R1 fica com SPEC-20260601-001/T3.2) | `apps/api/src/modules/expenses/expenses.service.ts` (`create`) | — | ⏳ (checagem R1 não implementada — deliberado) |
+| RF-09/CA-12 | `vehicle_id` de outro usuário → 404 | `apps/api/src/modules/expenses/expenses.service.ts` (`create`) | `apps/api/src/modules/expenses/expenses.service.spec.ts` | ✅ |
+| RF-10/CA-15/C2 | Audit log em mutações (fire-and-forget via `AuditService`) | `apps/api/src/modules/expenses/expenses.service.ts` | `apps/api/src/modules/expenses/expenses.service.spec.ts` | 🔶 (chamada verificada via mock; sem teste de integração do `audit_logs`) |
+| RF-14 | Campo `computed` (`price_per_liter`, `km_per_liter`) | — | — | ⏳ objeto de SPEC-20260606-001 |
+| RF-15 | Paginação por `cursor` | — | — | ❌ Baixa prioridade, não implementada nesta tarefa |
+
+### Schema / Validação
+
+| Req | Descrição | Código | Teste | Status |
+|-----|-----------|--------|-------|--------|
+| RF-02 | `expenseBaseSchema`, `createExpenseInputSchema`, `updateExpenseInputSchema`, `listExpensesQuerySchema` | `packages/validators/src/expense.schemas.ts` | `packages/validators/src/expense.schemas.spec.ts` | ✅ |
+
+### Frontend
+
+| Req | Descrição | Código | Teste | Status |
+|-----|-----------|--------|-------|--------|
+| RF-11 | Página `/expenses` (listagem, resolve veículo por `vehicle_id`) | `apps/web/src/app/expenses/page.tsx` | `apps/web/src/app/expenses/page.spec.tsx` | ✅ |
+| RF-12 | Página `/expenses/new` (formulário de criação) | `apps/web/src/app/expenses/new/page.tsx` | `apps/web/src/app/expenses/new/page.spec.tsx` | ✅ |
+| RF-13 | Página `/expenses/[id]` (edição + remoção, bloqueio quando `is_readonly`) | `apps/web/src/app/expenses/[id]/page.tsx` | `apps/web/src/app/expenses/[id]/page.spec.tsx` | ✅ |
 
 ---
 

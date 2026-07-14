@@ -15,22 +15,28 @@ describe("ExpensesService", () => {
   } as unknown as ConfigService;
   const supabaseAdmin = {} as never;
 
-  function buildTerminalBuilder(result: unknown) {
+  function buildTerminalBuilder(resultOrQueue: unknown) {
+    const queue = Array.isArray(resultOrQueue) ? [...resultOrQueue] : undefined;
+    const resolveNext = () => (queue ? (queue.length > 1 ? queue.shift() : queue[0]) : resultOrQueue);
+
     const builder: Record<string, unknown> = {};
     builder.select = jest.fn().mockReturnValue(builder);
     builder.insert = jest.fn().mockReturnValue(builder);
     builder.update = jest.fn().mockReturnValue(builder);
     builder.eq = jest.fn().mockReturnValue(builder);
+    builder.neq = jest.fn().mockReturnValue(builder);
+    builder.not = jest.fn().mockReturnValue(builder);
     builder.gte = jest.fn().mockReturnValue(builder);
     builder.lte = jest.fn().mockReturnValue(builder);
     builder.is = jest.fn().mockReturnValue(builder);
     builder.order = jest.fn().mockReturnValue(builder);
-    builder.range = jest.fn().mockResolvedValue(result);
-    builder.single = jest.fn().mockResolvedValue(result);
-    builder.maybeSingle = jest.fn().mockResolvedValue(result);
+    builder.limit = jest.fn().mockReturnValue(builder);
+    builder.range = jest.fn().mockImplementation(() => Promise.resolve(resolveNext()));
+    builder.single = jest.fn().mockImplementation(() => Promise.resolve(resolveNext()));
+    builder.maybeSingle = jest.fn().mockImplementation(() => Promise.resolve(resolveNext()));
     // "await builder" support for plain update chains without a terminal method call
     builder.then = ((resolve: (value: unknown) => unknown, reject: (reason: unknown) => unknown) =>
-      Promise.resolve(result).then(resolve, reject)) as unknown;
+      Promise.resolve(resolveNext()).then(resolve, reject)) as unknown;
     return builder;
   }
 
@@ -145,5 +151,158 @@ describe("ExpensesService", () => {
     expect(auditLog).toHaveBeenCalledWith(
       expect.objectContaining({ action: "EXPENSE_DELETED", recordId: "e1" }),
     );
+  });
+
+  describe("SPEC-20260601-001: validação de sequência de odômetro", () => {
+    it("RF-01, RF-03: create com odometer_km menor que o máximo retorna odometer_warning", async () => {
+      mockClient({
+        vehicles: { data: { id: "veh1" }, error: null },
+        expenses: [
+          { data: { id: "e1", vehicle_id: "veh1", odometer_km: 50000 }, error: null },
+          { data: { odometer_km: 80000 }, error: null },
+        ],
+      });
+      const service = createService();
+
+      const expense = await service.create(
+        "token",
+        "u1",
+        { ...createDto, odometer_km: 50000 } as never,
+      );
+
+      expect(expense).toMatchObject({ odometer_warning: true, odometer_previous_max_km: 80000 });
+    });
+
+    it("RF-04: create com odometer_km maior ou igual ao máximo não retorna odometer_warning", async () => {
+      mockClient({
+        vehicles: { data: { id: "veh1" }, error: null },
+        expenses: [
+          { data: { id: "e1", vehicle_id: "veh1", odometer_km: 90000 }, error: null },
+          { data: { odometer_km: 80000 }, error: null },
+        ],
+      });
+      const service = createService();
+
+      const expense = await service.create(
+        "token",
+        "u1",
+        { ...createDto, odometer_km: 90000 } as never,
+      );
+
+      expect(expense).not.toHaveProperty("odometer_warning");
+    });
+
+    it("EC-01: create sem histórico de odômetro (máximo null) não retorna warning", async () => {
+      mockClient({
+        vehicles: { data: { id: "veh1" }, error: null },
+        expenses: [
+          { data: { id: "e1", vehicle_id: "veh1", odometer_km: 50000 }, error: null },
+          { data: null, error: null },
+        ],
+      });
+      const service = createService();
+
+      const expense = await service.create(
+        "token",
+        "u1",
+        { ...createDto, odometer_km: 50000 } as never,
+      );
+
+      expect(expense).not.toHaveProperty("odometer_warning");
+    });
+
+    it("RF-01: create sem odometer_km não consulta o máximo nem retorna warning", async () => {
+      const { builders } = mockClient({
+        vehicles: { data: { id: "veh1" }, error: null },
+        expenses: { data: { id: "e1", vehicle_id: "veh1", odometer_km: null }, error: null },
+      });
+      const service = createService();
+
+      const expense = await service.create("token", "u1", createDto as never);
+
+      expect(expense).not.toHaveProperty("odometer_warning");
+      expect((builders.get("expenses")!.select as jest.Mock).mock.calls).toHaveLength(1);
+    });
+
+    it("EC-04: odometer_km igual ao máximo não retorna warning", async () => {
+      mockClient({
+        vehicles: { data: { id: "veh1" }, error: null },
+        expenses: [
+          { data: { id: "e1", vehicle_id: "veh1", odometer_km: 80000 }, error: null },
+          { data: { odometer_km: 80000 }, error: null },
+        ],
+      });
+      const service = createService();
+
+      const expense = await service.create(
+        "token",
+        "u1",
+        { ...createDto, odometer_km: 80000 } as never,
+      );
+
+      expect(expense).not.toHaveProperty("odometer_warning");
+    });
+
+    it("EC-05: falha na consulta de máximo degrada graciosamente sem warning", async () => {
+      mockClient({
+        vehicles: { data: { id: "veh1" }, error: null },
+        expenses: [
+          { data: { id: "e1", vehicle_id: "veh1", odometer_km: 50000 }, error: null },
+          { data: null, error: { message: "timeout" } },
+        ],
+      });
+      const service = createService();
+
+      const expense = await service.create(
+        "token",
+        "u1",
+        { ...createDto, odometer_km: 50000 } as never,
+      );
+
+      expect(expense).not.toHaveProperty("odometer_warning");
+    });
+
+    it("RF-05: update exclui o próprio registro da comparação de máximo (excludeExpenseId)", async () => {
+      const { builders } = mockClient({
+        expenses: [
+          { data: { id: "e1", is_readonly: false, odometer_km: 80000 }, error: null },
+          { data: { id: "e1", is_readonly: false, odometer_km: 79000 }, error: null },
+          { data: null, error: null },
+        ],
+      });
+      const service = createService();
+
+      const expense = await service.update("token", "u1", "e1", { odometer_km: 79000 } as never);
+
+      expect(expense).not.toHaveProperty("odometer_warning");
+      expect((builders.get("expenses")!.neq as jest.Mock).mock.calls[0]).toEqual(["id", "e1"]);
+    });
+
+    it("RF-03: update com odometer_km menor que o máximo (excluindo o próprio registro) retorna warning", async () => {
+      mockClient({
+        expenses: [
+          { data: { id: "e1", is_readonly: false, odometer_km: 30000 }, error: null },
+          { data: { id: "e1", is_readonly: false, odometer_km: 30000 }, error: null },
+          { data: { odometer_km: 80000 }, error: null },
+        ],
+      });
+      const service = createService();
+
+      const expense = await service.update("token", "u1", "e1", { odometer_km: 30000 } as never);
+
+      expect(expense).toMatchObject({ odometer_warning: true, odometer_previous_max_km: 80000 });
+    });
+
+    it("RF-01: update sem odometer_km na payload não consulta o máximo", async () => {
+      const { builders } = mockClient({
+        expenses: { data: { id: "e1", is_readonly: false, amount: 200 }, error: null },
+      });
+      const service = createService();
+
+      const expense = await service.update("token", "u1", "e1", { amount: 200 } as never);
+
+      expect(expense).not.toHaveProperty("odometer_warning");
+      expect((builders.get("expenses")!.update as jest.Mock).mock.calls).toHaveLength(1);
+    });
   });
 });

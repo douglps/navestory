@@ -811,7 +811,7 @@ que o artefato ainda não existe no repositório.
 | RF-05/CA-13 | `PATCH /expenses/:id` | `apps/api/src/modules/expenses/expenses.service.ts` (`update`) | `apps/api/src/modules/expenses/expenses.service.spec.ts` | ✅ |
 | RF-06/CA-11 | `DELETE /expenses/:id` soft-delete | `apps/api/src/modules/expenses/expenses.service.ts` (`remove`) | `apps/api/src/modules/expenses/expenses.service.spec.ts` | ✅ |
 | RF-07/CA-09/CA-10/R-LED-01 | Bloqueio de PATCH/DELETE em despesas `is_readonly` (403) | `apps/api/src/modules/expenses/expenses.service.ts` (`update`, `remove`) | `apps/api/src/modules/expenses/expenses.service.spec.ts` | ✅ |
-| RF-08/CA-05 | `odometer_km` persistido sem checagem de sequência (R1 fica com SPEC-20260601-001/T3.2) | `apps/api/src/modules/expenses/expenses.service.ts` (`create`) | — | ⏳ (checagem R1 não implementada — deliberado) |
+| RF-08/CA-05 | `odometer_km` persistido; checagem de sequência (R1) implementada em T3.2 — ver [SPEC-20260601-001](expenses/SPEC-20260601-001-odometer-validation.md) | `apps/api/src/modules/expenses/expenses.service.ts` (`create`, `buildOdometerWarning`) | `apps/api/src/modules/expenses/expenses.service.spec.ts` | ✅ |
 | RF-09/CA-12 | `vehicle_id` de outro usuário → 404 | `apps/api/src/modules/expenses/expenses.service.ts` (`create`) | `apps/api/src/modules/expenses/expenses.service.spec.ts` | ✅ |
 | RF-10/CA-15/C2 | Audit log em mutações (fire-and-forget via `AuditService`) | `apps/api/src/modules/expenses/expenses.service.ts` | `apps/api/src/modules/expenses/expenses.service.spec.ts` | 🔶 (chamada verificada via mock; sem teste de integração do `audit_logs`) |
 | RF-14 | Campo `computed` (`price_per_liter`, `km_per_liter`) | — | — | ⏳ objeto de SPEC-20260606-001 |
@@ -1037,30 +1037,27 @@ que o artefato ainda não existe no repositório.
 
 ## SPEC-20260601-001 — Validação de Sequência de Odômetro em Expenses (approved)
 
-> Adiciona aviso não-bloqueante quando `odometer_km` informado é menor que o maior valor
-> registrado para o veículo. Nenhum código implementado.
-
-### Schema de banco
-
-| Artefato | Descrição | Status |
-|----------|-----------|--------|
-| Migration `002_add_odometer_to_expenses.sql` | `ADD COLUMN IF NOT EXISTS odometer_km INTEGER` em `public.expenses`; índice parcial | ⏳ Não aplicado |
-
-### Camada de repositório
-
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-02 | Interface: `findMaxOdometerByVehicle(vehicleId, userId, excludeExpenseId?)` adicionada ao port | — | — | ⏳ |
-| RF-02 | Implementação Supabase: `SELECT MAX(odometer_km)` com filtros | — | — | ⏳ |
+> **2026-07-14 (T3.2):** Implementado com padrão **response-field** (não exception-based —
+> ver correção de D6 no changelog da spec). `odometer_km INTEGER` já existia em `public.expenses`
+> desde `20260712171830_core_tables.sql` (T3.0) — a linha de migration pendente citada
+> anteriormente aqui estava desatualizada e foi removida. Sem camada de repositório separada:
+> o projeto não usa o padrão Port/Repository para `ExpensesModule` (consulta Supabase inline no
+> service, mesmo padrão de `create`/`update`/`findOne` já existentes). Exibição do aviso no
+> frontend fica ⏳ deliberadamente — NG-05 da spec exclui esse escopo, e `R-FORM-04` (redirect
+> imediato após criar) exigiria uma spec de UX própria para acomodar o aviso pós-criação.
 
 ### Camada de serviço
 
 | Req | Descrição | Código | Teste | Status |
 |-----|-----------|--------|-------|--------|
-| RF-01 | `ExpensesService.create()`: pula verificação quando `odometer_km` é `null` ou ausente | — | — | ⏳ |
-| RF-03 | `ExpensesService.create()`: enriquece resposta com `odometer_warning: true` e `odometer_previous_max_km` | — | — | ⏳ |
-| RF-04 | Sem warning quando `odometer_km >= máximo` ou sem registros anteriores | — | — | ⏳ |
-| RF-05 | `ExpensesService.update()`: exclui o próprio registro da comparação via `excludeExpenseId` | — | — | ⏳ |
+| RF-01 | `ExpensesService.create()`/`update()`: pula verificação quando `odometer_km` é `null` ou ausente | `apps/api/src/modules/expenses/expenses.service.ts` (`buildOdometerWarning`) | `apps/api/src/modules/expenses/expenses.service.spec.ts` | ✅ |
+| RF-02 | `findMaxOdometerByVehicle(vehicleId, userId, excludeExpenseId?)` — método privado do service (sem Repository/Port; consulta Supabase inline, mesmo padrão do restante do módulo) | `apps/api/src/modules/expenses/expenses.service.ts` (`findMaxOdometerByVehicle`) | `apps/api/src/modules/expenses/expenses.service.spec.ts` | ✅ |
+| RF-03 | `ExpensesService.create()`/`update()`: enriquece resposta com `odometer_warning: true` e `odometer_previous_max_km` | `apps/api/src/modules/expenses/expenses.service.ts` (`buildOdometerWarning`) | `apps/api/src/modules/expenses/expenses.service.spec.ts` | ✅ |
+| RF-04 | Sem warning quando `odometer_km >= máximo` ou sem registros anteriores | `apps/api/src/modules/expenses/expenses.service.ts` (`buildOdometerWarning`) | `apps/api/src/modules/expenses/expenses.service.spec.ts` | ✅ |
+| RF-05 | `ExpensesService.update()`: exclui o próprio registro da comparação via `excludeExpenseId` | `apps/api/src/modules/expenses/expenses.service.ts` (`update`, `findMaxOdometerByVehicle`) | `apps/api/src/modules/expenses/expenses.service.spec.ts` | ✅ |
+| RF-06 | Verificação considera apenas `deleted_at IS NULL` | `apps/api/src/modules/expenses/expenses.service.ts` (`findMaxOdometerByVehicle`) | — | 🔶 (filtro aplicado via `.is("deleted_at", null)`; sem teste dedicado ao filtro de soft-delete neste método) |
+| EC-05 | Falha na consulta de máximo degrada graciosamente (loga e não bloqueia) | `apps/api/src/modules/expenses/expenses.service.ts` (`buildOdometerWarning`) | `apps/api/src/modules/expenses/expenses.service.spec.ts` | ✅ |
+| NG-05 | Exibição do warning no frontend | — | — | ⏳ deliberado — fora do escopo desta spec (ver nota acima) |
 
 ---
 

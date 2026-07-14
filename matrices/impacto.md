@@ -1,6 +1,6 @@
 # Matriz de Impacto — Nave SaaS
 
-> **AVISO DE CORRECAO — 2026-07-12 (rev. 21); atualizado 2026-07-13 (rev. 22 — IMPACTO-028 e IMPACTO-029 adicionados)**
+> **AVISO DE CORRECAO — 2026-07-12 (rev. 21); atualizado 2026-07-14 (rev. 23 — IMPACTO-030 adicionado)**
 > Esta matriz foi reescrita em 2026-07-12 para refletir o estado real do projeto.
 > Versões anteriores (rev. 1 a rev. 20) misturavam análises genuínas de planejamento com
 > entradas que afirmavam que mudanças haviam sido "implementadas" (com commits, datas de
@@ -740,6 +740,28 @@ A trigger `soft_delete_profile()` (em `supabase/migrations/`) está declarada pa
 **Impacto:** A regra C1 (LGPD — exclusão completa via cascata) é satisfeita pela exclusão física. A anonimização de `soft_delete_profile()` torna-se irrelevante quando a linha é deletada. Qualquer fluxo futuro que dependa de `profiles.deleted_at` ou de campos anonimizados deve ser revisado para verificar se a trigger adiciona valor real.
 
 **Decisão adiada:** Remover, manter (com documentação clara de efeito nulo) ou reatribuir a trigger para outro propósito. Registrar como débito técnico a ser resolvido antes da Fase 2.
+
+---
+
+### IMPACTO-030 — Decisão de Padrão de Soft Warnings: response-field vs. exception-based (2026-07-14)
+
+| Campo | Valor |
+|-------|-------|
+| **Spec** | SPEC-20260601-001 (T3.2 — odômetro), SPEC-20260601-002 (T3.3 — duplicata, ainda não implementada) |
+| **Status** | Decidido e implementado em T3.2 — response-field |
+| **Risco geral** | Baixo (com a opção escolhida) |
+
+| # | Dimensão | Option A: response-field (escolhida) | Option B: exception-based (descartada) |
+|---|----------|--------------------------|--------------------------|
+| 1 | Backend — service | Queries inline em `ExpensesService.create()`/`update()`, retornando objeto enriquecido. Sem nova classe de exception. | Exigiria `ExpenseWarningException`; service lançaria exceção em vez de retornar; DTOs ganhariam flag `confirmed`. |
+| 2 | Backend — controller | Zero alterações (`ExpensesController` já embrulha em `{ data: expense }`). | Exigiria capturar a exceção ou delegar ao filter; mudança na assinatura de resposta. |
+| 3 | Backend — `HttpExceptionFilter` | Zero alterações — o filtro atual (`@Catch()`) retorna apenas `{ statusCode, message, timestamp }`, compatível com Option A. | Exigiria modificar o filtro global para expor dados de warning em respostas de erro, impactando o contrato de TODOS os erros do projeto. |
+| 4 | Frontend — `expenses/new/page.tsx` | Ler `odometer_warning`/`odometer_previous_max_km` no `onSuccess`. | Exigiria detectar warning no `onError`, guardar payload pendente, exibir diálogo de confirmação, reenviar com `confirmed: true` — máquina de estados mais complexa. |
+| 5 | Frontend — `expenses/[id]/page.tsx` | Idem, no `onSuccess` do `updateMutation`. | Mesma máquina de estados de confirmação aplicada ao fluxo de PATCH. |
+| 6 | Consistência T3.2 × T3.3 | Alinhado: SPEC-20260601-002 (T3.3) especifica explicitamente response-field (RF-03: HTTP 201 com `duplicate_warning`). Zero retrabalho quando T3.3 for implementada. | Conflito: SPEC-20260601-002 nunca menciona exception-based. Exigiria emenda de spec aprovada ou dois padrões diferentes no mesmo endpoint `POST /expenses`. |
+| 7 | Risco de reversão futura | A → B: criar exception class, modificar filtro global, refatorar service, reescrever fluxo frontend, emendar specs. Custo alto. | B → A: remover exception class e lógica de confirmação. Custo médio, mas o filtro global já teria sido alterado, deixando rastro. |
+
+**Decisão:** Option A (response-field) foi confirmada com o usuário após pesquisa de UX (agente `design-system`: diálogo de confirmação é fricção desproporcional para validação soft; HTTP 409 é semanticamente incorreto para condição não-bloqueante) e análise de impacto técnico (agente `impact-analyzer`, esta entrada). A seção 15 D6 da SPEC-20260601-001 continha premissa incorreta ("padrão já implementado em SPEC-20260601-002" — que nunca usou exception-based) e foi corrigida via changelog da spec antes da implementação de T3.2. Frontend (itens 4/5) não foi implementado nesta tarefa — NG-05 da spec exclui exibição do warning no frontend deste escopo.
 
 ---
 

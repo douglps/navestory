@@ -231,7 +231,7 @@ CREATE INDEX IF NOT EXISTS idx_expenses_vehicle_id_odometer
 | Novo método `findMaxOdometerByVehicle` no `ExpenseRepositoryPort` | Query inline no service | Segue o padrão Repository existente no módulo; mantém o service testável com mocks do repositório. |
 | Enriquecimento da resposta no service (não no controller) | Controller sobrepõe a resposta | O enriquecimento é lógica de negócio — pertence ao service, não à camada HTTP. |
 | **OQ-01 → D5:** Query de máximo executada **após** o insert/update, com `excludeExpenseId` para excluir o próprio registro no fluxo PATCH | Query antes do insert (evita incluir o próprio registro) | Executar após o persist permite sempre passar `excludeExpenseId` de forma uniforme — o registro recém-criado é naturalmente excluído na comparação via PATCH; em INSERT o id não existe ainda, então `excludeExpenseId` é omitido. |
-| **OQ-02 → D6:** Implementação escolheu padrão **exception-based warning** com flag `confirmed` (não response-field) | Retornar `odometer_warning: true` no body do 201 | Consistência com o padrão de warnings de duplicata já implementado (SPEC-20260601-002). O campo `data.last_km` na exceção serve o mesmo propósito de `odometer_previous_max_km`. Migração para response-field é possível em versão futura sem breaking change. |
+| **OQ-02 → D6:** Padrão escolhido é **response-field** — retornar `odometer_warning: true` e `odometer_previous_max_km` no body do 201/200, conforme RF-03/RF-04 e seção 8 | Exception-based (`ExpenseWarningException` + flag `confirmed` para reenvio) | **Correção 2026-07-14 (ver changelog):** a versão anterior desta linha registrava a decisão oposta (exception-based) por suposição incorreta de que esse padrão já estava implementado em SPEC-20260601-002 — nunca esteve; aquela spec sempre especificou response-field (seu RF-03). Exception-based exigiria alterar o `HttpExceptionFilter` global do projeto (afetando o contrato de erro de todos os módulos) e introduzir uma máquina de estados de confirmação no frontend, sem nenhum ganho de UX comprovado — pesquisa de padrões de mercado (Nielsen Norman Group) desaconselha diálogo de confirmação para validações soft, e o uso de HTTP 409 para uma condição não-bloqueante distorce a semântica do protocolo. Response-field mantém o padrão consistente entre os dois warnings do módulo expenses. |
 
 ---
 
@@ -254,9 +254,10 @@ Ao implementar esta spec, siga as instruções abaixo para manter consistência 
 - Lógica de comparação e warning: no Service (`collectWarnings` para CREATE, bloco inline para UPDATE)
 - Ver `docs/architecture/overview.md` para diagrama completo de camadas e ADRs vigentes
 
-**Decisão de design já tomada (não alterar sem nova ADR):**
-- Warnings usam padrão exception-based (`ExpenseWarningException`) com flag `confirmed`
-- Não retornar `odometer_warning: true` no body do 201 — usar `ExpenseWarningException` + reenvio com `confirmed: true`
+**Decisão de design já tomada (corrigida em 2026-07-14 — ver changelog):**
+- Warnings usam padrão **response-field**: o lançamento é sempre persistido em uma única requisição, e a resposta HTTP 201/200 é enriquecida com `odometer_warning: true` e `odometer_previous_max_km` quando aplicável (RF-03/RF-04)
+- Não lançar exceção nem exigir reenvio com flag de confirmação — não há segunda requisição
+- Mesmo padrão usado por SPEC-20260601-002 (duplicate_warning/duplicate_id) — manter os dois warnings do módulo expenses consistentes entre si
 - Ver seção 15 (Decision Log) para racional de D5 e D6
 
 **Testes:**
@@ -280,6 +281,7 @@ Ao implementar esta spec, siga as instruções abaixo para manter consistência 
 | 1.0 | 2026-06-01 | douglps | Criação inicial |
 | 1.1 | 2026-06-02 | douglps | Fechamento de OQ-01 e OQ-02; adicionada seção "Contexto para Agentes" |
 | — | 2026-07-11 | doc-keeper | **NG-04 superseded parcialmente:** a exclusão de validação de odômetro em manutenções (NG-04) foi revertida por decisão de produto documentada em [SPEC-20260711-001](../vehicles/SPEC-20260711-001-odometer-cycles.md) e [ADR-007](../../docs/architecture/decisions/ADR-007-vehicle-odometer-cycles.md). `odometer_km` passa a ser obrigatório em manutenções com `status = completed` (R-ODO-03). O conteúdo original desta spec permanece inalterado — a superação é exclusivamente no escopo de NG-04. |
+| — | 2026-07-14 | douglps (via T3.2) | **Correção de contradição interna (D6):** a linha D6 do Decision Log e a seção "Contexto para Agentes de IA" afirmavam padrão exception-based (`ExpenseWarningException` + `confirmed`), contradizendo os próprios RF-03/RF-04 e a seção 8, que sempre descreveram response-field. A premissa de D6 (padrão "já implementado" em SPEC-20260601-002) era falsa — aquela spec nunca usou exception-based. Corrigido para response-field, único padrão coerente com os RFs desta spec e com SPEC-20260601-002. Decisão validada com pesquisa de UX (padrões Nielsen Norman Group) e análise de impacto técnico antes da correção. Nenhum RF funcional foi alterado — apenas a seção "Contexto para Agentes" e a decisão D6, que nunca refletiam corretamente os requisitos já aprovados. |
 
 ---
 

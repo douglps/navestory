@@ -1,4 +1,4 @@
-import { ForbiddenException, Inject, Injectable, NotFoundException } from "@nestjs/common";
+import { ForbiddenException, Inject, Injectable, Logger, NotFoundException } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { AuditService } from "../../shared/audit/audit.service";
@@ -28,6 +28,11 @@ export interface Expense {
   updated_at: string;
 }
 
+export type ExpenseWithOdometerWarning = Expense & {
+  odometer_warning?: true;
+  odometer_previous_max_km?: number;
+};
+
 export interface PaginatedExpenses {
   data: Expense[];
   meta: { total: number; page: number; limit: number; has_next: boolean };
@@ -41,6 +46,8 @@ const EXPENSE_COLUMNS = `id, user_id, vehicle_id, category, amount, date, descri
  */
 @Injectable()
 export class ExpensesService {
+  private readonly logger = new Logger(ExpensesService.name);
+
   constructor(
     @Inject(SUPABASE_ADMIN_CLIENT) private readonly supabaseAdmin: SupabaseClient,
     private readonly configService: ConfigService,
@@ -56,9 +63,71 @@ export class ExpensesService {
   }
 
   /**
-   * @spec SPEC-20260714-001 RF-01, RF-02, RF-09, RNF-04
+   * @spec SPEC-20260601-001 RF-02
    */
-  async create(accessToken: string, userId: string, dto: CreateExpenseDto): Promise<Expense> {
+  private async findMaxOdometerByVehicle(
+    client: SupabaseClient,
+    vehicleId: string,
+    userId: string,
+    excludeExpenseId?: string,
+  ): Promise<number | null> {
+    let builder = client
+      .from("expenses")
+      .select("odometer_km")
+      .eq("vehicle_id", vehicleId)
+      .eq("user_id", userId)
+      .is("deleted_at", null)
+      .not("odometer_km", "is", null);
+
+    if (excludeExpenseId) {
+      builder = builder.neq("id", excludeExpenseId);
+    }
+
+    const { data, error } = await builder
+      .order("odometer_km", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (error || !data) {
+      return null;
+    }
+    return (data as { odometer_km: number }).odometer_km;
+  }
+
+  /**
+   * @spec SPEC-20260601-001 RF-01, RF-03, RF-04, EC-05
+   */
+  private async buildOdometerWarning(
+    client: SupabaseClient,
+    userId: string,
+    vehicleId: string,
+    odometerKm: number | null | undefined,
+    excludeExpenseId?: string,
+  ): Promise<Pick<ExpenseWithOdometerWarning, "odometer_warning" | "odometer_previous_max_km">> {
+    if (odometerKm == null) {
+      return {};
+    }
+
+    try {
+      const maxKm = await this.findMaxOdometerByVehicle(client, vehicleId, userId, excludeExpenseId);
+      if (maxKm != null && odometerKm < maxKm) {
+        return { odometer_warning: true, odometer_previous_max_km: maxKm };
+      }
+    } catch (err) {
+      this.logger.error("Falha ao verificar sequência de odômetro", err as Error);
+    }
+    return {};
+  }
+
+  /**
+   * @spec SPEC-20260714-001 RF-01, RF-02, RF-09, RNF-04
+   * @spec SPEC-20260601-001 RF-01, RF-03, RF-04
+   */
+  async create(
+    accessToken: string,
+    userId: string,
+    dto: CreateExpenseDto,
+  ): Promise<ExpenseWithOdometerWarning> {
     const client = this.clientForUser(accessToken);
 
     const { data: vehicle, error: vehicleError } = await client
@@ -90,7 +159,9 @@ export class ExpensesService {
       recordId: (data as Expense).id,
     });
 
-    return data as Expense;
+    const expense = data as Expense;
+    const warning = await this.buildOdometerWarning(client, userId, expense.vehicle_id, dto.odometer_km);
+    return { ...expense, ...warning };
   }
 
   /**
@@ -160,19 +231,21 @@ export class ExpensesService {
 
   /**
    * @spec SPEC-20260714-001 RF-05, RF-07, R-LED-01
+   * @spec SPEC-20260601-001 RF-01, RF-03, RF-04, RF-05
    */
   async update(
     accessToken: string,
     userId: string,
     expenseId: string,
     dto: UpdateExpenseDto,
-  ): Promise<Expense> {
+  ): Promise<ExpenseWithOdometerWarning> {
     const existing = await this.findOne(accessToken, userId, expenseId);
     if (existing.is_readonly) {
       throw new ForbiddenException("Despesa vinculada ao ledger não pode ser editada");
     }
 
-    const { data, error } = await this.clientForUser(accessToken)
+    const client = this.clientForUser(accessToken);
+    const { data, error } = await client
       .from("expenses")
       .update(dto)
       .eq("id", expenseId)
@@ -193,7 +266,15 @@ export class ExpensesService {
       changes: dto,
     });
 
-    return data as Expense;
+    const expense = data as Expense;
+    const warning = await this.buildOdometerWarning(
+      client,
+      userId,
+      expense.vehicle_id,
+      dto.odometer_km,
+      expenseId,
+    );
+    return { ...expense, ...warning };
   }
 
   /**

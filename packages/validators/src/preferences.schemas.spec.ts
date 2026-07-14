@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { DEFAULT_AUTO_DRAFT_ENABLED, updatePreferencesInputSchema } from "./preferences.schemas";
+import {
+  DEFAULT_AUTO_DRAFT_ENABLED,
+  DEFAULT_CHIP_FIELDS,
+  chipFieldsSchema,
+  updatePreferencesInputSchema,
+} from "./preferences.schemas";
 
 describe("DEFAULT_AUTO_DRAFT_ENABLED", () => {
   it("é false (R-PREF-02 — default sem rascunho)", () => {
@@ -26,5 +31,58 @@ describe("updatePreferencesInputSchema", () => {
   it("rejeita payload vazio", () => {
     const result = updatePreferencesInputSchema.safeParse({});
     expect(result.success).toBe(false);
+  });
+
+  it("aceita apenas vehicle_chip_fields (RF-06 — atualização parcial)", () => {
+    const result = updatePreferencesInputSchema.safeParse({ vehicle_chip_fields: ["plate"] });
+    expect(result.success).toBe(true);
+  });
+});
+
+describe("DEFAULT_CHIP_FIELDS", () => {
+  it("é [make, plate, model] (RF-05 — ordem padrão atualizada em 2026-06-15)", () => {
+    expect(DEFAULT_CHIP_FIELDS).toEqual(["make", "plate", "model"]);
+  });
+});
+
+describe("chipFieldsSchema", () => {
+  it("aceita apenas placa (RF-02)", () => {
+    expect(chipFieldsSchema.safeParse(["plate"]).success).toBe(true);
+  });
+
+  it("aceita placa + 2 campos opcionais (RF-02)", () => {
+    expect(chipFieldsSchema.safeParse(["make", "plate", "model"]).success).toBe(true);
+  });
+
+  it("rejeita configuração sem placa (RF-01, CT-01)", () => {
+    const result = chipFieldsSchema.safeParse(["make", "model"]);
+    expect(result.success).toBe(false);
+  });
+
+  it("rejeita mais de 3 campos (RF-02, CT-02)", () => {
+    const result = chipFieldsSchema.safeParse(["plate", "make", "model", "nickname"]);
+    expect(result.success).toBe(false);
+  });
+
+  it("rejeita array vazio (RF-02)", () => {
+    expect(chipFieldsSchema.safeParse([]).success).toBe(false);
+  });
+
+  it("rejeita campo repetido (RF-03)", () => {
+    const result = chipFieldsSchema.safeParse(["plate", "plate"]);
+    expect(result.success).toBe(false);
+  });
+
+  it("rejeita campo desconhecido", () => {
+    const result = chipFieldsSchema.safeParse(["plate", "color"]);
+    expect(result.success).toBe(false);
+  });
+
+  it("preserva a ordem informada (RF-05, CT-07)", () => {
+    const result = chipFieldsSchema.safeParse(["plate", "make"]);
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data).toEqual(["plate", "make"]);
+    }
   });
 });

@@ -6,7 +6,7 @@ Regras: R5, R-VEH-01, R-VEH-02, R-GRP-01, R-GRP-02, R-GRP-03, R-GRP-04, R-DISP-0
 |------|--------|--------|
 | [SPEC-20260602-002](SPEC-20260602-002.md) | Gestão de Veículos (CRUD) | Aprovada |
 | [SPEC-20260602-003](SPEC-20260602-003.md) | Grupos de Veículos | Aprovada |
-| [SPEC-20260603-003](SPEC-20260603-003-vehicle-display-preferences.md) | Preferências de Exibição do Veículo no Chip | Draft |
+| [SPEC-20260603-003](SPEC-20260603-003-vehicle-display-preferences.md) | Preferências de Exibição do Veículo no Chip | Aprovada |
 | [SPEC-20260711-001](SPEC-20260711-001-odometer-cycles.md) | Ciclos de Odômetro | Aprovada |
 
 Implementação em `apps/api/src/modules/vehicles/`, `apps/api/src/modules/odometer-cycles/`, `apps/web/app/(dashboard)/vehicles/`, `apps/web/app/(dashboard)/settings/` e `apps/web/app/(dashboard)/dashboard/group-actions.ts`.

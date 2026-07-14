@@ -35,6 +35,22 @@ describe("PreferencesController", () => {
     expect(result.data).toEqual({ auto_draft_enabled: true });
   });
 
+  it("update persiste apenas vehicle_chip_fields (RF-06)", async () => {
+    const { controller, preferencesService } = createController({
+      upsert: jest.fn().mockResolvedValue({
+        auto_draft_enabled: false,
+        vehicle_chip_fields: ["plate"],
+      }),
+    });
+
+    const result = await controller.update(req, "u1", { vehicle_chip_fields: ["plate"] });
+
+    expect(preferencesService.upsert).toHaveBeenCalledWith("token-123", "u1", {
+      vehicle_chip_fields: ["plate"],
+    });
+    expect(result.data).toEqual({ auto_draft_enabled: false, vehicle_chip_fields: ["plate"] });
+  });
+
   it("lança 401 quando não há token disponível", async () => {
     const { controller } = createController();
     const reqSemToken = { headers: {}, cookies: {} } as unknown as Request;

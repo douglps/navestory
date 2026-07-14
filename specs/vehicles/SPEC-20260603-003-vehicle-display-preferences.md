@@ -1,9 +1,9 @@
 ---
 id: SPEC-20260603-003
 title: "Preferências de Exibição do Veículo no Chip de Contexto"
-status: draft
+status: approved
 date: 2026-06-03
-author: douglps
+author: Douglas Lopes (lps.doug@protonmail.com)
 rules: [R-DISP-01, R-DISP-02, R-DISP-03, R-CTX-07]
 security: [S2]
 ---
@@ -81,7 +81,9 @@ z.array(z.enum(['plate', 'make', 'model', 'nickname']))
 ```
 
 ### RF-09 — Campo Apelido no veículo
-O modelo `vehicles` ganha o campo `nickname` (text, nullable, max 30 caracteres). O formulário de criação/edição de veículo expõe esse campo opcionalmente.
+O modelo `vehicles` ganha o campo `nickname` (text, nullable, max 50 caracteres). O formulário de criação/edição de veículo expõe esse campo opcionalmente.
+
+> **Atualização 2026-07-14:** já implementado desde SPEC-20260602-002 (T2.1) com `max_length = 50`, não 30 como originalmente escrito nesta spec — o limite de 30 nunca chegou a ser aplicado no banco. Ver changelog no rodapé.
 
 ---
 
@@ -102,8 +104,10 @@ A tela de configuração usa estado local para mostrar a prévia antes de confir
 
 ### Alteração na tabela `vehicles`
 ```sql
-ALTER TABLE vehicles ADD COLUMN nickname text CHECK (char_length(nickname) <= 30);
+ALTER TABLE vehicles ADD COLUMN nickname text CHECK (char_length(nickname) <= 50);
 ```
+
+> Já aplicado via `supabase/migrations/20260712171830_core_tables.sql` (T2.1), com `<= 50` em vez do `<= 30` originalmente especificado.
 
 ### Alteração na tabela `user_preferences`
 ```sql
@@ -156,3 +160,17 @@ CREATE POLICY "owner" ON user_preferences
 - Depende de `SPEC-20260603-001` (chip de contexto no subheader)
 - Afeta `SPEC-20260602-002` (CRUD de veículos — adiciona campo `nickname`)
 - Afeta o store `use-dashboard-store` (adiciona `chipFields` ao `activeVehicleData`)
+
+---
+
+## Changelog
+
+- **2026-07-14**: Spec promovida de `draft` para `approved` (T2.7). Implementados nesta rodada: `chipFieldsSchema`
+  (`packages/validators/src/preferences.schemas.ts`), `PreferencesModule` REST estendido com `vehicle_chip_fields`
+  (GET/PATCH `/preferences`, mesmo padrão de `SPEC-20260612-003`), e UI de configuração em `/settings/preferences`
+  (seção "Exibição do veículo": seleção de campos, reordenação e prévia em tempo real via
+  `apps/web/src/lib/vehicle-chip.ts`). RF-09 (`nickname`) já estava concluído desde T2.1 (com divergência de
+  tamanho corrigida acima). RF-01/RF-04/RF-05 — a renderização do `VehicleContextChip` real no subheader —
+  permanecem ⏳ até `SPEC-20260603-001` (Fase 5) ser implementada; `resolveChipValue`/`formatChipPreview` já
+  ficam prontos para reuso nessa fase. Padrão seguido: NestJS REST + React Query (não server actions Next.js,
+  como já decidido em `SPEC-20260612-003`).

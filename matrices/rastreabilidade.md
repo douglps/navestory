@@ -44,6 +44,22 @@
 > (`/vehicles`, `/vehicles/new`, `/vehicles/[id]`). Itens de prioridade Baixa/Média da
 > spec (upload de foto, FIPE, history/manage pages, onboarding `QuickVehicleRegister`)
 > ficam explicitamente ⏳ para tarefa futura, não silenciosamente omitidos.
+>
+> **ATUALIZAÇÃO — 2026-07-14 (rev. 44)**
+> Tarefas T2.5, T2.6 e T2.7 da Fase 2 concluídas (parcialmente):
+>
+> - **T2.5/SPEC-20260603-004**: coluna `vehicle_chip_fields text[]` já existia na migration
+>   consolidada; camada de serviço REST formalizada via `PreferencesModule` (GET/PATCH `/preferences`).
+> - **T2.6/SPEC-20260612-003**: RF-01 (`PreferencesModule` estendido com `auto_draft_enabled`) e
+>   RF-02 (toggle em `/settings/preferences`) concluídos — ver seção SPEC-20260612-003 abaixo.
+>   RF-03 (integração com `ExpenseForm`) permanece ⏳ até a Fase 3.
+> - **T2.7/SPEC-20260603-003**: promovida de `draft` para `approved`. Implementados:
+>   `chipFieldsSchema`/`DEFAULT_CHIP_FIELDS` (`packages/validators/src/preferences.schemas.ts`),
+>   `PreferencesModule` estendido com `vehicle_chip_fields` (GET/PATCH), UI "Exibição do veículo"
+>   em `/settings/preferences` com seleção/reordenação/prévia em tempo real, e helper puro
+>   `apps/web/src/lib/vehicle-chip.ts` (`resolveChipValue`/`formatChipPreview`) — ver seção
+>   SPEC-20260603-003 abaixo. RF-01/RF-04/RF-05 (renderização do `VehicleContextChip` real
+>   no subheader) permanecem ⏳ até `SPEC-20260603-001` (Fase 5).
 
 ---
 
@@ -630,7 +646,7 @@ que o artefato ainda não existe no repositório.
 > Regras: S1, S2, R-DISP-03, R-PREF-01. Banco implementado (🔶, sem teste dedicado; schema
 > divergente do texto original da spec — ver changelog v1.1). Camada de serviço para `auto_draft_enabled` concluída
 > em 2026-07-14 via `PreferencesModule` REST (ver SPEC-20260612-003). Camada de serviço para
-> `vehicle_chip_fields` (SPEC-20260603-003, draft) segue ⏳. Nota: coluna `auto_draft_enabled`
+> `vehicle_chip_fields` (SPEC-20260603-003, approved) concluída em 2026-07-14 (T2.7), não mais ⏳. Nota: coluna `auto_draft_enabled`
 > (de SPEC-20260612-003) já incluída na migration consolidada, dispensando ALTER TABLE separado.
 
 ### Banco de dados
@@ -643,45 +659,46 @@ que o artefato ainda não existe no repositório.
 
 ---
 
-## SPEC-20260603-003 — Preferências de Exibição do Veículo no Chip de Contexto (draft)
+## SPEC-20260603-003 — Preferências de Exibição do Veículo no Chip de Contexto (approved)
 
 > Permite que o usuário configure quais campos de identidade do veículo aparecem no chip.
 > Adiciona campo `nickname` à entidade `vehicles`. Regras: R-DISP-01, R-DISP-02, R-DISP-03.
-> Status: draft — nenhum código implementado.
+> Status: aprovada em 2026-07-14 (T2.7) — backend + UI de configuração concluídos; renderização do
+> `VehicleContextChip` real no subheader (RF-01/RF-04/RF-05) permanece ⏳ até `SPEC-20260603-001` (Fase 5).
 
 ### Schema / Validação
 
 | Req | Descrição | Código | Teste | Status |
 |-----|-----------|--------|-------|--------|
-| RF-01..RF-03/RF-08 | Schema Zod `chipFieldsSchema`: array 1–3 campos enum, `plate` obrigatório, sem repetição | — | — | ⏳ |
+| RF-01..RF-03/RF-08 | Schema Zod `chipFieldsSchema`: array 1–3 campos enum, `plate` obrigatório, sem repetição | `packages/validators/src/preferences.schemas.ts` | `packages/validators/src/preferences.schemas.spec.ts` | ✅ |
 
 ### Backend — Entidade e DTOs de Veículo
 
 | Req | Descrição | Código | Teste | Status |
 |-----|-----------|--------|-------|--------|
-| RF-09 | Campo `nickname: string \| null` adicionado à entidade `Vehicle` (text nullable, max 30 chars) | — | — | ⏳ |
-| RF-09 | `nickname` adicionado ao `CreateVehicleDto` e `UpdateVehicleDto` (opcional, max 30) | — | — | ⏳ |
+| RF-09 | Campo `nickname: string \| null` adicionado à entidade `Vehicle` (text nullable, max 50 chars — corrigido de 30, ver changelog da spec) | `apps/api/src/modules/vehicles/vehicles.service.ts`, `supabase/migrations/20260712171830_core_tables.sql` | — | ✅ (concluído em T2.1) |
+| RF-09 | `nickname` adicionado ao `CreateVehicleDto` e `UpdateVehicleDto` (opcional, max 50) | `packages/validators/src/vehicle.schemas.ts` | — | ✅ (concluído em T2.1) |
 
-### Server Actions (frontend)
+### Backend — API REST (NestJS + React Query, não server actions)
 
 | Req | Descrição | Código | Teste | Status |
 |-----|-----------|--------|-------|--------|
-| RF-06 | `getChipFields()`: lê `vehicle_chip_fields` de `user_preferences` via Supabase; retorna fallback (R-DISP-03) | — | — | ⏳ |
-| RF-06 | `updateChipFields(fields)`: valida com `chipFieldsSchema`, persiste em `user_preferences.vehicle_chip_fields` | — | — | ⏳ |
+| RF-06 | `GET /preferences`: retorna `vehicle_chip_fields` de `user_preferences`; fallback `DEFAULT_CHIP_FIELDS` quando ausente (R-DISP-03) | `apps/api/src/modules/preferences/preferences.service.ts` | `apps/api/src/modules/preferences/preferences.service.spec.ts` | ✅ |
+| RF-06/RF-08 | `PATCH /preferences`: valida com `chipFieldsSchema` (via `updatePreferencesInputSchema`), upsert parcial em `user_preferences.vehicle_chip_fields` | `apps/api/src/modules/preferences/preferences.controller.ts`, `preferences.service.ts` | `preferences.controller.spec.ts`, `preferences.service.spec.ts` | ✅ |
 
 ### Banco de dados
 
 | Artefato | Descrição | Regra | Status |
 |----------|-----------|-------|--------|
-| `ALTER TABLE vehicles ADD COLUMN nickname text CHECK (char_length(nickname) <= 30)` | Campo apelido nullable na tabela vehicles | R-DISP-01 | ⏳ Não aplicado |
-| `CREATE TABLE user_preferences` com RLS owner-only | Formalizada em SPEC-20260603-004 | S2, R-DISP-03 | ⏳ |
+| `ALTER TABLE vehicles ADD COLUMN nickname text CHECK (char_length(nickname) <= 50)` | Campo apelido nullable na tabela vehicles | R-DISP-01 | ✅ Aplicado (T2.1) |
+| `CREATE TABLE user_preferences` com coluna `vehicle_chip_fields text[]` e RLS owner-only | Formalizada em SPEC-20260603-004; default `['make','plate','model']` já bate com RF-05 | S2, R-DISP-03 | ✅ Aplicado (sem teste dedicado de RLS) |
 
-### Componentes de Layout e Tela de Perfil
+### Componentes de Layout e Tela de Preferências
 
 | Req | Descrição | Código | Teste | Status |
 |-----|-----------|--------|-------|--------|
-| RF-01/RF-04/RF-05 | `VehicleContextChip`: renderização dinâmica por `chipFields`; fallback `nickname → model` | — | — | ⏳ |
-| RF-07/RNF-03 | `VehicleDisplayPreferences`: UI de preferências em Perfil; prévia em tempo real; botão "Salvar" | — | — | ⏳ |
+| RF-01/RF-04/RF-05 | `VehicleContextChip`: renderização dinâmica por `chipFields`; fallback `nickname → model` — helper puro `resolveChipValue`/`formatChipPreview` já pronto para reuso | `apps/web/src/lib/vehicle-chip.ts` (helper) | `apps/web/src/lib/vehicle-chip.spec.ts` | 🔶 Helper pronto; componente do chip real ⏳ até Fase 5 (`SPEC-20260603-001`) |
+| RF-07/RNF-03 | Seção "Exibição do veículo" em `/settings/preferences`: seleção de 1-3 campos, reordenação, prévia em tempo real, salvar/cancelar | `apps/web/src/app/settings/preferences/page.tsx` | `apps/web/src/app/settings/preferences/page.spec.tsx` | ✅ |
 
 ---
 

@@ -23,7 +23,7 @@ describe("PreferencesService", () => {
     return client;
   }
 
-  it("findOne retorna default quando não há linha (R-PREF-01)", async () => {
+  it("findOne retorna default quando não há linha (R-PREF-01, R-DISP-03)", async () => {
     const builder: Record<string, unknown> = {};
     builder.select = jest.fn().mockReturnValue(builder);
     builder.eq = jest.fn().mockReturnValue(builder);
@@ -33,7 +33,10 @@ describe("PreferencesService", () => {
 
     const result = await service.findOne("token", "u1");
 
-    expect(result).toEqual({ auto_draft_enabled: false });
+    expect(result).toEqual({
+      auto_draft_enabled: false,
+      vehicle_chip_fields: ["make", "plate", "model"],
+    });
   });
 
   it("findOne retorna o valor persistido quando existe linha", async () => {
@@ -41,7 +44,7 @@ describe("PreferencesService", () => {
     builder.select = jest.fn().mockReturnValue(builder);
     builder.eq = jest.fn().mockReturnValue(builder);
     builder.maybeSingle = jest.fn().mockResolvedValue({
-      data: { auto_draft_enabled: true },
+      data: { auto_draft_enabled: true, vehicle_chip_fields: ["plate"] },
       error: null,
     });
     mockClient(builder);
@@ -49,7 +52,7 @@ describe("PreferencesService", () => {
 
     const result = await service.findOne("token", "u1");
 
-    expect(result).toEqual({ auto_draft_enabled: true });
+    expect(result).toEqual({ auto_draft_enabled: true, vehicle_chip_fields: ["plate"] });
   });
 
   it("findOne lança 404 em erro do Supabase", async () => {
@@ -79,6 +82,27 @@ describe("PreferencesService", () => {
       { onConflict: "user_id" },
     );
     expect(result).toEqual({ auto_draft_enabled: true });
+  });
+
+  it("upsert persiste apenas vehicle_chip_fields sem exigir auto_draft_enabled (RF-06)", async () => {
+    const builder: Record<string, unknown> = {};
+    builder.upsert = jest.fn().mockReturnValue(builder);
+    builder.select = jest.fn().mockReturnValue(builder);
+    builder.single = jest.fn().mockResolvedValue({
+      data: { auto_draft_enabled: false, vehicle_chip_fields: ["plate"] },
+      error: null,
+    });
+    const client = mockClient(builder);
+    const service = createService();
+
+    const result = await service.upsert("token", "u1", { vehicle_chip_fields: ["plate"] });
+
+    expect(client.from).toHaveBeenCalledWith("user_preferences");
+    expect(builder.upsert).toHaveBeenCalledWith(
+      { user_id: "u1", vehicle_chip_fields: ["plate"] },
+      { onConflict: "user_id" },
+    );
+    expect(result).toEqual({ auto_draft_enabled: false, vehicle_chip_fields: ["plate"] });
   });
 
   it("upsert lança 404 em erro do Supabase", async () => {

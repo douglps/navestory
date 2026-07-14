@@ -7,6 +7,7 @@ import { HealthModule } from "./health/health.module";
 import { AdminModule } from "./modules/admin/admin.module";
 import { AuthModule } from "./modules/auth/auth.module";
 import { CategoriesModule } from "./modules/categories/categories.module";
+import { DashboardModule } from "./modules/dashboard/dashboard.module";
 import { ExpensesModule } from "./modules/expenses/expenses.module";
 import { OdometerCyclesModule } from "./modules/odometer-cycles/odometer-cycles.module";
 import { PreferencesModule } from "./modules/preferences/preferences.module";
@@ -42,6 +43,7 @@ import { SupabaseModule } from "./shared/supabase/supabase.module";
     ExpensesModule,
     OdometerCyclesModule,
     PreferencesModule,
+    DashboardModule,
   ],
   providers: [
     {

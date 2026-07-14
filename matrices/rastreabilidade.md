@@ -1196,18 +1196,25 @@ que o artefato ainda não existe no repositório.
 
 ## SPEC-20260521-003 — Export CSV do Dashboard (Aprovada)
 
-> Endpoint `GET /dashboard/export` com filtros de período e veículo. Nenhum código implementado.
+> **2026-07-14 (T3.1):** `DashboardModule` criado do zero — a spec assumia um `DashboardController`
+> pré-existente (`GET /dashboard/stats`), mas nenhum módulo de dashboard havia sido implementado
+> ainda (Fase 5, `SPEC-20260531-001`, ainda `draft`). Escopo desta tarefa ficou restrito ao
+> endpoint de export descrito nesta spec — nenhum endpoint de estatísticas foi criado. Página
+> `/dashboard` mínima criada apenas com o seletor de mês/veículo e o link de exportação; o
+> redesign completo do Dashboard (Fleet Command + Vehicle Spotlight) permanece objeto da Fase 5.
 
 | Req | Descrição | Código | Teste | Status |
 |-----|-----------|--------|-------|--------|
-| RF-01 | `GET /dashboard/export` retorna arquivo CSV | — | — | ⏳ |
-| RF-02 | Filtro obrigatório: `period` (YYYY-MM) | — | — | ⏳ |
-| RF-03 | Filtro opcional: `vehicle_id` | — | — | ⏳ |
-| RF-04 | Colunas: Data, Placa, Modelo, Categoria, Descrição, Valor | — | — | ⏳ |
-| RF-05 | BOM UTF-8 no arquivo CSV (compatibilidade Excel) | — | — | ⏳ |
-| RF-06 | Nome do arquivo: `nave-despesas-{YYYY-MM}.csv` | — | — | ⏳ |
-| RF-07 | Botão "Exportar CSV" no Dashboard com seletor de mês | — | — | ⏳ |
-| RF-08 | Isolamento por `user_id` do JWT | — | — | ⏳ |
+| RF-01 | `GET /dashboard/export` retorna arquivo CSV | `apps/api/src/modules/dashboard/dashboard.controller.ts`, `dashboard.service.ts` | `apps/api/src/modules/dashboard/dashboard.controller.spec.ts`, `dashboard.service.spec.ts` | ✅ |
+| RF-02 | Filtro obrigatório: `period` (YYYY-MM) | `packages/validators/src/dashboard.schemas.ts` (`exportExpensesQuerySchema`) | `apps/api/src/modules/dashboard/dashboard.controller.spec.ts` | ✅ |
+| RF-03 | Filtro opcional: `vehicle_id` | `apps/api/src/modules/dashboard/dashboard.service.ts` (`exportExpensesCsv`) | `apps/api/src/modules/dashboard/dashboard.service.spec.ts`, `dashboard.controller.spec.ts` | ✅ |
+| RF-04 | Colunas: Data, Placa, Modelo, Categoria, Descrição, Valor | `apps/api/src/modules/dashboard/dashboard.service.ts` | `apps/api/src/modules/dashboard/dashboard.service.spec.ts` | ✅ |
+| RF-05 | BOM UTF-8 no arquivo CSV (compatibilidade Excel) | `apps/api/src/modules/dashboard/dashboard.controller.ts` (`CSV_BOM`) | `apps/api/src/modules/dashboard/dashboard.controller.spec.ts` | ✅ |
+| RF-06 | Nome do arquivo: `nave-despesas-{YYYY-MM}.csv` | `apps/api/src/modules/dashboard/dashboard.controller.ts` (`Content-Disposition`) | `apps/api/src/modules/dashboard/dashboard.controller.spec.ts` | ✅ |
+| RF-07 | Botão "Exportar CSV" no Dashboard com seletor de mês | `apps/web/src/app/dashboard/page.tsx` | `apps/web/src/app/dashboard/page.spec.tsx` | ✅ |
+| RF-08 | Isolamento por `user_id` do JWT | `apps/api/src/modules/dashboard/dashboard.service.ts` (`.eq("user_id", userId)`, `SupabaseAuthGuard`) | `apps/api/src/modules/dashboard/dashboard.service.spec.ts` | ✅ |
+| RNF-03 | Limite de 5.000 linhas por exportação | `apps/api/src/modules/dashboard/dashboard.service.ts` (`CSV_MAX_ROWS`, `.limit`) | — | 🔶 (constante aplicada; sem teste de volume) |
+| RNF-04 | Rate limiting 10 req/5min | `apps/api/src/modules/dashboard/dashboard.controller.ts` (`@Throttle`) | — | 🔶 (decorator aplicado; sem teste de integração do throttler) |
 
 ---
 

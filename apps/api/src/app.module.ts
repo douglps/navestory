@@ -6,6 +6,7 @@ import { envValidationSchema } from "./common/config/env.validation";
 import { HealthModule } from "./health/health.module";
 import { AdminModule } from "./modules/admin/admin.module";
 import { AuthModule } from "./modules/auth/auth.module";
+import { CategoriesModule } from "./modules/categories/categories.module";
 import { UsersModule } from "./modules/users/users.module";
 import { VehicleGroupsModule } from "./modules/vehicle-groups/vehicle-groups.module";
 import { VehiclesModule } from "./modules/vehicles/vehicles.module";
@@ -34,6 +35,7 @@ import { SupabaseModule } from "./shared/supabase/supabase.module";
     AdminModule,
     VehiclesModule,
     VehicleGroupsModule,
+    CategoriesModule,
   ],
   providers: [
     {

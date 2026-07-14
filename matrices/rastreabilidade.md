@@ -762,30 +762,46 @@ que o artefato ainda não existe no repositório.
 
 ## SPEC-20260602-004 — Categorias Personalizadas de Despesa (approved)
 
-> API REST completa para categorias customizadas por usuário; tabela `user_categories`.
-> Banco implementado (🔶); API backend e frontend ainda pendentes (⏳).
+> **2026-07-13 (T2.3):** `CategoriesModule` (RF-01 a RF-06) implementado — API REST completa +
+> schemas Zod. Durante a implementação foi encontrado e corrigido um gap: a migration
+> consolidada não incluía a constraint `UNIQUE(user_id, value)` que a spec original assumia
+> existir (ver changelog da spec). RF-07/RF-08 (integração com `ExpenseForm`) permanecem ⏳ —
+> dependem do módulo de despesas (Fase 3, ainda não implementado). UI de gerenciamento de
+> categorias é fora de escopo do MVP (definição original da spec, não uma omissão desta tarefa).
 
 ### Banco de dados
 
-| Artefato | Descrição | Status |
-|----------|-----------|--------|
-| `supabase/migrations/20260712171846_grouping_templates_preferences.sql` | `CREATE TABLE public.user_categories` (id, user_id FK, value slug `[a-z0-9_-]+`, label 1–100 chars, created_at) com FK `→ profiles(id) ON DELETE CASCADE` | 🔶 Aplicado (sem teste) |
-| RLS `user_categories_owner` | `supabase/migrations/20260712172047_rls_policies.sql` — policy `for all` por `user_id` | 🔶 |
+| Artefato | Descrição | Regra | Status |
+|----------|-----------|-------|--------|
+| `supabase/migrations/20260712171846_grouping_templates_preferences.sql` | `CREATE TABLE public.user_categories` (id, user_id FK, value slug `[a-z0-9_-]+`, label 1–100 chars, created_at) com FK `→ profiles(id) ON DELETE CASCADE` | — | 🔶 Aplicado (sem teste) |
+| `supabase/migrations/20260713210000_user_categories_unique_value.sql` | `ADD CONSTRAINT uq_user_categories_user_value UNIQUE (user_id, value)` — gap corrigido em T2.3 | R-CAT-02, RF-03 | ✅ Aplicado (coberto indiretamente por `categories.service.spec.ts`, caso de violação `23505`) |
+| RLS `user_categories_owner` | `supabase/migrations/20260712172047_rls_policies.sql` — policy `for all` por `user_id` | S2 | 🔶 |
 
-### API (backend)
+### API (backend) — `CategoriesModule`
 
 | Req | Descrição | Código | Teste | Status |
 |-----|-----------|--------|-------|--------|
-| RF-01 | `GET /categories`: retorna `{ default: DEFAULT_EXPENSE_CATEGORIES, custom: [...] }` | — | — | ⏳ |
-| RF-02..RF-05 | `POST /categories`: valida slug, verifica conflito com padrões (409), limite 20 (422), cria registro | — | — | ⏳ |
-| RF-06 | `DELETE /categories/:id`: verifica ownership; 404 se não encontrada | — | — | ⏳ |
-| RF-02 | Schema Zod `createCategorySchema`: `value` slug 1–50 + `label` 1–100 | — | — | ⏳ |
+| RF-01/CA-07 | `GET /categories`: retorna `{ default: DEFAULT_EXPENSE_CATEGORIES, custom: [...] }` ordenado por `label` | `apps/api/src/modules/categories/categories.controller.ts`, `categories.service.ts` | `apps/api/src/modules/categories/categories.service.spec.ts` | ✅ |
+| RF-02/CA-01/CA-05 | `POST /categories`: cria categoria; `value` validado via `createCategoryInputSchema` (slug, 1–50) | `apps/api/src/modules/categories/categories.controller.ts`, `categories.service.ts` | `apps/api/src/modules/categories/categories.service.spec.ts` | ✅ |
+| RF-04/CA-02/R-CAT-03 | `POST /categories` com `value` de categoria padrão retorna 409 | `apps/api/src/modules/categories/categories.service.ts` | `apps/api/src/modules/categories/categories.service.spec.ts` | ✅ |
+| RF-03/CA-03/R-CAT-02 | `POST /categories` com `value` duplicado do mesmo usuário retorna 409 (via `23505` + constraint nova) | `apps/api/src/modules/categories/categories.service.ts` | `apps/api/src/modules/categories/categories.service.spec.ts` | ✅ |
+| RF-05/CA-04/R-CAT-01 | `POST /categories` quando usuário já tem 20 categorias retorna 422 | `apps/api/src/modules/categories/categories.service.ts` | `apps/api/src/modules/categories/categories.service.spec.ts` | ✅ |
+| RF-06/CA-06/R-CAT-04 | `DELETE /categories/:id`: hard-delete; verifica ownership; 404 se não encontrada | `apps/api/src/modules/categories/categories.controller.ts`, `categories.service.ts` | `apps/api/src/modules/categories/categories.service.spec.ts` | ✅ |
+| RNF-01/RNF-02/S1/S2 | Toda rota exige JWT (`SupabaseAuthGuard`); client escopado por usuário + filtro `user_id` | `apps/api/src/modules/categories/categories.service.ts` | `apps/api/src/modules/categories/categories.service.spec.ts` | ✅ |
+| RNF-03/C1 | Cascade FK `user_categories.user_id → profiles(id) ON DELETE CASCADE` garante remoção na exclusão de conta | `supabase/migrations/20260712171846_grouping_templates_preferences.sql` | — | 🔶 Garantido pelo DB, sem teste de integração |
+
+### Schema / Validação
+
+| Req | Descrição | Código | Teste | Status |
+|-----|-----------|--------|-------|--------|
+| RF-02 | `createCategoryInputSchema`, `DEFAULT_EXPENSE_CATEGORIES` (9 categorias), `DEFAULT_EXPENSE_CATEGORY_VALUES` | `packages/validators/src/category.schemas.ts` | `packages/validators/src/category.schemas.spec.ts` | ✅ |
 
 ### Frontend
 
 | Req | Descrição | Status |
 |-----|-----------|--------|
-| RF-07/RF-08 | `ExpenseForm` com `customCategories`; integração com `GET /categories` | ⏳ |
+| RF-07/RF-08 | `ExpenseForm` com `customCategories: { value, label }[]`; migração do legado `profiles.preferences.expense_categories` para `GET /categories` — depende do módulo de despesas (Fase 3) | ⏳ |
+| — | UI de gerenciamento de categorias (página de configurações) | ❌ Fora de escopo do MVP (definição original da spec) |
 
 ---
 

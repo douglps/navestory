@@ -1013,25 +1013,28 @@ que o artefato ainda não existe no repositório.
 
 ## SPEC-20260601-002 — Detecção de Duplicata de Despesa (approved)
 
-> Aviso não-bloqueante quando `POST /expenses` detecta registro ativo com mesmos
-> `vehicle_id`, `date`, `amount` e `category`. Nenhum código implementado.
-
-### Camada de repositório
-
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-01 | Interface: `findPotentialDuplicate(userId, vehicleId, date, amount, category)` adicionada ao port | — | — | ⏳ |
-| RF-01 | Implementação Supabase: `SELECT 1` com filtros nos 5 parâmetros e `deleted_at IS NULL` | — | — | ⏳ |
-| RF-05 | Apenas registros com `deleted_at IS NULL` são candidatos a duplicata | — | — | ⏳ |
+> **2026-07-14 (T3.3):** Implementado com padrão **response-field**, consistente com T3.2
+> (SPEC-20260601-001) — mesma decisão de UX/impacto já registrada em `IMPACTO-030`. Corrigida
+> também a descrição de `R2` em `specs/RULES.md`, que mencionava `confirmed: true` (padrão
+> exception-based nunca especificado por esta spec — RF-01 a RF-06 sempre foram soft warning
+> sem flag de confirmação). Sem camada de repositório separada, mesmo padrão inline de
+> SPEC-20260601-001. **Ajuste de design não coberto explicitamente pelos RFs:** a busca de
+> duplicata exclui o próprio registro recém-criado (`excludeExpenseId`) — sem essa exclusão, o
+> registro que acabou de ser inserido sempre bateria nos próprios 4 critérios de comparação
+> (a spec invoca a busca *após* o insert), gerando falso positivo em toda criação sem duplicata
+> real. Exibição do aviso no frontend fica ⏳ deliberadamente, mesma justificativa de T3.2.
 
 ### Camada de serviço
 
 | Req | Descrição | Código | Teste | Status |
 |-----|-----------|--------|-------|--------|
-| RF-02 | `ExpensesService.create()`: invoca `findPotentialDuplicate()` após o insert bem-sucedido | — | — | ⏳ |
-| RF-03 | Enriquece resposta com `duplicate_warning: true` e `duplicate_id`; HTTP 201 mantido | — | — | ⏳ |
-| RF-04 | Sem `duplicate_warning` quando `findPotentialDuplicate` retorna `null` | — | — | ⏳ |
-| RF-06 | `ExpensesService.update()` não invoca `findPotentialDuplicate` | — | — | ⏳ |
+| RF-01 | `findPotentialDuplicate(userId, vehicleId, date, amount, category, excludeExpenseId)` — método privado do service | `apps/api/src/modules/expenses/expenses.service.ts` (`findPotentialDuplicate`) | `apps/api/src/modules/expenses/expenses.service.spec.ts` | ✅ |
+| RF-02 | `ExpensesService.create()`: invoca `findPotentialDuplicate()` após o insert bem-sucedido | `apps/api/src/modules/expenses/expenses.service.ts` (`create`, `buildDuplicateWarning`) | `apps/api/src/modules/expenses/expenses.service.spec.ts` | ✅ |
+| RF-03 | Enriquece resposta com `duplicate_warning: true` e `duplicate_id`; HTTP 201 mantido | `apps/api/src/modules/expenses/expenses.service.ts` (`buildDuplicateWarning`) | `apps/api/src/modules/expenses/expenses.service.spec.ts` | ✅ |
+| RF-04 | Sem `duplicate_warning` quando `findPotentialDuplicate` retorna `null` | `apps/api/src/modules/expenses/expenses.service.ts` (`buildDuplicateWarning`) | `apps/api/src/modules/expenses/expenses.service.spec.ts` | ✅ |
+| RF-05 | Apenas registros com `deleted_at IS NULL` são candidatos a duplicata | `apps/api/src/modules/expenses/expenses.service.ts` (`findPotentialDuplicate`, `.is("deleted_at", null)`) | — | 🔶 (filtro aplicado; sem teste dedicado ao soft-delete neste método) |
+| RF-06 | `ExpensesService.update()` não invoca `findPotentialDuplicate` | `apps/api/src/modules/expenses/expenses.service.ts` (`update`) | `apps/api/src/modules/expenses/expenses.service.spec.ts` | ✅ |
+| EC-05 | Falha na consulta de duplicata degrada graciosamente (loga e não bloqueia) | `apps/api/src/modules/expenses/expenses.service.ts` (`buildDuplicateWarning`) | `apps/api/src/modules/expenses/expenses.service.spec.ts` | ✅ |
 
 ---
 

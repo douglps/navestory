@@ -9,7 +9,7 @@
 | ID | Regra | Spec |
 |----|-------|------|
 | R1 | `odometer_km` não pode ser menor que o maior valor já registrado para aquele veículo | [SPEC-20260601-001](expenses/SPEC-20260601-001-odometer-validation.md) |
-| R2 | Despesas com os mesmos `vehicle_id`, `category`, `amount` e `date` exigem `confirmed: true` para serem criadas | [SPEC-20260601-002](expenses/SPEC-20260601-002-duplicate-detection.md) |
+| R2 | Despesa criada com os mesmos `vehicle_id`, `category`, `amount` e `date` de um registro ativo existente do mesmo usuário é sempre persistida (nunca bloqueada); a resposta é enriquecida com `duplicate_warning: true` e `duplicate_id` do registro suspeito | [SPEC-20260601-002](expenses/SPEC-20260601-002-duplicate-detection.md) |
 | R3 | Limite de 20 templates por usuário — enforced por DB trigger e validado no service | [SPEC-20260601-003](expenses/SPEC-20260601-003-expense-templates.md) |
 | R4 | `odometer_km` é obrigatório para despesas de categoria `fuel` (abastecimento) | [SPEC-20260601-001](expenses/SPEC-20260601-001-odometer-validation.md) |
 | R5 | Soft-delete via `deleted_at`; registros com `deleted_at IS NOT NULL` são invisíveis por padrão em todas as listagens | todos os domínios |

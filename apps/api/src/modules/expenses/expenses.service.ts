@@ -33,6 +33,11 @@ export type ExpenseWithOdometerWarning = Expense & {
   odometer_previous_max_km?: number;
 };
 
+export type ExpenseWithWarnings = ExpenseWithOdometerWarning & {
+  duplicate_warning?: true;
+  duplicate_id?: string;
+};
+
 export interface PaginatedExpenses {
   data: Expense[];
   meta: { total: number; page: number; limit: number; has_next: boolean };
@@ -120,14 +125,76 @@ export class ExpensesService {
   }
 
   /**
+   * @spec SPEC-20260601-002 RF-01
+   * `excludeExpenseId` exclui o registro recém-criado da própria busca — sem essa exclusão,
+   * a query encontraria o registro que acabou de ser inserido como "duplicata de si mesmo"
+   * (RF-02 invoca a busca *após* o insert, então o novo registro sempre bate nos 4 critérios).
+   */
+  private async findPotentialDuplicate(
+    client: SupabaseClient,
+    userId: string,
+    vehicleId: string,
+    date: string,
+    amount: number,
+    category: string,
+    excludeExpenseId: string,
+  ): Promise<string | null> {
+    const { data, error } = await client
+      .from("expenses")
+      .select("id")
+      .eq("user_id", userId)
+      .eq("vehicle_id", vehicleId)
+      .eq("date", date)
+      .eq("amount", amount)
+      .eq("category", category)
+      .is("deleted_at", null)
+      .neq("id", excludeExpenseId)
+      .limit(1)
+      .maybeSingle();
+
+    if (error || !data) {
+      return null;
+    }
+    return (data as { id: string }).id;
+  }
+
+  /**
+   * @spec SPEC-20260601-002 RF-02, RF-03, RF-04, EC-05
+   */
+  private async buildDuplicateWarning(
+    client: SupabaseClient,
+    userId: string,
+    expense: Expense,
+  ): Promise<Pick<ExpenseWithWarnings, "duplicate_warning" | "duplicate_id">> {
+    try {
+      const duplicateId = await this.findPotentialDuplicate(
+        client,
+        userId,
+        expense.vehicle_id,
+        expense.date,
+        expense.amount,
+        expense.category,
+        expense.id,
+      );
+      if (duplicateId) {
+        return { duplicate_warning: true, duplicate_id: duplicateId };
+      }
+    } catch (err) {
+      this.logger.error("Falha ao verificar duplicata de despesa", err as Error);
+    }
+    return {};
+  }
+
+  /**
    * @spec SPEC-20260714-001 RF-01, RF-02, RF-09, RNF-04
    * @spec SPEC-20260601-001 RF-01, RF-03, RF-04
+   * @spec SPEC-20260601-002 RF-02, RF-03, RF-04
    */
   async create(
     accessToken: string,
     userId: string,
     dto: CreateExpenseDto,
-  ): Promise<ExpenseWithOdometerWarning> {
+  ): Promise<ExpenseWithWarnings> {
     const client = this.clientForUser(accessToken);
 
     const { data: vehicle, error: vehicleError } = await client
@@ -160,8 +227,14 @@ export class ExpensesService {
     });
 
     const expense = data as Expense;
-    const warning = await this.buildOdometerWarning(client, userId, expense.vehicle_id, dto.odometer_km);
-    return { ...expense, ...warning };
+    const odometerWarning = await this.buildOdometerWarning(
+      client,
+      userId,
+      expense.vehicle_id,
+      dto.odometer_km,
+    );
+    const duplicateWarning = await this.buildDuplicateWarning(client, userId, expense);
+    return { ...expense, ...odometerWarning, ...duplicateWarning };
   }
 
   /**

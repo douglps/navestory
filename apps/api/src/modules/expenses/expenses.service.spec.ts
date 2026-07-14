@@ -65,7 +65,10 @@ describe("ExpensesService", () => {
   it("create persiste a despesa quando o veículo pertence ao usuário (RF-01, CA-01)", async () => {
     const { builders } = mockClient({
       vehicles: { data: { id: "veh1" }, error: null },
-      expenses: { data: { id: "e1", vehicle_id: "veh1" }, error: null },
+      expenses: [
+        { data: { id: "e1", vehicle_id: "veh1" }, error: null },
+        { data: null, error: null },
+      ],
     });
     const service = createService();
 
@@ -214,14 +217,17 @@ describe("ExpensesService", () => {
     it("RF-01: create sem odometer_km não consulta o máximo nem retorna warning", async () => {
       const { builders } = mockClient({
         vehicles: { data: { id: "veh1" }, error: null },
-        expenses: { data: { id: "e1", vehicle_id: "veh1", odometer_km: null }, error: null },
+        expenses: [
+          { data: { id: "e1", vehicle_id: "veh1", odometer_km: null }, error: null },
+          { data: null, error: null },
+        ],
       });
       const service = createService();
 
       const expense = await service.create("token", "u1", createDto as never);
 
       expect(expense).not.toHaveProperty("odometer_warning");
-      expect((builders.get("expenses")!.select as jest.Mock).mock.calls).toHaveLength(1);
+      expect((builders.get("expenses")!.not as jest.Mock).mock.calls).toHaveLength(0);
     });
 
     it("EC-04: odometer_km igual ao máximo não retorna warning", async () => {
@@ -303,6 +309,82 @@ describe("ExpensesService", () => {
 
       expect(expense).not.toHaveProperty("odometer_warning");
       expect((builders.get("expenses")!.update as jest.Mock).mock.calls).toHaveLength(1);
+    });
+  });
+
+  describe("SPEC-20260601-002: detecção de duplicata de despesa", () => {
+    it("RF-02, RF-03: create com duplicata ativa existente retorna duplicate_warning e duplicate_id", async () => {
+      mockClient({
+        vehicles: { data: { id: "veh1" }, error: null },
+        expenses: [
+          { data: { id: "e-novo", vehicle_id: "veh1", category: "fuel", amount: 150, date: "2026-07-14" }, error: null },
+          { data: { id: "e-existente" }, error: null },
+        ],
+      });
+      const service = createService();
+
+      const expense = await service.create("token", "u1", createDto as never);
+
+      expect(expense).toMatchObject({ duplicate_warning: true, duplicate_id: "e-existente" });
+    });
+
+    it("RF-04: create sem duplicata não retorna duplicate_warning", async () => {
+      mockClient({
+        vehicles: { data: { id: "veh1" }, error: null },
+        expenses: [
+          { data: { id: "e-novo", vehicle_id: "veh1", category: "fuel", amount: 150, date: "2026-07-14" }, error: null },
+          { data: null, error: null },
+        ],
+      });
+      const service = createService();
+
+      const expense = await service.create("token", "u1", createDto as never);
+
+      expect(expense).not.toHaveProperty("duplicate_warning");
+    });
+
+    it("RF-01, EC-01: busca de duplicata exclui o próprio registro recém-criado da comparação", async () => {
+      const { builders } = mockClient({
+        vehicles: { data: { id: "veh1" }, error: null },
+        expenses: [
+          { data: { id: "e-novo", vehicle_id: "veh1", category: "fuel", amount: 150, date: "2026-07-14" }, error: null },
+          { data: null, error: null },
+        ],
+      });
+      const service = createService();
+
+      await service.create("token", "u1", createDto as never);
+
+      expect((builders.get("expenses")!.neq as jest.Mock).mock.calls).toContainEqual(["id", "e-novo"]);
+    });
+
+    it("RF-06: update não invoca verificação de duplicata", async () => {
+      const { builders } = mockClient({
+        expenses: { data: { id: "e1", is_readonly: false, amount: 200 }, error: null },
+      });
+      const service = createService();
+
+      const expense = await service.update("token", "u1", "e1", { amount: 200 } as never);
+
+      expect(expense).not.toHaveProperty("duplicate_warning");
+      // findPotentialDuplicate sempre filtra por "category"; update() nunca deveria fazê-lo
+      const eqCalls = (builders.get("expenses")!.eq as jest.Mock).mock.calls;
+      expect(eqCalls.some(([column]) => column === "category")).toBe(false);
+    });
+
+    it("EC-05: falha na consulta de duplicata degrada graciosamente sem warning", async () => {
+      mockClient({
+        vehicles: { data: { id: "veh1" }, error: null },
+        expenses: [
+          { data: { id: "e-novo", vehicle_id: "veh1", category: "fuel", amount: 150, date: "2026-07-14" }, error: null },
+          { data: null, error: { message: "timeout" } },
+        ],
+      });
+      const service = createService();
+
+      const expense = await service.create("token", "u1", createDto as never);
+
+      expect(expense).not.toHaveProperty("duplicate_warning");
     });
   });
 });

@@ -3,7 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useState, type ReactNode } from "react";
+import { Suspense, useState, type ReactNode } from "react";
 import { apiClient } from "@/lib/http/api-client";
 
 interface Expense {
@@ -264,8 +264,18 @@ function ByVehicleTab({
  * @spec SPEC-20260608-002 RF-04
  * @spec SPEC-20260609-002 RF-01
  * @spec SPEC-20260609-003 RF-03
+ * `useSearchParams()` exige um `Suspense` boundary para não forçar bailout de
+ * CSR no build de produção (https://nextjs.org/docs/messages/missing-suspense-with-csr-bailout).
  */
 export default function ExpensesPage(): ReactNode {
+  return (
+    <Suspense fallback={<main className="mx-auto flex max-w-2xl flex-col gap-4 p-8">Carregando...</main>}>
+      <ExpensesPageContent />
+    </Suspense>
+  );
+}
+
+function ExpensesPageContent(): ReactNode {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();

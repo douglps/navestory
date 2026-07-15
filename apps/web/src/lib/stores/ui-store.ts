@@ -7,9 +7,21 @@ import { create } from "zustand";
 interface UIState {
   isMobileNavOpen: boolean;
   toggleMobileNav: () => void;
+  isSidebarCollapsed: boolean;
+  toggleSidebarCollapsed: () => void;
+  // @spec SPEC-20260602-001 RF-16, RNF-04 — aviso não-obstrutivo de staleness de contexto
+  contextStaleNotice: string | null;
+  setContextStaleNotice: (message: string) => void;
+  clearContextStaleNotice: () => void;
 }
 
 export const useUIStore = create<UIState>((set) => ({
   isMobileNavOpen: false,
   toggleMobileNav: () => set((state) => ({ isMobileNavOpen: !state.isMobileNavOpen })),
+  isSidebarCollapsed: false,
+  toggleSidebarCollapsed: () =>
+    set((state) => ({ isSidebarCollapsed: !state.isSidebarCollapsed })),
+  contextStaleNotice: null,
+  setContextStaleNotice: (message) => set({ contextStaleNotice: message }),
+  clearContextStaleNotice: () => set({ contextStaleNotice: null }),
 }));

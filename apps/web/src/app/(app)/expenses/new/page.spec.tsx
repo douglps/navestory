@@ -1,6 +1,7 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { QueryProvider } from "@/lib/query/providers";
+import { useDashboardStore } from "@/lib/stores/use-dashboard-store";
 import NewExpensePage from "./page";
 
 const pushMock = vi.fn();
@@ -53,6 +54,11 @@ function mockLookups(options?: { templates?: typeof templates }) {
 }
 
 describe("NewExpensePage", () => {
+  beforeEach(() => {
+    localStorage.clear();
+    useDashboardStore.getState().clearAllSelection();
+  });
+
   afterEach(() => {
     vi.clearAllMocks();
   });
@@ -263,5 +269,63 @@ describe("NewExpensePage", () => {
 
     expect(confirmSpy).not.toHaveBeenCalled();
     expect(pushMock).toHaveBeenCalledWith("/expenses");
+  });
+
+  /**
+   * @spec SPEC-20260602-001 RF-07, RF-08
+   */
+  it("herda o veículo do contexto em foco (modo single) com indicador ↩", async () => {
+    useDashboardStore.getState().setActiveVehicle(VEHICLE_ID);
+    mockLookups();
+    renderPage();
+
+    await screen.findByText("Fiat Uno");
+    await screen.findByText(/Herdado do contexto em foco/);
+    expect(screen.getByLabelText("Veículo *")).toHaveValue(VEHICLE_ID);
+  });
+
+  /**
+   * @spec SPEC-20260602-001 RF-13
+   */
+  it("troca para indicador ✓ ao selecionar o veículo manualmente", async () => {
+    mockLookups();
+    renderPage();
+
+    await screen.findByText("Fiat Uno");
+    fireEvent.change(screen.getByLabelText("Veículo *"), { target: { value: VEHICLE_ID } });
+
+    expect(await screen.findByText(/Selecionado manualmente/)).toBeInTheDocument();
+    expect(screen.queryByText(/Herdado do contexto em foco/)).not.toBeInTheDocument();
+  });
+
+  /**
+   * @spec SPEC-20260602-001 RF-12
+   */
+  it("modo none: exibe os veículos recentes como atalhos", async () => {
+    localStorage.setItem("nave-recent-vehicle-ids", JSON.stringify([VEHICLE_ID]));
+    mockLookups();
+    renderPage();
+
+    expect(await screen.findByRole("button", { name: "Fiat Uno" })).toBeInTheDocument();
+  });
+
+  /**
+   * @spec SPEC-20260602-001 RF-14, R-CTX-06
+   */
+  it("mudança de contexto com o formulário aberto não reseta o campo, mas avisa", async () => {
+    mockLookups();
+    renderPage();
+    await screen.findByText("Fiat Uno");
+
+    fireEvent.change(screen.getByLabelText("Veículo *"), { target: { value: VEHICLE_ID } });
+    expect(screen.getByLabelText("Veículo *")).toHaveValue(VEHICLE_ID);
+
+    useDashboardStore.getState().setActiveVehicle("99999999-9999-4999-8999-999999999999");
+
+    expect(await screen.findByText("O contexto ativo mudou.")).toBeInTheDocument();
+    expect(screen.getByLabelText("Veículo *")).toHaveValue(VEHICLE_ID);
+
+    fireEvent.click(screen.getByRole("button", { name: "Atualizar campo" }));
+    expect(screen.queryByText("O contexto ativo mudou.")).not.toBeInTheDocument();
   });
 });

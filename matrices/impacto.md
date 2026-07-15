@@ -795,6 +795,32 @@ A trigger `soft_delete_profile()` (em `supabase/migrations/`) está declarada pa
 
 ---
 
+### IMPACTO-032 — Execução de T5.3 (SPEC-20260602-001): divisão em sub-tarefas e app shell (2026-07-15)
+
+| Campo | Valor |
+|-------|-------|
+| **Spec** | SPEC-20260602-001 |
+| **Status** | T5.3a, T5.3b, T5.3c e T5.3d concluídas — SPEC-20260602-001 encerrada nesta rodada |
+| **Risco geral** | Baixo |
+
+Confirmado na prática o achado #7 de IMPACTO-031: a spec presume `Sidebar`/`FleetAside` já existentes, mas nenhum app shell existia (`layout.tsx` era só `QueryProvider`; cada página um `<main>` solto). O changelog v1.0/1.1/1.2 da própria SPEC-20260602-001, que descreve "implementação concluída", é resíduo de outro ciclo/projeto — não reflete este repositório (auditoria de código confirma zero arquivos `focus-slot`, `context-filter-sync`, `use-dashboard-store` etc.).
+
+T5.3 foi dividida em sub-tarefas, conforme já autorizado pela decisão de sequenciamento de IMPACTO-031 ("shell de layout pode ser construído em paralelo"):
+- **T5.3a (concluída):** route group `apps/web/src/app/(app)/` (páginas autenticadas movidas de `app/*` para `app/(app)/*`, sem mudança de URL) + `components/layout/sidebar.tsx` com navegação básica.
+- **T5.3b (concluída):** `use-dashboard-store.ts` (5 modos de contexto) + `focus-slot.tsx` (RF-01–06).
+- **T5.3c (concluída):** `VehicleActivator`/`ContextFilterSync` (RF-15, RF-17.1, R-CTX-04) + staleness no `FleetAside` (RF-16).
+- **T5.3d (concluída):** `use-vehicle-context-field.ts` + `vehicle-recency.ts`, integrados em `expenses/new` e `maintenance/new` (RF-07–14).
+
+**Achado à parte — corrigido em 2026-07-15 a pedido do usuário, antes do commit:** `npx next build` falhava ao pré-renderizar `/expenses` — `useSearchParams()` sem `Suspense` boundary (erro pré-existente, confirmado via `git stash` que reproduzia o mesmo erro na árvore antes de T5.3). Corrigido isolando a lógica em `ExpensesPageContent` e envolvendo em `<Suspense>` no export default de `apps/web/src/app/(app)/expenses/page.tsx`, conforme https://nextjs.org/docs/messages/missing-suspense-with-csr-bailout.
+
+Corrigir esse achado expôs um segundo bug real, também corrigido: `useDashboardStore.persist` (criado por T5.3b) é `undefined` durante SSR/prerender — `createJSONStorage(() => localStorage)` referencia um global inexistente no Node e o middleware `persist` do Zustand nunca anexa `.persist` à store quando isso acontece (comportamento documentado do próprio Zustand 5, não um bug da lib). `focus-slot.tsx` chamava `useDashboardStore.persist.hasHydrated()` sem guarda, quebrando o prerender de `/expenses/new` (e de qualquer página que renderize o `Sidebar`). Corrigido com optional chaining (`useDashboardStore.persist?.hasHydrated() ?? false`) em `apps/web/src/components/layout/focus-slot.tsx`. `npx next build` completa as 17 páginas com sucesso após as duas correções; suíte de 165 testes, lint e type-check permanecem verdes.
+
+**Achado adicional (T5.3c):** RF-19 (logout limpa o contexto) expôs que o frontend não tinha nenhum mecanismo de logout — o endpoint `POST /auth/logout` já existia no backend (Fase 1/T1.1) mas nenhuma página/componente o chamava. Criado `apps/web/src/lib/auth/logout.ts` (chama o endpoint, limpa o store, redireciona para `/login`, resiliente a falha de rede) e um botão "Sair" no `Sidebar`. Escopo mínimo necessário para RF-19 ser testável — não é uma tela de perfil/conta completa.
+
+**Desvios de escopo (T5.3d):** RF-09 (lista de veículos pré-filtrada pelos membros do grupo em foco) não filtra de fato a lista — implementar exigiria um novo endpoint `GET /vehicle-groups/:id/members` (hoje só existe `PUT` replace-all); a dica textual com o nome do grupo foi implementada, a filtragem ficou pendente. RF-11 (dropdown filtrado por atributo) foi implementado apenas client-side sobre a lista de veículos já carregada — aceitável na escala atual (dezenas de veículos por usuário, não milhares) e porque o modo `attribute` ainda não tem nenhum seletor de UI que o acione (só via API/store direto). Ambos os gaps são baixo risco e ficam documentados em `matrices/rastreabilidade.md` para reavaliação se o volume de dados crescer ou um seletor de atributo for construído.
+
+---
+
 ## Legenda de Risco
 
 | Nível | Critério |

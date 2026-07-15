@@ -16,6 +16,7 @@ import { ApiError, apiClient } from "@/lib/http/api-client";
 import { changeDateYear } from "@/lib/date-year";
 import { FUEL_TYPE_OPTIONS } from "@/lib/fuel-types";
 import { useFuelCrossCalc } from "@/lib/hooks/use-fuel-cross-calc";
+import { useVehicleContextField } from "@/lib/hooks/use-vehicle-context-field";
 
 const TEMPLATE_LIMIT = 20;
 
@@ -219,7 +220,17 @@ export default function NewExpensePage(): ReactNode {
     retry: false,
   });
 
-  const [vehicleId, setVehicleId] = useState("");
+  const {
+    vehicleId,
+    setVehicleId,
+    isInherited: isVehicleInherited,
+    contextHint: vehicleContextHint,
+    quickPicks: vehicleQuickPicks,
+    filteredVehicles,
+    contextChangeNotice,
+    applyContextChange,
+    dismissContextChangeNotice,
+  } = useVehicleContextField(vehicles);
   const [category, setCategory] = useState("");
   const [date, setDate] = useState(TODAY);
   const [description, setDescription] = useState("");
@@ -304,7 +315,7 @@ export default function NewExpensePage(): ReactNode {
    * @spec SPEC-20260619-001 R-FORM-05
    */
   const isDirty =
-    vehicleId !== "" ||
+    (vehicleId !== "" && !isVehicleInherited) ||
     category !== "" ||
     fuelCalc.amount != null ||
     date !== TODAY ||
@@ -367,22 +378,64 @@ export default function NewExpensePage(): ReactNode {
       {templateNotice && <p role="alert">{templateNotice}</p>}
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+        {contextChangeNotice && (
+          <div role="status" className="flex items-center justify-between gap-2 rounded border border-neutral-200 p-2 text-sm">
+            <span>{contextChangeNotice}</span>
+            <div className="flex shrink-0 gap-2">
+              <button type="button" onClick={applyContextChange} className="underline">
+                Atualizar campo
+              </button>
+              <button type="button" onClick={dismissContextChangeNotice} aria-label="Fechar aviso">
+                ×
+              </button>
+            </div>
+          </div>
+        )}
+
         <label htmlFor="vehicle_id">Veículo *</label>
         <select
           id="vehicle_id"
           value={vehicleId}
           onChange={(event) => setVehicleId(event.target.value)}
           required
+          className={
+            isVehicleInherited
+              ? "border border-amber-300 bg-amber-50"
+              : vehicleId
+                ? "border border-neutral-300"
+                : ""
+          }
         >
           <option value="" disabled>
             Selecione um veículo
           </option>
-          {vehicles?.map((vehicle) => (
+          {filteredVehicles.map((vehicle) => (
             <option key={vehicle.id} value={vehicle.id}>
               {vehicleLabel(vehicle)}
             </option>
           ))}
         </select>
+        {isVehicleInherited && (
+          <span className="text-xs text-amber-700">↩ Herdado do contexto em foco</span>
+        )}
+        {!isVehicleInherited && vehicleId && (
+          <span className="text-xs text-neutral-500">✓ Selecionado manualmente</span>
+        )}
+        {vehicleContextHint && <p className="text-xs text-muted-foreground">{vehicleContextHint}</p>}
+        {vehicleQuickPicks.length > 0 && (
+          <div className="flex flex-wrap gap-1">
+            {vehicleQuickPicks.map((vehicle) => (
+              <button
+                key={vehicle.id}
+                type="button"
+                onClick={() => setVehicleId(vehicle.id)}
+                className="rounded border px-2 py-0.5 text-xs hover:bg-neutral-100"
+              >
+                {vehicleLabel(vehicle)}
+              </button>
+            ))}
+          </div>
+        )}
 
         <label htmlFor="category">Categoria *</label>
         <select

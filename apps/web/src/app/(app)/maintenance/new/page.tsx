@@ -7,6 +7,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent, type ReactNode } from "react";
 import { ApiError, apiClient } from "@/lib/http/api-client";
+import { useVehicleContextField } from "@/lib/hooks/use-vehicle-context-field";
 
 interface Vehicle {
   id: string;
@@ -40,7 +41,17 @@ export default function NewMaintenancePage(): ReactNode {
     retry: false,
   });
 
-  const [vehicleId, setVehicleId] = useState("");
+  const {
+    vehicleId,
+    setVehicleId,
+    isInherited: isVehicleInherited,
+    contextHint: vehicleContextHint,
+    quickPicks: vehicleQuickPicks,
+    filteredVehicles,
+    contextChangeNotice,
+    applyContextChange,
+    dismissContextChangeNotice,
+  } = useVehicleContextField(vehicles);
   const [description, setDescription] = useState("");
   const [scheduledDate, setScheduledDate] = useState(TODAY);
   const [cost, setCost] = useState<number | undefined>(undefined);
@@ -76,7 +87,7 @@ export default function NewMaintenancePage(): ReactNode {
   }
 
   const isDirty =
-    vehicleId !== "" ||
+    (vehicleId !== "" && !isVehicleInherited) ||
     description !== "" ||
     scheduledDate !== TODAY ||
     cost != null ||
@@ -109,22 +120,64 @@ export default function NewMaintenancePage(): ReactNode {
       <h1 className="text-xl font-semibold">Nova manutenção</h1>
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+        {contextChangeNotice && (
+          <div role="status" className="flex items-center justify-between gap-2 rounded border border-neutral-200 p-2 text-sm">
+            <span>{contextChangeNotice}</span>
+            <div className="flex shrink-0 gap-2">
+              <button type="button" onClick={applyContextChange} className="underline">
+                Atualizar campo
+              </button>
+              <button type="button" onClick={dismissContextChangeNotice} aria-label="Fechar aviso">
+                ×
+              </button>
+            </div>
+          </div>
+        )}
+
         <label htmlFor="vehicle_id">Veículo *</label>
         <select
           id="vehicle_id"
           value={vehicleId}
           onChange={(event) => setVehicleId(event.target.value)}
           required
+          className={
+            isVehicleInherited
+              ? "border border-amber-300 bg-amber-50"
+              : vehicleId
+                ? "border border-neutral-300"
+                : ""
+          }
         >
           <option value="" disabled>
             Selecione um veículo
           </option>
-          {vehicles?.map((vehicle) => (
+          {filteredVehicles.map((vehicle) => (
             <option key={vehicle.id} value={vehicle.id}>
               {vehicleLabel(vehicle)}
             </option>
           ))}
         </select>
+        {isVehicleInherited && (
+          <span className="text-xs text-amber-700">↩ Herdado do contexto em foco</span>
+        )}
+        {!isVehicleInherited && vehicleId && (
+          <span className="text-xs text-neutral-500">✓ Selecionado manualmente</span>
+        )}
+        {vehicleContextHint && <p className="text-xs text-muted-foreground">{vehicleContextHint}</p>}
+        {vehicleQuickPicks.length > 0 && (
+          <div className="flex flex-wrap gap-1">
+            {vehicleQuickPicks.map((vehicle) => (
+              <button
+                key={vehicle.id}
+                type="button"
+                onClick={() => setVehicleId(vehicle.id)}
+                className="rounded border px-2 py-0.5 text-xs hover:bg-neutral-100"
+              >
+                {vehicleLabel(vehicle)}
+              </button>
+            ))}
+          </div>
+        )}
 
         <label htmlFor="description">Descrição *</label>
         <input

@@ -1040,17 +1040,62 @@ que o artefato ainda não existe no repositório.
 ## SPEC-20260602-001 — Sistema Em Foco: Contexto de Veículo Global (approved)
 
 > Torna o contexto de veículo/grupo/seleção visível de forma persistente em toda a aplicação.
-> Sincroniza formulários transacionais com o contexto ativo. Nenhum código implementado.
+> Sincroniza formulários transacionais com o contexto ativo.
+> **2026-07-15 (T5.3a):** Divergência encontrada — a spec presumia `Sidebar`/`FleetAside`
+> já existentes; o repositório não tinha nenhum app shell (`layout.tsx` era só `QueryProvider`,
+> cada página um `<main>` solto). T5.3 foi dividida em sub-tarefas (T5.3a-d). Esta rodada
+> (T5.3a) criou o pré-requisito: rota group `app/(app)/` (páginas autenticadas movidas para lá)
+> + `components/layout/sidebar.tsx` com nav básica.
+> **2026-07-15 (T5.3b):** `use-dashboard-store.ts` (5 modos, R-CTX-01/02) e `focus-slot.tsx`
+> (RF-01–06, com botão "Trocar" abrindo seletor inline de veículo/grupo) implementados e
+> integrados ao `Sidebar` (expandido e recolhido via `isSidebarCollapsed` em `ui-store.ts`).
+> RF-07 a RF-19 (integração com formulários, `VehicleActivator`, staleness) ficam para
+> T5.3c/T5.3d.
+> **2026-07-15 (T5.3c):** `VehicleActivator` (bootstrap `?vehicleId=`/`?groupId=` na URL →
+> store, e `ContextFilterSync` store → URL via `window.location.search` não-reativo, RF-15,
+> RF-17.1, R-CTX-04) e `FleetAside` (staleness de `activeVehicleId`/`activeGroupId`, RF-16,
+> reaproveitando as query keys `["vehicles"]`/`["vehicle-groups"]` já usadas pelo `focus-slot`
+> — sem request extra, RNF-03) implementados. RF-19 (logout limpa contexto) exigiu criar
+> `apps/web/src/lib/auth/logout.ts` e um botão "Sair" no `Sidebar` — não havia nenhum
+> mecanismo de logout no frontend até esta rodada (endpoint `POST /auth/logout` já existia
+> no backend, sem consumidor no cliente).
+> **2026-07-15 (T5.3d):** `use-vehicle-context-field.ts` (RF-07, RF-13, RF-14, R-CTX-06) e
+> `vehicle-recency.ts` (RF-12) implementados e integrados a `expenses/new/page.tsx` e
+> `maintenance/new/page.tsx`. **Desvios de escopo, documentados em IMPACTO-032:** RF-09
+> (lista de veículos pré-filtrada pelos membros do grupo) mostra a dica textual do grupo mas
+> não filtra a lista — não existe endpoint que retorne os IDs de membros de um grupo
+> específico (só `PUT /vehicle-groups/:id/members`, replace-all); RF-11 (dropdown filtrado por
+> atributo) funciona apenas client-side, sobre a lista de veículos já carregada. Ambos os
+> gaps ficam registrados para tratamento futuro (endpoint dedicado, se o modo `group`/
+> `attribute` ganhar um seletor de UI real — hoje só acionável via API/store direto).
 
 ### Frontend
 
 | Req | Descrição | Código | Teste | Status |
 |-----|-----------|--------|-------|--------|
-| RF-01..RF-06 | `focus-slot.tsx`: slot "Em Foco" no Sidebar com 5 estados visuais | — | — | ⏳ |
-| RF-07/RF-13/RF-14 | `use-vehicle-context-field.ts`: hook que captura o contexto do store apenas no mount | — | — | ⏳ |
-| RF-15/RF-17 | `context-filter-sync.tsx`: sincroniza contexto do store com URL searchParams | — | — | ⏳ |
-| R-CTX-01/R-CTX-02 | `use-dashboard-store.ts`: adicionados `activeVehicleData`, `activeGroupData`, novos setters | — | — | ⏳ |
-| RF-07..RF-09/RF-13/RF-14 | `expense-form.tsx` e `maintenance-form.tsx`: herança de contexto via `useVehicleContextField` | — | — | ⏳ |
+| — | Pré-requisito (T5.3a): app shell — route group `(app)` + `Sidebar` com navegação | `apps/web/src/app/(app)/layout.tsx`, `apps/web/src/components/layout/sidebar.tsx` | `apps/web/src/components/layout/sidebar.spec.tsx` | ✅ |
+| R-CTX-01/R-CTX-02 | `use-dashboard-store.ts`: 5 modos de contexto (`none`/`single`/`group`/`multi`/`attribute`), `clearAllSelection`, persistência seletiva (`single`/`group` via localStorage; `multi`/`attribute` efêmeros) | `apps/web/src/lib/stores/use-dashboard-store.ts` | `apps/web/src/lib/stores/use-dashboard-store.spec.ts` | ✅ |
+| RF-01, RF-02, RF-03, RF-06 | `focus-slot.tsx`: slot "Em Foco" com os 5 estados visuais, label por modo, botão "×" (`clearAllSelection`) | `apps/web/src/components/layout/focus-slot.tsx` | `apps/web/src/components/layout/focus-slot.spec.tsx` | ✅ |
+| RF-04 | Sidebar recolhido: slot mostra só ícone + dot, tooltip nativo (`title`) com detalhes | `apps/web/src/components/layout/focus-slot.tsx`, `apps/web/src/lib/stores/ui-store.ts` (`isSidebarCollapsed`) | — | ✅ (tooltip via `title` nativo, sem componente de tooltip customizado) |
+| RF-05 | Botão "Trocar" abre seletor inline (lista de veículos/grupos) | `apps/web/src/components/layout/focus-slot.tsx` | — | 🟡 Funcional, mas é uma lista simples sem busca/paginação — suficiente para o volume atual de veículos por usuário |
+| RNF-05 | Nomenclatura canônica centralizada | `apps/web/src/lib/context/context-labels.ts` | — | ✅ |
+| RNF-01/RNF-02 | Slot reserva espaço fixo antes da hidratação (evita CLS); render inicial não bloqueia em rede | `apps/web/src/components/layout/focus-slot.tsx` | — | ✅ |
+| RF-15, R-CTX-04 | `VehicleActivator`: único componente que sincroniza URL↔store; bootstrap de `?vehicleId=`/`?groupId=` no mount | `apps/web/src/components/layout/vehicle-activator.tsx` | `apps/web/src/components/layout/vehicle-activator.spec.tsx` | ✅ |
+| RF-17.1 | `ContextFilterSync` (mesma implementação): reage só a mudanças do store; lê `window.location.search` não-reativamente para não conflitar com filtros locais de página | `apps/web/src/components/layout/vehicle-activator.tsx` | `apps/web/src/components/layout/vehicle-activator.spec.tsx` | ✅ |
+| RF-16 | `FleetAside`: staleness de `activeVehicleId` (toast + clear) e `activeGroupId` (clear silencioso) | `apps/web/src/components/layout/fleet-aside.tsx` | `apps/web/src/components/layout/fleet-aside.spec.tsx` | ✅ |
+| RNF-03 | Staleness reaproveita as query keys `["vehicles"]`/`["vehicle-groups"]` já ativas no `focus-slot` — sem request extra (dedupe do TanStack Query) | `apps/web/src/components/layout/fleet-aside.tsx` | — | ✅ |
+| RNF-04 | Toast não-obstrutivo, descartável, some sozinho em 5s | `apps/web/src/components/layout/context-stale-toast.tsx` | `apps/web/src/components/layout/context-stale-toast.spec.tsx` | ✅ |
+| RF-19 | Logout limpa todos os campos de contexto | `apps/web/src/lib/auth/logout.ts`, botão "Sair" em `sidebar.tsx` | `apps/web/src/lib/auth/logout.spec.ts` | ✅ |
+| RF-07, R-CTX-06 | `use-vehicle-context-field.ts`: captura o contexto do store apenas no mount; pré-seleciona `vehicle_id` só no modo `single` | `apps/web/src/lib/hooks/use-vehicle-context-field.ts` | `apps/web/src/lib/hooks/use-vehicle-context-field.spec.tsx` | ✅ |
+| RF-08 | Ícone ↩ + fundo/borda âmbar quando o campo está herdado do contexto | `apps/web/src/app/(app)/expenses/new/page.tsx`, `.../maintenance/new/page.tsx` | `page.spec.tsx` de cada formulário | ✅ |
+| RF-09 | Modo `group`: campo vazio + dica com nome do grupo | `use-vehicle-context-field.ts` | — | 🟡 Dica textual pronta; lista **não** é pré-filtrada pelos membros — não existe endpoint `GET` para os IDs de membros de um grupo específico (só `PUT .../members`, replace-all) |
+| RF-10 | Modo `multi`: dica "N veículos selecionados" + atalhos | `use-vehicle-context-field.ts` | `use-vehicle-context-field.spec.tsx` | ✅ |
+| RF-11 | Modo `attribute`: dropdown filtrado pelo atributo ativo | `use-vehicle-context-field.ts` | `use-vehicle-context-field.spec.tsx` | 🟡 Filtragem client-side sobre a lista já carregada; modo `attribute` ainda não tem seletor de UI (só acionável via store/API direto) |
+| RF-12 | Modo `none`: atalhos dos últimos veículos acessados | `apps/web/src/lib/vehicle-recency.ts`, `use-vehicle-context-field.ts` | `expenses/new/page.spec.tsx` ("modo none: exibe os veículos recentes") | ✅ |
+| RF-13 | Seleção manual troca o ícone para ✓ e remove o visual âmbar | `use-vehicle-context-field.ts` | `page.spec.tsx` de cada formulário ("troca para indicador ✓") | ✅ |
+| RF-14 | Mudança de contexto com formulário aberto não reseta o campo; aviso com ação "Atualizar campo" | `use-vehicle-context-field.ts` | `expenses/new/page.spec.tsx` ("mudança de contexto com o formulário aberto") | ✅ (aviso inline no formulário, não o toast fixo global de RF-16 — natureza diferente: ação específica do campo, não staleness) |
+| RF-17 (dashboard/listas) | Filtragem de KPIs, Spotlight, listas de despesas/manutenções pelo contexto ativo | — | — | ⏳ Sync já existe (T5.3c); filtragem em si depende da Fase 5/6 (dashboard e listas ainda não leem o store) |
+| RF-18 | `/vehicles/[id]` e `/settings` ignoram o contexto | — | — | ⏳ Trivial (não fazem leitura do store hoje) — confirmar quando o contexto passar a influenciar outras páginas |
 | RF-17 | `expenses/page.tsx` e `maintenance/page.tsx`: filtro por contexto via `ContextFilterSync` | — | — | ⏳ |
 
 ---

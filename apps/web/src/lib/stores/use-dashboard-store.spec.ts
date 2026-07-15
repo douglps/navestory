@@ -1,0 +1,68 @@
+import { beforeEach, describe, expect, it } from "vitest";
+import { useDashboardStore } from "./use-dashboard-store";
+
+function getPersisted(): { state: { selectionMode: string } } | null {
+  const raw = localStorage.getItem("nave-dashboard-context");
+  return raw ? JSON.parse(raw) : null;
+}
+
+describe("useDashboardStore", () => {
+  beforeEach(() => {
+    localStorage.clear();
+    useDashboardStore.getState().clearAllSelection();
+  });
+
+  it("inicia no modo none, sem seleção", () => {
+    const state = useDashboardStore.getState();
+    expect(state.selectionMode).toBe("none");
+    expect(state.activeVehicleId).toBeNull();
+    expect(state.activeGroupId).toBeNull();
+  });
+
+  it("R-CTX-01: ativar single zera os campos de outros modos", () => {
+    useDashboardStore.getState().setMultiSelected(["v1", "v2"]);
+    useDashboardStore.getState().setActiveVehicle("v3");
+
+    const state = useDashboardStore.getState();
+    expect(state.selectionMode).toBe("single");
+    expect(state.activeVehicleId).toBe("v3");
+    expect(state.multiSelectedIds).toEqual([]);
+  });
+
+  it("R-CTX-01: ativar group zera activeVehicleId", () => {
+    useDashboardStore.getState().setActiveVehicle("v1");
+    useDashboardStore.getState().setActiveGroup("g1");
+
+    const state = useDashboardStore.getState();
+    expect(state.selectionMode).toBe("group");
+    expect(state.activeGroupId).toBe("g1");
+    expect(state.activeVehicleId).toBeNull();
+  });
+
+  it("clearAllSelection retorna ao modo none", () => {
+    useDashboardStore.getState().setActiveVehicle("v1");
+    useDashboardStore.getState().clearAllSelection();
+
+    const state = useDashboardStore.getState();
+    expect(state.selectionMode).toBe("none");
+    expect(state.activeVehicleId).toBeNull();
+  });
+
+  it("R-CTX-02: persiste single em localStorage", () => {
+    useDashboardStore.getState().setActiveVehicle("v1");
+
+    expect(getPersisted()?.state.selectionMode).toBe("single");
+  });
+
+  it("R-CTX-02: não persiste multi (efêmero) em localStorage", () => {
+    useDashboardStore.getState().setMultiSelected(["v1", "v2"]);
+
+    expect(getPersisted()?.state.selectionMode).toBe("none");
+  });
+
+  it("R-CTX-02: não persiste attribute (efêmero) em localStorage", () => {
+    useDashboardStore.getState().setAttributeFilter({ attribute: "tipo", value: "carro" });
+
+    expect(getPersisted()?.state.selectionMode).toBe("none");
+  });
+});

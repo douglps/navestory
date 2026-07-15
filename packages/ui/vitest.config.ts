@@ -5,6 +5,7 @@ export default defineConfig({
   plugins: [react()],
   test: {
     environment: "jsdom",
+    setupFiles: ["./vitest.setup.ts"],
     coverage: {
       reporter: ["text", "lcov"],
       exclude: ["src/index.ts", "**/*.config.*"],

@@ -12,12 +12,12 @@ security: [S1, S2]
 
 ## Contexto
 
-Multas de trânsito devem ser gerenciadas no sistema para alimentar o Hub Financeiro Unificado (EPIC-FIN-001). O módulo inclui CRUD completo, controle de status e (Sprint 2) vinculação automática ao ledger de expenses quando uma multa com `due_date` for registrada.
+Multas de trânsito devem ser gerenciadas no sistema para alimentar o Hub Financeiro Unificado (EPIC-FIN-001). O módulo inclui CRUD completo, controle de status e vinculação automática ao ledger de expenses no momento da criação.
 
-## Escopo (Sprint 0 + Sprint 2)
+## Escopo
 
-- Sprint 0: scaffold completo (entity, DTOs, repository, service, controller, module)
-- Sprint 2: lógica de vinculação ao ledger (`US-FIN-A02`) via `ExpensesService.createFromSource()`
+- Scaffold completo (entity, DTOs, service, controller, module)
+- Vinculação automática ao ledger (`US-FIN-A02`) via `ExpensesService.createFromSource()`/`softDeleteBySource()`
 
 ## Entidade: Fine
 
@@ -95,11 +95,11 @@ cancelled  → []  (terminal)
 - RLS: apenas multas do próprio usuário são visíveis (S2)
 - JWT obrigatório em todas as rotas (S1)
 - `amount_with_discount` deve ser ≤ `amount` (validado no service)
-- Soft-delete de fine também soft-deleta a expense vinculada, se existir (R-HUB-01) — implementado no Sprint 2
+- Criação de multa (`POST /fines`) sempre cria expense vinculada com `source_type='fine'`, usando `amount_with_discount` quando disponível (R-LED-02)
+- Transição para `status=cancelled` ou soft-delete da fine também soft-deleta a expense vinculada, se existir (R-LED-03, R-HUB-01)
 
 ## Fora do Escopo desta Spec
 
-- Vinculação ao ledger (`US-FIN-A02`) — Sprint 2, spec separada
 - Notificações de vencimento — Sprint 3 (G-09)
 - Tela `/fines` no frontend — Sprint 2 (G-07)
 
@@ -111,3 +111,5 @@ cancelled  → []  (terminal)
 |--------|------|-------|-----------|
 | 1.0 | 2026-06-07 | douglps | Criação inicial |
 | 1.1 | 2026-06-22 | douglps | Layout de listagem atualizado para padrão 2 linhas + zebra (ref: SPEC-20260525-001 §7) |
+| 1.2 | 2026-07-14 | douglps | Correção de contradição interna: a seção "Escopo" listava a vinculação ao ledger (Sprint 2) como parte desta spec, mas "Fora do Escopo" já a descrevia como pertencente a uma spec separada — e `createFromSource()`/`softDeleteBySource()` (R-LED-02/03) não existiam em nenhum lugar do código. Implementação (T3.6) escopada apenas ao Sprint 0 (CRUD completo), consistente com "Fora do Escopo"; vinculação ao ledger fica pendente até T3.7/T3.8, quando `createFromSource()` for implementado uma única vez para as três origens (manutenção, multa, custo recorrente). Ver `matrices/rastreabilidade.md`. |
+| 1.3 | 2026-07-14 | douglps | Vinculação ao ledger implementada (T3.8, junto de `RecurringCostsModule`/SPEC-20260609-001): "Escopo" e "Fora do Escopo" atualizados para remover a divisão em Sprints, já que `createFromSource()`/`softDeleteBySource()` agora existem em `ExpensesService`. `FinesService.create()` chama `createFromSource` incondicionalmente; `update()` para `status=cancelled` e `remove()` chamam `softDeleteBySource`. Ver `matrices/rastreabilidade.md`. |

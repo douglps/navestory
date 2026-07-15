@@ -673,3 +673,18 @@ Layout (3 segmentos + ação cancelar):
 | `FormDraftGuard` | `apps/web` | Notificação de draft restaurado |
 | `useFormDraftGuard` | `apps/web` | Hook de persistência de draft |
 | `useVehicleContextField` | `apps/web` | Hook de contexto de veículo |
+
+---
+
+## Changelog
+
+- **2026-07-14 (T3.10):** R-FORM-05 (dirty check + confirmação ao cancelar) e R-FORM-07 (empty
+  state com CTA quando sem veículos) aplicados retroativamente ao Expense Form
+  (`apps/web/src/app/expenses/new/page.tsx`, `apps/web/src/app/expenses/[id]/page.tsx`), único
+  formulário transacional com tela própria no frontend até esta data. Adaptação sem
+  `AlertDialog`/`FormField` (ver nota da Seção 2026-07-14 acima): confirmação via
+  `window.confirm`, mesmo padrão já usado nas exclusões dessas telas. R-FORM-01/02/06 seguem ⏳,
+  dependentes da stack react-hook-form/`@nave/ui` (Fase 8). R-FORM-04 já estava conforme (create
+  redireciona, update não). Demais formulários do inventário (Vehicle, Fine, Maintenance,
+  RecurringCost) ficam fora do escopo desta aplicação retroativa — não têm tela própria ainda ou
+  já são tratados em specs específicas (ex: SPEC-20260602-002 para Vehicle).

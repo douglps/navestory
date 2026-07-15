@@ -8,9 +8,13 @@ import { AdminModule } from "./modules/admin/admin.module";
 import { AuthModule } from "./modules/auth/auth.module";
 import { CategoriesModule } from "./modules/categories/categories.module";
 import { DashboardModule } from "./modules/dashboard/dashboard.module";
+import { ExpenseTemplatesModule } from "./modules/expense-templates/expense-templates.module";
 import { ExpensesModule } from "./modules/expenses/expenses.module";
+import { FinesModule } from "./modules/fines/fines.module";
+import { MaintenancesModule } from "./modules/maintenances/maintenances.module";
 import { OdometerCyclesModule } from "./modules/odometer-cycles/odometer-cycles.module";
 import { PreferencesModule } from "./modules/preferences/preferences.module";
+import { RecurringCostsModule } from "./modules/recurring-costs/recurring-costs.module";
 import { UsersModule } from "./modules/users/users.module";
 import { VehicleGroupsModule } from "./modules/vehicle-groups/vehicle-groups.module";
 import { VehiclesModule } from "./modules/vehicles/vehicles.module";
@@ -41,9 +45,13 @@ import { SupabaseModule } from "./shared/supabase/supabase.module";
     VehicleGroupsModule,
     CategoriesModule,
     ExpensesModule,
+    ExpenseTemplatesModule,
+    FinesModule,
+    MaintenancesModule,
     OdometerCyclesModule,
     PreferencesModule,
     DashboardModule,
+    RecurringCostsModule,
   ],
   providers: [
     {

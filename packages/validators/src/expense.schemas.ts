@@ -29,10 +29,33 @@ export const expenseBaseSchema = z.object({
     .optional(),
 });
 
-export const createExpenseInputSchema = expenseBaseSchema;
+/**
+ * @spec SPEC-20260612-001 RF-06.1
+ * `category = 'fuel'` exige `odometer_km` informado (R-FUEL-01). No update, só é possível
+ * validar essa dependência quando `category` está presente no payload — o caso "já é fuel"
+ * (categoria não alterada nesta chamada) depende do estado persistido e é responsabilidade
+ * do service, não do schema.
+ */
+function requireOdometerForFuel<T extends { category?: string; odometer_km?: number | null }>(
+  data: T,
+  ctx: z.RefinementCtx,
+): void {
+  if (data.category === "fuel" && (data.odometer_km == null)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Odômetro é obrigatório para despesas de combustível.",
+      path: ["odometer_km"],
+    });
+  }
+}
+
+export const createExpenseInputSchema = expenseBaseSchema.superRefine(requireOdometerForFuel);
 export type CreateExpenseInput = z.infer<typeof createExpenseInputSchema>;
 
-export const updateExpenseInputSchema = expenseBaseSchema.partial().omit({ vehicle_id: true });
+export const updateExpenseInputSchema = expenseBaseSchema
+  .partial()
+  .omit({ vehicle_id: true })
+  .superRefine(requireOdometerForFuel);
 export type UpdateExpenseInput = z.infer<typeof updateExpenseInputSchema>;
 
 /**
@@ -53,3 +76,63 @@ export const listExpensesQuerySchema = z.object({
     .optional(),
 });
 export type ListExpensesQuery = z.infer<typeof listExpensesQuerySchema>;
+
+/**
+ * @spec SPEC-20260608-001 RF-01, RNF-03
+ */
+export const upcomingCostsQuerySchema = z.object({
+  vehicle_id: z.string().uuid().optional(),
+  horizon_days: z.coerce
+    .number()
+    .int()
+    .refine((value) => value === 30 || value === 90, {
+      message: "horizon_days deve ser 30 ou 90",
+    })
+    .default(30),
+});
+export type UpcomingCostsQuery = z.infer<typeof upcomingCostsQuerySchema>;
+
+export interface UpcomingCostItem {
+  source_type: "maintenance" | "fine" | "recurring_cost" | "expense";
+  source_id: string;
+  title: string;
+  amount: number | null;
+  due_date: string;
+  vehicle_id: string;
+  vehicle_plate: string | null;
+  is_estimated: boolean;
+}
+
+/**
+ * @spec SPEC-20260608-002 RF-01
+ */
+export const expenseKpisQuerySchema = z.object({
+  vehicle_id: z.string().uuid().optional(),
+});
+export type ExpenseKpisQuery = z.infer<typeof expenseKpisQuerySchema>;
+
+export interface ExpenseKpis {
+  total_this_month: number;
+  total_prev_month: number;
+  delta_percent: number | null;
+  total_all_time: number;
+  upcoming_30_days_total: number;
+  upcoming_30_days_count: number;
+}
+
+/**
+ * @spec SPEC-20260609-003 RF-01
+ * `from`/`to` ausentes → últimos 12 meses (default aplicado no service, não aqui).
+ */
+export const consolidatedExportQuerySchema = z.object({
+  from: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .optional(),
+  to: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .optional(),
+  vehicle_id: z.string().uuid().optional(),
+});
+export type ConsolidatedExportQuery = z.infer<typeof consolidatedExportQuerySchema>;

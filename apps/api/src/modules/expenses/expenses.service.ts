@@ -1,11 +1,22 @@
-import { ForbiddenException, Inject, Injectable, Logger, NotFoundException } from "@nestjs/common";
+import {
+  BadRequestException,
+  ForbiddenException,
+  Inject,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
+import type { ConsolidatedExportQuery, ExpenseKpis, UpcomingCostItem } from "@nave/validators";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { AuditService } from "../../shared/audit/audit.service";
+import { escapeCsvField } from "../../shared/csv/csv.util";
 import { createUserScopedClient } from "../../shared/supabase/create-user-scoped-client";
 import { SUPABASE_ADMIN_CLIENT } from "../../shared/supabase/supabase.constants";
 import type { CreateExpenseDto } from "./dto/create-expense.dto";
+import type { ExpenseKpisDto } from "./dto/expense-kpis.dto";
 import type { ListExpensesDto } from "./dto/list-expenses.dto";
+import type { UpcomingCostsDto } from "./dto/upcoming-costs.dto";
 import type { UpdateExpenseDto } from "./dto/update-expense.dto";
 
 export interface Expense {
@@ -31,6 +42,7 @@ export interface Expense {
 export type ExpenseWithOdometerWarning = Expense & {
   odometer_warning?: true;
   odometer_previous_max_km?: number;
+  computed?: { km_per_liter: number | null; price_per_liter: number | null };
 };
 
 export type ExpenseWithWarnings = ExpenseWithOdometerWarning & {
@@ -45,6 +57,12 @@ export interface PaginatedExpenses {
 
 const EXPENSE_COLUMNS = `id, user_id, vehicle_id, category, amount, date, description, odometer_km,
   liters, fuel_type, full_tank, supplier, source_type, source_id, is_readonly, created_at, updated_at`;
+
+const SUPPLIER_SUGGESTION_LIMIT = 10;
+
+function round2(value: number): number {
+  return Math.round(value * 100) / 100;
+}
 
 /**
  * @spec SPEC-20260714-001
@@ -97,6 +115,86 @@ export class ExpensesService {
       return null;
     }
     return (data as { odometer_km: number }).odometer_km;
+  }
+
+  /**
+   * @spec SPEC-20260612-001 RF-04.1
+   */
+  private async findOdometerBoundary(
+    client: SupabaseClient,
+    vehicleId: string,
+    userId: string,
+    direction: "before" | "after",
+    date: string,
+    excludeExpenseId?: string,
+  ): Promise<{ odometer_km: number; date: string } | null> {
+    let builder = client
+      .from("expenses")
+      .select("odometer_km, date")
+      .eq("vehicle_id", vehicleId)
+      .eq("user_id", userId)
+      .is("deleted_at", null)
+      .not("odometer_km", "is", null);
+
+    builder = direction === "before" ? builder.lte("date", date) : builder.gt("date", date);
+    if (excludeExpenseId) {
+      builder = builder.neq("id", excludeExpenseId);
+    }
+
+    const { data, error } = await builder
+      .order("odometer_km", { ascending: direction === "after" })
+      .limit(1)
+      .maybeSingle();
+
+    if (error || !data) {
+      return null;
+    }
+    return data as { odometer_km: number; date: string };
+  }
+
+  /**
+   * @spec SPEC-20260612-001 RF-04.1, RF-04.2
+   * R-ODO-01: validação rígida (hard block), opt-in via `strict` — usada exclusivamente pelo
+   * fluxo web (apps/web envia `?strict=true`); o default preserva o soft-warning R1
+   * (SPEC-20260601-001) para os demais consumidores da API.
+   */
+  private async checkOdometerHardBlock(
+    client: SupabaseClient,
+    userId: string,
+    vehicleId: string,
+    date: string,
+    odometerKm: number | null | undefined,
+    excludeExpenseId?: string,
+  ): Promise<void> {
+    if (odometerKm == null) return;
+
+    const before = await this.findOdometerBoundary(
+      client,
+      vehicleId,
+      userId,
+      "before",
+      date,
+      excludeExpenseId,
+    );
+    if (before && odometerKm < before.odometer_km) {
+      throw new BadRequestException(
+        `Odômetro inválido: o último valor registrado para este veículo foi ${before.odometer_km} km em ${before.date}. Informe um valor igual ou maior.`,
+      );
+    }
+
+    const after = await this.findOdometerBoundary(
+      client,
+      vehicleId,
+      userId,
+      "after",
+      date,
+      excludeExpenseId,
+    );
+    if (after && odometerKm > after.odometer_km) {
+      throw new BadRequestException(
+        `Odômetro inválido: existe um registro de ${after.odometer_km} km em ${after.date}, posterior a esta despesa. Informe um valor igual ou menor.`,
+      );
+    }
   }
 
   /**
@@ -186,14 +284,81 @@ export class ExpensesService {
   }
 
   /**
+   * @spec SPEC-20260606-001 RF-03, R-FUEL-02, R-FUEL-03
+   * `excludeExpenseId` reutiliza a busca de `findMaxOdometerByVehicle` já usada pela validação de
+   * odômetro (SPEC-20260601-001) — sem query adicional, conforme RNF de SPEC-20260606-001.
+   */
+  private async computeFuelMetrics(
+    client: SupabaseClient,
+    userId: string,
+    expense: Expense,
+  ): Promise<Pick<ExpenseWithOdometerWarning, "computed">> {
+    if (expense.category !== "fuel") {
+      return {};
+    }
+
+    const priceperLiter =
+      expense.liters != null && expense.liters > 0 ? round2(expense.amount / expense.liters) : null;
+
+    let kmPerLiter: number | null = null;
+    if (expense.full_tank === true && expense.liters != null && expense.liters > 0 && expense.odometer_km != null) {
+      const maxPrevKm = await this.findMaxOdometerByVehicle(
+        client,
+        expense.vehicle_id,
+        userId,
+        expense.id,
+      );
+      if (maxPrevKm != null) {
+        kmPerLiter = round2((expense.odometer_km - maxPrevKm) / expense.liters);
+      }
+    }
+
+    return { computed: { km_per_liter: kmPerLiter, price_per_liter: priceperLiter } };
+  }
+
+  /**
+   * @spec SPEC-20260606-002 RF-02
+   * Sugestões deduplicadas case-insensitive em memória (histórico do usuário é pequeno o bastante
+   * para não justificar DISTINCT no banco); mantém a capitalização original mais recente (R-FUEL-04).
+   */
+  async listSuppliers(accessToken: string, userId: string): Promise<string[]> {
+    const { data, error } = await this.clientForUser(accessToken)
+      .from("expenses")
+      .select("supplier, date")
+      .eq("user_id", userId)
+      .not("supplier", "is", null)
+      .is("deleted_at", null)
+      .order("date", { ascending: false })
+      .limit(200);
+
+    if (error) {
+      throw new NotFoundException("Não foi possível listar os fornecedores");
+    }
+
+    const seen = new Set<string>();
+    const suppliers: string[] = [];
+    for (const row of (data ?? []) as { supplier: string }[]) {
+      const key = row.supplier.toLowerCase();
+      if (!seen.has(key)) {
+        seen.add(key);
+        suppliers.push(row.supplier);
+        if (suppliers.length >= SUPPLIER_SUGGESTION_LIMIT) break;
+      }
+    }
+    return suppliers;
+  }
+
+  /**
    * @spec SPEC-20260714-001 RF-01, RF-02, RF-09, RNF-04
    * @spec SPEC-20260601-001 RF-01, RF-03, RF-04
    * @spec SPEC-20260601-002 RF-02, RF-03, RF-04
+   * @spec SPEC-20260606-001 RF-03
    */
   async create(
     accessToken: string,
     userId: string,
     dto: CreateExpenseDto,
+    strict = false,
   ): Promise<ExpenseWithWarnings> {
     const client = this.clientForUser(accessToken);
 
@@ -207,6 +372,10 @@ export class ExpensesService {
 
     if (vehicleError || !vehicle) {
       throw new NotFoundException("Veículo não encontrado");
+    }
+
+    if (strict) {
+      await this.checkOdometerHardBlock(client, userId, dto.vehicle_id, dto.date, dto.odometer_km);
     }
 
     const { data, error } = await client
@@ -227,14 +396,12 @@ export class ExpensesService {
     });
 
     const expense = data as Expense;
-    const odometerWarning = await this.buildOdometerWarning(
-      client,
-      userId,
-      expense.vehicle_id,
-      dto.odometer_km,
-    );
+    const odometerWarning = strict
+      ? {}
+      : await this.buildOdometerWarning(client, userId, expense.vehicle_id, dto.odometer_km);
     const duplicateWarning = await this.buildDuplicateWarning(client, userId, expense);
-    return { ...expense, ...odometerWarning, ...duplicateWarning };
+    const fuelMetrics = await this.computeFuelMetrics(client, userId, expense);
+    return { ...expense, ...odometerWarning, ...duplicateWarning, ...fuelMetrics };
   }
 
   /**
@@ -305,12 +472,14 @@ export class ExpensesService {
   /**
    * @spec SPEC-20260714-001 RF-05, RF-07, R-LED-01
    * @spec SPEC-20260601-001 RF-01, RF-03, RF-04, RF-05
+   * @spec SPEC-20260606-001 RF-03
    */
   async update(
     accessToken: string,
     userId: string,
     expenseId: string,
     dto: UpdateExpenseDto,
+    strict = false,
   ): Promise<ExpenseWithOdometerWarning> {
     const existing = await this.findOne(accessToken, userId, expenseId);
     if (existing.is_readonly) {
@@ -318,6 +487,18 @@ export class ExpensesService {
     }
 
     const client = this.clientForUser(accessToken);
+
+    if (strict && dto.odometer_km !== undefined) {
+      await this.checkOdometerHardBlock(
+        client,
+        userId,
+        existing.vehicle_id,
+        dto.date ?? existing.date,
+        dto.odometer_km,
+        expenseId,
+      );
+    }
+
     const { data, error } = await client
       .from("expenses")
       .update(dto)
@@ -340,14 +521,11 @@ export class ExpensesService {
     });
 
     const expense = data as Expense;
-    const warning = await this.buildOdometerWarning(
-      client,
-      userId,
-      expense.vehicle_id,
-      dto.odometer_km,
-      expenseId,
-    );
-    return { ...expense, ...warning };
+    const warning = strict
+      ? {}
+      : await this.buildOdometerWarning(client, userId, expense.vehicle_id, dto.odometer_km, expenseId);
+    const fuelMetrics = await this.computeFuelMetrics(client, userId, expense);
+    return { ...expense, ...warning, ...fuelMetrics };
   }
 
   /**
@@ -376,5 +554,254 @@ export class ExpensesService {
       tableName: "expenses",
       recordId: expenseId,
     });
+  }
+
+  /**
+   * @spec SPEC-20260608-001 RF-01, RF-02, RF-03, RNF-02
+   */
+  async getUpcomingCosts(
+    accessToken: string,
+    query: UpcomingCostsDto,
+  ): Promise<UpcomingCostItem[]> {
+    const { data, error } = await this.clientForUser(accessToken).rpc("get_upcoming_costs", {
+      p_vehicle_id: query.vehicle_id ?? null,
+      p_horizon_days: query.horizon_days,
+    });
+
+    if (error) {
+      throw new NotFoundException("Não foi possível carregar as próximas despesas");
+    }
+    return (data ?? []) as UpcomingCostItem[];
+  }
+
+  private async sumExpensesAmount(
+    client: SupabaseClient,
+    userId: string,
+    vehicleId: string | undefined,
+    dateFrom?: string,
+    dateTo?: string,
+  ): Promise<number> {
+    let builder = client
+      .from("expenses")
+      .select("amount")
+      .eq("user_id", userId)
+      .is("deleted_at", null);
+
+    if (vehicleId) {
+      builder = builder.eq("vehicle_id", vehicleId);
+    }
+    if (dateFrom) {
+      builder = builder.gte("date", dateFrom);
+    }
+    if (dateTo) {
+      builder = builder.lt("date", dateTo);
+    }
+
+    const { data, error } = await builder;
+    if (error) {
+      throw new NotFoundException("Não foi possível calcular os KPIs financeiros");
+    }
+    return round2(((data ?? []) as { amount: number }[]).reduce((sum, row) => sum + row.amount, 0));
+  }
+
+  /**
+   * @spec SPEC-20260608-002 RF-01, RF-02, RF-03
+   */
+  async getKpis(accessToken: string, userId: string, query: ExpenseKpisDto): Promise<ExpenseKpis> {
+    const client = this.clientForUser(accessToken);
+    const now = new Date();
+    const toDateString = (date: Date) => date.toISOString().slice(0, 10);
+    const startOfThisMonth = toDateString(new Date(now.getFullYear(), now.getMonth(), 1));
+    const startOfNextMonth = toDateString(new Date(now.getFullYear(), now.getMonth() + 1, 1));
+    const startOfPrevMonth = toDateString(new Date(now.getFullYear(), now.getMonth() - 1, 1));
+
+    const [totalThisMonth, totalPrevMonth, totalAllTime, upcoming] = await Promise.all([
+      this.sumExpensesAmount(client, userId, query.vehicle_id, startOfThisMonth, startOfNextMonth),
+      this.sumExpensesAmount(client, userId, query.vehicle_id, startOfPrevMonth, startOfThisMonth),
+      this.sumExpensesAmount(client, userId, query.vehicle_id),
+      this.getUpcomingCosts(accessToken, { vehicle_id: query.vehicle_id, horizon_days: 30 }),
+    ]);
+
+    const deltaPercent =
+      totalPrevMonth === 0
+        ? null
+        : Math.round(((totalThisMonth - totalPrevMonth) / totalPrevMonth) * 1000) / 10;
+
+    return {
+      total_this_month: totalThisMonth,
+      total_prev_month: totalPrevMonth,
+      delta_percent: deltaPercent,
+      total_all_time: totalAllTime,
+      upcoming_30_days_total: round2(
+        upcoming.reduce((sum, item) => sum + (item.amount ?? 0), 0),
+      ),
+      upcoming_30_days_count: upcoming.length,
+    };
+  }
+
+  /**
+   * @spec EPIC-FIN-001 R-LED-02, R-LED-05, R-HUB-02
+   * Idempotente via checagem prévia (mesma técnica de `findPotentialDuplicate`) — a idempotência
+   * definitiva é garantida pelo índice único parcial `uq_expenses_source` no banco.
+   */
+  async createFromSource(
+    accessToken: string,
+    userId: string,
+    params: {
+      source_type: string;
+      source_id: string;
+      vehicle_id: string;
+      category: string;
+      amount: number;
+      date: string;
+      description?: string | null;
+    },
+  ): Promise<Expense> {
+    const client = this.clientForUser(accessToken);
+
+    const { data: existing } = await client
+      .from("expenses")
+      .select(EXPENSE_COLUMNS)
+      .eq("source_type", params.source_type)
+      .eq("source_id", params.source_id)
+      .is("deleted_at", null)
+      .maybeSingle();
+
+    if (existing) {
+      return existing as Expense;
+    }
+
+    const { data, error } = await client
+      .from("expenses")
+      .insert({
+        user_id: userId,
+        vehicle_id: params.vehicle_id,
+        category: params.category,
+        amount: params.amount,
+        date: params.date,
+        description: params.description ?? null,
+        source_type: params.source_type,
+        source_id: params.source_id,
+        is_readonly: true,
+      })
+      .select(EXPENSE_COLUMNS)
+      .single();
+
+    if (error || !data) {
+      throw new NotFoundException("Não foi possível vincular a despesa ao ledger");
+    }
+
+    void this.auditService.log({
+      userId,
+      action: "EXPENSE_CREATED",
+      tableName: "expenses",
+      recordId: (data as Expense).id,
+      changes: { source_type: params.source_type, source_id: params.source_id },
+    });
+
+    return data as Expense;
+  }
+
+  /**
+   * @spec EPIC-FIN-001 R-HUB-01
+   */
+  async softDeleteBySource(
+    accessToken: string,
+    userId: string,
+    sourceType: string,
+    sourceId: string,
+  ): Promise<void> {
+    const { error } = await this.clientForUser(accessToken)
+      .from("expenses")
+      .update({ deleted_at: new Date().toISOString() })
+      .eq("user_id", userId)
+      .eq("source_type", sourceType)
+      .eq("source_id", sourceId)
+      .is("deleted_at", null);
+
+    if (error) {
+      throw new NotFoundException("Não foi possível remover a despesa vinculada");
+    }
+  }
+
+  private csvOriginLabel(sourceType: string | null): string {
+    switch (sourceType) {
+      case "maintenance":
+        return "Manutenção";
+      case "fine":
+        return "Multa";
+      case "recurring_cost":
+        return "Documento";
+      default:
+        return "Despesa Manual";
+    }
+  }
+
+  /**
+   * @spec SPEC-20260609-003 RF-01, RF-02
+   * Retorna CSV pronto (mesmo padrão de `DashboardService.exportExpensesCsv`) em vez do array JSON
+   * literal da spec — mantém a arquitetura já estabelecida (backend gera o arquivo, frontend baixa
+   * via `<a href download>`), sem introduzir fetch direto ao Supabase no cliente.
+   */
+  async exportConsolidatedCsv(
+    accessToken: string,
+    userId: string,
+    query: ConsolidatedExportQuery,
+  ): Promise<string> {
+    const client = this.clientForUser(accessToken);
+    const today = new Date();
+    const toDateString = (date: Date) => date.toISOString().slice(0, 10);
+    const from = query.from ?? toDateString(new Date(today.getFullYear(), today.getMonth() - 12, today.getDate()));
+    const to = query.to ?? toDateString(today);
+
+    let builder = client
+      .from("expenses")
+      .select("date, amount, category, description, source_type, vehicles(plate, make, model)")
+      .eq("user_id", userId)
+      .is("deleted_at", null)
+      .gte("date", from)
+      .lte("date", to);
+
+    if (query.vehicle_id) {
+      builder = builder.eq("vehicle_id", query.vehicle_id);
+    }
+
+    const header = "Data,Veiculo,Placa,Categoria,Valor,Origem,Descricao";
+    const { data, error } = await builder.order("date", { ascending: false }).limit(5_000);
+
+    if (error) {
+      return `${header}\n`;
+    }
+
+    interface ConsolidatedExportRow {
+      date: string;
+      amount: number;
+      category: string;
+      description: string | null;
+      source_type: string | null;
+      vehicles:
+        | { plate: string; make: string | null; model: string | null }
+        | { plate: string; make: string | null; model: string | null }[]
+        | null;
+    }
+
+    const rows = ((data ?? []) as ConsolidatedExportRow[]).map((row) => {
+      const vehicle = (Array.isArray(row.vehicles) ? row.vehicles[0] : row.vehicles) ?? {
+        plate: "",
+        make: null,
+        model: null,
+      };
+      return [
+        row.date,
+        escapeCsvField(`${vehicle.make ?? ""} ${vehicle.model ?? ""}`.trim()),
+        escapeCsvField(vehicle.plate),
+        escapeCsvField(row.category),
+        row.amount.toFixed(2),
+        this.csvOriginLabel(row.source_type),
+        escapeCsvField(row.description ?? ""),
+      ].join(",");
+    });
+
+    return [header, ...rows].join("\n") + "\n";
   }
 }

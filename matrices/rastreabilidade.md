@@ -77,6 +77,7 @@
 | ✅ | Implementado e com teste cobrindo o comportamento |
 | 🔶 | Implementado, mas sem cobertura de teste |
 | ⏳ | Não implementado ainda |
+| ⏸️ | Adiado — decisão explícita registrada (não é apenas "ainda não chegou a vez"); ver nota da spec/tarefa para o motivo e o gatilho de retomada |
 | ❌ | Fora de escopo do MVP |
 
 ---
@@ -161,10 +162,10 @@ que o artefato ainda não existe no repositório.
 
 | Req | Descrição | Código | Teste | Status |
 |-----|-----------|--------|-------|--------|
-| RF-01 | `updateMaintenanceInputSchema` com `superRefine`: `odometer_km` obrigatório quando `status === 'completed'` | — | — | ⏳ Depende do módulo de manutenções (Fase 4) |
-| RF-02 | `MaintenanceService.update()` rejeita HTTP 422 quando `status = completed` sem `odometer_km` válido | — | — | ⏳ Depende do módulo de manutenções (Fase 4) |
-| RF-03 | Correção de bug pré-existente em `createMaintenanceAction`: `odometer_km` do FormData não era mapeado para o corpo do request | — | — | ⏳ Depende do módulo de manutenções (Fase 4) |
-| RF-04 | Validação de sequência de odômetro em manutenções via `MaintenanceWarningException`; usa `findMaxOdometerByVehicle` filtrado pelo ciclo ativo | — | — | ⏳ Depende do módulo de manutenções (Fase 4) |
+| RF-01 | `odometer_km` obrigatório quando `status === 'completed'` — implementado como checagem imperativa em `MaintenancesService.update()` (não via `superRefine` no schema Zod, já que a validação depende do valor *existente* no banco quando não reenviado no payload; mesma decisão de design de `SPEC-20260603-002`/RNF-04) | `apps/api/src/modules/maintenances/maintenances.service.ts` | `apps/api/src/modules/maintenances/maintenances.service.spec.ts` | 🔶 Implementado com padrão diferente do descrito |
+| RF-02 | `MaintenancesService.update()` rejeita HTTP 422 quando `status = completed` sem `odometer_km` válido | `apps/api/src/modules/maintenances/maintenances.service.ts` | `apps/api/src/modules/maintenances/maintenances.service.spec.ts` | ✅ |
+| RF-03 | Bug de `createMaintenanceAction` (Server Action) não aplicável — projeto não usa Server Actions para mutação (decisão já registrada em T3.9); `POST /maintenances` mapeia `odometer_km` corretamente desde a criação do endpoint | `apps/api/src/modules/maintenances/maintenances.controller.ts` | `apps/api/src/modules/maintenances/maintenances.controller.spec.ts` | ✅ N/A por decisão de arquitetura |
+| RF-04 | Validação de sequência de odômetro em manutenções: padrão response-field (`odometer_warning`/`odometer_previous_max_km`), não exceção (`MaintenanceWarningException` descartada — mesma decisão de T3.2/T3.3 para despesas); `findMaxOdometerByVehicle` ainda sem filtro de ciclo ativo (R-ODO-04 permanece ⏳) | `apps/api/src/modules/maintenances/maintenances.service.ts` | `apps/api/src/modules/maintenances/maintenances.service.spec.ts` | 🔶 Implementado com padrão diferente do descrito |
 
 ### Modelo de Dados — `vehicle_odometer_cycles` (R-ODO-05, R-ODO-06)
 
@@ -188,9 +189,9 @@ que o artefato ainda não existe no repositório.
 | Req | Descrição | Código | Teste | Status |
 |-----|-----------|--------|-------|--------|
 | RF-12 | `ExpenseRepositoryPort.findMaxOdometerByVehicle` recebe parâmetro opcional `sinceDate?: string`; zero breaking change para callers existentes | — | — | ⏳ Depende do módulo de despesas (Fase 3) |
-| RF-13 | `MaintenanceRepositoryPort.findMaxOdometerByVehicle(vehicleId, userId, excludeMaintenanceId?, sinceDate?)`: análogo ao de expenses | — | — | ⏳ Depende do módulo de manutenções (Fase 4) |
+| RF-13 | `MaintenancesService.findMaxOdometerByVehicle(client, vehicleId, userId, excludeMaintenanceId?)`: análogo ao de expenses, sem parâmetro `sinceDate`/filtro de ciclo ainda (ver RF-14/RF-15) | `apps/api/src/modules/maintenances/maintenances.service.ts` | `apps/api/src/modules/maintenances/maintenances.service.spec.ts` | 🔶 Sem filtro de ciclo |
 | RF-14 | `ExpensesService` consulta `OdometerCyclesService.getActiveCycleStart()` antes da verificação de sequência e passa resultado como `sinceDate` | — | — | ⏳ Depende do módulo de despesas (Fase 3) |
-| RF-15 | `MaintenanceService` aplica o mesmo padrão de RF-14 para o repositório de manutenções (R-ODO-04) | — | — | ⏳ Depende do módulo de manutenções (Fase 4) |
+| RF-15 | `MaintenancesService` aplica o mesmo padrão de RF-14 para o repositório de manutenções (R-ODO-04) | — | — | ⏳ Gap pré-existente também em `ExpensesService` (RF-14); tratamento unificado em spec futura |
 
 ### Mensagem de Confirmação e Atalho para Novo Ciclo (R-ODO-06)
 
@@ -214,7 +215,7 @@ que o artefato ainda não existe no repositório.
 |-----|-----------|--------|-------|--------|
 | RF-22 | Rota `/settings/vehicles/[vehicleId]/odometer-cycles`: tabela de histórico + modal "Reiniciar odômetro" (sem dirty-check `AlertDialog` dedicado — mesma limitação de T2.1, pendente do Design System) | `apps/web/src/app/settings/vehicles/[vehicleId]/odometer-cycles/page.tsx` | `apps/web/src/app/settings/vehicles/[vehicleId]/odometer-cycles/page.spec.tsx` | 🔶 |
 | RF-23 | `VehicleContextChip` exibe badge "Ciclo {N}" somente quando `cycle_number >= 2`; Ciclo 1 implícito não exibe badge (R-ODO-06) | — | — | ⏳ Depende do dashboard/Em Foco (Fase 5) |
-| RF-24 | `MaintenanceForm`: campo `odometer_km` torna-se visualmente obrigatório quando `status = completed` (R-ODO-03) | — | — | ⏳ Depende do módulo de manutenções (Fase 4) |
+| RF-24 | `MaintenanceForm`: campo `odometer_km` torna-se visualmente obrigatório quando `status = completed` (R-ODO-03) | `apps/web/src/app/maintenance/[id]/page.tsx` | `apps/web/src/app/maintenance/[id]/page.spec.tsx` | 🔶 Campo exposto via `OdometerInput`; obrigatoriedade visual condicional (asterisco/required dinâmico) fica ⏳ — enforcement real já ocorre no backend (422) |
 
 ---
 
@@ -333,19 +334,27 @@ que o artefato ainda não existe no repositório.
 ## SPEC-20260619-001 — Padrão de Comportamento de Formulários (approved)
 
 > Define stack, regras (R-FORM-01..R-FORM-07, R-FUEL-07, R-FUEL-08) e fases de implementação
-> para todos os formulários. Status: approved — nenhum código implementado ainda.
+> para todos os formulários. Status: approved.
+> **2026-07-14:** decisão tomada com o usuário ao retomar T3.9 (ver changelog de
+> SPEC-20260612-001) de **não** construir esta stack agora — react-hook-form/Server
+> Actions/`@nave/ui` form kit ficam para quando a Fase 8 (Design System) evoluir os
+> componentes. `R-FUEL-08` foi implementada sem essa stack, via hook `useFuelCrossCalc`
+> (`apps/web/src/lib/hooks/use-fuel-cross-calc.ts`).
+> **2026-07-14 (T3.10):** R-FORM-05 e R-FORM-07 aplicados retroativamente ao Expense Form
+> (única tela transacional existente no frontend), adaptados sem `AlertDialog`/`FormField`
+> (confirmação via `window.confirm`, mesmo padrão das exclusões). Ver changelog da spec.
 
 ### Regras de Formulário (R-FORM)
 
 | Requisito | Descrição | Código | Teste | Status |
 |-----------|-----------|--------|-------|--------|
-| R-FORM-01 | `mode: 'onBlur'`, `reValidateMode: 'onChange'` em todos os forms | — | — | ⏳ |
-| R-FORM-02 | `FormField` + `Controller` pattern; nunca `.register()` direto | — | — | ⏳ |
-| R-FORM-03 | Valores monetários usam `CurrencyInput` (ATM-style) | — | — | ⏳ |
-| R-FORM-04 | Create actions redirect para listagem; update/delete fazem revalidate sem redirect | — | — | ⏳ |
-| R-FORM-05 | Dirty check com `AlertDialog` de confirmação ao cancelar | — | — | ⏳ |
-| R-FORM-06 | Server Actions retornam `ActionResult` padrão | — | — | ⏳ |
-| R-FORM-07 | Empty state com CTA quando sem veículos cadastrados | — | — | ⏳ |
+| R-FORM-01 | `mode: 'onBlur'`, `reValidateMode: 'onChange'` em todos os forms | — | — | ⏳ Depende da stack react-hook-form (Fase 8) |
+| R-FORM-02 | `FormField` + `Controller` pattern; nunca `.register()` direto | — | — | ⏳ Depende da stack react-hook-form (Fase 8) |
+| R-FORM-03 | Valores monetários usam `CurrencyInput` (ATM-style) | `packages/ui/src/components/masked-input.tsx` | `packages/ui/src/components/masked-input.spec.tsx` | ✅ (Expense Form) |
+| R-FORM-04 | Create actions redirect para listagem; update/delete fazem revalidate sem redirect | `apps/web/src/app/expenses/new/page.tsx`, `apps/web/src/app/expenses/[id]/page.tsx` | `apps/web/src/app/expenses/new/page.spec.tsx`, `apps/web/src/app/expenses/[id]/page.spec.tsx` | ✅ (Expense Form) |
+| R-FORM-05 | Dirty check com confirmação (`window.confirm`, adaptado de `AlertDialog`) ao cancelar | `apps/web/src/app/expenses/new/page.tsx`, `apps/web/src/app/expenses/[id]/page.tsx` | `apps/web/src/app/expenses/new/page.spec.tsx`, `apps/web/src/app/expenses/[id]/page.spec.tsx` | ✅ (Expense Form) |
+| R-FORM-06 | Server Actions retornam `ActionResult` padrão | — | — | ⏳ Não aplicável sem Server Actions; API usa `ApiError`/`apiClient` uniformemente |
+| R-FORM-07 | Empty state com CTA quando sem veículos cadastrados | `apps/web/src/app/expenses/new/page.tsx` | `apps/web/src/app/expenses/new/page.spec.tsx` | ✅ (Expense Form) |
 
 ### Fases de Implementação
 
@@ -404,15 +413,17 @@ que o artefato ainda não existe no repositório.
 
 > Ajustes pontuais no `ExpenseForm`: limite máximo do campo Valor (R-EXP-01), campo Ano
 > editável, "Tanque cheio?" tri-state (R-FUEL-06), limite de 7 dígitos no Odômetro (R-ODO-02)
-> e reorganização do layout. Status: approved — nenhum código implementado ainda.
+> e reorganização do layout. **2026-07-14 (T3.9):** implementado sobre a stack real do projeto
+> (client component + `useState` + TanStack Query), não react-hook-form/`@nave/ui` como a spec
+> original descreve — ver changelog da spec e de SPEC-20260612-001.
 
 | Requisito | Descrição | Código | Teste | Status |
 |-----------|-----------|--------|-------|--------|
-| RF-01 | `amount` aceita até R$ 100.000.000,00 (R-EXP-01); `CurrencyInput` permite digitar até 11 dígitos | — | — | ⏳ |
-| RF-02 | Campo "Ano" (4 dígitos) ao lado da Data: editar atualiza apenas o ano; ano inválido ajusta para o último dia válido do mês | — | — | ⏳ |
-| RF-03 | "Tanque cheio?" tri-state (`true`/`false`/`null`, default `null`); botões "Sim"/"Não", clicar no ativo desmarca para `null` (R-FUEL-06) | — | — | ⏳ |
-| RF-04 | `odometer_km` limitado a 9.999.999 (7 dígitos) no `expenseBaseSchema` (R-ODO-02) | — | — | ⏳ |
-| RF-05 | Reordenação do layout: Data + Ano lado a lado; Odômetro movido para após Data/Ano quando `category = fuel` | — | — | ⏳ |
+| RF-01 | `amount` aceita até R$ 100.000.000,00 (R-EXP-01); `CurrencyInput` permite digitar até 11 dígitos | `packages/validators/src/expense.schemas.ts` (já vigente desde T3.0), `packages/ui/src/components/masked-input.tsx` (`CURRENCY_MAX_DIGITS = 11`) | `packages/ui/src/components/masked-input.spec.tsx` | ✅ |
+| RF-02 | Campo "Ano" (4 dígitos) ao lado da Data: editar atualiza apenas o ano; ano inválido faz rollover (comportamento padrão de `Date`) | `apps/web/src/lib/date-year.ts`, `apps/web/src/app/expenses/{new/page.tsx,[id]/page.tsx}` | `apps/web/src/lib/date-year.spec.ts`, `apps/web/src/app/expenses/new/page.spec.tsx` | ✅ |
+| RF-03 | "Tanque cheio?" tri-state (`true`/`false`/`null`, default `null`); botões "Sim"/"Não", clicar no ativo desmarca para `null` (R-FUEL-06) | `apps/web/src/app/expenses/{new/page.tsx,[id]/page.tsx}` | `apps/web/src/app/expenses/new/page.spec.tsx` | ✅ |
+| RF-04 | `odometer_km` limitado a 9.999.999 (7 dígitos) no `expenseBaseSchema` (R-ODO-02); `OdometerInput` limita digitação a 7 dígitos | `packages/validators/src/expense.schemas.ts` (já vigente desde T3.0), `packages/ui/src/components/masked-input.tsx` (`ODOMETER_MAX_DIGITS = 7`) | `packages/validators/src/expense.schemas.spec.ts`, `packages/ui/src/components/masked-input.spec.tsx` | ✅ |
+| RF-05 | Reordenação do layout: Data + Ano lado a lado; Odômetro movido para após Data/Ano quando `category = fuel` | `apps/web/src/app/expenses/{new/page.tsx,[id]/page.tsx}` | — (verificado visualmente na estrutura do JSX) | ✅ |
 
 ---
 
@@ -420,18 +431,25 @@ que o artefato ainda não existe no repositório.
 
 > Consolida 6 itens da análise de UX de `/expenses` (KPIs, reatividade de contexto, máscaras
 > pt-BR, cálculo cruzado de combustível, hard-block de odômetro, mensagens de erro de update).
-> Regras: R-ODO-01 (novo), R-CTX-06 (atualizado). Status: approved — nenhum código implementado.
+> Regras: R-ODO-01 (novo), R-CTX-06 (atualizado). **2026-07-14 (T3.9):** implementado com
+> adaptação de arquitetura — decisão tomada com o usuário (ver changelog da spec): sem
+> react-hook-form/Server Actions/`@nave/ui` form kit (SPEC-20260619-001), que nunca foram
+> construídos neste projeto. `CurrencyInput`/`OdometerInput` viraram componentes React simples
+> controlados (`value`/`onChange`) em `packages/ui`, consumidos por `useState` puro.
+> RF-02 (reatividade ao contexto global) fica ⏳ — depende do `useDashboardStore`/"Em Foco"
+> da Fase 5 (SPEC-20260602-001), ainda não implementado.
 
 | Requisito | Descrição | Código | Teste | Status |
 |-----------|-----------|--------|-------|--------|
-| RF-01 | KPI "Próximos 30 dias" e tab "Próximas" consideram despesas manuais como 4ª fonte | — | — | ⏳ |
-| RF-02 | Campo `vehicle_id` do `ExpenseForm` reativo a mudanças do contexto global enquanto `isInherited === true` | — | — | ⏳ |
-| RF-03 | Máscaras pt-BR progressivas (acumulador de dígitos estilo caixa eletrônico) nos campos Valor, Odômetro e Litros | — | — | ⏳ |
-| RF-04 | Hard-block de regressão de odômetro (R-ODO-01): rejeita valor menor que o máximo registrado em data anterior/igual, ou maior que o mínimo registrado em data posterior | — | — | ⏳ |
-| RF-05 | Campo "Valor por litro" editável na seção de combustível, com cálculo cruzado entre `amount`, `liters` e `price_per_liter`; algoritmo de pilha de ordem de edição `fuelEditOrder` (R-FUEL-08) | — | — | ⏳ |
-| RF-06.1 | `updateExpenseInputSchema` recebe o mesmo `superRefine` de `createExpenseInputSchema` (categoria `fuel` ⇒ `odometer_km` obrigatório) | — | — | ⏳ |
-| RF-06.2 | `updateExpenseAction` busca a despesa existente e bloqueia edição quando `source_type IS NOT NULL` (R-LED-01) | — | — | ⏳ |
-| RF-06.3 | Erros do Supabase em create/update/delete diferenciam `PGRST116` de erro genérico | — | — | ⏳ |
+| RF-01.1 | KPI "Próximos 30 dias" calculado em todas as abas (já não dependia da aba ativa nesta implementação — `kpis`/`upcoming` são carregados incondicionalmente em `/expenses`) | `apps/web/src/app/expenses/page.tsx` | `apps/web/src/app/expenses/page.spec.tsx` | ✅ |
+| RF-01.2 | RPC `get_upcoming_costs` ganha 4ª fonte: despesas manuais (`source_type IS NULL`, `date > current_date`) como `source_type = 'expense'` | `supabase/migrations/20260714220000_upcoming_costs_manual_expenses.sql` | — (RPC; sem harness de teste de banco no projeto) | 🔶 Aplicado |
+| RF-02 | Campo `vehicle_id` do `ExpenseForm` reativo a mudanças do contexto global enquanto `isInherited === true` | — | — | ⏳ Depende da Fase 5 (`useDashboardStore` ainda não existe) |
+| RF-03 | Máscaras pt-BR progressivas (acumulador de dígitos estilo caixa eletrônico) nos campos Valor, Odômetro e Litros | `packages/ui/src/components/masked-input.tsx` (`CurrencyInput`, `OdometerInput`) | `packages/ui/src/components/masked-input.spec.tsx` | ✅ |
+| RF-04 | Hard-block de regressão de odômetro (R-ODO-01): rejeita valor menor que o máximo registrado em data anterior/igual, ou maior que o mínimo registrado em data posterior. Adaptação: opt-in via query param `?strict=true` (enviado só pelo `apps/web`) em vez de "fluxo web" separado — o soft-warning R1 (SPEC-20260601-001) permanece o default para os demais consumidores da API | `apps/api/src/modules/expenses/expenses.service.ts` (`checkOdometerHardBlock`, `findOdometerBoundary`) | `apps/api/src/modules/expenses/expenses.service.spec.ts` | ✅ |
+| RF-05 | Campo "Valor por litro" editável na seção de combustível, com cálculo cruzado entre `amount`, `liters` e `price_per_liter`; algoritmo de pilha de ordem de edição `fuelEditOrder` (R-FUEL-08) | `apps/web/src/lib/hooks/use-fuel-cross-calc.ts` | `apps/web/src/lib/hooks/use-fuel-cross-calc.spec.ts` | ✅ |
+| RF-06.1 | `category = fuel` ⇒ `odometer_km` obrigatório, via `superRefine` compartilhado por `createExpenseInputSchema` e `updateExpenseInputSchema` (o update só valida quando `category` está presente no payload — "já é fuel" sem alterar a categoria depende do estado persistido e não é verificável no schema) | `packages/validators/src/expense.schemas.ts` (`requireOdometerForFuel`) | `packages/validators/src/expense.schemas.spec.ts` | ✅ |
+| RF-06.2 | Edição bloqueada quando `is_readonly === true` — já implementado desde T3.0 (`ForbiddenException`), reafirmado sem mudança de código | `apps/api/src/modules/expenses/expenses.service.ts` (`update`) | `apps/api/src/modules/expenses/expenses.service.spec.ts` | ✅ |
+| RF-06.3 | Mensagem de erro do hard-block exibida inline no formulário via `ApiError.message` (substitui a diferenciação `PGRST116`/genérico da spec original, que pressupõe Server Actions) | `apps/web/src/app/expenses/[id]/page.tsx` (`onError` de `updateMutation`) | `apps/web/src/app/expenses/[id]/page.spec.tsx` | ✅ |
 
 ---
 
@@ -615,15 +633,20 @@ que o artefato ainda não existe no repositório.
 ## SPEC-20260606-002 — Fornecedor / Posto de Combustível (approved)
 
 > Permite registrar o posto de combustível no lançamento de abastecimento com autocomplete
-> baseado no histórico do usuário. Regras: R-FUEL-04, R-FUEL-05. Nenhum código implementado.
+> baseado no histórico do usuário. Regras: R-FUEL-04, R-FUEL-05.
+> **2026-07-14 (T3.5):** RF-01 e RF-02 (backend) implementados via `ExpensesService`/`ExpensesController`
+> — coluna `supplier` já existia na tabela `expenses` desde a migration consolidada (T3.0). Campo
+> `supplier` (com datalist de sugestões) adicionado aos formulários web de criação/edição de despesa
+> e ao fluxo de templates; UX de autocomplete "estilo Popover" fica ⏳ (T3.9/T3.10, junto do
+> `ExpenseForm` reescrito com react-hook-form — ver R-FORM-01/02).
 
 | Req | Descrição | Código | Regra | Teste | Status |
 |-----|-----------|--------|-------|-------|--------|
-| RF-01 | Aceitar `supplier` no payload da API (backend) — validação ≤ 100 chars | — | — | — | ⏳ |
-| RF-02 | `getSupplierSuggestionsAction()`: busca 50 registros com `supplier IS NOT NULL`, deduplica em JS, retorna top 10 | — | R-FUEL-04 | — | ⏳ |
-| RF-02 | `ExpenseForm`: campo `supplier` com autocomplete inline via Popover; filtro client-side por substring | — | R-FUEL-04 | — | ⏳ |
-| RF-03 | Sem tabela separada — abordagem de query direta em `expenses` | — | — | — | ⏳ |
-| RF-04 | Aceitar texto livre sem match no histórico | — | — | — | ⏳ |
+| RF-01 | Aceitar `supplier` no payload da API (backend) — validação ≤ 100 chars | `packages/validators/src/expense.schemas.ts` (`expenseBaseSchema`) | R-FUEL-04 | — | ✅ |
+| RF-02 | `GET /expenses/suppliers` — busca 200 registros com `supplier IS NOT NULL`, deduplica case-insensitive em JS, retorna top 10 | `apps/api/src/modules/expenses/expenses.service.ts` (`listSuppliers`), `.controller.ts` | R-FUEL-04 | `expenses.service.spec.ts`, `.controller.spec.ts` | ✅ |
+| RF-02 | Campo `supplier` com `<datalist>` alimentado por `GET /expenses/suppliers` nos formulários `new`/`[id]` | `apps/web/src/app/expenses/new/page.tsx`, `[id]/page.tsx` | R-FUEL-04 | — | 🔶 sem teste dedicado de UI; autocomplete via Popover fica ⏳ (T3.9) |
+| RF-03 | Sem tabela separada — abordagem de query direta em `expenses` | `expenses.service.ts` (`listSuppliers`) | — | — | ✅ |
+| RF-04 | Aceitar texto livre sem match no histórico | `expenseBaseSchema` | — | — | ✅ |
 
 ---
 
@@ -631,19 +654,27 @@ que o artefato ainda não existe no repositório.
 
 > Enriquece o formulário de abastecimento com `fuel_type`, `full_tank`, cálculo de km/l
 > e preço/litro. Campos derivados sem persistência.
-> Regras: R4, R-FUEL-01, R-FUEL-02, R-FUEL-03, R-FUEL-05. Nenhum código implementado.
+> Regras: R4, R-FUEL-01, R-FUEL-02, R-FUEL-03, R-FUEL-05.
+> **2026-07-14 (T3.5):** RF-01, RF-02, RF-03 (backend) implementados — colunas `fuel_type`/`full_tank`
+> já existiam na tabela `expenses` desde a migration consolidada (T3.0); `computed.km_per_liter`/
+> `computed.price_per_liter` adicionados em `create`/`update` reaproveitando a query de
+> `findMaxOdometerByVehicle` (sem query adicional, conforme RNF). Campos `fuel_type`, `liters` e
+> `full_tank` (checkbox "Abastecimento parcial?") adicionados aos formulários web de criação/edição.
+> RF-04 (pré-preenchimento), RF-05 (default tri-state — ver R-FUEL-06), RF-06 (hint de odômetro),
+> RF-07/RF-08 (cálculo em tempo real no form) ficam ⏳, escopo de T3.9/T3.10 (reescrita do
+> `ExpenseForm` com react-hook-form).
 
 | Req | Descrição | Código | Teste | Status |
 |-----|-----------|--------|-------|--------|
-| RF-01 | Persistir `fuel_type` no payload da API (backend) — validação contra enum `FuelType` | — | — | ⏳ |
-| RF-02 | Persistir `full_tank` (boolean nullable) no payload da API (backend) | — | — | ⏳ |
-| RF-03 | Retornar `computed.km_per_liter` e `computed.price_per_liter` na resposta da API | — | — | ⏳ |
-| RF-04 | `getLastFuelTypeAction(vehicleId)`: consulta último `fuel_type` selecionado para pré-preencher o campo (R-FUEL-01) | — | — | ⏳ |
-| RF-04 | `ExpenseForm`: `useEffect` de pré-preenchimento de `fuel_type` dispara em modo criação | — | — | ⏳ |
-| RF-05 | Default de `full_tank = true` no formulário (toggle "Abastecimento parcial?") | — | — | ⏳ |
-| RF-06 | `ExpenseForm`: hint de odômetro exibe delta quando valor digitado supera o último registrado (R4) | — | — | ⏳ |
-| RF-07 | `ExpenseForm`: exibe mensagem "Consumo aparece após o 2º abastecimento completo" (R-FUEL-02, R-FUEL-03) | — | — | ⏳ |
-| RF-08 | Exibir preço/litro em tempo real no formulário | — | — | ⏳ |
+| RF-01 | Persistir `fuel_type` no payload da API (backend) — validação contra enum `FuelType` | `packages/validators/src/expense.schemas.ts` | — | ✅ |
+| RF-02 | Persistir `full_tank` (boolean nullable) no payload da API (backend) | `expense.schemas.ts` | — | ✅ |
+| RF-03 | Retornar `computed.km_per_liter` e `computed.price_per_liter` na resposta da API | `apps/api/src/modules/expenses/expenses.service.ts` (`computeFuelMetrics`) | `expenses.service.spec.ts` | ✅ |
+| RF-04 | `getLastFuelTypeAction(vehicleId)`: consulta último `fuel_type` selecionado para pré-preencher o campo (R-FUEL-01) | — | — | ⏳ (T3.9, ver R-FUEL-07) |
+| RF-04 | `ExpenseForm`: `useEffect` de pré-preenchimento de `fuel_type` dispara em modo criação | — | — | ⏳ (T3.9) |
+| RF-05 | Default de `full_tank = true` no formulário (toggle "Abastecimento parcial?") | `apps/web/src/app/expenses/new/page.tsx`, `[id]/page.tsx` (checkbox `partialTank`) | — | 🔶 implementado como decidido na spec original; superseded por R-FUEL-06 (tri-state) em T3.9 |
+| RF-06 | `ExpenseForm`: hint de odômetro exibe delta quando valor digitado supera o último registrado (R4) | — | — | ⏳ (T3.9) |
+| RF-07 | `ExpenseForm`: exibe mensagem "Consumo aparece após o 2º abastecimento completo" (R-FUEL-02, R-FUEL-03) | — | — | ⏳ (T3.9) |
+| RF-08 | Exibir preço/litro em tempo real no formulário | — | — | ⏳ (T3.9) |
 
 ---
 
@@ -709,23 +740,57 @@ que o artefato ainda não existe no repositório.
 
 ---
 
-## SPEC-20260603-002 — Transições de Status de Manutenção (approved)
+## SPEC-20260715-001 — CRUD Base de Manutenções (MaintenancesModule) (approved)
 
-> Enforcement do grafo de transições de status no `MaintenancesService` (NestJS).
-> Estados: `pending`, `in_progress`, `completed`, `cancelled`. Regra: R7.
-> Nenhum código implementado ainda.
+> Concluído em 2026-07-15: `MaintenancesModule` REST completo (mesmo padrão de
+> SPEC-20260714-001, T3.0). Absorveu o enforcement de transição de status (T4.2,
+> SPEC-20260603-002) e a integração com o ledger (R-LED-02/03, R-HUB-01) no mesmo módulo,
+> replicando o padrão de `FinesModule` (T3.6/T3.8). Frontend mínimo (RF-15..RF-17) também
+> concluído no mesmo dia.
 
 ### Camada de serviço (backend)
 
 | Req | Descrição | Código | Teste | Status |
 |-----|-----------|--------|-------|--------|
-| RF-01 | `MaintenancesService.update()` valida transição quando `status` está no payload | — | — | ⏳ |
-| RF-02..RF-05 | Constante `ALLOWED_TRANSITIONS` define saídas de cada estado; `completed` e `cancelled` terminais | — | — | ⏳ |
-| RF-06 | Transição para o mesmo estado atual é rejeitada com 409 | — | — | ⏳ |
-| RF-07 | Sem campo `status` no payload, validação de transição é ignorada | — | — | ⏳ |
-| RF-08 | Status atual lido do `findOne()` de ownership — sem query adicional | — | — | ⏳ |
-| RF-09 | Resposta 409 com `message: "Transição inválida: {de} → {para}"` | — | — | ⏳ |
-| RF-10/C2 | Audit log gravado apenas após transição bem-sucedida | — | — | ⏳ |
+| RF-01..RF-06/RF-13 | CRUD (`create`, `findAll`, `findOne`, `update`, `remove`) — inline, sem Repository/Port | `apps/api/src/modules/maintenances/maintenances.service.ts`, `.controller.ts`, `.module.ts` | `apps/api/src/modules/maintenances/maintenances.service.spec.ts`, `.controller.spec.ts` | ✅ |
+| RF-07/R7 | Validação de transição de status via `MAINTENANCE_STATUS_TRANSITIONS`; 409 se inválida | `apps/api/src/modules/maintenances/maintenances.service.ts`, `packages/validators/src/maintenance.schemas.ts` | `apps/api/src/modules/maintenances/maintenances.service.spec.ts`, `packages/validators/src/maintenance.schemas.spec.ts` | ✅ |
+| RF-08/R-ODO-03 | `odometer_km` obrigatório para transição a `completed`; 422 se ausente | `apps/api/src/modules/maintenances/maintenances.service.ts` | `apps/api/src/modules/maintenances/maintenances.service.spec.ts` | ✅ |
+| RF-09 | `findMaxOdometerByVehicle` (sem filtro de ciclo — R-ODO-04 permanece ⏳ em ambos os módulos); warning não-bloqueante | `apps/api/src/modules/maintenances/maintenances.service.ts` | `apps/api/src/modules/maintenances/maintenances.service.spec.ts` | ✅ |
+| RF-10/R-LED-02 | Transição a `completed` com `cost` cria despesa vinculada via `ExpensesService.createFromSource()` | `apps/api/src/modules/maintenances/maintenances.service.ts` | `apps/api/src/modules/maintenances/maintenances.service.spec.ts` | ✅ |
+| RF-11/R-LED-03 | Transição a `cancelled` soft-deleta a despesa vinculada via `softDeleteBySource()` | `apps/api/src/modules/maintenances/maintenances.service.ts` | `apps/api/src/modules/maintenances/maintenances.service.spec.ts` | ✅ |
+| RF-12/R-HUB-01 | `remove()` soft-deleta a despesa vinculada, se existir | `apps/api/src/modules/maintenances/maintenances.service.ts` | `apps/api/src/modules/maintenances/maintenances.service.spec.ts` | ✅ |
+| RF-14/C2 | Audit log em mutações bem-sucedidas; transições rejeitadas não geram entrada | `apps/api/src/modules/maintenances/maintenances.service.ts` | `apps/api/src/modules/maintenances/maintenances.service.spec.ts` | ✅ |
+
+### Frontend (mínimo)
+
+| Req | Descrição | Código | Teste | Status |
+|-----|-----------|--------|-------|--------|
+| RF-15 | `/maintenance`: lista com data, descrição, veículo, badge de status | `apps/web/src/app/maintenance/page.tsx` | `apps/web/src/app/maintenance/page.spec.tsx` | ✅ |
+| RF-16 | `/maintenance/new`: formulário mínimo, empty state sem veículos (R-FORM-07) | `apps/web/src/app/maintenance/new/page.tsx` | `apps/web/src/app/maintenance/new/page.spec.tsx` | ✅ |
+| RF-17 | `/maintenance/[id]`: edição + seletor de status restrito às transições válidas (UX progressiva, R7) | `apps/web/src/app/maintenance/[id]/page.tsx` | `apps/web/src/app/maintenance/[id]/page.spec.tsx` | ✅ |
+| RF-24 (SPEC-20260711-001) | `odometer_km` exposto no formulário de manutenção via `OdometerInput` (não torna-se visualmente obrigatório em `completed` — refinamento de UX deixado para spec futura) | `apps/web/src/app/maintenance/[id]/page.tsx` | idem | 🔶 Parcial |
+
+---
+
+## SPEC-20260603-002 — Transições de Status de Manutenção (approved)
+
+> Enforcement do grafo de transições de status no `MaintenancesService` (NestJS).
+> Estados: `scheduled`, `in_progress`, `completed`, `cancelled` (corrigido em 2026-07-15 —
+> ver changelog v0.2 da spec: o schema real usa `scheduled`, não `pending` como a v0.1 assumia).
+> Implementado junto com SPEC-20260715-001 em 2026-07-15 (mesmo módulo, ver seção acima) —
+> linhas abaixo mantidas para rastreabilidade histórica do requisito original.
+
+### Camada de serviço (backend)
+
+| Req | Descrição | Código | Teste | Status |
+|-----|-----------|--------|-------|--------|
+| RF-01 | `MaintenancesService.update()` valida transição quando `status` está no payload | `apps/api/src/modules/maintenances/maintenances.service.ts` | `apps/api/src/modules/maintenances/maintenances.service.spec.ts` | ✅ |
+| RF-02..RF-05 | Constante `MAINTENANCE_STATUS_TRANSITIONS` define saídas de cada estado; `completed` e `cancelled` terminais | `packages/validators/src/maintenance.schemas.ts` | `packages/validators/src/maintenance.schemas.spec.ts` | ✅ |
+| RF-06 | Transição para o mesmo estado atual é rejeitada com 409 | idem | idem | ✅ |
+| RF-07 | Sem campo `status` no payload, validação de transição é ignorada | idem | idem | ✅ |
+| RF-08 | Status atual lido do `findOne()` de ownership — sem query adicional | idem | idem | ✅ |
+| RF-09 | Resposta 409 com `message: "Transição inválida: {de} → {para}"` | idem | idem | ✅ |
+| RF-10/C2 | Audit log gravado apenas após transição bem-sucedida | idem | idem | ✅ |
 
 ---
 
@@ -814,7 +879,7 @@ que o artefato ainda não existe no repositório.
 | RF-08/CA-05 | `odometer_km` persistido; checagem de sequência (R1) implementada em T3.2 — ver [SPEC-20260601-001](expenses/SPEC-20260601-001-odometer-validation.md) | `apps/api/src/modules/expenses/expenses.service.ts` (`create`, `buildOdometerWarning`) | `apps/api/src/modules/expenses/expenses.service.spec.ts` | ✅ |
 | RF-09/CA-12 | `vehicle_id` de outro usuário → 404 | `apps/api/src/modules/expenses/expenses.service.ts` (`create`) | `apps/api/src/modules/expenses/expenses.service.spec.ts` | ✅ |
 | RF-10/CA-15/C2 | Audit log em mutações (fire-and-forget via `AuditService`) | `apps/api/src/modules/expenses/expenses.service.ts` | `apps/api/src/modules/expenses/expenses.service.spec.ts` | 🔶 (chamada verificada via mock; sem teste de integração do `audit_logs`) |
-| RF-14 | Campo `computed` (`price_per_liter`, `km_per_liter`) | — | — | ⏳ objeto de SPEC-20260606-001 |
+| RF-14 | Campo `computed` (`price_per_liter`, `km_per_liter`) | `apps/api/src/modules/expenses/expenses.service.ts` (`computeFuelMetrics`) — implementado em T3.5, ver [SPEC-20260606-001](expenses/SPEC-20260606-001-fuel-enrichment.md) | `apps/api/src/modules/expenses/expenses.service.spec.ts` | ✅ |
 | RF-15 | Paginação por `cursor` | — | — | ❌ Baixa prioridade, não implementada nesta tarefa |
 
 ### Schema / Validação
@@ -992,22 +1057,67 @@ que o artefato ainda não existe no repositório.
 
 ## SPEC-20260601-003 — Sistema de Modelos Rápidos de Despesas (approved)
 
-> Templates de despesas frequentes para preenchimento rápido.
-> Regras: R3, R6. Segurança: S1, S2. Banco implementado (🔶); backend e frontend ainda
-> pendentes (⏳).
+> **2026-07-14 (T3.4):** Implementado. Tabela, índices, trigger de limite (RNF-06) e RLS já
+> existiam desde T0.2 (schema recuperado do banco remoto) — nenhuma migration nova necessária.
+> `ExpenseTemplatesModule` sem camada Repository/Port, mesmo padrão inline de
+> `CategoriesModule`/`ExpensesModule`. **Desvios deliberados de escopo frente à spec** (frontend
+> deste projeto usa formulários HTML simples, sem `react-hook-form`, modal ou design system —
+> mesmo padrão já estabelecido em `/expenses/new` e `/expenses/[id]`):
+> - RF-05 (modal de criação inline): implementado como formulário inline expansível, não um
+>   modal dedicado — não existe componente de modal no `packages/ui` ainda.
+> - RF-08 (bump de `last_used_at` via `PATCH /expense-templates/:id`): implementado como rota
+>   dedicada `PATCH /expense-templates/:id/touch`, já que `last_used_at` não é um campo do
+>   schema Zod de update (RF-09 só permite editar campos de conteúdo do modelo) — uma rota
+>   própria evita misturar um campo de sistema com o DTO validado publicamente.
+> - RF-09 (renomear via menu de contexto): endpoint `PATCH /expense-templates/:id` cobre o
+>   caso, mas a UI de "três pontos" não foi construída — fica ⏳.
+> - RF-02 (contagem responsiva de cartões visíveis 3/4): tray usa scroll horizontal simples
+>   (`overflow-x-auto`), sem enforcement de breakpoint exato — fica ⏳.
+> - Feature flag `NEXT_PUBLIC_EXPENSE_TEMPLATES_ENABLED` (Seção 14 da spec): não implementada —
+>   nenhuma outra feature do projeto usa flag de ambiente; a feature entra direto atrás do
+>   `SupabaseAuthGuard`/sessão autenticada, mesmo padrão de T3.0–T3.3.
+> RF-13 (aviso de veículo excluído) foi implementado no frontend via comparação client-side com
+> a lista de veículos ativos, sem o ícone âmbar especificado — mensagem inline apenas.
 
 ### Banco de dados
 
 | Artefato | Descrição | Regra | Status |
 |----------|-----------|-------|--------|
-| `supabase/migrations/20260712171846_grouping_templates_preferences.sql` | Tabela `expense_templates` (id, user_id FK, vehicle_id FK, name, category, amount, description, liters, fuel_type, supplier, timestamps) | R3, R6 | 🔶 Aplicado (sem teste) |
-| RLS `expense_templates_*` | `supabase/migrations/20260712172047_rls_policies.sql` — policies SELECT, INSERT, UPDATE, DELETE por `user_id` | S2 | 🔶 |
+| `supabase/migrations/20260712171846_grouping_templates_preferences.sql` | Tabela `expense_templates` (id, user_id FK, vehicle_id FK, name, category, amount, description, liters, fuel_type, supplier, timestamps) | R3, R6 | ✅ |
+| Trigger `trg_expense_templates_limit` | `supabase/migrations/20260712171941_trigger_functions.sql` — `enforce_expense_templates_limit()`, bloqueia o 21º insert | R3, RNF-06 | ✅ |
+| RLS `expense_templates_*` | `supabase/migrations/20260712172047_rls_policies.sql` — policies SELECT, INSERT, UPDATE, DELETE por `user_id` | S1, S2, RNF-04 | ✅ |
 
-### Backend e Frontend
+### Validators (`packages/validators`)
 
 | Req | Descrição | Código | Teste | Status |
 |-----|-----------|--------|-------|--------|
-| (ver spec) | Templates de despesas: API CRUD, listagem, aplicação ao formulário | — | — | ⏳ |
+| RF-06, R6 | `createExpenseTemplateInputSchema`/`updateExpenseTemplateInputSchema` — sem `date`/`odometer_km`/`full_tank` | `packages/validators/src/expense-template.schemas.ts` | `packages/validators/src/expense-template.schemas.spec.ts` | ✅ |
+
+### Backend (`apps/api`)
+
+| Req | Descrição | Código | Teste | Status |
+|-----|-----------|--------|-------|--------|
+| RF-01 | `GET /expense-templates` — lista ordenada por `last_used_at DESC` | `apps/api/src/modules/expense-templates/expense-templates.service.ts` (`findAll`) | `expense-templates.service.spec.ts` | ✅ |
+| RF-06, RF-07, RNF-06 | `POST /expense-templates` — valida veículo ativo do usuário e limite de 20 (422) antes do insert | `expense-templates.service.ts` (`create`) | `expense-templates.service.spec.ts` | ✅ |
+| RF-08 | `PATCH /expense-templates/:id/touch` — bump de `last_used_at` | `expense-templates.service.ts` (`touch`), `expense-templates.controller.ts` | `expense-templates.service.spec.ts`, `.controller.spec.ts` | ✅ |
+| RF-09 | `PATCH /expense-templates/:id` — atualização parcial (nome/campos) | `expense-templates.service.ts` (`update`) | `expense-templates.service.spec.ts` | ✅ |
+| RF-10, CA-08 | `DELETE /expense-templates/:id` — hard delete após checagem de ownership | `expense-templates.service.ts` (`remove`) | `expense-templates.service.spec.ts` | ✅ |
+| RNF-04, RNF-05 | `SupabaseAuthGuard` + RLS (`auth.uid()`) em todas as rotas | `expense-templates.controller.ts` | `expense-templates.controller.spec.ts` | ✅ |
+
+### Frontend (`apps/web`)
+
+| Req | Descrição | Código | Teste | Status |
+|-----|-----------|--------|-------|--------|
+| RF-01, RF-02, RF-11 | Tray de modelos no topo de `/expenses/new`, estado vazio, scroll horizontal | `apps/web/src/app/expenses/new/page.tsx` (`ExpenseTemplatesTray`) | `page.spec.tsx` | ✅ |
+| RF-03, RF-04 | Aplicação de modelo preenche `vehicle_id`/`category`/`amount`/`description`; `date`/`odometer_km` inalterados | `page.tsx` (`handleApplyTemplate`) | `page.spec.tsx` | ✅ |
+| RF-05 | Criação inline de modelo (formulário expansível, não modal — ver nota acima) | `page.tsx` (`ExpenseTemplatesTray`, `creating`) | `page.spec.tsx` | 🔶 (sem teste de criação inline dedicado) |
+| RF-06, CA-10 | "Salvar como modelo" em `/expenses/[id]` | `apps/web/src/app/expenses/[id]/page.tsx` (`handleSaveAsTemplate`) | `page.spec.tsx` | ✅ |
+| RF-07, CA-06 | Botão "+" desabilitado ao atingir 20 modelos | `page.tsx` (`ExpenseTemplatesTray`, `atLimit`) | — | 🔶 (sem teste dedicado) |
+| RF-08 | Aplicação dispara `PATCH .../touch` fire-and-forget | `page.tsx` (`handleApply`, `touchMutation`) | `page.spec.tsx` | ✅ |
+| RF-09 | Renomear via menu de contexto | — | — | ⏳ deliberado (ver nota acima) |
+| RF-10, CA-08 | Exclusão de modelo com confirmação | `page.tsx` (`handleDelete`) | — | 🔶 (sem teste dedicado) |
+| RF-13, EC-01 | Aviso inline (sem ícone âmbar) quando `vehicle_id` do modelo não existe mais entre os veículos ativos | `page.tsx` (`handleApplyTemplate`, `templateNotice`) | — | 🔶 (sem teste dedicado) |
+| RF-02 (responsivo), Feature flag | Contagem exata de cartões por breakpoint; `NEXT_PUBLIC_EXPENSE_TEMPLATES_ENABLED` | — | — | ⏳ deliberado (ver nota acima) |
 
 ---
 
@@ -1221,16 +1331,20 @@ que o artefato ainda não existe no repositório.
 ## SPEC-20260521-002 — Alertas de Manutenção por Email (aprovado)
 
 > Job diário via pg_cron; Edge Function; envio via Resend. Nenhum código implementado.
+> **Adiada em 2026-07-15** (decisão do usuário, não bloqueio técnico): Resend exige domínio
+> próprio verificado para envio em produção — o projeto ainda não tem domínio registrado. A
+> decisão foi vincular este recurso ao lançamento da monetização (Fase 9, `SPEC-20260620-001`),
+> não à Fase 4. Retomar junto com T9.1, quando domínio e conta Resend estiverem disponíveis.
 
 | Req | Descrição | Código | Teste | Status |
 |-----|-----------|--------|-------|--------|
-| RF-01 | Job diário via pg_cron às 11:00 UTC | — | — | ⏳ |
-| RF-02 | Edge Function busca manutenções `scheduled_date = +7d AND alert_sent = false` | — | — | ⏳ |
-| RF-03 | Email com nome, data, veículo via Resend (com retry idempotente) | — | — | ⏳ |
-| RF-04 | `alert_sent = true` somente após confirmação de envio | — | — | ⏳ |
-| RF-05 | Não reenvia alertas já enviados (filtro `alert_sent = false` na query) | — | — | ⏳ |
-| RF-06 | `MAINTENANCE_ALERT_SENT` em `audit_logs` com `record_id` da manutenção | — | — | ⏳ |
-| RF-07 | Respeita soft delete (filtro `.is('deleted_at', null)` na query) | — | — | ⏳ |
+| RF-01 | Job diário via pg_cron às 11:00 UTC | — | — | ⏸️ Adiado para Fase 9 |
+| RF-02 | Edge Function busca manutenções `scheduled_date = +7d AND alert_sent = false` | — | — | ⏸️ Adiado para Fase 9 |
+| RF-03 | Email com nome, data, veículo via Resend (com retry idempotente) | — | — | ⏸️ Adiado para Fase 9 |
+| RF-04 | `alert_sent = true` somente após confirmação de envio | — | — | ⏸️ Adiado para Fase 9 |
+| RF-05 | Não reenvia alertas já enviados (filtro `alert_sent = false` na query) | — | — | ⏸️ Adiado para Fase 9 |
+| RF-06 | `MAINTENANCE_ALERT_SENT` em `audit_logs` com `record_id` da manutenção | — | — | ⏸️ Adiado para Fase 9 |
+| RF-07 | Respeita soft delete (filtro `.is('deleted_at', null)` na query) | — | — | ⏸️ Adiado para Fase 9 |
 
 ---
 
@@ -1273,6 +1387,181 @@ que o artefato ainda não existe no repositório.
 | Req | Descrição | Código | Teste | Status |
 |-----|-----------|--------|-------|--------|
 | (ver spec) | Redesign do dashboard com Fleet Command e Vehicle Spotlight | — | — | ⏳ |
+
+---
+
+## SPEC-20260607-001 — FinesModule — CRUD de Multas de Trânsito (approved)
+
+> **2026-07-14 (T3.6):** Sprint 0 implementado (scaffold completo: entity, DTOs, service,
+> controller, module). Tabela `fines`, enum `fine_status` e colunas já existiam desde T0.2
+> (schema recuperado do banco remoto) — nenhuma migration nova necessária, só a camada de
+> aplicação. `FinesModule` sem Repository/Port, mesmo padrão inline de `ExpensesModule`/
+> `ExpenseTemplatesModule`. **Correção de contradição interna identificada antes de implementar**
+> (mesmo padrão de resolução usado em T3.2/T3.3): a seção "Escopo" da spec listava a vinculação
+> ao ledger (`US-FIN-A02`, Sprint 2) como parte do escopo desta spec, mas a seção "Fora do Escopo"
+> já descrevia essa mesma vinculação como pertencente a uma "spec separada" do Sprint 2 — e
+> `ExpensesService.createFromSource()`/`softDeleteBySource()` (citados por R-LED-02/R-LED-03) não
+> existem em nenhum lugar do código ainda. Tratada como escopo desta tarefa apenas o Sprint 0
+> (CRUD completo); a vinculação ao ledger fica ⏳, a ser resolvida junto com T3.7/T3.8
+> (manutenção e custos recorrentes também dependem do mesmo `createFromSource()` compartilhado,
+> então faz mais sentido implementá-lo uma única vez quando todas as três origens existirem).
+> RF-05 (transições de status) usa `ConflictException` diretamente (409), seguindo o padrão já
+> estabelecido em `CategoriesService`/`AuthService` — nenhum projeto usa classes de exceção
+> customizadas, então a `InvalidStatusTransitionException` nomeada na spec foi implementada como
+> mensagem descritiva, não uma classe dedicada. `paid_at` é preenchido automaticamente pelo
+> service quando a transição para `paid` não informa a data (RF-04). Tela `/fines` no frontend
+> permanece ⏳ (Sprint 2, G-07 — fora do escopo desta spec).
+>
+> **2026-07-14 (T3.8):** Vinculação ao ledger fechada — `createFromSource()`/`softDeleteBySource()`
+> implementados em `ExpensesService` como parte de `RecurringCostsModule` (SPEC-20260609-001) e
+> retrofitados aqui: `create()` chama `createFromSource` incondicionalmente (`source_type='fine'`,
+> usa `amount_with_discount` quando disponível — R-LED-02); `update()` para `status=cancelled`
+> chama `softDeleteBySource` (R-LED-03); `remove()` também chama `softDeleteBySource` (R-HUB-01).
+> `FinesModule` passou a importar `ExpensesModule`.
+
+### Backend (`apps/api`)
+
+| Req | Descrição | Código | Teste | Status |
+|-----|-----------|--------|-------|--------|
+| RF-01 | `POST /fines` — valida veículo ativo do usuário e `amount_with_discount ≤ amount` antes do insert | `apps/api/src/modules/fines/fines.service.ts` (`create`) | `fines.service.spec.ts` | ✅ |
+| RF-02 | `GET /fines`, `GET /fines?status=`, `GET /fines/vehicle/:vehicleId` | `fines.service.ts` (`findAll`, `findByVehicle`) | `fines.service.spec.ts` | ✅ |
+| RF-03 | `GET /fines/:id` | `fines.service.ts` (`findOne`) | `fines.service.spec.ts` | ✅ |
+| RF-04 | `PATCH /fines/:id` — atualização parcial + preenchimento automático de `paid_at` | `fines.service.ts` (`update`) | `fines.service.spec.ts` | ✅ |
+| RF-05 | Grafo de transições de status, 409 para transição inválida | `fines.service.ts` (`update`, `FINE_STATUS_TRANSITIONS`) | `fines.service.spec.ts` | ✅ |
+| RF-06 | `DELETE /fines/:id` — soft-delete (R5) | `fines.service.ts` (`remove`) | `fines.service.spec.ts` | ✅ |
+| RF-07 | `countPending(userId, vehicleId?)` — método interno, sem rota própria | `fines.service.ts` (`countPending`) | — | ✅ |
+| S1, S2 | `SupabaseAuthGuard` + RLS (`auth.uid()`) em todas as rotas | `fines.controller.ts` | `fines.controller.spec.ts` | ✅ |
+| — | `amount_with_discount` ≤ `amount` (Regras de Negócio) | `fines.service.ts` (`create`, `update`) | `fines.service.spec.ts` | ✅ |
+| R-LED-02, R-LED-03, R-HUB-01, R-HUB-02 | Vinculação automática ao ledger via `ExpensesService.createFromSource`/`softDeleteBySource` | `fines.service.ts` (`create`, `update`, `remove`) | `fines.service.spec.ts` | ✅ |
+| Sprint 2, G-07 | Tela `/fines` no frontend | — | — | ⏳ |
+
+### Validators (`packages/validators`)
+
+| Req | Descrição | Código | Teste | Status |
+|-----|-----------|--------|-------|--------|
+| RF-01, RF-05 | `createFineInputSchema`/`updateFineInputSchema`/`FINE_STATUS_TRANSITIONS` | `packages/validators/src/fine.schemas.ts` | `packages/validators/src/fine.schemas.spec.ts` | ✅ |
+
+---
+
+## SPEC-20260608-001 — Upcoming Costs — Próximas Despesas (approved)
+## SPEC-20260608-002 — Expenses KPIs — Central Financeira (approved)
+## SPEC-20260608-003 — Alertas de Custos Recorrentes (approved)
+
+> **2026-07-14 (T3.7):** As três specs foram implementadas juntas por compartilharem o mesmo
+> endpoint/tela (`GET /expenses/upcoming` e a tab "Próximas" de `/expenses`). RPC
+> `get_upcoming_costs(p_vehicle_id, p_horizon_days)` já existia desde T0.2 (schema recuperado do
+> banco remoto), com `EXECUTE` concedido a `authenticated` — `ExpensesService.getUpcomingCosts()`
+> apenas delega (mesmo padrão de `OdometerCyclesService.getActiveCycleStart()`, primeiro uso de
+> `.rpc()` no projeto). `GET /expenses/kpis` não tinha RPC equivalente — implementado em
+> `ExpensesService.getKpis()` com 3 somas em memória sobre `expenses` (mês corrente, mês anterior,
+> total histórico) mais uma chamada interna a `getUpcomingCosts(horizon=30)`, sem view/RPC nova no
+> banco (volume de dados por usuário não justifica). **Desvios deliberados de escopo:**
+> - RF-06 (SPEC-608-001) — botão "Ver" nas rows da tab "Próximas": fica desabilitado com tooltip
+>   "Em breve" para as três origens (`maintenance`, `fine`, `recurring_cost`), não só para
+>   `recurring_cost` como a spec previa — `/maintenance` (Fase 4) e `/fines` (frontend, T3.6
+>   deferiu) também não têm tela própria ainda. Mesma técnica que a própria spec já usava para
+>   `recurring_cost`, só estendida às outras duas por necessidade real do estado atual do projeto.
+> - RF-02 (SPEC-608-003) — badge numérico na sidebar: fica ⏳. Não existe componente de sidebar no
+>   projeto ainda (a navegação lateral é objeto da Fase 5, ainda `draft` em SPEC-20260531-001); não
+>   há onde pendurar o badge. A chamada client-side direta ao RPC (`p_horizon_days=7`) também
+>   introduziria um padrão arquitetural novo — nenhuma outra tela do projeto chama Supabase
+>   diretamente do browser, tudo passa pelo backend NestJS. Ambas as decisões ficam registradas
+>   aqui para quando a Fase 5 construir a sidebar.
+> RF-05 (badge de contagem na tab) usa `upcoming_30_days_count` já calculado pelo endpoint de KPIs
+> (evita uma segunda chamada de horizonte=30 só para o contador da tab).
+
+### Backend (`apps/api`)
+
+| Req | Descrição | Código | Teste | Status |
+|-----|-----------|--------|-------|--------|
+| SPEC-608-001 RF-01, RF-02, RF-03, RNF-02 | `GET /expenses/upcoming?vehicle_id=&horizon_days=` — delega para RPC `get_upcoming_costs` | `apps/api/src/modules/expenses/expenses.service.ts` (`getUpcomingCosts`) | `expenses.service.spec.ts`, `.controller.spec.ts` | ✅ |
+| SPEC-608-001 RNF-03 | `horizon_days` fora de (30, 90) → 400 | `packages/validators/src/expense.schemas.ts` (`upcomingCostsQuerySchema`) | `expense.schemas.spec.ts` | ✅ |
+| SPEC-608-002 RF-01, RF-02 | `GET /expenses/kpis?vehicle_id=` — totais mês/mês anterior/histórico/upcoming | `expenses.service.ts` (`getKpis`, `sumExpensesAmount`) | `expenses.service.spec.ts` | ✅ |
+| SPEC-608-002 RF-03, CT-002/003/004 | `delta_percent` (null quando `prev=0`, arredondado a 1 casa) | `expenses.service.ts` (`getKpis`) | `expenses.service.spec.ts` | ✅ |
+| S1, S2 | `SupabaseAuthGuard` + RLS/`auth.uid()` (RPC `security definer` já valida por dentro) | `expenses.controller.ts` | `expenses.controller.spec.ts` | ✅ |
+
+### Validators (`packages/validators`)
+
+| Req | Descrição | Código | Teste | Status |
+|-----|-----------|--------|-------|--------|
+| SPEC-608-001 RF-01, RF-03 | `upcomingCostsQuerySchema`, `UpcomingCostItem` | `packages/validators/src/expense.schemas.ts` | `expense.schemas.spec.ts` | ✅ |
+| SPEC-608-002 RF-01, RF-02 | `expenseKpisQuerySchema`, `ExpenseKpis` | `packages/validators/src/expense.schemas.ts` | `expense.schemas.spec.ts` | ✅ |
+
+### Frontend (`apps/web`)
+
+| Req | Descrição | Código | Teste | Status |
+|-----|-----------|--------|-------|--------|
+| SPEC-608-002 RF-04, RF-05, RF-06 | KPI cards (total do mês + delta badge, próximos 30 dias, total histórico) | `apps/web/src/app/expenses/page.tsx` (`KpiCards`, `DeltaBadge`) | `page.spec.tsx` | ✅ |
+| SPEC-608-001 RF-04 | Tab "Lista"/"Próximas" com `?tab=proximas` na URL e badges de urgência por faixa de dias | `page.tsx` (`UpcomingCostsTab`, `urgencyBadge`) | `page.spec.tsx` | ✅ |
+| SPEC-608-001 RF-05 | Badge de contagem na tab "Próximas" (vermelho quando há item vencido) | `page.tsx` | `page.spec.tsx` | ✅ |
+| SPEC-608-003 RF-03 | Labels de `cost_type` (IPVA/CRLV/Seguro/Doc. Recorrente) | `page.tsx` (`SOURCE_TYPE_LABEL`) | — | ✅ |
+| SPEC-608-001 RF-06 | Navegação "Ver" para origem (`/maintenance`, `/fines`, `/settings`) | — | — | ⏳ |
+| SPEC-608-003 RF-02 | Badge numérico na sidebar | — | — | ⏳ |
+
+---
+
+## SPEC-20260609-001 — CRUD de Custos Recorrentes (approved)
+## SPEC-20260609-002 — Tab "Por Veículo" em /expenses (approved)
+## SPEC-20260609-003 — Exportação CSV Consolidada (approved)
+
+> **2026-07-14 (T3.8):** As três specs foram implementadas juntas por serem incrementos pequenos
+> e interdependentes da mesma tela (`/expenses`). `RecurringCostsModule` foi o gatilho para
+> finalmente implementar `ExpensesService.createFromSource()`/`softDeleteBySource()` (adiado desde
+> T3.6/T3.7 conforme já registrado) — e, uma vez implementados, `FinesModule` (T3.6) foi
+> retrofitado na mesma tarefa para fechar o item que já estava documentado como pendente (ver
+> changelog v1.3 de `SPEC-20260607-001`). O módulo de manutenção (Fase 4, R-LED-02) ainda não
+> existe, então essa terceira origem continua fora do ledger por ora — nada a fazer aqui até a
+> Fase 4 chegar.
+>
+> **Desvios de escopo (SPEC-609-001):** nenhum — RF-01 a RF-05 implementados conforme especificado.
+> Um detalhe de schema real diverge do texto da spec: a constraint `uq_vehicle_recurring_cost`
+> no banco (criada em T0.2) é **full-table**, não parcial (`WHERE deleted_at IS NULL`) — um
+> registro soft-deletado ainda ocupa a combinação `(vehicle_id, cost_type, year)`. A checagem de
+> duplicata em `RecurringCostsService.assertNoDuplicate()` foi implementada para bater com essa
+> realidade (não filtra `deleted_at`), já que alterar a constraint estaria fora do escopo de uma
+> tarefa de camada de aplicação — se for indesejado, é uma migration futura, não um bug deste
+> serviço.
+>
+> **Desvios de escopo (SPEC-609-002):** a spec original descreve "Server Component (Next.js)" com
+> busca de dados no servidor — este projeto usa exclusivamente client components com TanStack
+> Query + REST via NestJS (mesmo padrão de T3.0 em diante); reescrito como client component que
+> reaproveita `GET /expenses` (com `limit=100` em vez do paginado default de 20, já que a tab
+> precisa da visão completa do período). Accordion via `<details>/<summary>` nativo, como a
+> própria spec permite. Tab "Em atraso" mencionada no mockup da spec não existe neste projeto (não
+> foi implementada em nenhuma tarefa anterior) — "Por veículo" foi adicionada como 3ª tab, não 4ª.
+>
+> **Desvios de escopo (SPEC-609-003):** a spec pedia `GET /expenses/export` retornando um array
+> JSON e exportação client-side "via fetch da query Supabase" — ambos conflitam com a arquitetura
+> já estabelecida (backend gera CSV pronto com BOM, frontend baixa via `<a href download>`, mesmo
+> padrão de `DashboardService.exportExpensesCsv` de T3.1). Implementado como `GET /expenses/export`
+> retornando texto CSV direto. Função `escapeCsvField` extraída para `shared/csv/csv.util.ts` e
+> reutilizada por `DashboardService` (evita duplicar a mesma função em dois módulos).
+
+### Backend (`apps/api`)
+
+| Req | Descrição | Código | Teste | Status |
+|-----|-----------|--------|-------|--------|
+| EPIC-FIN-001 R-LED-02, R-LED-05, R-HUB-01, R-HUB-02 | `ExpensesService.createFromSource()`/`softDeleteBySource()` — idempotente via checagem prévia + índice único parcial `uq_expenses_source` | `apps/api/src/modules/expenses/expenses.service.ts` | `expenses.service.spec.ts` | ✅ |
+| SPEC-609-001 RF-01 a RF-05, CT-REC-01 a 08 | `RecurringCostsModule` REST completo (`POST/GET/PATCH/DELETE /recurring-costs`) | `apps/api/src/modules/recurring-costs/recurring-costs.service.ts` | `recurring-costs.service.spec.ts`, `.controller.spec.ts` | ✅ |
+| SPEC-609-001 R-REC-01 | 409 em duplicata `(vehicle_id, cost_type, year)` — checagem sem filtro de `deleted_at` (bate com constraint full-table do banco) | `recurring-costs.service.ts` (`assertNoDuplicate`) | `recurring-costs.service.spec.ts` | ✅ |
+| SPEC-609-003 RF-01, RF-02 | `GET /expenses/export?from=&to=&vehicle_id=` — CSV consolidado com coluna Origem humanizada | `apps/api/src/modules/expenses/expenses.service.ts` (`exportConsolidatedCsv`) | `expenses.service.spec.ts`, `.controller.spec.ts` | ✅ |
+| — | `FinesModule` retrofitado para usar `createFromSource`/`softDeleteBySource` | `apps/api/src/modules/fines/fines.service.ts` | `fines.service.spec.ts` | ✅ |
+| S1, S2 | `SupabaseAuthGuard` + RLS (`auth.uid()`) em todas as rotas | `recurring-costs.controller.ts` | `recurring-costs.controller.spec.ts` | ✅ |
+
+### Validators (`packages/validators`)
+
+| Req | Descrição | Código | Teste | Status |
+|-----|-----------|--------|-------|--------|
+| SPEC-609-001 RF-02 | `createRecurringCostInputSchema`/`updateRecurringCostInputSchema`/`RECURRING_COST_TYPE_TO_CATEGORY` | `packages/validators/src/recurring-cost.schemas.ts` | `recurring-cost.schemas.spec.ts` | ✅ |
+| SPEC-609-003 RF-01 | `consolidatedExportQuerySchema` | `packages/validators/src/expense.schemas.ts` | `expense.schemas.spec.ts` | ✅ |
+
+### Frontend (`apps/web`)
+
+| Req | Descrição | Código | Teste | Status |
+|-----|-----------|--------|-------|--------|
+| SPEC-609-002 RF-01, RF-02, RF-03, RF-05 | Tab "Por veículo" com accordion nativo, subtotal e total geral, ordenado por maior subtotal | `apps/web/src/app/expenses/page.tsx` (`ByVehicleTab`, `groupByVehicle`) | `page.spec.tsx` | ✅ |
+| SPEC-609-003 RF-03 | Botão "Exportar CSV Completo" | `page.tsx` | `page.spec.tsx` | ✅ |
+| SPEC-609-001 | Tela de CRUD de custos recorrentes | — | — | ⏳ (sem tela dedicada; gerenciamento fica para quando o Módulo de Documentos, G-08, existir) |
 
 ---
 
@@ -1319,14 +1608,14 @@ que o artefato ainda não existe no repositório.
 | `expenses` | `expenses.service.spec.ts`, `expenses.controller.spec.ts`, `supabase-expense.repository.spec.ts` | ⏳ |
 | `maintenance` | `maintenance.service.spec.ts`, `maintenance.controller.spec.ts`, `supabase-maintenance.repository.spec.ts` | ⏳ |
 | `dashboard` | `dashboard.service.spec.ts`, `dashboard.controller.spec.ts` | ⏳ |
-| `fines` | `fines.service.spec.ts`, `fines.controller.spec.ts` | ⏳ |
-| `recurring-costs` | `recurring-costs.service.spec.ts`, `recurring-costs.controller.spec.ts` | ⏳ |
+| `fines` | `apps/api/src/modules/fines/fines.service.spec.ts`, `fines.controller.spec.ts` | ✅ (Jest) |
+| `recurring-costs` | `apps/api/src/modules/recurring-costs/recurring-costs.service.spec.ts`, `.controller.spec.ts` | ✅ (Jest) |
 | `analytics` | `analytics.service.spec.ts`, `analytics.controller.spec.ts` | ⏳ |
 | `validators/vehicles` | `vehicles.schema.spec.ts` | ⏳ |
 | `validators/expenses` | `expenses.schema.spec.ts` | ⏳ |
 | `validators/maintenance` | `maintenance.schema.spec.ts` | ⏳ |
 | `validators/display-preferences` | `display-preferences.schema.spec.ts` | ⏳ |
 | `validators/categories` | `categories.schema.spec.ts` | ⏳ |
-| `validators/fines` | `fines.schema.spec.ts` | ⏳ |
-| `validators/recurring-costs` | `recurring-costs.schema.spec.ts` | ⏳ |
+| `validators/fines` | `packages/validators/src/fine.schemas.spec.ts` | ✅ (Vitest) |
+| `validators/recurring-costs` | `packages/validators/src/recurring-cost.schemas.spec.ts` | ✅ (Vitest) |
 | Edge Functions | Testes de integração via Supabase CLI | ⏳ (Fase 2) |

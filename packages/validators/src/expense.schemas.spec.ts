@@ -1,8 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
+  consolidatedExportQuerySchema,
   createExpenseInputSchema,
+  expenseKpisQuerySchema,
   listExpensesQuerySchema,
   updateExpenseInputSchema,
+  upcomingCostsQuerySchema,
 } from "./expense.schemas";
 
 const validUuid = "11111111-1111-4111-8111-111111111111";
@@ -10,7 +13,7 @@ const validUuid = "11111111-1111-4111-8111-111111111111";
 describe("createExpenseInputSchema", () => {
   const base = {
     vehicle_id: validUuid,
-    category: "fuel",
+    category: "maintenance",
     amount: 150.0,
     date: "2026-07-14",
   };
@@ -56,10 +59,29 @@ describe("createExpenseInputSchema", () => {
   it("aceita campos opcionais de combustível", () => {
     const result = createExpenseInputSchema.safeParse({
       ...base,
+      category: "fuel",
+      odometer_km: 50_000,
       fuel_type: "gasoline",
       liters: 40.5,
       full_tank: true,
       supplier: "Posto Ipiranga",
+    });
+    expect(result.success).toBe(true);
+  });
+
+  /**
+   * @spec SPEC-20260612-001 RF-06.1
+   */
+  it("rejeita category=fuel sem odometer_km (R-FUEL-01)", () => {
+    const result = createExpenseInputSchema.safeParse({ ...base, category: "fuel" });
+    expect(result.success).toBe(false);
+  });
+
+  it("aceita category=fuel com odometer_km informado", () => {
+    const result = createExpenseInputSchema.safeParse({
+      ...base,
+      category: "fuel",
+      odometer_km: 50_000,
     });
     expect(result.success).toBe(true);
   });
@@ -80,6 +102,19 @@ describe("updateExpenseInputSchema", () => {
     if (parsed.success) {
       expect((parsed.data as Record<string, unknown>).vehicle_id).toBeUndefined();
     }
+  });
+
+  /**
+   * @spec SPEC-20260612-001 RF-06.1
+   */
+  it("rejeita category=fuel sem odometer_km", () => {
+    expect(updateExpenseInputSchema.safeParse({ category: "fuel" }).success).toBe(false);
+  });
+
+  it("aceita category=fuel com odometer_km informado", () => {
+    expect(
+      updateExpenseInputSchema.safeParse({ category: "fuel", odometer_km: 60_000 }).success,
+    ).toBe(true);
   });
 });
 
@@ -102,5 +137,58 @@ describe("listExpensesQuerySchema", () => {
       date_to: "2026-07-31",
     });
     expect(result.success).toBe(true);
+  });
+});
+
+describe("upcomingCostsQuerySchema", () => {
+  it("aplica default de horizon_days=30 (RF-01)", () => {
+    const result = upcomingCostsQuerySchema.parse({});
+    expect(result.horizon_days).toBe(30);
+  });
+
+  it("aceita horizon_days=90", () => {
+    expect(upcomingCostsQuerySchema.safeParse({ horizon_days: 90 }).success).toBe(true);
+  });
+
+  it("rejeita horizon_days fora de (30, 90) (RNF-03)", () => {
+    expect(upcomingCostsQuerySchema.safeParse({ horizon_days: 15 }).success).toBe(false);
+    expect(upcomingCostsQuerySchema.safeParse({ horizon_days: 7 }).success).toBe(false);
+  });
+
+  it("aceita vehicle_id opcional", () => {
+    expect(upcomingCostsQuerySchema.safeParse({ vehicle_id: validUuid }).success).toBe(true);
+  });
+});
+
+describe("expenseKpisQuerySchema", () => {
+  it("aceita objeto vazio", () => {
+    expect(expenseKpisQuerySchema.safeParse({}).success).toBe(true);
+  });
+
+  it("aceita vehicle_id opcional", () => {
+    expect(expenseKpisQuerySchema.safeParse({ vehicle_id: validUuid }).success).toBe(true);
+  });
+
+  it("rejeita vehicle_id inválido", () => {
+    expect(expenseKpisQuerySchema.safeParse({ vehicle_id: "not-a-uuid" }).success).toBe(false);
+  });
+});
+
+describe("consolidatedExportQuerySchema", () => {
+  it("aceita objeto vazio (default de 12 meses aplicado no service)", () => {
+    expect(consolidatedExportQuerySchema.safeParse({}).success).toBe(true);
+  });
+
+  it("aceita from/to/vehicle_id opcionais", () => {
+    const result = consolidatedExportQuerySchema.safeParse({
+      from: "2025-07-01",
+      to: "2026-07-01",
+      vehicle_id: validUuid,
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejeita from em formato inválido", () => {
+    expect(consolidatedExportQuerySchema.safeParse({ from: "01/07/2025" }).success).toBe(false);
   });
 });

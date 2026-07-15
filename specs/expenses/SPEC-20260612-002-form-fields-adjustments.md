@@ -129,3 +129,4 @@ Pedido do usuário (2026-06-12), consolidando 5 ajustes incrementais no mesmo fo
 |--------|------|-------|---------|
 | 1.0 | 2026-06-12 | douglps | Criação inicial |
 | 1.1 | 2026-06-12 | douglps | Implementação via TDD (RF-01..RF-05). Status: aprovada. |
+| 1.2 | 2026-07-14 | douglps | Implementação real (T3.9) — a v1.1 registrava "implementado" mas o código não existia (matriz de rastreabilidade estava com todos os itens ⏳; corrigido nesta rodada). RF-01/RF-04 (`amount`/`odometer_km` max) já estavam corretos em `expenseBaseSchema` desde T3.0, coincidentemente. RF-02, RF-03 e RF-05 implementados em `apps/web/src/app/expenses/{new/page.tsx,[id]/page.tsx}` sobre a stack real do projeto (`useState`, sem react-hook-form) — ver changelog de SPEC-20260612-001 para o racional completo do desvio de arquitetura. |

@@ -14,7 +14,7 @@
 | R4 | `odometer_km` é obrigatório para despesas de categoria `fuel` (abastecimento) | [SPEC-20260601-001](expenses/SPEC-20260601-001-odometer-validation.md) |
 | R5 | Soft-delete via `deleted_at`; registros com `deleted_at IS NOT NULL` são invisíveis por padrão em todas as listagens | todos os domínios |
 | R6 | Template não persiste `date` nem `odometer_km` — esses campos são sempre preenchidos no momento do uso | [SPEC-20260601-003](expenses/SPEC-20260601-003-expense-templates.md) |
-| R7 | Transições válidas de manutenção: `pending → [in_progress, completed, cancelled]`; `in_progress → [completed, cancelled]`; `completed` e `cancelled` são estados terminais sem transições de saída; transições fora desse grafo são rejeitadas com 409 | [SPEC-20260603-002](maintenance/SPEC-20260603-002-maintenance-status-transitions.md) |
+| R7 | Transições válidas de manutenção: `scheduled → [in_progress, completed, cancelled]`; `in_progress → [completed, cancelled]`; `completed` e `cancelled` são estados terminais sem transições de saída; transições fora desse grafo são rejeitadas com 409 | [SPEC-20260603-002](maintenance/SPEC-20260603-002-maintenance-status-transitions.md) |
 | R-VEH-01 | Soft-delete de veículo é em cascata: todas as despesas e manutenções vinculadas recebem `deleted_at` com o mesmo timestamp | [SPEC-20260602-002](vehicles/SPEC-20260602-002.md) |
 | R-VEH-02 | Placa normalizada para uppercase sem hífens antes de persistir; aceita padrão BR (ABC1234) e Mercosul (ABC1D23); placa com formato inválido retorna 400 | [SPEC-20260602-002](vehicles/SPEC-20260602-002.md) |
 | R-MON-01 | `writeAuditLog` e `AuditService.log` são sempre fire-and-forget; erros nunca propagam para a operação principal | [SPEC-20260602-005](dashboard/SPEC-20260602-005.md) |

@@ -1,5 +1,5 @@
 import { UnauthorizedException } from "@nestjs/common";
-import type { Request } from "express";
+import type { Request, Response } from "express";
 import { ExpensesController } from "./expenses.controller";
 import type { ExpensesService } from "./expenses.service";
 
@@ -14,9 +14,27 @@ describe("ExpensesController", () => {
       findOne: jest.fn().mockResolvedValue({ id: "e1" }),
       update: jest.fn().mockResolvedValue({ id: "e1", amount: 200 }),
       remove: jest.fn().mockResolvedValue(undefined),
+      listSuppliers: jest.fn().mockResolvedValue(["Shell Av. Paulista"]),
+      getUpcomingCosts: jest.fn().mockResolvedValue([{ source_type: "fine", source_id: "f1" }]),
+      getKpis: jest.fn().mockResolvedValue({
+        total_this_month: 100,
+        total_prev_month: 50,
+        delta_percent: 100,
+        total_all_time: 500,
+        upcoming_30_days_total: 30,
+        upcoming_30_days_count: 1,
+      }),
+      exportConsolidatedCsv: jest.fn().mockResolvedValue("Data,Veiculo,Placa,Categoria,Valor,Origem,Descricao\n"),
       ...overrides,
     } as unknown as ExpensesService;
     return { controller: new ExpensesController(expensesService), expensesService };
+  }
+
+  function createRes(): Response {
+    return {
+      setHeader: jest.fn(),
+      send: jest.fn(),
+    } as unknown as Response;
   }
 
   const req = { headers: { authorization: "Bearer token-123" }, cookies: {} } as Request;
@@ -26,8 +44,19 @@ describe("ExpensesController", () => {
 
     const result = await controller.create(req, "u1", { amount: 150 } as never);
 
-    expect(expensesService.create).toHaveBeenCalledWith("token-123", "u1", { amount: 150 });
+    expect(expensesService.create).toHaveBeenCalledWith("token-123", "u1", { amount: 150 }, false);
     expect(result.data).toEqual({ id: "e1" });
+  });
+
+  /**
+   * @spec SPEC-20260612-001 RF-04
+   */
+  it("create repassa strict=true quando o query param strict=true (web)", async () => {
+    const { controller, expensesService } = createController();
+
+    await controller.create(req, "u1", { amount: 150 } as never, "true");
+
+    expect(expensesService.create).toHaveBeenCalledWith("token-123", "u1", { amount: 150 }, true);
   });
 
   it("findAll retorna envelope paginado", async () => {
@@ -54,8 +83,63 @@ describe("ExpensesController", () => {
 
     const result = await controller.update(req, "u1", "e1", { amount: 200 } as never);
 
-    expect(expensesService.update).toHaveBeenCalledWith("token-123", "u1", "e1", { amount: 200 });
+    expect(expensesService.update).toHaveBeenCalledWith("token-123", "u1", "e1", { amount: 200 }, false);
     expect(result.data).toEqual({ id: "e1", amount: 200 });
+  });
+
+  /**
+   * @spec SPEC-20260612-001 RF-04
+   */
+  it("update repassa strict=true quando o query param strict=true (web)", async () => {
+    const { controller, expensesService } = createController();
+
+    await controller.update(req, "u1", "e1", { amount: 200 } as never, "true");
+
+    expect(expensesService.update).toHaveBeenCalledWith("token-123", "u1", "e1", { amount: 200 }, true);
+  });
+
+  it("listSuppliers retorna sugestões de fornecedores (SPEC-20260606-002 RF-02)", async () => {
+    const { controller, expensesService } = createController();
+
+    const result = await controller.listSuppliers(req, "u1");
+
+    expect(expensesService.listSuppliers).toHaveBeenCalledWith("token-123", "u1");
+    expect(result.data).toEqual(["Shell Av. Paulista"]);
+  });
+
+  it("getUpcoming retorna a lista de próximas despesas (SPEC-20260608-001 RF-01)", async () => {
+    const { controller, expensesService } = createController();
+    const query = { horizon_days: 30 } as never;
+
+    const result = await controller.getUpcoming(req, query);
+
+    expect(expensesService.getUpcomingCosts).toHaveBeenCalledWith("token-123", query);
+    expect(result.data).toEqual([{ source_type: "fine", source_id: "f1" }]);
+  });
+
+  it("getKpis retorna os KPIs financeiros (SPEC-20260608-002 RF-01)", async () => {
+    const { controller, expensesService } = createController();
+    const query = {} as never;
+
+    const result = await controller.getKpis(req, "u1", query);
+
+    expect(expensesService.getKpis).toHaveBeenCalledWith("token-123", "u1", query);
+    expect(result.data.total_this_month).toBe(100);
+  });
+
+  it("exportConsolidated monta headers e envia o CSV com BOM (SPEC-20260609-003 RF-01)", async () => {
+    const { controller, expensesService } = createController();
+    const res = createRes();
+
+    await controller.exportConsolidated(req, "u1", {} as never, res);
+
+    expect(expensesService.exportConsolidatedCsv).toHaveBeenCalledWith("token-123", "u1", {});
+    expect(res.setHeader).toHaveBeenCalledWith("Content-Type", "text/csv; charset=utf-8");
+    expect(res.setHeader).toHaveBeenCalledWith(
+      "Content-Disposition",
+      expect.stringContaining("nave-despesas-completo-"),
+    );
+    expect(res.send).toHaveBeenCalledWith(expect.stringContaining("Data,Veiculo,Placa"));
   });
 
   it("remove remove a despesa", async () => {

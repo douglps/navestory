@@ -1,6 +1,7 @@
 import { Inject, Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { escapeCsvField } from "../../shared/csv/csv.util";
 import { createUserScopedClient } from "../../shared/supabase/create-user-scoped-client";
 import { SUPABASE_ADMIN_CLIENT } from "../../shared/supabase/supabase.constants";
 
@@ -13,13 +14,6 @@ interface ExpenseExportRow {
   category: string;
   description: string | null;
   vehicles: { plate: string; model: string | null } | { plate: string; model: string | null }[] | null;
-}
-
-function escapeCsvField(value: string): string {
-  if (/[",\n]/.test(value)) {
-    return `"${value.replace(/"/g, '""')}"`;
-  }
-  return value;
 }
 
 function lastDayOfMonth(period: string): string {

@@ -1,10 +1,23 @@
 "use client";
 
-import { createExpenseInputSchema, type CreateExpenseInput } from "@nave/validators";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import {
+  createExpenseInputSchema,
+  createExpenseTemplateInputSchema,
+  type CreateExpenseInput,
+  type CreateExpenseTemplateInput,
+  type ExpenseTemplate,
+} from "@nave/validators";
+import { CurrencyInput, OdometerInput } from "@nave/ui";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent, type ReactNode } from "react";
-import { apiClient } from "@/lib/http/api-client";
+import { ApiError, apiClient } from "@/lib/http/api-client";
+import { changeDateYear } from "@/lib/date-year";
+import { FUEL_TYPE_OPTIONS } from "@/lib/fuel-types";
+import { useFuelCrossCalc } from "@/lib/hooks/use-fuel-cross-calc";
+
+const TEMPLATE_LIMIT = 20;
 
 interface Vehicle {
   id: string;
@@ -28,12 +41,173 @@ function vehicleLabel(vehicle: Vehicle): string {
 }
 
 /**
+ * @spec SPEC-20260601-003 RF-01, RF-02, RF-03, RF-04, RF-05, RF-07, RF-08, RF-10, RF-11, RF-13
+ */
+function ExpenseTemplatesTray({
+  vehicles,
+  onApply,
+  currentFields,
+}: {
+  vehicles: Vehicle[] | undefined;
+  onApply: (template: ExpenseTemplate, vehicleExists: boolean) => void;
+  currentFields: {
+    vehicleId: string;
+    category: string;
+    amount: number | undefined;
+    description: string;
+    fuelType: string;
+    supplier: string;
+  };
+}): ReactNode {
+  const queryClient = useQueryClient();
+  const [creating, setCreating] = useState(false);
+  const [templateName, setTemplateName] = useState("");
+  const [createError, setCreateError] = useState<string | null>(null);
+
+  const { data: templates } = useQuery({
+    queryKey: ["expense-templates"],
+    queryFn: () => apiClient<{ data: ExpenseTemplate[] }>("/expense-templates").then((r) => r.data),
+    retry: false,
+  });
+
+  const touchMutation = useMutation({
+    mutationFn: (templateId: string) =>
+      apiClient(`/expense-templates/${templateId}/touch`, { method: "PATCH" }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["expense-templates"] });
+    },
+  });
+
+  const createMutation = useMutation({
+    mutationFn: (input: CreateExpenseTemplateInput) =>
+      apiClient<{ data: ExpenseTemplate }>("/expense-templates", { method: "POST", body: input }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["expense-templates"] });
+      setCreating(false);
+      setTemplateName("");
+    },
+    onError: () => setCreateError("Não foi possível criar o modelo."),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (templateId: string) =>
+      apiClient(`/expense-templates/${templateId}`, { method: "DELETE" }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["expense-templates"] });
+    },
+  });
+
+  const atLimit = (templates?.length ?? 0) >= TEMPLATE_LIMIT;
+
+  function handleApply(template: ExpenseTemplate): void {
+    const vehicleExists = (vehicles ?? []).some((v) => v.id === template.vehicle_id);
+    onApply(template, vehicleExists);
+    touchMutation.mutate(template.id);
+  }
+
+  function handleDelete(templateId: string): void {
+    if (window.confirm("Excluir este modelo?")) {
+      deleteMutation.mutate(templateId);
+    }
+  }
+
+  function handleCreateSubmit(event: FormEvent): void {
+    event.preventDefault();
+    setCreateError(null);
+
+    if (atLimit) {
+      setCreateError("Você atingiu o limite de 20 modelos. Exclua um para criar outro.");
+      return;
+    }
+
+    const result = createExpenseTemplateInputSchema.safeParse({
+      name: templateName,
+      vehicle_id: currentFields.vehicleId,
+      category: currentFields.category,
+      amount: currentFields.amount,
+      description: currentFields.description || null,
+      fuel_type: currentFields.fuelType || null,
+      supplier: currentFields.supplier || null,
+    });
+    if (!result.success) {
+      setCreateError(result.error.issues[0]?.message ?? "Dados inválidos para criar o modelo");
+      return;
+    }
+
+    createMutation.mutate(result.data);
+  }
+
+  return (
+    <section aria-label="Modelos de despesa" className="flex flex-col gap-2">
+      <div className="flex gap-2 overflow-x-auto">
+        {templates?.length === 0 && !creating && (
+          <p>Nenhum modelo ainda. Toque em + para criar.</p>
+        )}
+        {templates?.map((template) => (
+          <div key={template.id} className="flex items-center gap-1 whitespace-nowrap">
+            <button
+              type="button"
+              aria-label={`Aplicar modelo ${template.name}`}
+              onClick={() => handleApply(template)}
+            >
+              {template.name}
+            </button>
+            <button
+              type="button"
+              aria-label={`Excluir modelo ${template.name}`}
+              onClick={() => handleDelete(template.id)}
+            >
+              ×
+            </button>
+          </div>
+        ))}
+        <button
+          type="button"
+          aria-label="Criar novo modelo"
+          disabled={atLimit}
+          onClick={() => setCreating((prev) => !prev)}
+        >
+          +
+        </button>
+      </div>
+
+      {creating && (
+        <form onSubmit={handleCreateSubmit} className="flex flex-col gap-2">
+          <label htmlFor="template_name">Nome do modelo</label>
+          <input
+            id="template_name"
+            value={templateName}
+            onChange={(event) => setTemplateName(event.target.value)}
+            required
+          />
+          <p>Usa os campos veículo, categoria, valor e descrição preenchidos no formulário.</p>
+          {createError && <p role="alert">{createError}</p>}
+          <button type="submit" disabled={createMutation.isPending}>
+            {createMutation.isPending ? "Salvando..." : "Salvar modelo"}
+          </button>
+        </form>
+      )}
+    </section>
+  );
+}
+
+const TODAY = new Date().toISOString().slice(0, 10);
+
+/**
  * @spec SPEC-20260714-001 RF-12
+ * @spec SPEC-20260606-001 RF-01, RF-02, R-FUEL-05
+ * @spec SPEC-20260606-002 RF-01, RF-02
+ * @spec SPEC-20260612-001 RF-03, RF-04, RF-05, RF-06
+ * @spec SPEC-20260612-002 RF-01, RF-02, RF-03, RF-04, RF-05
+ * Arquitetura: adaptado à stack real do projeto (client component + useState + TanStack
+ * Query chamando `apps/api` via `apiClient`) — SPEC-20260619-001 descreve react-hook-form +
+ * Server Actions, ainda não construídos neste projeto (ver changelog da spec).
+ * @spec SPEC-20260619-001 R-FORM-05, R-FORM-07
  */
 export default function NewExpensePage(): ReactNode {
   const router = useRouter();
 
-  const { data: vehicles } = useQuery({
+  const { data: vehicles, isLoading: vehiclesLoading } = useQuery({
     queryKey: ["vehicles"],
     queryFn: () => apiClient<Vehicle[]>("/vehicles"),
     retry: false,
@@ -47,19 +221,60 @@ export default function NewExpensePage(): ReactNode {
 
   const [vehicleId, setVehicleId] = useState("");
   const [category, setCategory] = useState("");
-  const [amount, setAmount] = useState("");
-  const [date, setDate] = useState("");
+  const [date, setDate] = useState(TODAY);
   const [description, setDescription] = useState("");
-  const [odometerKm, setOdometerKm] = useState("");
+  const [odometerKm, setOdometerKm] = useState<number | undefined>(undefined);
+  const [fuelType, setFuelType] = useState("");
+  const [fullTank, setFullTank] = useState<boolean | null>(null);
+  const [supplier, setSupplier] = useState("");
   const [fieldError, setFieldError] = useState<string | null>(null);
+  const [templateNotice, setTemplateNotice] = useState<string | null>(null);
+  const fuelCalc = useFuelCrossCalc();
+
+  const isFuel = category === "fuel";
+  const year = date ? Number(date.slice(0, 4)) : undefined;
+
+  /**
+   * @spec SPEC-20260606-002 RF-02
+   */
+  const { data: suppliers } = useQuery({
+    queryKey: ["expense-suppliers"],
+    queryFn: () => apiClient<{ data: string[] }>("/expenses/suppliers").then((r) => r.data),
+    enabled: isFuel,
+    retry: false,
+  });
 
   const mutation = useMutation({
     mutationFn: (input: CreateExpenseInput) =>
-      apiClient<ExpenseResponse>("/expenses", { method: "POST", body: input }),
+      apiClient<ExpenseResponse>("/expenses?strict=true", { method: "POST", body: input }),
     onSuccess: () => router.push("/expenses"),
+    onError: (error) => {
+      if (error instanceof ApiError) setFieldError(error.message);
+    },
   });
 
   const allCategories = [...(categories?.default ?? []), ...(categories?.custom ?? [])];
+
+  /**
+   * @spec SPEC-20260601-003 RF-03, RF-04, EC-01
+   * @spec SPEC-20260606-001 R-FUEL-05
+   */
+  function handleApplyTemplate(template: ExpenseTemplate, vehicleExists: boolean): void {
+    setVehicleId(vehicleExists ? template.vehicle_id : "");
+    setCategory(template.category);
+    fuelCalc.reset({ amount: template.amount });
+    setDescription(template.description ?? "");
+    setFuelType(template.fuel_type ?? "");
+    setSupplier(template.supplier ?? "");
+    setTemplateNotice(
+      vehicleExists ? null : "Veículo deste modelo não está mais disponível.",
+    );
+  }
+
+  function handleYearChange(value: number | undefined): void {
+    if (value == null || String(value).length !== 4) return;
+    setDate((current) => changeDateYear(current, value));
+  }
 
   function handleSubmit(event: FormEvent): void {
     event.preventDefault();
@@ -68,10 +283,14 @@ export default function NewExpensePage(): ReactNode {
     const result = createExpenseInputSchema.safeParse({
       vehicle_id: vehicleId,
       category,
-      amount: Number(amount),
+      amount: fuelCalc.amount,
       date,
       description: description || null,
-      odometer_km: odometerKm ? Number(odometerKm) : null,
+      odometer_km: isFuel ? (odometerKm ?? null) : null,
+      fuel_type: isFuel && fuelType ? fuelType : null,
+      full_tank: isFuel ? fullTank : null,
+      liters: isFuel ? (fuelCalc.liters ?? null) : null,
+      supplier: isFuel && supplier ? supplier : null,
     });
     if (!result.success) {
       setFieldError(result.error.issues[0]?.message ?? "Dados inválidos");
@@ -81,16 +300,74 @@ export default function NewExpensePage(): ReactNode {
     mutation.mutate(result.data);
   }
 
+  /**
+   * @spec SPEC-20260619-001 R-FORM-05
+   */
+  const isDirty =
+    vehicleId !== "" ||
+    category !== "" ||
+    fuelCalc.amount != null ||
+    date !== TODAY ||
+    description !== "" ||
+    odometerKm != null ||
+    fuelType !== "" ||
+    fullTank !== null ||
+    supplier !== "" ||
+    fuelCalc.liters != null ||
+    fuelCalc.pricePerLiter != null;
+
+  function handleCancel(): void {
+    if (isDirty && !window.confirm("Descartar alterações?")) return;
+    router.push("/expenses");
+  }
+
+  /**
+   * @spec SPEC-20260619-001 R-FORM-07
+   */
+  if (!vehiclesLoading && vehicles?.length === 0) {
+    return (
+      <main className="mx-auto flex max-w-sm flex-col gap-4 p-8">
+        <h1 className="text-xl font-semibold">Nova despesa</h1>
+        <div className="flex flex-col items-center gap-2 rounded border p-6 text-center">
+          <p className="font-medium">Nenhum veículo cadastrado</p>
+          <p className="text-sm text-muted-foreground">
+            Cadastre um veículo para registrar despesas.
+          </p>
+          <Link href="/vehicles/new" className="underline">
+            Cadastrar veículo →
+          </Link>
+        </div>
+      </main>
+    );
+  }
+
+  const summaryConsistent =
+    isFuel &&
+    fuelCalc.amount != null &&
+    fuelCalc.liters != null &&
+    fuelCalc.pricePerLiter != null &&
+    Math.abs(fuelCalc.liters * fuelCalc.pricePerLiter - fuelCalc.amount) <= 0.01;
+
   return (
     <main className="mx-auto flex max-w-sm flex-col gap-4 p-8">
       <h1 className="text-xl font-semibold">Nova despesa</h1>
 
-      {!vehicles?.length && (
-        <p role="alert">Cadastre um veículo antes de registrar despesas.</p>
-      )}
+      <ExpenseTemplatesTray
+        vehicles={vehicles}
+        onApply={handleApplyTemplate}
+        currentFields={{
+          vehicleId,
+          category,
+          amount: fuelCalc.amount,
+          description,
+          fuelType,
+          supplier,
+        }}
+      />
+      {templateNotice && <p role="alert">{templateNotice}</p>}
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-        <label htmlFor="vehicle_id">Veículo</label>
+        <label htmlFor="vehicle_id">Veículo *</label>
         <select
           id="vehicle_id"
           value={vehicleId}
@@ -107,7 +384,7 @@ export default function NewExpensePage(): ReactNode {
           ))}
         </select>
 
-        <label htmlFor="category">Categoria</label>
+        <label htmlFor="category">Categoria *</label>
         <select
           id="category"
           value={category}
@@ -124,32 +401,43 @@ export default function NewExpensePage(): ReactNode {
           ))}
         </select>
 
-        <label htmlFor="amount">Valor (R$)</label>
-        <input
-          id="amount"
-          type="number"
-          step="0.01"
-          value={amount}
-          onChange={(event) => setAmount(event.target.value)}
-          required
-        />
+        <label htmlFor="amount">Valor (R$) *</label>
+        <CurrencyInput id="amount" value={fuelCalc.amount} onChange={fuelCalc.setAmount} required />
 
-        <label htmlFor="date">Data</label>
-        <input
-          id="date"
-          type="date"
-          value={date}
-          onChange={(event) => setDate(event.target.value)}
-          required
-        />
+        <div className="flex gap-3">
+          <div className="flex flex-1 flex-col gap-1">
+            <label htmlFor="date">Data *</label>
+            <input
+              id="date"
+              type="date"
+              value={date}
+              onChange={(event) => setDate(event.target.value)}
+              required
+            />
+          </div>
+          <div className="flex flex-col gap-1">
+            <label htmlFor="year">Ano</label>
+            <input
+              id="year"
+              type="text"
+              inputMode="numeric"
+              maxLength={4}
+              value={year ?? ""}
+              onChange={(event) => {
+                const digits = event.target.value.replace(/\D/g, "").slice(0, 4);
+                handleYearChange(digits ? Number(digits) : undefined);
+              }}
+              className="w-20"
+            />
+          </div>
+        </div>
 
-        <label htmlFor="odometer_km">Odômetro (km)</label>
-        <input
-          id="odometer_km"
-          type="number"
-          value={odometerKm}
-          onChange={(event) => setOdometerKm(event.target.value)}
-        />
+        {isFuel && (
+          <>
+            <label htmlFor="odometer_km">Odômetro (km) *</label>
+            <OdometerInput id="odometer_km" value={odometerKm} onChange={setOdometerKm} required />
+          </>
+        )}
 
         <label htmlFor="description">Descrição</label>
         <input
@@ -158,12 +446,85 @@ export default function NewExpensePage(): ReactNode {
           onChange={(event) => setDescription(event.target.value)}
         />
 
-        {fieldError && <p role="alert">{fieldError}</p>}
-        {mutation.isError && <p role="alert">Não foi possível registrar a despesa.</p>}
+        {isFuel && (
+          <section aria-label="Dados do abastecimento" className="flex flex-col gap-3 rounded border p-3">
+            <label htmlFor="fuel_type">Tipo de combustível</label>
+            <select
+              id="fuel_type"
+              value={fuelType}
+              onChange={(event) => setFuelType(event.target.value)}
+            >
+              <option value="">Selecione (opcional)</option>
+              {FUEL_TYPE_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
 
-        <button type="submit" disabled={mutation.isPending}>
-          {mutation.isPending ? "Salvando..." : "Registrar"}
-        </button>
+            <span id="full_tank_label">Tanque cheio?</span>
+            <div role="group" aria-labelledby="full_tank_label" className="flex gap-2">
+              <button
+                type="button"
+                aria-pressed={fullTank === true}
+                onClick={() => setFullTank((current) => (current === true ? null : true))}
+              >
+                Sim
+              </button>
+              <button
+                type="button"
+                aria-pressed={fullTank === false}
+                onClick={() => setFullTank((current) => (current === false ? null : false))}
+              >
+                Não
+              </button>
+            </div>
+
+            <label htmlFor="liters">Litros</label>
+            <CurrencyInput
+              id="liters"
+              prefix={null}
+              value={fuelCalc.liters}
+              onChange={fuelCalc.setLiters}
+            />
+
+            <label htmlFor="price_per_liter">Valor por litro</label>
+            <CurrencyInput
+              id="price_per_liter"
+              value={fuelCalc.pricePerLiter}
+              onChange={fuelCalc.setPricePerLiter}
+            />
+
+            {summaryConsistent && (
+              <p className="text-sm text-muted-foreground">
+                {fuelCalc.liters} L × R$ {fuelCalc.pricePerLiter}/L = R$ {fuelCalc.amount}
+              </p>
+            )}
+
+            <label htmlFor="supplier">Posto / Fornecedor</label>
+            <input
+              id="supplier"
+              list="supplier-suggestions"
+              value={supplier}
+              onChange={(event) => setSupplier(event.target.value)}
+            />
+            <datalist id="supplier-suggestions">
+              {suppliers?.map((name) => <option key={name} value={name} />)}
+            </datalist>
+          </section>
+        )}
+
+        {fieldError && <p role="alert">{fieldError}</p>}
+        {mutation.isError && !fieldError && <p role="alert">Não foi possível registrar a despesa.</p>}
+
+        <div className="flex gap-2">
+          <button type="submit" disabled={mutation.isPending}>
+            {mutation.isPending ? "Salvando..." : "Registrar"}
+          </button>
+          <button type="button" onClick={handleCancel}>
+            Cancelar
+          </button>
+        </div>
       </form>
     </main>
   );

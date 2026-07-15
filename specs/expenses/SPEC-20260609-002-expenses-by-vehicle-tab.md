@@ -6,6 +6,7 @@ date: 2026-06-09
 author: douglps
 rules: [R5, S1, S2]
 security: [S1, S2]
+camadas: [frontend]
 ---
 
 # SPEC-20260609-002 — Tab "Por Veículo" em /expenses

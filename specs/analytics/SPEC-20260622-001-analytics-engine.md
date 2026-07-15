@@ -6,6 +6,7 @@ date: 2026-06-22
 author: douglps
 rules: [R-FUEL-02, R-FUEL-03, R5, R-ANA-01, R-ANA-02, R-ANA-03, R-ANA-04, R-ANA-05, R-ANA-06, R-ANA-07]
 security: [S1, S2]
+camadas: [database, backend, frontend, data]
 ---
 
 # SPEC-20260622-001 — Analytics Engine

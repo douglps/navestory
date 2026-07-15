@@ -6,6 +6,7 @@ date: 2026-06-08
 author: douglps
 rules: [R-LED-01, R-LED-02, R-LED-03, R-REC-01, R-REC-02]
 security: [S1, S2]
+camadas: [backend, frontend, database]
 ---
 
 # SPEC-20260608-001 — Upcoming Costs — Próximas Despesas

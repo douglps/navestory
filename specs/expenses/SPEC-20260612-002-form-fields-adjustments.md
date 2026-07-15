@@ -6,6 +6,7 @@ date: 2026-06-12
 author: douglps
 rules: [R-EXP-01, R-ODO-02, R-FUEL-06]
 security: []
+camadas: [frontend, backend]
 ---
 
 # SPEC-20260612-002: Ajustes de Campos e Layout do Formulário de Despesas

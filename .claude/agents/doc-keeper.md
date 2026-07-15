@@ -12,7 +12,7 @@ Manter toda documentação, matrizes e registros do projeto atualizados, preciso
 
 ## Responsabilidades
 
-### Matrizes (em `.claude/matrices/`)
+### Matrizes (em `matrices/`)
 - **impacto.md**: registrar mudanças avaliadas e seus impactos
 - **rastreabilidade.md**: mapear requisitos → specs → código → testes
 - **permissoes.md**: manter matrix de permissões por role e recurso
@@ -20,13 +20,14 @@ Manter toda documentação, matrizes e registros do projeto atualizados, preciso
 ### Documentação geral
 - **README.md**: propósito, requisitos, instalação, uso, contribuição
 - **CHANGELOG.md**: histórico de mudanças por versão (formato Keep a Changelog)
-- **Specs em `.claude/specs/`**: garantir que refletem o estado atual da implementação
+- **Specs em `specs/`**: garantir que refletem o estado atual da implementação
+- **Frontmatter das specs**: verificar se `camadas:` está presente e coerente com o conteúdo real da spec; sinalizar specs sem o campo ou com valor fora do vocabulário canônico definido em `~/.claude/CLAUDE.md`
 
 ## Fluxo de trabalho
 1. Identifique o que mudou (feature concluída, arquitetura alterada, permissão adicionada)
 2. Atualize as matrizes relevantes
 3. Atualize o CHANGELOG se for mudança visível para o usuário
-4. Verifique se specs precisam de revisão para refletir o estado atual
+4. Verifique se specs precisam de revisão para refletir o estado atual, incluindo o campo `camadas:` do frontmatter
 5. Confirme que o README ainda está preciso
 
 ## Regras

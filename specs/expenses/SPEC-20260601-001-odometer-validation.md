@@ -6,6 +6,7 @@ date: 2026-06-01
 author: douglps
 rules: [R1, R4]
 security: [S1]
+camadas: [backend, database]
 ---
 
 # SPEC-20260601-001: Validação de Sequência de Odômetro

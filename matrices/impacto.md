@@ -765,6 +765,36 @@ A trigger `soft_delete_profile()` (em `supabase/migrations/`) está declarada pa
 
 ---
 
+### IMPACTO-031 — Estudo Pré-Implementação: Redesign do Dashboard (SPEC-20260531-001) (2026-07-15)
+
+| Campo | Valor |
+|-------|-------|
+| **Spec** | SPEC-20260531-001 (rascunho), com sobreposição direta a SPEC-20260602-001 (contexto global, approved) |
+| **Status** | Avaliação pré-implementação — spec revisada e corrigida nesta rodada (ver changelog da própria spec); nenhum código do dashboard existe ainda |
+| **Risco geral** | Alto (antes da correção da spec) → Médio (após correção, condicionado à ordem de implementação) |
+| **Insumos** | Agente `Explore` (raio-x de código), agente `impact-analyzer`, agente `design-system` (produto/UX), análise de personas P-001/P-002 |
+
+| # | Achado | Módulos/specs afetados | Risco | Mitigação aplicada |
+|---|--------|------------------------|-------|---------------------|
+| 1 | RF-BD-01 (colunas `ipva_due_date`/`insurance_expires_at`/`crlv_expires_at` em `vehicles`) já está implementado desde `20260712171830_core_tables.sql` — a spec pedia para criá-las de novo | `supabase/migrations` | Médio (migration duplicada/erro `relation already exists` se executado como escrito) | Requisito reescrito na spec para "pré-condição já satisfeita"; critério de aceite convertido em verificação de sanidade |
+| 2 | RF-BD-02/03 (tabela `fines` + RLS) já implementados desde `SPEC-20260607-001` (approved), com schema mais rico que o proposto (`auto_number`, `infraction_code`, `amount_with_discount`, etc.) e `FinesModule` REST completo | `apps/api/src/modules/fines`, `supabase/migrations` | Médio | Requisitos removidos da spec; substituídos por referência a SPEC-20260607-001 |
+| 3 | RF-SH-01/02 propunham recalcular o score de saúde no frontend com pesos próprios, divergentes dos já implementados e persistidos pela RPC `calculate_vehicle_health`/`calculate_fleet_health` (`20260712172020_analytics_functions.sql`). Teste de mesa: mesmo veículo dá 75 (verde) pela RPC e 50 (amarelo) pelos pesos da spec — fonte de verdade duplicada e divergente | `apps/web` (a criar), RPC Postgres | Alto | RF-SH-01/02 reescritos para consumir a RPC existente (`score`/`flags` já prontos) em vez de recalcular; seção "Fora de Escopo" corrigida (o cálculo não é "frontend-only", já existe como RPC PostgreSQL, não NestJS) |
+| 4 | Seção 12.1 e RF-ST-02/03 propunham que o próprio `DashboardPage` sincronizasse URL↔store, violando `R-CTX-04` (só `VehicleActivator` pode fazer essa ponte, regra já aprovada em SPEC-20260602-001) | `apps/web/src/app/dashboard`, componente `VehicleActivator` (a criar) | Alto | Seção 12.1 reescrita para delegar a sincronização ao `VehicleActivator`; `DashboardPage` apenas chama `setActiveVehicleId` |
+| 5 | RF-ST-01 propunha criar/expandir um `useDashboardStore` isolado para `activeVehicleId`, ignorando que SPEC-20260602-001 (approved) já define esse campo dentro de um store com 5 modos de contexto (`single`/`group`/`multi`/`attribute`/`none`) | `apps/web` store global | Alto (dois stores disputando a mesma fonte de verdade) | RF-ST-01 reescrito para apenas adicionar `dockOpen`/`setDockOpen` ao store já especificado por SPEC-20260602-001 — não recriar `activeVehicleId` |
+| 6 | RF-DB-01 ("chip sticky... Analisando: [veículo] ×") duplica o conceito de "Em Foco" já definido como termo canônico obrigatório por SPEC-20260602-001, introduzindo um terceiro termo não previsto na tabela de nomenclatura canônica daquela spec | `apps/web` UI | Médio (inconsistência de nomenclatura visível ao usuário) | RF-DB-01 corrigido para reusar a nomenclatura "Em Foco" e referenciar o `VehicleContextSlot`/chip já especificado |
+| 7 | Seção 9 (Componentes Afetados) e seção 10 (Dependências) usavam caminhos de arquivo inexistentes (`apps/web/app/(dashboard)/...`, `apps/web/components/layout/...`) — a árvore real é `apps/web/src/app/...`; nenhum shell de layout (Sidebar, Header, FleetAside, footer) existe fisicamente no código ainda | Toda a seção 9/10 da spec | Médio | Caminhos corrigidos para `apps/web/src/...`; componentes "a alterar" reclassificados como "a criar" onde aplicável |
+| 8 | Tensão arquitetural não endereçada: `vehicle_recurring_costs` (implementada, com `paid_at`) e os campos soltos de vencimento em `vehicles` cobrem parcialmente o mesmo conceito ("documentos"/vencimentos) sem regra de reconciliação — risco de um IPVA já pago aparecer como vencido se a fonte errada for lida | RF-DA-01, RF-DB-06 | Médio-Alto | Fonte de verdade declarada explicitamente na spec revisada (ver nota na spec); reconciliação com `vehicle_recurring_costs.paid_at` documentada |
+| 9 | Ausência de dependência formal a SPEC-20260602-001 na seção 10 da spec, apesar de toda a arquitetura de estado do dashboard depender dela | Seção 10 da spec | Alto | Adicionada como dependência arquitetural bloqueante, com decisão explícita do usuário: **Sistema Em Foco (SPEC-20260602-001) deve ser implementado antes de qualquer componente do dashboard que leia/escreva `activeVehicleId`** |
+| 10 | Lacunas de produto identificadas para as personas: falta auto-seleção de veículo único (Carlos), Zona B não suporta comparação multi-veículo apesar de ser a necessidade principal declarada de Ana, dock de 6 ações mistura frequências incompatíveis (Abastecer semanal vs. Multa 0-2x/ano vs. IA Nave conversacional), falta empty state para usuário com zero veículos, critério de "urgente" contraditório entre RF-DA-01 e RF-DA-03, escopo do KPI "Próxima manutenção" indefinido para múltiplos veículos | RF-DA-03, RF-DC-02, RF-DB-08, seção 4 (Personas) | Médio | Requisitos novos adicionados à spec (auto-seleção, empty state de zero veículos, dock reduzido a 4 ações, critério de urgência unificado); comparação multi-veículo documentada como melhoria futura (depende do modo `group`/`multi` de SPEC-20260602-001, fora do escopo desta rodada) |
+
+**Decisão de sequenciamento (usuário, 2026-07-15):** SPEC-20260602-001 (Sistema Em Foco) deve estar implementada — `VehicleActivator`, store com os 5 modos, slot "Em Foco" — antes de qualquer código do dashboard que toque `activeVehicleId` ou `?vehicleId=`. Shell de layout (Sidebar/Header sem lógica de negócio) pode ser construído em paralelo. Implementar o dashboard sem essa base, ou em paralelo sem contrato de store travado, foi descartado por gerar retrabalho garantido (violação de R-CTX-04 seguida de refatoração).
+
+**Riscos a observar na implementação futura:**
+- `calculate_fleet_health` chama `calculate_vehicle_health` duas vezes por veículo no loop (bug de performance, não desta spec) — ao consumir via `calculate_fleet_health` para a Zona A, uma frota de N veículos gera 2N updates em `vehicles.health_score` por carregamento. Considerar corrigir o bug antes de expor a Zona A em produção, ou chamar `calculate_vehicle_health` individualmente por veículo.
+- S7 (RULES.md): confirmar que `calculate_vehicle_health`/`calculate_fleet_health` não são mais executáveis por `anon` antes de expor a Zona A (IMPACTO-027 já fechou esse achado, mas vale reverificação no ambiente de produção antes do lançamento da Fase 5).
+
+---
+
 ## Legenda de Risco
 
 | Nível | Critério |

@@ -6,6 +6,7 @@ date: 2026-06-06
 author: douglps
 rules: [R-FUEL-04, R-FUEL-05]
 security: [S2]
+camadas: [backend, frontend, database]
 ---
 
 # Fornecedor / Posto de Combustível

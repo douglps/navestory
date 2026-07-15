@@ -6,6 +6,7 @@ date: 2026-06-03
 author: Douglas Lopes (lps.doug@protonmail.com)
 rules: [R-DISP-01, R-DISP-02, R-DISP-03, R-CTX-07]
 security: [S2]
+camadas: [frontend, backend, database]
 ---
 
 # Preferências de Exibição do Veículo no Chip de Contexto

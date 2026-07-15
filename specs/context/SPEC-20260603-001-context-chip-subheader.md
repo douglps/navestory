@@ -6,6 +6,7 @@ date: 2026-06-03
 author: douglps
 rules: [R5, R-CTX-01, R-CTX-02, R-CTX-03, R-CTX-04, R-CTX-05, R-CTX-06, R-CTX-07, R-GRP-03]
 security: [S1, S2]
+camadas: [frontend, backend]
 ---
 
 # SPEC-20260603-001: Chip de Contexto de Veículo no Subheader + Dialog/Sheet de Seleção

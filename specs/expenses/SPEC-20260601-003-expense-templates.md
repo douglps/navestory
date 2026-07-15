@@ -6,6 +6,7 @@ date: 2026-06-01
 author: douglps
 rules: [R3, R6]
 security: [S1, S2]
+camadas: [backend, frontend, database]
 ---
 
 # SPEC-20260601-003: Sistema de Modelos Rápidos de Despesas

@@ -6,6 +6,7 @@ date: 2026-06-03
 author: douglps
 rules: [R5, R7]
 security: [S1, S2]
+camadas: [backend, database]
 compliance: [C2]
 ---
 

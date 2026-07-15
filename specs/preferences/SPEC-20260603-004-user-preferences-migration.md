@@ -6,6 +6,7 @@ date: 2026-06-03
 author: douglps
 rules: [S1, S2, R-DISP-03, R-PREF-01]
 security: [S1, S2]
+camadas: [database, backend]
 ---
 
 # SPEC-20260603-004: Migration — Tabela Consolidada `user_preferences`

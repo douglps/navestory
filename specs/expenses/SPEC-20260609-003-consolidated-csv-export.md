@@ -6,6 +6,7 @@ date: 2026-06-09
 author: douglps
 rules: [R5, R-LED-01, S1, S2]
 security: [S1, S2]
+camadas: [backend, frontend]
 ---
 
 # SPEC-20260609-003 — Exportação CSV Consolidada

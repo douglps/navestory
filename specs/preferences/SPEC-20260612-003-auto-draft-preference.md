@@ -6,6 +6,7 @@ date: 2026-06-12
 author: douglps
 rules: [R-PREF-01, R-PREF-02]
 security: [S2]
+camadas: [database, backend, frontend]
 ---
 
 # SPEC-20260612-003: Preferência de Rascunho Automático em Formulários

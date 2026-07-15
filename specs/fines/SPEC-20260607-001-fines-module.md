@@ -6,6 +6,7 @@ date: 2026-06-07
 author: douglps
 rules: [R5, S1, S2, R-LED-02, R-LED-03, R-HUB-01]
 security: [S1, S2]
+camadas: [backend, database]
 ---
 
 # FinesModule — CRUD de Multas de Trânsito

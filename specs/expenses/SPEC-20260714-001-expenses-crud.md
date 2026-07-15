@@ -6,6 +6,7 @@ date: 2026-07-14
 author: Douglas Lopes (lps.doug@protonmail.com)
 rules: [R2, R4, R5, R-EXP-01, R-ODO-02, R-LED-01, R-LED-04, R-SAN-01, R-SAN-02, R-SAN-04, R-VEH-01]
 security: [S1, S2, C2]
+camadas: [backend, frontend, database]
 ---
 
 # SPEC-20260714-001: CRUD Base de Despesas (ExpensesModule)

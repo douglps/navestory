@@ -6,6 +6,7 @@ date: 2026-06-12
 author: douglps
 rules: [R-ODO-01, R-CTX-06, R-FUEL-03, R-LED-01]
 security: [S1, S2]
+camadas: [frontend, backend, database]
 ---
 
 # SPEC-20260612-001: Melhorias de UX no Formulário de Despesas e Hub Financeiro

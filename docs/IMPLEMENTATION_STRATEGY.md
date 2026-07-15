@@ -159,9 +159,9 @@ Cada tarefa é dimensionada para ser um PR pequeno (uma sessão de implementaç�
 
 | # | Spec | Tarefa |
 |---|---|---|
-| T5.1 📝 | SPEC-20260531-001 (rascunho) | Redesign do dashboard (Fleet Command + Vehicle Spotlight) — **promover a approved antes de codar** |
+| T5.1 | SPEC-20260531-001 (approved, 2026-07-15) | Redesign do dashboard (Fleet Command + Vehicle Spotlight) — spec revisada e promovida a `approved` em 2026-07-15 (IMPACTO-031); código ainda não iniciado. Depende arquiteturalmente de T5.3 (SPEC-20260602-001) — implementar **depois** de T5.3, não antes, para respeitar R-CTX-04 |
 | T5.2 | SPEC-20260602-005 | Monitor do sistema — audit log dashboard |
-| T5.3 | SPEC-20260602-001 (ADR de contexto) | "Em Foco" — contexto de veículo global |
+| T5.3 ⚠️ | SPEC-20260602-001 (ADR de contexto) | "Em Foco" — contexto de veículo global. **Reordenar antes de T5.1**: `VehicleActivator`, store global e slot "Em Foco" são pré-requisito bloqueante do dashboard (decisão do usuário, 2026-07-15, ver IMPACTO-031) |
 | T5.4 📝 | SPEC-20260603-001 (rascunho) | Chip de contexto no subheader — **promover a approved antes de codar** |
 
 ### Fase 6 — Analytics

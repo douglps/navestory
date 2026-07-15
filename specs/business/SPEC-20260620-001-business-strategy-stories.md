@@ -6,6 +6,7 @@ date: 2026-06-20
 author: douglps
 rules: [R-BIZ-01, R-BIZ-02, R-BIZ-03, R-BIZ-04, R-BIZ-05, R-BIZ-06, R-BIZ-07, R-BIZ-08, R-BIZ-09, R-BIZ-10, R-BIZ-11, R-BIZ-12, R-BIZ-13, R-BIZ-14, R-BIZ-15, S1, S2, S4, C1, C2]
 security: [S1, S2, S4]
+camadas: [frontend, backend, database, security]
 ---
 
 # Business Strategy Stories

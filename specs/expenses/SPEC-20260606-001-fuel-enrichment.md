@@ -6,6 +6,7 @@ date: 2026-06-06
 author: douglps
 rules: [R4, R-FUEL-01, R-FUEL-02, R-FUEL-03, R-FUEL-05]
 security: [S2]
+camadas: [backend, frontend, database]
 ---
 
 # Tipo de Combustível, Tanque Cheio e Cálculo de Consumo

@@ -6,6 +6,7 @@ date: 2026-06-01
 author: douglps
 rules: [R2]
 security: [S1]
+camadas: [backend, database]
 ---
 
 # SPEC-20260601-002: Detecção de Duplicata de Despesa

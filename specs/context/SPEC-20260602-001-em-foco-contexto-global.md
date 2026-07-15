@@ -6,6 +6,7 @@ date: 2026-06-02
 author: douglps
 rules: [R5, R-CTX-01, R-CTX-02, R-CTX-03, R-CTX-04, R-CTX-05, R-CTX-06]
 security: [S1, S2]
+camadas: [frontend, backend]
 ---
 
 # SPEC-20260602-001: Sistema Em Foco — Contexto de Veículo Global

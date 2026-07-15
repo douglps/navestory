@@ -6,6 +6,7 @@ date: 2026-06-08
 author: douglps
 rules: [R-LED-01]
 security: [S1, S2]
+camadas: [backend, frontend]
 ---
 
 # SPEC-20260608-002 — Expenses KPIs — Central Financeira

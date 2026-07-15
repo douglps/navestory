@@ -84,8 +84,11 @@ date: YYYY-MM-DD
 author: <nome> (<email>)
 rules: [R1, R4]      # IDs de regras de domínio que esta spec implementa
 security: [S1]       # IDs de regras de segurança que esta spec implementa
+camadas: [backend, database]  # camadas técnicas tocadas — vocabulário canônico em ~/.claude/CLAUDE.md
 ---
 ```
+
+**Campo `camadas`:** array com pelo menos 1 valor. Permite consulta horizontal ("quais specs tocam backend?") sem quebrar a organização vertical por feature deste projeto. Usar o vocabulário canônico definido em `~/.claude/CLAUDE.md` (`frontend`, `backend`, `database`, `infra`, `devops`, `qa`, `design`, `data`, `mobile`, `security`) — o Nave não precisa estender essa lista hoje.
 
 **Formato do campo `author`:** `Douglas Lopes (lps.doug@protonmail.com)` — nome completo seguido do e-mail entre parênteses. Este é o autor padrão de toda spec deste projeto, salvo quando outro colaborador estiver devidamente identificado (nome e e-mail próprios registrados no projeto).
 

@@ -13,9 +13,9 @@ Criar e manter specs de features claras, rastreáveis e úteis tanto para humano
 ## Fluxo de trabalho
 1. Entenda o requisito ou feature solicitada
 2. Consulte o template em `~/.claude/templates/specs/feature-spec.md`
-3. Verifique specs existentes em `.claude/specs/` para evitar duplicatas e manter consistência
+3. Verifique specs existentes em `specs/` para evitar duplicatas e manter consistência
 4. Crie ou atualize a spec no formato padrão
-5. Sugira atualização da matriz de rastreabilidade em `.claude/matrices/rastreabilidade.md`
+5. Sugira atualização da matriz de rastreabilidade em `matrices/rastreabilidade.md`
 
 ## Regras
 - Sempre use o template padrão
@@ -23,3 +23,4 @@ Criar e manter specs de features claras, rastreáveis e úteis tanto para humano
 - Cada spec deve ter: contexto, objetivos, requisitos funcionais, não-funcionais, critérios de aceite e dependências
 - Linguagem clara e sem ambiguidade — specs são contratos
 - Dados técnicos (nomes de libs, APIs, flags de CLI) podem permanecer em inglês com explicação em pt-BR ao lado
+- Preencher `camadas:` no frontmatter automaticamente, inferindo pelo escopo real do requisito (schema/migration → `database`; controller/service/server action → `backend`; componente/página/estado client-side → `frontend`; etc.). Usar o vocabulário canônico definido em `~/.claude/CLAUDE.md` — nunca inventar sinônimo. Uma spec pode listar mais de uma camada quando o requisito atravessa várias

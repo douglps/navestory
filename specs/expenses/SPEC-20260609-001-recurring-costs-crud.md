@@ -6,6 +6,7 @@ date: 2026-06-09
 author: douglps
 rules: [R-REC-01, R-REC-02, R-LED-05, R-HUB-01, S1, S2]
 security: [S1, S2]
+camadas: [backend, database]
 ---
 
 # SPEC-20260609-001 — CRUD de Custos Recorrentes

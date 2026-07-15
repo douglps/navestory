@@ -6,6 +6,7 @@ date: 2026-06-08
 author: douglps
 rules: [R-REC-01, R-REC-02]
 security: [S1, S2]
+camadas: [frontend]
 ---
 
 # SPEC-20260608-003 — Alertas de Custos Recorrentes

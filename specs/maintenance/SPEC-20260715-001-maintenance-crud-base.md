@@ -6,6 +6,7 @@ date: 2026-07-15
 author: Douglas Lopes (lps.doug@protonmail.com)
 rules: [R5, R7, R-ODO-03, R-LED-02, R-LED-03, R-HUB-01, R-SAN-01, R-SAN-02, R-SAN-04, R-VEH-01]
 security: [S1, S2, C2]
+camadas: [backend, frontend, database]
 ---
 
 # SPEC-20260715-001: CRUD Base de Manutenções (MaintenancesModule)

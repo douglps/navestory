@@ -58,8 +58,11 @@ date: YYYY-MM-DD
 author: <username>
 rules: [R1, R4]      # IDs de regras de domínio (ver RULES.md)
 security: [S1]       # IDs de regras de segurança (ver RULES.md)
+camadas: [backend, database]  # camadas técnicas tocadas — vocabulário canônico em ~/.claude/CLAUDE.md
 ---
 ```
+
+`camadas` é um array com pelo menos 1 valor: `frontend`, `backend`, `database`, `infra`, `devops`, `qa`, `design`, `data`, `mobile` ou `security`. Existe para permitir consulta horizontal ("quais specs tocam backend?") sem quebrar a organização vertical por feature — não crie pastas por camada dentro de `specs/`.
 
 **4.** Atualize `matrices/rastreabilidade.md` com o novo ID e status `⏳ Pendente`.
 

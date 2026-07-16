@@ -9,7 +9,7 @@
 | ID | Regra | Spec |
 |----|-------|------|
 | R1 | `odometer_km` não pode ser menor que o maior valor já registrado para aquele veículo | [SPEC-20260601-001](expenses/SPEC-20260601-001-odometer-validation.md) |
-| R2 | Despesa criada com os mesmos `vehicle_id`, `category`, `amount` e `date` de um registro ativo existente do mesmo usuário é sempre persistida (nunca bloqueada); a resposta é enriquecida com `duplicate_warning: true` e `duplicate_id` do registro suspeito | [SPEC-20260601-002](expenses/SPEC-20260601-002-duplicate-detection.md) |
+| R2 | Despesa criada com os mesmos `vehicle_id`, `category`, `amount` e data de um registro ativo existente do mesmo usuário é sempre persistida (nunca bloqueada); a resposta é enriquecida com `duplicate_warning: true` e `duplicate_id` do registro suspeito. **Nota 2026-07-15 (SPEC-20260715-002):** `expenses.date` foi renomeada para `occurred_at` e migrada de `DATE` para `timestamptz`; "mesma data" passa a significar mesmo **dia calendário no fuso do usuário** (não igualdade de `timestamptz`); a implementação de RF-BK-08 de SPEC-20260715-002 aplica esse critério | [SPEC-20260601-002](expenses/SPEC-20260601-002-duplicate-detection.md) |
 | R3 | Limite de 20 templates por usuário — enforced por DB trigger e validado no service | [SPEC-20260601-003](expenses/SPEC-20260601-003-expense-templates.md) |
 | R4 | `odometer_km` é obrigatório para despesas de categoria `fuel` (abastecimento) | [SPEC-20260601-001](expenses/SPEC-20260601-001-odometer-validation.md) |
 | R5 | Soft-delete via `deleted_at`; registros com `deleted_at IS NOT NULL` são invisíveis por padrão em todas as listagens | todos os domínios |
@@ -67,6 +67,17 @@
 | R-FORM-05 | Todo formulário transacional implementa dirty check: ao cancelar com `isDirty === true`, exibe `AlertDialog` de confirmação "Descartar alterações?" | [SPEC-20260619-001](forms/SPEC-20260619-001-form-standard.md) |
 | R-FORM-06 | Server Actions de formulários retornam `ActionResult` padrão: `{ success: true; message: string } \| { success: false; error: string; fieldErrors?: Record<string, string[]> }` | [SPEC-20260619-001](forms/SPEC-20260619-001-form-standard.md) |
 | R-FORM-07 | Todo formulário transacional sem veículos cadastrados exibe empty state com CTA para cadastrar veículo em vez do formulário | [SPEC-20260619-001](forms/SPEC-20260619-001-form-standard.md) |
+
+### Regras de Fuso Horário (R-TZ)
+
+| ID | Regra | Spec |
+|----|-------|------|
+| R-TZ-01 | "Hoje" (`today`) para alertas, KPIs e cálculo de urgência é sempre o dia calendário corrente **no fuso do usuário autenticado**; nunca o dia em UTC do servidor ou do processo Node.js; quando `user_preferences.timezone` está `null` ou é inválido, o fallback documentado é `'UTC'` como constante nomeada (`FALLBACK_TIMEZONE`) — nunca o fuso implícito do SO | [SPEC-20260715-002](timezone/SPEC-20260715-002-timezone-aware-datetime.md) |
+| R-TZ-02 | Fusos de usuário são armazenados como nomes IANA (ex: `'America/Sao_Paulo'`), nunca como offset fixo (ex: `'-03:00'`); offset fixo não sobrevive a mudanças de DST; detecção automática usa `Intl.DateTimeFormat().resolvedOptions().timeZone` (API nativa do browser) | [SPEC-20260715-002](timezone/SPEC-20260715-002-timezone-aware-datetime.md) |
+| R-TZ-03 | Datas e horas de lançamento (`expenses.date`, `maintenances.scheduled_date`, `maintenances.completion_date`) são persistidas como `timestamptz` em UTC; o frontend captura data+hora no fuso do usuário via `datetime-local` e envia com offset explícito; hora corrente no fuso do usuário é preenchida automaticamente no mount do formulário, editável manualmente | [SPEC-20260715-002](timezone/SPEC-20260715-002-timezone-aware-datetime.md) |
+| R-TZ-04 | Despesa criada com `occurred_at` no futuro (dia calendário do usuário) emite `future_date_warning: true` na resposta, sem bloquear a operação — pré-registro de despesas é válido. `completion_date` de manutenção não pode exceder a data/hora atual em mais de 24 h (422) | [SPEC-20260715-002](timezone/SPEC-20260715-002-timezone-aware-datetime.md) |
+
+---
 
 ### Regras de Sanitização (R-SAN)
 

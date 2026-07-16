@@ -67,6 +67,18 @@
 > `ExpensesModule` como pré-existente. Spec nova **SPEC-20260714-001** criada, aprovada e
 > implementada (backend + validators + frontend mínimo) como pré-requisito de T3.1 (Export CSV,
 > SPEC-20260521-003). Ver seção SPEC-20260714-001 abaixo para o detalhamento Código/Teste.
+>
+> **ATUALIZAÇÃO — 2026-07-15 (rev. 46)**
+> Fase 5: T5.3 (SPEC-20260602-001 — Sistema Em Foco) e T5.1 (SPEC-20260531-001 — Dashboard Sprint 1)
+> concluídas. Ver seções SPEC-20260602-001 e SPEC-20260531-001 abaixo para o detalhamento.
+> Destaques desta revisão:
+> - Cobertura de Testes do módulo `dashboard` atualizada de ⏳ para ✅ (backend: `dashboard.service.spec.ts`/
+>   `dashboard.controller.spec.ts`; frontend: `FleetAlertBar.spec.tsx`, `VehicleHealthCard.spec.tsx`,
+>   `page.spec.tsx`, `use-dashboard-store.spec.ts`, `action-dock.spec.tsx`).
+> - Seção de Validators adicionada à entrada de SPEC-20260531-001 (`packages/validators/src/dashboard.schemas.ts`).
+> - SPEC-20260715-002 (Suporte a Fuso Horário, `draft`) registrada como placeholder — nenhum
+>   código existe ainda; entrada será completada quando a spec avançar para `approved`.
+> - IMPACTO-033 e IMPACTO-035 atualizados em `matrices/impacto.md` para refletir T5.1 concluída.
 
 ---
 
@@ -1425,13 +1437,71 @@ que o artefato ainda não existe no repositório.
 
 ---
 
-## SPEC-20260531-001 — Redesign do Dashboard (Rascunho)
+## SPEC-20260531-001 — Redesign do Dashboard — Fleet Command + Vehicle Spotlight (approved)
 
-> Fleet Command + Vehicle Spotlight. Status: rascunho — nenhum código implementado.
+> Fleet Command (Zona A) + Vehicle Spotlight (Zona B), 3 sprints. Status: **Sprint 1 concluída em
+> 2026-07-15** (T5.1). Estudo pré-implementação registrado em IMPACTO-033 corrigiu 3 divergências
+> spec↔código antes de codar (ver changelog v1.2 da spec) — nenhuma delas gerou retrabalho.
+> Zona B (Vehicle Spotlight) e o score de saúde consumido nos flags detalhados ficam para a
+> Sprint 2/3, conforme a migração incremental da própria spec (seção 12.3).
+>
+> **Decisão de escopo (IMPACTO-033):** `KpiCard`/`Tabs`/`EmptyState`/`Alert` (SPEC-20260525-001,
+> T8.1, Fase 8, ainda `draft`) não existiam — construídas versões mínimas inline em
+> `FleetKpis.tsx`/`VehicleHealthCard.tsx`/`DashboardPage`, mesmo padrão já usado em T3.9/T3.10;
+> migração para os componentes compartilhados fica para quando a Fase 8 avançar.
+>
+> **Lacunas reais encontradas durante a implementação (não previstas pela spec):**
+> - `VEHICLE_COLUMNS` em `vehicles.service.ts` não selecionava `insurance_expires_at`/
+>   `crlv_expires_at`, apesar de as colunas existirem desde T0.2 — corrigido (afeta também
+>   `GET /vehicles`, não só o dashboard).
+> - RF-DC-02 item 4 ("Registrar KM") apontava para `/vehicles/[id]/odometer`, rota que não existia
+>   em nenhuma feature do projeto — criada como tela mínima reaproveitando `PATCH /vehicles/:id`
+>   (campo `odometer` já aceito pelo backend).
+> - RF-DC-02 item 1 ("Abastecer `/expenses/new?category=fuel`") exigiu adicionar suporte a
+>   `?category=` em `expenses/new/page.tsx`, que não lia nenhum query param antes — reaproveitado
+>   o mesmo ajuste de `<Suspense>` já validado em T5.3c para `useSearchParams()`.
+> - RF-DC-04 ("pré-selecionar o veículo em foco nos formulários") já estava satisfeito por
+>   `useVehicleContextField` (T5.3d) — o dock não precisou (nem deveria, por R-CTX-04) propagar
+>   `?vehicleId=` nos links.
+> - Bug de fuso horário encontrado e corrigido em `dashboard.service.ts`: `daysUntil` misturava
+>   calendário local (`getFullYear`/`getMonth`/`getDate`) com `toDateString` (UTC), gerando
+>   off-by-one perto da meia-noite UTC — unificado para UTC em todo o módulo.
+
+### Backend (`apps/api`) — Sprint 1
 
 | Req | Descrição | Código | Teste | Status |
 |-----|-----------|--------|-------|--------|
-| (ver spec) | Redesign do dashboard com Fleet Command e Vehicle Spotlight | — | — | ⏳ |
+| RF-SH-01, RF-SH-02 | `GET /dashboard/fleet-health` — wrapper de `calculate_fleet_health` | `apps/api/src/modules/dashboard/dashboard.service.ts` (`getFleetHealth`), `dashboard.controller.ts` | `dashboard.service.spec.ts`, `dashboard.controller.spec.ts` | ✅ |
+| RF-DA-01, RF-DA-02 | `GET /dashboard/alerts` — alertas de manutenção vencida/próxima (7 dias), ordenados por urgência. Escopo Sprint 1: só manutenção; documentos entram na Sprint 3 (CA-S3-02) | `dashboard.service.ts` (`getAlerts`) | `dashboard.service.spec.ts` | ✅ |
+| RF-DA-03, CA-S1-05, CA-S1-05.1 | `GET /dashboard/fleet-kpis` — 4 KPIs isolados via `Promise.allSettled`, `?vehicle_id=` só afeta "Próxima manutenção" | `dashboard.service.ts` (`getFleetKpis`, `countUrgentMaintenances`, `getFleetCostPerKm`, `getNextMaintenance`) | `dashboard.service.spec.ts` | ✅ |
+| RF-DA-04 | `GET /dashboard/vehicle-cards` — odômetro, último abastecimento, status de documentos (sem reconciliação com `vehicle_recurring_costs`, RF-DB-06 é Sprint 3) | `dashboard.service.ts` (`getVehicleCards`, `getLastFuelExpense`, `classifyDocument`) | `dashboard.service.spec.ts` | ✅ |
+| — | `VEHICLE_COLUMNS` passa a incluir `insurance_expires_at`/`crlv_expires_at` (lacuna pré-existente desde T0.2) | `apps/api/src/modules/vehicles/vehicles.service.ts` | `vehicles.service.spec.ts` (suíte existente, sem regressão) | ✅ |
+| RF-BD-04 | `odometer_km` obrigatório para `category=fuel` | `packages/validators/src/expense.schemas.ts` (`requireOdometerForFuel`) | `expense.schemas.spec.ts` | ✅ (já satisfeito antes desta tarefa) |
+
+### Frontend (`apps/web`) — Sprint 1
+
+| Req | Descrição | Código | Teste | Status |
+|-----|-----------|--------|-------|--------|
+| RF-ST-01 | `dockOpen`/`setDockOpen` no store global (sem recriar `activeVehicleId`) | `apps/web/src/lib/stores/use-dashboard-store.ts` | `use-dashboard-store.spec.ts` | ✅ |
+| RF-DA-01, RF-DA-02 | `FleetAlertBar` — máx. 3 itens + link "ver todos (+N)" para `/maintenance?filter=urgent` | `apps/web/src/components/dashboard/FleetAlertBar.tsx` | `FleetAlertBar.spec.tsx` | ✅ |
+| RF-DA-03, CA-S1-05.1 | `FleetKpis` — 4 KPIs com fallback "—"/tooltip por card em falha isolada | `apps/web/src/components/dashboard/FleetKpis.tsx` | `page.spec.tsx` (via `DashboardPage`) | ✅ |
+| RF-DA-04, RF-DA-05, RF-SH-01, RF-SH-02 | `VehicleHealthCard` — semáforo, odômetro, último abastecimento, badges de documento, click → `setActiveVehicle` | `apps/web/src/components/dashboard/VehicleHealthCard.tsx` | `VehicleHealthCard.spec.tsx` | ✅ |
+| RF-DA-08 | Auto-seleção com exatamente 1 veículo | `apps/web/src/app/(app)/dashboard/page.tsx` (efeito de auto-seleção) | `page.spec.tsx` | ✅ |
+| RF-DA-09 | `EmptyState` de boas-vindas sem veículos, sem KPIs "zerados" | `dashboard/page.tsx` (`NoVehiclesEmptyState`) | `page.spec.tsx` | ✅ |
+| RF-DA-10 | Grid sem virtualização até 15; acima disso, 10 piores primeiro + "ver mais" | `dashboard/page.tsx` (`VehicleGrid`) | — (comportamento >15 veículos não coberto por teste automatizado; validado por leitura de código) | 🟡 |
+| RF-DC-01 a RF-DC-06 | `ActionDock` — dock mobile 2×2, inline desktop ≥1024px, fecha ao navegar, sem "Multa"/"IA Nave"/"Novo Veículo" | `apps/web/src/components/layout/action-dock.tsx` | `action-dock.spec.tsx` | ✅ |
+| RF-DC-02 item 1 | `?category=` em `/expenses/new` (gap novo, ver nota acima) | `apps/web/src/app/(app)/expenses/new/page.tsx` | `expenses/new/page.spec.tsx` (mock de `useSearchParams` atualizado) | ✅ |
+| RF-DC-02 item 4 | Rota `/vehicles/[id]/odometer` (gap novo, ver nota acima) | `apps/web/src/app/(app)/vehicles/[id]/odometer/page.tsx` | `vehicles/[id]/odometer/page.spec.tsx` | ✅ |
+| — | Preservação do stub original (seletor mês/veículo + export CSV) dentro da nova estrutura (seção 12.3) | `dashboard/page.tsx` (`ExportControls`) | `page.spec.tsx` | ✅ |
+
+### Validators (`packages/validators`) — Sprint 1
+
+| Req | Descrição | Código | Teste | Status |
+|-----|-----------|--------|-------|--------|
+| RF-DA-01, RF-DA-03, RF-DA-04, RF-SH-01 | Tipos e schemas de runtime: `fleetKpisQuerySchema`, `FleetKpisQuery`, `FleetHealthEntry`, `FleetAlert`, `FleetAlertType`, `KpiResult`, `FleetKpis`, `DocumentStatus`, `VehicleDocumentsStatus`, `VehicleCard` | `packages/validators/src/dashboard.schemas.ts` | — (tipos e schema puro, sem branches condicionais; consumido por `dashboard.service.spec.ts`) | 🔶 |
+| RF-DA-03 | DTO thin wrapper: `fleetKpisDtoSchema`/`FleetKpisDto` (re-exporta `fleetKpisQuerySchema`) | `apps/api/src/modules/dashboard/dto/fleet-kpis.dto.ts` | — | 🔶 |
+
+**Pendente para Sprint 2/3 (não é dívida desta tarefa — ordem definida pela própria spec, seção 12.3):** `VehicleSpotlight` (Zona B), gráficos reais (`dashboard-charts.tsx`), reconciliação de documentos com `vehicle_recurring_costs` (RF-DB-06), alertas de documentos na `FleetAlertBar` (CA-S3-02), tooltip de flags detalhados do score (RF-SH-03).
 
 ---
 
@@ -1610,6 +1680,24 @@ que o artefato ainda não existe no repositório.
 
 ---
 
+## SPEC-20260715-002 — Suporte a Fuso Horário por Usuário (draft)
+
+> Torna os lançamentos transacionais (`expenses.date`, `maintenances.scheduled_date`,
+> `maintenances.completion_date`) cientes do fuso do usuário. Migra os campos de `DATE` para
+> `timestamptz`. Armazena o fuso IANA em `user_preferences.timezone`. Corrige o comportamento
+> de "hoje" em alertas e KPIs para usar o dia calendário no fuso do usuário, não em UTC do servidor.
+> Regras: R-TZ-01, R-TZ-02, R-TZ-03, R-TZ-04, R2 (critério de duplicata passa a usar dia
+> calendário no fuso do usuário). Segurança: S1, S2. Camadas: frontend, backend, database.
+> **Status: draft — nenhum código implementado.** Entrada incompleta por design: será preenchida
+> quando a spec avançar para `review`/`approved` (gate de sincronia).
+
+| Req | Descrição | Código | Teste | Status |
+|-----|-----------|--------|-------|--------|
+| RF-BK-01 a RF-BK-12 | Backend: migrations `occurred_at`/`completion_date` `timestamptz`, campo `user_preferences.timezone`, endpoint `PATCH /preferences` estendido, lógica de "hoje no fuso do usuário" em dashboard e expenses | — | — | ⏳ |
+| RF-FE-01 a RF-FE-08 | Frontend: `datetime-local` + `Intl.DateTimeFormat`, detecção automática de timezone, envio com offset explícito | — | — | ⏳ |
+
+---
+
 ## Requisitos do PRD sem Spec (Fase 2 / Backlog)
 
 | Req PRD | Descrição | Fase |
@@ -1652,7 +1740,7 @@ que o artefato ainda não existe no repositório.
 | `vehicles` | `vehicles.service.spec.ts`, `vehicles.controller.spec.ts`, `license-plate.vo.spec.ts`, `supabase-vehicle.repository.spec.ts` | ⏳ |
 | `expenses` | `expenses.service.spec.ts`, `expenses.controller.spec.ts`, `supabase-expense.repository.spec.ts` | ⏳ |
 | `maintenance` | `maintenance.service.spec.ts`, `maintenance.controller.spec.ts`, `supabase-maintenance.repository.spec.ts` | ⏳ |
-| `dashboard` | `dashboard.service.spec.ts`, `dashboard.controller.spec.ts` | ⏳ |
+| `dashboard` | **Backend:** `apps/api/src/modules/dashboard/dashboard.service.spec.ts`, `dashboard.controller.spec.ts` (Jest) — **Frontend:** `apps/web/src/components/dashboard/FleetAlertBar.spec.tsx`, `VehicleHealthCard.spec.tsx`; `apps/web/src/app/(app)/dashboard/page.spec.tsx`; `apps/web/src/lib/stores/use-dashboard-store.spec.ts`; `apps/web/src/components/layout/action-dock.spec.tsx` (Vitest) | ✅ (Sprint 1, T5.1, 2026-07-15) |
 | `fines` | `apps/api/src/modules/fines/fines.service.spec.ts`, `fines.controller.spec.ts` | ✅ (Jest) |
 | `recurring-costs` | `apps/api/src/modules/recurring-costs/recurring-costs.service.spec.ts`, `.controller.spec.ts` | ✅ (Jest) |
 | `analytics` | `analytics.service.spec.ts`, `analytics.controller.spec.ts` | ⏳ |

@@ -10,7 +10,8 @@
     "emitDecoratorMetadata": true,
     "declaration": false,
     "declarationMap": false,
-    "isolatedModules": false
+    "isolatedModules": false,
+    "types": ["node", "express", "cookie-parser", "passport-jwt", "jest", "supertest"]
   },
   "include": ["src"]
 }

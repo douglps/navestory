@@ -65,4 +65,22 @@ describe("useDashboardStore", () => {
 
     expect(getPersisted()?.state.selectionMode).toBe("none");
   });
+
+  it("SPEC-20260531-001 RF-ST-01: dockOpen inicia fechado e alterna via setDockOpen", () => {
+    expect(useDashboardStore.getState().dockOpen).toBe(false);
+
+    useDashboardStore.getState().setDockOpen(true);
+    expect(useDashboardStore.getState().dockOpen).toBe(true);
+
+    useDashboardStore.getState().setDockOpen(false);
+    expect(useDashboardStore.getState().dockOpen).toBe(false);
+  });
+
+  it("RF-ST-01: dockOpen não é persistido em localStorage (estado efêmero de UI)", () => {
+    useDashboardStore.getState().setActiveVehicle("v1");
+    useDashboardStore.getState().setDockOpen(true);
+
+    const persisted = getPersisted() as { state: { dockOpen?: boolean } } | null;
+    expect(persisted?.state.dockOpen).toBeUndefined();
+  });
 });

@@ -7,6 +7,10 @@ describe("DashboardController", () => {
   function createController(overrides?: Partial<DashboardService>) {
     const dashboardService = {
       exportExpensesCsv: jest.fn().mockResolvedValue("Data,Placa,Modelo,Categoria,Descricao,Valor\n"),
+      getFleetHealth: jest.fn().mockResolvedValue([]),
+      getAlerts: jest.fn().mockResolvedValue([]),
+      getFleetKpis: jest.fn().mockResolvedValue({}),
+      getVehicleCards: jest.fn().mockResolvedValue([]),
       ...overrides,
     } as unknown as DashboardService;
     return { controller: new DashboardController(dashboardService), dashboardService };
@@ -62,5 +66,40 @@ describe("DashboardController", () => {
     await expect(
       controller.exportCsv(reqSemToken, "u1", { period: "2026-05", vehicle_id: undefined }, createRes()),
     ).rejects.toBeInstanceOf(UnauthorizedException);
+  });
+
+  it("getFleetHealth extrai o token e devolve { data } (RF-SH-01)", async () => {
+    const { controller, dashboardService } = createController({
+      getFleetHealth: jest.fn().mockResolvedValue([{ vehicle_id: "v1", score: 80, flags: [] }]),
+    });
+
+    const result = await controller.getFleetHealth(req, "u1");
+
+    expect(dashboardService.getFleetHealth).toHaveBeenCalledWith("token-123", "u1");
+    expect(result).toEqual({ data: [{ vehicle_id: "v1", score: 80, flags: [] }] });
+  });
+
+  it("getAlerts extrai o token e devolve { data } (RF-DA-01)", async () => {
+    const { controller, dashboardService } = createController();
+
+    await controller.getAlerts(req, "u1");
+
+    expect(dashboardService.getAlerts).toHaveBeenCalledWith("token-123", "u1");
+  });
+
+  it("getFleetKpis repassa o vehicle_id da query para 'próxima manutenção' (RF-DA-03)", async () => {
+    const { controller, dashboardService } = createController();
+
+    await controller.getFleetKpis(req, "u1", { vehicle_id: "v1" });
+
+    expect(dashboardService.getFleetKpis).toHaveBeenCalledWith("token-123", "u1", "v1");
+  });
+
+  it("getVehicleCards extrai o token e devolve { data } (RF-DA-04)", async () => {
+    const { controller, dashboardService } = createController();
+
+    await controller.getVehicleCards(req, "u1");
+
+    expect(dashboardService.getVehicleCards).toHaveBeenCalledWith("token-123", "u1");
   });
 });

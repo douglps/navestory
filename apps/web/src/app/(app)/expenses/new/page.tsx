@@ -10,8 +10,8 @@ import {
 import { CurrencyInput, OdometerInput } from "@nave/ui";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useState, type FormEvent, type ReactNode } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useState, type FormEvent, type ReactNode } from "react";
 import { ApiError, apiClient } from "@/lib/http/api-client";
 import { changeDateYear } from "@/lib/date-year";
 import { FUEL_TYPE_OPTIONS } from "@/lib/fuel-types";
@@ -204,9 +204,15 @@ const TODAY = new Date().toISOString().slice(0, 10);
  * Query chamando `apps/api` via `apiClient`) — SPEC-20260619-001 descreve react-hook-form +
  * Server Actions, ainda não construídos neste projeto (ver changelog da spec).
  * @spec SPEC-20260619-001 R-FORM-05, R-FORM-07
+ * @spec SPEC-20260531-001 RF-DC-02
+ * `?category=` (usado pela ação "Abastecer" do dock) exige `useSearchParams`, que só funciona
+ * dentro de um limite `<Suspense>` no App Router (mesmo ajuste já aplicado em `/expenses`, ver
+ * IMPACTO-032) — por isso o export default abaixo é só o wrapper de Suspense.
  */
-export default function NewExpensePage(): ReactNode {
+function NewExpensePageContent(): ReactNode {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const initialCategory = searchParams.get("category") ?? "";
 
   const { data: vehicles, isLoading: vehiclesLoading } = useQuery({
     queryKey: ["vehicles"],
@@ -231,7 +237,7 @@ export default function NewExpensePage(): ReactNode {
     applyContextChange,
     dismissContextChangeNotice,
   } = useVehicleContextField(vehicles);
-  const [category, setCategory] = useState("");
+  const [category, setCategory] = useState(initialCategory);
   const [date, setDate] = useState(TODAY);
   const [description, setDescription] = useState("");
   const [odometerKm, setOdometerKm] = useState<number | undefined>(undefined);
@@ -580,5 +586,13 @@ export default function NewExpensePage(): ReactNode {
         </div>
       </form>
     </main>
+  );
+}
+
+export default function NewExpensePage(): ReactNode {
+  return (
+    <Suspense fallback={null}>
+      <NewExpensePageContent />
+    </Suspense>
   );
 }

@@ -22,8 +22,8 @@ export interface Vehicle {
 const VEHICLE_COLUMNS = `id, user_id, plate, make, model, year, model_year, nickname, color,
   photo_url, photo_thumbnail_url, photo_object_position, photo_zoom, odometer, fuel_type,
   fuel_efficiency, fuel_liters_capacity, vehicle_type, status, renavam, chassi, fipe_code,
-  fipe_updated_at, ipva_due_date, engine_displacement_cc, engine_power_cv, engine_torque_kgm,
-  engine_config, is_turbo, created_at, updated_at`;
+  fipe_updated_at, ipva_due_date, insurance_expires_at, crlv_expires_at, engine_displacement_cc,
+  engine_power_cv, engine_torque_kgm, engine_config, is_turbo, created_at, updated_at`;
 
 /**
  * @spec SPEC-20260602-002

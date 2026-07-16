@@ -7,6 +7,7 @@ import { SupabaseAuthGuard } from "../../common/guards/supabase-auth.guard";
 import { ZodValidationPipe } from "../../common/pipes/zod-validation.pipe";
 import { DashboardService } from "./dashboard.service";
 import { exportExpensesDtoSchema, type ExportExpensesDto } from "./dto/export-expenses.dto";
+import { fleetKpisDtoSchema, type FleetKpisDto } from "./dto/fleet-kpis.dto";
 
 const CSV_BOM = "﻿";
 
@@ -45,6 +46,46 @@ export class DashboardController {
       `attachment; filename="nave-despesas-${query.period}.csv"`,
     );
     res.send(CSV_BOM + csv);
+  }
+
+  @Get("fleet-health")
+  @ApiOperation({ summary: "Score de saúde de cada veículo da frota (RF-SH-01, RF-SH-02)" })
+  @ApiResponse({ status: 200, description: "Lista de { vehicle_id, score, flags }" })
+  async getFleetHealth(@Req() req: Request, @UserId() userId: string) {
+    const accessToken = this.extractAccessToken(req);
+    const data = await this.dashboardService.getFleetHealth(accessToken, userId);
+    return { data };
+  }
+
+  @Get("alerts")
+  @ApiOperation({ summary: "Alertas críticos da frota, ordenados por urgência (RF-DA-01)" })
+  @ApiResponse({ status: 200, description: "Lista de alertas de manutenção vencida/próxima" })
+  async getAlerts(@Req() req: Request, @UserId() userId: string) {
+    const accessToken = this.extractAccessToken(req);
+    const data = await this.dashboardService.getAlerts(accessToken, userId);
+    return { data };
+  }
+
+  @Get("fleet-kpis")
+  @ApiOperation({ summary: "KPIs do mês da Zona A: gastos, manutenções urgentes, custo/km, próxima manutenção (RF-DA-03)" })
+  @ApiResponse({ status: 200, description: "Cada KPI com { ok: true, value } ou { ok: false } isoladamente" })
+  async getFleetKpis(
+    @Req() req: Request,
+    @UserId() userId: string,
+    @Query(new ZodValidationPipe(fleetKpisDtoSchema)) query: FleetKpisDto,
+  ) {
+    const accessToken = this.extractAccessToken(req);
+    const data = await this.dashboardService.getFleetKpis(accessToken, userId, query.vehicle_id);
+    return { data };
+  }
+
+  @Get("vehicle-cards")
+  @ApiOperation({ summary: "Cards de veículo da Zona A: odômetro, último abastecimento, status de documentos (RF-DA-04)" })
+  @ApiResponse({ status: 200, description: "Lista de VehicleCard" })
+  async getVehicleCards(@Req() req: Request, @UserId() userId: string) {
+    const accessToken = this.extractAccessToken(req);
+    const data = await this.dashboardService.getVehicleCards(accessToken, userId);
+    return { data };
   }
 
   private extractAccessToken(req: Request): string {

@@ -821,6 +821,110 @@ Corrigir esse achado expôs um segundo bug real, também corrigido: `useDashboar
 
 ---
 
+### IMPACTO-033 — Estudo Pré-Implementação: T5.1 (Redesign do Dashboard, SPEC-20260531-001) (2026-07-15)
+
+| Campo | Valor |
+|-------|-------|
+| **Spec** | SPEC-20260531-001 |
+| **Status** | **T5.1 concluída em 2026-07-15** — Sprint 1 (Zona A + ActionDock) implementada. Ver detalhamento em IMPACTO-035 e na seção SPEC-20260531-001 de `matrices/rastreabilidade.md`. Sprint 2/3 (Zona B + score detalhado) permanecem ⏳. |
+| **Risco geral** | Baixo |
+
+Com T5.3 (SPEC-20260602-001) concluída (IMPACTO-032), rodado um segundo estudo pré-implementação para T5.1, cruzando o texto da spec com o estado real do código pós-T5.3 via agente `Explore` (a spec havia sido revisada em 2026-07-15 *antes* da execução de T5.3, então parte do texto já nasceu potencialmente desatualizada em relação ao que seria de fato entregue).
+
+**Achados — 3 divergências corrigidas na spec (v1.2, sem mudança de status):**
+1. RF-ST-02/seção 9.1 diziam que `FleetAside` "não existe ainda, criar do zero". Falso — T5.3c já entregou `apps/web/src/components/layout/fleet-aside.tsx` subscrevendo o store global corretamente, com teste. Risco mitigado antes de virar código: sem a correção, a implementação de T5.1 poderia reescrever/quebrar um componente já funcional.
+2. RF-SH-04 alertava sobre bug de dupla chamada em `calculate_fleet_health` como pendente. Já corrigido por `supabase/migrations/20260712172220_fix_fleet_health_double_call.sql`, três dias antes da própria revisão v1.1 da spec.
+3. Caminho de arquivo do dashboard citado incorretamente (`apps/web/src/app/dashboard/page.tsx` em vez de `apps/web/src/app/(app)/dashboard/page.tsx`, route group `(app)` introduzido pelo app shell de T5.3a). Nome real do setter do store também corrigido (`setActiveVehicle`, não `setActiveVehicleId`).
+
+**Decisão de escopo tomada com o usuário (não é correção de erro, é trade-off explícito):** a spec depende de `KpiCard`/`Tabs`/`EmptyState`/`Alert` (SPEC-20260525-001, T8.1, Fase 8, ainda `draft` — não iniciada). Duas opções avaliadas: (A) implementar versões mínimas inline em T5.1, mesmo padrão já validado em T3.9/T3.10, migrando quando a Fase 8 evoluir os componentes compartilhados; (B) antecipar um recorte de T8.1 agora (promover SPEC-20260525-001 e construir só os 4 componentes em `packages/ui` antes do dashboard). Escolhida a opção A por consistência com decisões já tomadas nas Fases 2/3 — registrado no changelog v1.2 da spec, sem necessidade de nova spec ou ADR (não é mudança de padrão arquitetural, é reincidência do padrão já adotado).
+
+**Pendências não bloqueantes, já registradas na própria spec (seção 14) e reafirmadas aqui:** layout desktop master-detail (vs. zonas empilhadas) e comparação multi-veículo na Zona B seguem fora de escopo desta entrega, avaliação futura.
+
+---
+
+### IMPACTO-034 — Avaliacao de Upgrade: TypeScript 5.x -> 7.0 (2026-07-15)
+
+| Campo | Valor |
+|-------|-------|
+| **Spec** | -- (mudanca de toolchain; sem spec de produto associada) |
+| **Status** | Upgrade para TS7 adiado (risco Alto, bloqueado por dependencias externas); preparacao de baixo risco implementada em 2026-07-15 |
+| **Risco geral** | Alto (upgrade completo) / Baixo (preparacao ja aplicada) |
+
+Analise conduzida antes de qualquer mudanca no repositorio. O TypeScript 7.0 reescreve o compilador em Go (8x-12x mais rapido) e introduz quatro breaking changes relevantes para este monorepo. A Microsoft recomenda passar pelo TypeScript 6.0 antes de migrar para 7.0, e frameworks como Next.js/NestJS devem aguardar a API estavel do 7.1.
+
+**Inventario de tsconfigs do projeto (excluindo node_modules):**
+
+| Arquivo | rootDir | types | moduleResolution | Observacao |
+|---------|---------|-------|-----------------|------------|
+| `tsconfig.base.json` | nao definido (base compartilhado) | nao definido | `Bundler` | Base herdado por todos |
+| `apps/api/tsconfig.json` | `src` (explicito) | nao definido | `Node` (legacy) | NestJS; usa decorators |
+| `apps/web/tsconfig.json` | nao definido | nao definido | `Bundler` (herdado) | Next.js; noEmit: true |
+| `packages/types/tsconfig.json` | `src` (explicito) | nao definido | `Bundler` (herdado) | -- |
+| `packages/database/tsconfig.json` | `src` (explicito) | nao definido | `Bundler` (herdado) | -- |
+| `packages/validators/tsconfig.json` | `src` (explicito) | nao definido | `Node` (legacy) | Build dual: tsc direto |
+| `packages/ui/tsconfig.json` | `src` (explicito) | nao definido | `Bundler` (herdado) | -- |
+
+| # | Mudanca | Modulos afetados | Risco | Mitigacao |
+|---|---------|-----------------|-------|-----------|
+| 1 | **`types` agora default `[]`**: nenhum tsconfig do monorepo declara `types` explicitamente -- todos os pacotes `@types/*` resolvidos automaticamente hoje deixarao de ser incluidos automaticamente, causando erros de tipo em cascata em todos os 7 pacotes/apps. Pacotes afetados: `@types/node`, `@types/react`, `@types/react-dom`, `@types/jest`, `@types/express`, `@types/cookie-parser`, `@types/passport-jwt`, `@types/supertest` | Todos os tsconfigs (7 arquivos) | Alto | Declarar `types` explicitamente em cada tsconfig antes do upgrade; inventario por pacote necessario |
+| 2 | **`rootDir` agora default `./`**: `apps/web/tsconfig.json` nao declara `rootDir`; com `noEmit: true` o impacto direto na emissao e nulo, mas o compilador ancora o rootDir em `./` de forma explicita -- comportamento diferente do atual (inferido a partir dos arquivos de entrada) | `apps/web` | Baixo | Adicionar `"rootDir": "."` ao tsconfig do web explicitamente |
+| 3 | **`moduleResolution: "Node"` (legacy)**: usado em `apps/api/tsconfig.json` e `packages/validators/tsconfig.json`; o TS7 pressiona migracao para `NodeNext`/`Bundler`; o `Node` legacy (equivalente ao antigo `node10`) e zona cinzenta -- pode ser mantido como alias de compatibilidade, mas sem garantia formal no TS7 | `apps/api`, `packages/validators` | Medio | Migrar para `moduleResolution: "NodeNext"` com `module: "CommonJS"` (padrao NestJS moderno); testar imports internos do NestJS antes de confirmar |
+| 4 | **`emitDecoratorMetadata: true` + compilador Go**: o NestJS depende de `emitDecoratorMetadata` e `experimentalDecorators` para injecao de dependencia; o compilador Go do TS7 processa arquivos em paralelo -- `emitDecoratorMetadata` requer informacao de tipo cross-arquivo para emitir metadados corretos, o que e potencialmente incompativel com parsing isolado paralelo; compatibilidade do NestJS com TS7 ainda incerta | `apps/api` (NestJS inteiro) | Alto | Aguardar declaracao oficial de suporte do NestJS ao TS7 antes de avancar |
+| 5 | **`typescript-eslint ^8.19.0` incompativel com TS7**: o typescript-eslint usa as APIs publicas do compilador TypeScript como peer dependency; o compilador Go expoe APIs diferentes -- a versao 8.x nao suporta TS7; a cadeia de lint em `eslint.config.mjs` quebrara completamente no upgrade | Lint de todo o monorepo | Alto | Aguardar typescript-eslint com suporte declarado ao TS7 (provavelmente v9+); upgrade de TS esta bloqueado por esta dependencia |
+| 6 | **`ts-jest ^29.2.5` incompativel com TS7**: `apps/api` usa `ts-jest` como transform do Jest (`jest.config.js`); ts-jest 29.x usa APIs internas do compilador TypeScript JS que nao existem no compilador Go | `apps/api` (suite de testes Jest -- 100% dos testes) | Alto | Aguardar versao do ts-jest compativel com TS7; alternativa: migrar `apps/api` de Jest+ts-jest para Vitest (ja usado nos outros pacotes) como parte do upgrade |
+| 7 | **`baseUrl` removido**: nenhum tsconfig do projeto usa `baseUrl` standalone; o alias `"@/*"` em `apps/web/tsconfig.json` e implementado via `paths` (que continua suportado no TS7) | Nenhum | Nenhum | Nenhuma acao necessaria |
+| 8 | **`target: es5` removido**: todos os tsconfigs usam `target: "ES2022"` | Nenhum | Nenhum | Nenhuma acao necessaria |
+
+**Cobertura de testes existente sobre a area de toolchain:**
+- `apps/api`: Jest + ts-jest; threshold de 88% obrigatorio -- o upgrade quebra a execucao dos testes antes de qualquer validacao funcional
+- `apps/web`, `packages/validators`, `packages/ui`: Vitest (nao depende do compilador TS para transpilacao) -- execucao dos testes nao e afetada; o script `tsc --noEmit` (type-check em CI) e o ponto de impacto
+- Script raiz `type-check` via Turbo executa `tsc --noEmit` em todos os pacotes -- quebrara com os itens 1 e 2 no primeiro `pnpm type-check`
+
+**Blocantes externos (fora do controle do projeto):**
+- Suporte do NestJS ao TS7 (item 4)
+- Versao do typescript-eslint compativel com TS7 (item 5)
+- Versao do ts-jest compativel com TS7, ou migracao para Vitest no `apps/api` (item 6)
+
+**Nota sobre ADR:** esta mudanca atende aos criterios de obrigatoriedade de ADR (mudanca de padrao arquitetural de toolchain -- troca de compilador JS para Go com breaking changes de configuracao). Recomenda-se criar um ADR em `docs/architecture/decisions/` antes de iniciar a migracao, documentando a motivacao, alternativas avaliadas e a decisao tomada. **Decisao (2026-07-15):** upgrade para TS7 adiado; ADR nao criado -- reavaliar quando os tres blocantes externos (itens 4, 5, 6) tiverem suporte declarado.
+
+**Preparacao de baixo risco implementada em 2026-07-15** (itens 1 e 3 do upgrade, adiantados de forma independente por nao quebrarem nada em TS 5.x):
+
+- **Item 1 (`types` explicito):** adicionado `"types": []` em `tsconfig.base.json` como default, com override por pacote: `apps/api` -> `["node", "express", "cookie-parser", "passport-jwt", "jest", "supertest"]`; `apps/web` -> `["node", "react", "react-dom"]`; `packages/ui` -> `["react", "react-dom"]`; `packages/types` e `packages/database` -> `[]` (sem uso de APIs Node no `src`). Validado com `pnpm type-check` (7/7 pacotes) sem erros.
+- **Item 2 (`rootDir` no web):** adicionado `"rootDir": "."` em `apps/web/tsconfig.json`.
+- **Item 3 (`moduleResolution: NodeNext`):** aplicado em `packages/validators/tsconfig.json` (module + moduleResolution `NodeNext`) -- validado com `type-check` e `vitest run` (126 testes, sem avisos). **Nao aplicado em `apps/api`**: a mudanca fez o `ts-jest` emitir o aviso `TS151002` em todas as suites, pedindo `isolatedModules: true`, que esta explicitamente `false` no tsconfig do NestJS. Como o `apps/api` e CommonJS puro (sem uso de ESM) e o ganho seria so cosmetico, revertido para `moduleResolution: "Node"` / `module: "CommonJS"` para nao introduzir ruido em CI. Revisitar junto com a decisao do item 6 (ts-jest vs migracao para Vitest).
+
+Resultado: `pnpm type-check` e `pnpm lint` passam em todos os 7 pacotes; suite completa do `apps/api` (37 suites, 280 testes) e do `packages/validators` (11 suites, 126 testes) passam sem regressao. Nenhuma das mudancas acima antecipa o upgrade para TS7 em si -- os tres blocantes externos (itens 4, 5, 6) continuam de pe.
+
+---
+
+### IMPACTO-035 — Execução de T5.1 (SPEC-20260531-001, Sprint 1): Dashboard Zona A + ActionDock (2026-07-15)
+
+| Campo | Valor |
+|-------|-------|
+| **Spec** | SPEC-20260531-001 |
+| **Status** | T5.1 concluída — Sprint 1 implementada |
+| **Risco geral** | Baixo |
+
+Sprint 1 do redesign do dashboard implementada sobre a base do SPEC-20260602-001 (T5.3). Nenhum risco crítico materializado. Desvios e decisões registrados no changelog v1.2 da spec e na seção SPEC-20260531-001 de `matrices/rastreabilidade.md`.
+
+| # | Mudança | Módulos afetados | Risco | Observação |
+|---|---------|-----------------|-------|------------|
+| 1 | `DashboardService` — 4 novos métodos: `getFleetHealth`, `getAlerts`, `getFleetKpis`, `getVehicleCards` | `apps/api/src/modules/dashboard/` | Baixo | Cada KPI isolado via `Promise.allSettled` — falha não derruba os demais (CA-S1-05.1) |
+| 2 | `DashboardController` — 4 novos endpoints: `GET /dashboard/fleet-health`, `/alerts`, `/fleet-kpis`, `/vehicle-cards` | `apps/api/src/modules/dashboard/` | Baixo | Todos protegidos por `SupabaseAuthGuard` (S1); RPC `calculate_fleet_health` requer S7 revisado antes de produção |
+| 3 | `packages/validators/src/dashboard.schemas.ts` — tipos e schemas de runtime do dashboard | `packages/validators` | Baixo | Importado por `DashboardService` e frontend; tipos puros sem side-effects |
+| 4 | `use-dashboard-store.ts` — adição de `dockOpen`/`setDockOpen` (RF-ST-01) ao store de SPEC-20260602-001; sem recriar `activeVehicleId` | `apps/web/src/lib/stores/` | Baixo | Segue R-CTX-04; alteração aditiva, sem breaking change no store |
+| 5 | Componentes novos: `FleetAlertBar`, `FleetKpis`, `VehicleHealthCard` | `apps/web/src/components/dashboard/` | Baixo | Versões inline (sem `@nave/ui` formal, padrão já estabelecido em T3.9); migração para Fase 8 |
+| 6 | `ActionDock` — dock fixo mobile + botões inline desktop | `apps/web/src/components/layout/action-dock.tsx` | Baixo | Sem "Multa"/"IA Nave"/"Novo Veículo" (RF-DC-02.1/RF-DC-03); fecha ao navegar (RF-DC-06) |
+| 7 | `DashboardPage` reescrita — Zona A + ExportControls preservados | `apps/web/src/app/(app)/dashboard/page.tsx` | Baixo | Zona B (Vehicle Spotlight) fica ⏳ Sprint 2 |
+| 8 | Rota `/vehicles/[id]/odometer` criada (gap identificado durante implementação) | `apps/web/src/app/(app)/vehicles/[id]/odometer/` | Baixo | Reutiliza `PATCH /vehicles/:id` (campo `odometer`); sem spec própria — coberta como sub-item de T5.1; ver nota em rastreabilidade.md |
+| 9 | `vehicles.service.ts` — `VEHICLE_COLUMNS` passa a incluir `insurance_expires_at`/`crlv_expires_at` | `apps/api/src/modules/vehicles/` | Baixo | Corrige lacuna pré-existente desde T0.2; afeta `GET /vehicles` e o dashboard |
+| 10 | Bug de fuso horário corrigido em `daysUntil` (`dashboard.service.ts`) | `apps/api/src/modules/dashboard/` | Baixo | Unificado para UTC; limitação residual documentada em SPEC-20260715-002 (draft) |
+| 11 | Suporte a `?category=` em `/expenses/new` | `apps/web/src/app/(app)/expenses/new/page.tsx` | Baixo | Gap identificado em RF-DC-02 item 1; `useSearchParams()` dentro de `<Suspense>` conforme padrão T5.3 |
+
+**Pendente (Sprint 2/3 — não é dívida desta tarefa):** Vehicle Spotlight (Zona B), gráficos reais, reconciliação de documentos com `vehicle_recurring_costs`, alertas de IPVA/Seguro/CRLV na `FleetAlertBar`, tooltip de flags detalhados do score (RF-SH-03).
+
+---
+
 ## Legenda de Risco
 
 | Nível | Critério |

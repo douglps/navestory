@@ -15,12 +15,14 @@ interface DashboardContextState {
   multiSelectedIds: string[];
   attributeFilter: AttributeFilter | null;
   hasHydrated: boolean;
+  dockOpen: boolean;
   setActiveVehicle: (vehicleId: string) => void;
   setActiveGroup: (groupId: string) => void;
   setMultiSelected: (vehicleIds: string[]) => void;
   setAttributeFilter: (filter: AttributeFilter) => void;
   clearAllSelection: () => void;
   markHydrated: () => void;
+  setDockOpen: (open: boolean) => void;
 }
 
 const EMPTY_SELECTION = {
@@ -40,6 +42,7 @@ export const useDashboardStore = create<DashboardContextState>()(
     (set) => ({
       ...EMPTY_SELECTION,
       hasHydrated: false,
+      dockOpen: false,
       // R-CTX-01: ativar um modo zera os campos dos demais modos.
       setActiveVehicle: (vehicleId) =>
         set({ ...EMPTY_SELECTION, selectionMode: "single", activeVehicleId: vehicleId }),
@@ -51,6 +54,8 @@ export const useDashboardStore = create<DashboardContextState>()(
         set({ ...EMPTY_SELECTION, selectionMode: "attribute", attributeFilter: filter }),
       clearAllSelection: () => set({ ...EMPTY_SELECTION }),
       markHydrated: () => set({ hasHydrated: true }),
+      // @spec SPEC-20260531-001 RF-ST-01
+      setDockOpen: (open) => set({ dockOpen: open }),
     }),
     {
       name: "nave-dashboard-context",

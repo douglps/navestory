@@ -11,6 +11,11 @@
 | Contrato | Verificação de response shape vs. spec | a implementar (Fase 4) | CI |
 | E2E | Playwright | `apps/web/e2e/` | CI, antes de deploy |
 
+> **Estratégia E2E:** a configuração do Playwright, os fluxos cobertos, o critério de seleção
+> (E2E vs. unitário) e a integração com o CI estão formalizados em
+> [SPEC-20260716-001](qa/SPEC-20260716-001-e2e-playwright.md). Esta tabela é o ponto de entrada
+> da pirâmide; a spec é a fonte canônica dos requisitos de E2E.
+
 **Regra inviolável:** testes de repositório nunca mocam o banco de dados — política ativa desde 2026-06-01.
 
 ---

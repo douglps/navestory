@@ -1,0 +1,124 @@
+# @spec SPEC-20260716-001 RF-01 a RF-12
+#
+# Pipeline de entrega contínua. Três gatilhos:
+# - `pull_request`: preview de apps/web (RF-01), independente do resultado do CI —
+#   um preview serve para revisão visual mesmo com CI vermelho, mesmo padrão da
+#   integração nativa Vercel<->GitHub.
+# - `workflow_run` (após o workflow "CI" concluir em push para master): cadeia de
+#   deploy de produção. Só dispara se `conclusion == 'success'`, o que satisfaz RF-05
+#   (nenhum deploy caso lint/type-check/test/build falhem) sem duplicar os jobs de
+#   qualidade aqui.
+# - `workflow_dispatch`: redisparo manual da cadeia de produção para um SHA/tag
+#   arbitrário — usado em rollback (RF-08, ver `docs/operations/runbooks.md`). O gate
+#   humano do environment `production` continua valendo mesmo nesse caminho.
+name: CD
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+    branches: [master]
+  workflow_dispatch:
+
+concurrency:
+  group: cd-${{ github.workflow }}-${{ github.event.pull_request.number || github.event.workflow_run.head_branch }}
+  cancel-in-progress: true
+
+env:
+  TURBO_TELEMETRY_DISABLED: "1"
+
+jobs:
+  # RF-01, RF-12: preview de apps/web em cada PR, URL comentada automaticamente pela action.
+  deploy-web-preview:
+    name: Deploy preview (Vercel) — apps/web
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Deploy to Vercel (Preview)
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          working-directory: apps/web
+          github-comment: true
+
+  # RF-02: produção de apps/web, disparada só após o workflow CI ter passado em master.
+  deploy-web-prod:
+    name: Deploy produção (Vercel) — apps/web
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+      - name: Deploy to Vercel (Production)
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          vercel-args: "--prod"
+          working-directory: apps/web
+
+  # RF-03, RF-10: staging de apps/api (Railway) — environment próprio para segregar
+  # os secrets de staging dos de produção (S3).
+  deploy-api-staging:
+    name: Deploy staging (Railway) — apps/api
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+      - name: Deploy to Railway (staging)
+        uses: bervProject/railway-deploy@v1.4.0
+        with:
+          railway_token: ${{ secrets.RAILWAY_STAGING_TOKEN }}
+          service: nave-api-staging
+
+  # RF-04, RF-06, RF-11: gate humano ANTES da migration (não no job de deploy em si) —
+  # `environment: production` aqui já força aprovação manual de um reviewer autorizado
+  # antes de qualquer coisa tocar o banco de produção. `deploy-api-prod` herda essa
+  # aprovação por dependência (`needs`), evitando pedir aprovação duas vezes na mesma run.
+  migrate-db:
+    name: Aplicar migrations (Supabase — produção)
+    needs: deploy-api-staging
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - name: supabase db push (produção)
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+        run: supabase db push --project-ref "${{ secrets.SUPABASE_PROJECT_ID }}" --password "$SUPABASE_DB_PASSWORD"
+
+  # RF-04: deploy de produção da API — só roda depois do gate humano de `migrate-db`.
+  deploy-api-prod:
+    name: Deploy produção (Railway) — apps/api
+    needs: migrate-db
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+      - name: Deploy to Railway (produção)
+        uses: bervProject/railway-deploy@v1.4.0
+        with:
+          railway_token: ${{ secrets.RAILWAY_PRODUCTION_TOKEN }}
+          service: nave-api-production

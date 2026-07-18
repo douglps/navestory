@@ -8,6 +8,7 @@ import { LoggerModule } from "./common/logging/logger.module";
 import { HealthModule } from "./health/health.module";
 import { AdminModule } from "./modules/admin/admin.module";
 import { AnalyticsModule } from "./modules/analytics/analytics.module";
+import { AuditLogsModule } from "./modules/audit-logs/audit-logs.module";
 import { AuthModule } from "./modules/auth/auth.module";
 import { CategoriesModule } from "./modules/categories/categories.module";
 import { DashboardModule } from "./modules/dashboard/dashboard.module";
@@ -58,6 +59,7 @@ import { SupabaseModule } from "./shared/supabase/supabase.module";
     DashboardModule,
     RecurringCostsModule,
     AnalyticsModule,
+    AuditLogsModule,
   ],
   providers: [
     {

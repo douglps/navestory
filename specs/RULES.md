@@ -17,9 +17,10 @@
 | R7 | Transições válidas de manutenção: `scheduled → [in_progress, completed, cancelled]`; `in_progress → [completed, cancelled]`; `completed` e `cancelled` são estados terminais sem transições de saída; transições fora desse grafo são rejeitadas com 409 | [SPEC-20260603-002](maintenance/SPEC-20260603-002-maintenance-status-transitions.md) |
 | R-VEH-01 | Soft-delete de veículo é em cascata: todas as despesas e manutenções vinculadas recebem `deleted_at` com o mesmo timestamp | [SPEC-20260602-002](vehicles/SPEC-20260602-002.md) |
 | R-VEH-02 | Placa normalizada para uppercase sem hífens antes de persistir; aceita padrão BR (ABC1234) e Mercosul (ABC1D23); placa com formato inválido retorna 400 | [SPEC-20260602-002](vehicles/SPEC-20260602-002.md) |
-| R-MON-01 | `writeAuditLog` e `AuditService.log` são sempre fire-and-forget; erros nunca propagam para a operação principal | [SPEC-20260602-005](dashboard/SPEC-20260602-005.md) |
+| R-MON-01 | `AuditService.log()` é sempre fire-and-forget; erros nunca propagam para a operação principal | [SPEC-20260602-005](dashboard/SPEC-20260602-005.md) |
 | R-MON-02 | O campo `changes` em `audit_logs` não armazena PII; campos sensíveis (`user_id`, `photo_url`, tokens) são omitidos no registro e filtrados na exibição | [SPEC-20260602-005](dashboard/SPEC-20260602-005.md) |
 | R-MON-03 | `audit_logs.user_id` é `ON DELETE SET NULL`; registros são preservados após exclusão de conta para fins de compliance | [SPEC-20260602-005](dashboard/SPEC-20260602-005.md) |
+| R-MON-04 | `audit_logs` é imutável — `UPDATE`/`DELETE` bloqueados por RLS (`audit_logs_no_update`, `audit_logs_no_delete`), independente do client usado | [SPEC-20260602-005](dashboard/SPEC-20260602-005.md) |
 | R-CAT-01 | Máximo 20 categorias personalizadas por usuário — enforced no service (`CategoriesService.MAX_CUSTOM`); retorna 422 ao exceder | [SPEC-20260602-004](expenses/SPEC-20260602-004.md) |
 | R-CAT-02 | `value` de categoria personalizada segue slug `^[a-z0-9_-]+$`, 1–50 caracteres; validado por Zod e por constraint de DB | [SPEC-20260602-004](expenses/SPEC-20260602-004.md) |
 | R-CAT-03 | `value` de categoria personalizada não pode coincidir com o `value` de nenhuma categoria padrão; retorna 409 se coincidir | [SPEC-20260602-004](expenses/SPEC-20260602-004.md) |

@@ -1,12 +1,18 @@
 import { Injectable, type CallHandler, type ExecutionContext, type NestInterceptor } from "@nestjs/common";
 import * as Sentry from "@sentry/nestjs";
 import type { Request, Response } from "express";
-import type { Observable } from "rxjs";
+import { defer, type Observable } from "rxjs";
+import { requestContextStorage } from "../context/request-context";
 
 /**
  * @spec SPEC-20260716-002 RF-13
  * Propaga o requestId gerado pelo pino-http (RF-08) no header de resposta e como
  * tag do Sentry, para correlação entre logs, respostas HTTP e eventos de erro.
+ *
+ * @spec SPEC-20260602-005 RF-07
+ * Também popula o AsyncLocalStorage (`requestContextStorage`) consumido pelo
+ * `AuditService`, para gravar o requestId em `audit_logs.changes` sem exigir que
+ * cada service passe o valor explicitamente.
  */
 @Injectable()
 export class RequestIdInterceptor implements NestInterceptor {
@@ -20,6 +26,6 @@ export class RequestIdInterceptor implements NestInterceptor {
       Sentry.setTag("requestId", request.id);
     }
 
-    return next.handle();
+    return defer(() => requestContextStorage.run({ requestId: request.id }, () => next.handle()));
   }
 }

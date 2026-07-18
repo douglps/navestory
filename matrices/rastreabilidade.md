@@ -885,28 +885,44 @@ que o artefato ainda não existe no repositório.
 
 ---
 
-## SPEC-20260602-005 — Monitor do Sistema (Audit Log Dashboard) (approved)
+## SPEC-20260602-005 — Histórico de Atividades (Audit Log do Usuário) (approved)
 
-> Formaliza a infraestrutura de audit log e a página Monitor.
-> Nenhum código implementado.
+> Formaliza a infraestrutura de audit log (escritor único, backend) e a página de histórico
+> de atividades pessoal do usuário. **2026-07-18 (v1.1):** spec revisada — removida a
+> arquitetura de "dois escritores" (Server Actions nunca implementadas), corrigida a nota de
+> RLS (já habilitado, imutabilidade formalizada em RF-04/R-MON-04), página renomeada de
+> "Monitor" para "Histórico de Atividades", adicionado RF-07/CA-11 de correlação com
+> `requestId` (`SPEC-20260716-002`). **2026-07-18 (T5.2, implementação):** RF-01 a RF-16
+> concluídos, com dois ajustes de arquitetura adicionais registrados no changelog da spec —
+> (1) página é client component + `apiClient`/TanStack Query, não Server Component
+> `force-dynamic` (padrão real do projeto, mesmo de `/analytics`/`/dashboard`); (2) rota final
+> é `/atividades` (fora de `/dashboard/`, seguindo a convenção real de `apps/web/src/app/(app)`)
+> em vez de `/dashboard/atividades`; (3) o card de RF-16 fica como link direto no cabeçalho do
+> dashboard, não dentro do `ActionDock` (que tem 4 itens fixos por decisão de RF-DC-02.1/03 da
+> `SPEC-20260531-001`). RF-07 (correlação `requestId`) implementado via `AsyncLocalStorage`
+> (`apps/api/src/common/context/request-context.ts`), sem exigir mudança nos 9 callers
+> existentes de `AuditService.log()`.
 
 ### Infraestrutura de Audit Log
 
 | Req | Descrição | Código | Teste | Status |
 |-----|-----------|--------|-------|--------|
-| RF-01/RF-02 | `writeAuditLog()`: helper fire-and-forget para Server Actions; erros silenciados via try/catch | — | — | ⏳ |
-| RF-03/RF-04 | `AuditService.log()`: injeta `timestamp` em `changes`; fire-and-forget via try/catch + Logger | — | — | ⏳ |
-| RF-07 | Server Actions que chamam `writeAuditLog`: vehicles, vehicle-actions, expense-actions, maintenance-actions | — | — | ⏳ |
-| RF-08 | `AuditService` no backend: `REGISTER`, `LOGIN` em auth; operações REST de veículos/despesas/manutenções | — | — | ⏳ |
+| RF-01/RF-02/RF-03 | `AuditService.log()`: injeta `timestamp`/`requestId` em `changes`; fire-and-forget via try/catch + `Logger`; escritor único (sem contraparte no frontend) | `apps/api/src/shared/audit/audit.service.ts` | `apps/api/src/shared/audit/audit.service.spec.ts` | ✅ |
+| RF-04/RNF-04/R-MON-04 | Imutabilidade de `audit_logs` via RLS (`audit_logs_no_update`, `audit_logs_no_delete`) | `supabase/migrations/20260712172047_rls_policies.sql` | — (sem harness de teste de integração de banco além do já existente em `rls.int-spec.ts`) | 🔶 Aplicado |
+| RF-05 | `audit_logs.user_id ON DELETE SET NULL` | `supabase/migrations/20260712171830_core_tables.sql` | — | 🔶 Aplicado |
+| RF-06 | `changes` sem PII na leitura: `AuditLogsService` remove `user_id`/`deleted_at`/`photo_url`/`photo_thumbnail_url` antes de retornar (defesa em profundidade; registro em si já não grava esses campos por convenção dos callers) | `apps/api/src/modules/audit-logs/audit-logs.service.ts` | `apps/api/src/modules/audit-logs/audit-logs.service.spec.ts` | ✅ |
+| RF-07/CA-11 | `AuditService.log()` grava `requestId` em `changes` via `AsyncLocalStorage` populado pelo `RequestIdInterceptor` | `apps/api/src/common/context/request-context.ts`, `apps/api/src/common/interceptors/request-id.interceptor.ts`, `apps/api/src/shared/audit/audit.service.ts` | `apps/api/src/shared/audit/audit.service.spec.ts` | ✅ |
+| RF-08 | Cobertura atual de `AuditService.log()`: `auth`, `admin`, `users`, `vehicles`, `expenses`, `maintenances`, `fines`, `recurring-costs`, `odometer-cycles` | `apps/api/src/modules/{auth,admin,users,vehicles,expenses,maintenances,fines,recurring-costs,odometer-cycles}/*.service.ts` | ver specs de cada módulo | ✅ |
 
-### Página Monitor
+### Página Histórico de Atividades (`/atividades`)
 
 | Req | Descrição | Código | Teste | Status |
 |-----|-----------|--------|-------|--------|
-| RF-09/RF-10 | Server Component `force-dynamic`; auth redirect; query top-100 `audit_logs` por `user_id` desc | — | — | ⏳ |
-| RF-11 | KPI cards: Total, Veículos, Despesas, Manutenções | — | — | ⏳ |
-| RF-12..RF-14 | Tabela: Quando (relativo), Ação (badge colorido), Domínio (ícone), Detalhes | — | — | ⏳ |
-| RF-16 | Card "Monitor" + `ShieldCheck` nas Ações Rápidas do dashboard | — | — | ⏳ |
+| RF-09/RF-10 | Client component + `apiClient`; consulta `GET /audit-logs` (top-100 `audit_logs` do usuário, `created_at DESC`); autenticação via middleware (`apps/web/middleware.ts`), não redirect na própria página | `apps/web/src/app/(app)/atividades/page.tsx`, `apps/api/src/modules/audit-logs/{audit-logs.controller,audit-logs.service}.ts` | `apps/web/src/app/(app)/atividades/page.spec.tsx`, `apps/api/src/modules/audit-logs/{audit-logs.controller,audit-logs.service}.spec.ts` | ✅ |
+| RF-11 | KPI cards: Total, Veículos, Despesas, Manutenções (computados a partir do mesmo array de 100 entradas, sem query adicional) | `apps/web/src/app/(app)/atividades/page.tsx` | `apps/web/src/app/(app)/atividades/page.spec.tsx` | ✅ |
+| RF-12..RF-14 | Tabela: Quando (relativo), Ação (badge colorido por sufixo `_CREATED`/`_UPDATED`/`_DELETED`), Domínio (emoji + label, sem depender de ícone lib — projeto não usa lucide-react), Detalhes (oculto em mobile, `hidden sm:table-cell`) | `apps/web/src/app/(app)/atividades/page.tsx` | `apps/web/src/app/(app)/atividades/page.spec.tsx` | ✅ |
+| RF-15 | Empty state com emoji 🛡️ e mensagem "Nenhuma operação registrada ainda." | `apps/web/src/app/(app)/atividades/page.tsx` | `apps/web/src/app/(app)/atividades/page.spec.tsx` | ✅ |
+| RF-16 | Link "Histórico de Atividades" no cabeçalho do dashboard principal (fora do `ActionDock`, que é fixo em 4 itens) | `apps/web/src/app/(app)/dashboard/page.tsx` | — (coberto indiretamente por `dashboard/page.spec.tsx` já existente; sem asserção dedicada ao novo link) | 🔶 |
 
 ---
 

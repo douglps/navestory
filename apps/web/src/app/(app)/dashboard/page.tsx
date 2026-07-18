@@ -191,7 +191,18 @@ export default function DashboardPage(): ReactNode {
 
   return (
     <main className="mx-auto flex max-w-5xl flex-col gap-4 p-8 pb-24">
-      <h1 className="text-xl font-semibold">Dashboard</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-xl font-semibold">Dashboard</h1>
+        {/*
+          @spec SPEC-20260602-005 RF-16
+          Fora do ActionDock por decisão de RF-DC-02.1/RF-DC-03 (dock fixo em 4 itens,
+          ver action-dock.tsx) — link direto satisfaz o mesmo objetivo de acesso rápido.
+        */}
+        <Link href="/atividades" className="flex items-center gap-1 text-sm text-muted-foreground underline">
+          <span aria-hidden>🛡️</span>
+          Histórico de Atividades
+        </Link>
+      </div>
 
       {hasNoVehicles ? (
         <NoVehiclesEmptyState />

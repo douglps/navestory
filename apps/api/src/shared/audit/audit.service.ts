@@ -1,5 +1,6 @@
 import { Inject, Injectable, Logger } from "@nestjs/common";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { getCurrentRequestId } from "../../common/context/request-context";
 import { SUPABASE_CLIENT } from "../supabase/supabase.constants";
 
 export interface AuditLogEntry {
@@ -22,12 +23,15 @@ export class AuditService {
 
   async log(entry: AuditLogEntry): Promise<void> {
     try {
+      // @spec SPEC-20260602-005 RF-07 — correlação com logs Pino/Sentry via requestId
+      const requestId = getCurrentRequestId();
+      const changes = requestId ? { ...entry.changes, requestId } : (entry.changes ?? {});
       const { error } = await this.supabase.from("audit_logs").insert({
         user_id: entry.userId,
         action: entry.action,
         table_name: entry.tableName,
         record_id: entry.recordId,
-        changes: entry.changes ?? {},
+        changes,
       });
       if (error) {
         this.logger.error(`Falha ao gravar audit_log: ${error.message}`);

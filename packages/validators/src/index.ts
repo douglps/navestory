@@ -1,3 +1,4 @@
+export * from "./analytics.schemas";
 export * from "./auth.schemas";
 export * from "./category.schemas";
 export * from "./dashboard.schemas";

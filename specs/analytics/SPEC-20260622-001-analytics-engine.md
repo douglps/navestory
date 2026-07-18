@@ -3,7 +3,7 @@ id: SPEC-20260622-001
 title: "Analytics Engine — Motor de Inteligência de Frota"
 status: approved
 date: 2026-06-22
-author: douglps
+author: Douglas Lopes (lps.doug@protonmail.com)
 rules: [R-FUEL-02, R-FUEL-03, R5, R-ANA-01, R-ANA-02, R-ANA-03, R-ANA-04, R-ANA-05, R-ANA-06, R-ANA-07]
 security: [S1, S2]
 camadas: [database, backend, frontend, data]
@@ -404,3 +404,18 @@ Os itens abaixo são relevantes para o ecossistema de analytics mas estão **for
 **Agentes IA (desenvolvimento, não runtime):**
 - Highcharts Visualizer skill (para prototipagem de dashboards standalone)
 - Data Analyst skill (`.agents/skills/data-analyst/` — referência de padrões SQL e catálogo de análises)
+
+**Frontend:**
+- `recharts` (^3.9.2) — lib de gráficos adotada para RF-13 (stacked bar, donut, area chart, heatmap); nenhuma lib de visualização existia no `apps/web` antes desta spec
+
+---
+
+## Changelog
+
+### 2026-07-16 — Alinhamento com padrão SECURITY INVOKER (mudança pequena, sem mudar comportamento externo)
+
+RF-01 a RF-06 descreviam as RPCs novas como `SECURITY DEFINER` com checagem manual via `RAISE EXCEPTION`. Essa redação é anterior à decisão de hardening registrada em `matrices/impacto.md` (IMPACTO-027, item 3, 2026-07-12), que trocou as RPCs de analytics existentes (`calculate_vehicle_health`, `calculate_fleet_health`, `get_upcoming_costs`, `get_vehicle_cost_per_km`, `fuel_consumption_trend`, `calculate_vehicle_tco`) de `SECURITY DEFINER` para `SECURITY INVOKER`, apoiando-se no RLS como mecanismo de isolamento (elimina alertas do advisor do Supabase sem perda funcional).
+
+Para manter consistência arquitetural, todas as RPCs desta spec (RF-01 a RF-06) devem ser implementadas como `SECURITY INVOKER`, com o RLS das tabelas subjacentes (`expenses`, `vehicles`, etc.) garantindo o isolamento por `auth.uid()`. As checagens manuais de posse (ex: `RAISE EXCEPTION 'unauthorized'`) permanecem como defesa em profundidade, mas não são mais o mecanismo primário de isolamento. Nenhum comportamento observável pelo cliente muda — apenas o mecanismo de enforcement no banco.
+
+Adicionalmente, `calculate_vehicle_tco(uuid)` e `fuel_consumption_trend(uuid, integer)` já existem no banco desde a migration `20260712172020_analytics_functions.sql` (criadas em outro contexto, com formato de retorno diferente do especificado em RF-01/RF-02 e não consumidas por nenhum código de aplicação). A implementação desta spec deve substituí-las via `DROP FUNCTION` explícito antes do `CREATE` (mudança de tipo de retorno não é compatível com `CREATE OR REPLACE`).

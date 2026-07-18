@@ -826,7 +826,7 @@ Corrigir esse achado expôs um segundo bug real, também corrigido: `useDashboar
 | Campo | Valor |
 |-------|-------|
 | **Spec** | SPEC-20260531-001 |
-| **Status** | **T5.1 concluída em 2026-07-15** — Sprint 1 (Zona A + ActionDock) implementada. Ver detalhamento em IMPACTO-035 e na seção SPEC-20260531-001 de `matrices/rastreabilidade.md`. Sprint 2/3 (Zona B + score detalhado) permanecem ⏳. |
+| **Status** | **T5.1 totalmente concluída em 2026-07-18** — Sprint 1 (Zona A + ActionDock) implementada em 2026-07-15 (ver IMPACTO-035). Sprint 2/3 (Zona B + Vehicle Spotlight) **concluídas em 2026-07-18** (ver IMPACTO-036). Feature completa. |
 | **Risco geral** | Baixo |
 
 Com T5.3 (SPEC-20260602-001) concluída (IMPACTO-032), rodado um segundo estudo pré-implementação para T5.1, cruzando o texto da spec com o estado real do código pós-T5.3 via agente `Explore` (a spec havia sido revisada em 2026-07-15 *antes* da execução de T5.3, então parte do texto já nasceu potencialmente desatualizada em relação ao que seria de fato entregue).
@@ -915,13 +915,43 @@ Sprint 1 do redesign do dashboard implementada sobre a base do SPEC-20260602-001
 | 4 | `use-dashboard-store.ts` — adição de `dockOpen`/`setDockOpen` (RF-ST-01) ao store de SPEC-20260602-001; sem recriar `activeVehicleId` | `apps/web/src/lib/stores/` | Baixo | Segue R-CTX-04; alteração aditiva, sem breaking change no store |
 | 5 | Componentes novos: `FleetAlertBar`, `FleetKpis`, `VehicleHealthCard` | `apps/web/src/components/dashboard/` | Baixo | Versões inline (sem `@nave/ui` formal, padrão já estabelecido em T3.9); migração para Fase 8 |
 | 6 | `ActionDock` — dock fixo mobile + botões inline desktop | `apps/web/src/components/layout/action-dock.tsx` | Baixo | Sem "Multa"/"IA Nave"/"Novo Veículo" (RF-DC-02.1/RF-DC-03); fecha ao navegar (RF-DC-06) |
-| 7 | `DashboardPage` reescrita — Zona A + ExportControls preservados | `apps/web/src/app/(app)/dashboard/page.tsx` | Baixo | Zona B (Vehicle Spotlight) fica ⏳ Sprint 2 |
+| 7 | `DashboardPage` reescrita — Zona A + ExportControls preservados | `apps/web/src/app/(app)/dashboard/page.tsx` | Baixo | Zona B (Vehicle Spotlight) entregue na Sprint 2/3 (ver IMPACTO-036) |
 | 8 | Rota `/vehicles/[id]/odometer` criada (gap identificado durante implementação) | `apps/web/src/app/(app)/vehicles/[id]/odometer/` | Baixo | Reutiliza `PATCH /vehicles/:id` (campo `odometer`); sem spec própria — coberta como sub-item de T5.1; ver nota em rastreabilidade.md |
 | 9 | `vehicles.service.ts` — `VEHICLE_COLUMNS` passa a incluir `insurance_expires_at`/`crlv_expires_at` | `apps/api/src/modules/vehicles/` | Baixo | Corrige lacuna pré-existente desde T0.2; afeta `GET /vehicles` e o dashboard |
 | 10 | Bug de fuso horário corrigido em `daysUntil` (`dashboard.service.ts`) | `apps/api/src/modules/dashboard/` | Baixo | Unificado para UTC; limitação residual documentada em SPEC-20260715-002 (draft) |
 | 11 | Suporte a `?category=` em `/expenses/new` | `apps/web/src/app/(app)/expenses/new/page.tsx` | Baixo | Gap identificado em RF-DC-02 item 1; `useSearchParams()` dentro de `<Suspense>` conforme padrão T5.3 |
 
-**Pendente (Sprint 2/3 — não é dívida desta tarefa):** Vehicle Spotlight (Zona B), gráficos reais, reconciliação de documentos com `vehicle_recurring_costs`, alertas de IPVA/Seguro/CRLV na `FleetAlertBar`, tooltip de flags detalhados do score (RF-SH-03).
+**Sprint 2/3 concluída em 2026-07-18 (IMPACTO-036):** Vehicle Spotlight (Zona B), gráficos reais (`TcoBreakdownChart`/`FuelTrendChart`), reconciliação de documentos com `vehicle_recurring_costs`, alertas de IPVA/Seguro/CRLV na `FleetAlertBar`, tooltip de flags detalhados (RF-SH-03) — todos implementados. Ver IMPACTO-036 para o detalhamento.
+
+---
+
+### IMPACTO-036 — Execução de T5.1 Sprints 2 e 3 (SPEC-20260531-001): Vehicle Spotlight + Alertas de Documentos + Histórico (2026-07-18)
+
+| Campo | Valor |
+|-------|-------|
+| **Spec** | SPEC-20260531-001 |
+| **Status** | T5.1 totalmente concluída — Sprints 2 e 3 implementadas em 2026-07-18 |
+| **Risco geral** | Baixo |
+
+Sprints 2 e 3 do redesign do dashboard implementadas sobre a base de T5.1 Sprint 1 (IMPACTO-035). Estudo pré-implementação com agentes `impact-analyzer` e `design-system` resultou na revisão v1.3 da spec (changelog de 2026-07-18). Nenhum risco crítico materializado.
+
+**Decisões técnicas registradas na revisão v1.3 da spec:**
+- RF-DB-04/RF-DB-05: reaproveitam `GET /analytics/tco/:vehicleId` e `GET /analytics/fuel-trend/:vehicleId` (T6.1) em vez de nova RPC — elimina duplicação de código e SQL, componentes `TcoBreakdownChart`/`FuelTrendChart` extraídos de `analytics/page.tsx` para `apps/web/src/components/charts/` e reutilizados em ambas as páginas.
+- TCO breakdown por ciclo de odômetro ativo: reaproveitado sem filtro de período de calendário — filtro de período fica fora de escopo desta rodada, registrado na seção 14 da spec.
+- RF-SH-03 (tooltip de flags do semáforo): promovido de prioridade Baixa para esta rodada.
+
+| # | Mudança | Módulos afetados | Risco | Observação |
+|---|---------|-----------------|-------|------------|
+| 1 | `DashboardService` — 3 novos métodos: `getDocumentOverdueAlerts`, `getPaidDocumentsCurrentYear`, `getVehicleHistory` | `apps/api/src/modules/dashboard/` | Baixo | `getDocumentOverdueAlerts` reconcilia IPVA/Seguro/CRLV com `vehicle_recurring_costs.paid_at` do ano corrente (CA-S3-02, RF-DB-06) |
+| 2 | `DashboardController` — 1 novo endpoint: `GET /dashboard/vehicle-history?vehicle_id=` | `apps/api/src/modules/dashboard/` | Baixo | Combina últimas 20 despesas + manutenções via `ExpensesService`/`MaintenancesService.findAll`; reaproveitamento sem código novo no backend para RF-DB-04/RF-DB-05 |
+| 3 | `packages/validators/src/dashboard.schemas.ts` — extensões: `FleetAlertType` com `"document_overdue"`, `vehicleHistoryQuerySchema`/`VehicleHistoryItem`, `VehicleCard.last_fuel_odometer_missing` | `packages/validators` | Baixo | Tipos puros; sem breaking change nos schemas existentes |
+| 4 | `apps/web/src/components/dashboard/VehicleSpotlight.tsx` — componente completo da Zona B: `StickyFocusChip`, tabs/grid responsivos, 4 seções (Despesas, Consumo, Docs, Histórico), `EmptyState` | `apps/web/src/components/dashboard/` | Baixo | `StickyFocusChip` chama `clearAllSelection` do store global; chip segue nomenclatura canônica de SPEC-20260602-001 |
+| 5 | `apps/web/src/components/charts/tco-breakdown-chart.tsx` e `fuel-trend-chart.tsx` extraídos de `analytics/page.tsx` | `apps/web/src/components/charts/` | Baixo | Eliminam duplicação: `/analytics` e `VehicleSpotlight` compartilham os mesmos componentes `recharts` sem cópia |
+| 6 | `apps/web/src/components/dashboard/VehicleHealthCard.tsx` — extensão: tooltip de flags (RF-SH-03) + badge `last_fuel_odometer_missing` (CA-S3-03) | `apps/web/src/components/dashboard/` | Baixo | Sem mudança de interface pública do componente; adição de props opcionais |
+| 7 | `apps/web/src/components/dashboard/FleetAlertBar.tsx` — extensão: suporte a tipo `"document_overdue"` | `apps/web/src/components/dashboard/` | Baixo | Sem mudança de lógica de estilo — já baseada em `days_until_due` |
+| 8 | `dashboard/page.tsx` — extensão: scroll suave até Zona B em `handleSelectVehicle` + `spotlightRef` (RF-DA-05) | `apps/web/src/app/(app)/dashboard/` | Baixo | Comportamento puramente client-side; sem chamada de rede nova |
+
+**Fora de escopo desta rodada (documentado no changelog v1.3 da spec e seção 14):** filtro de período de calendário no gráfico de Despesas por Categoria; layout master-detail horizontal em desktop; comparação multi-veículo na Zona B.
 
 ---
 

@@ -61,24 +61,49 @@ export class VehicleGroupsService {
 
   /**
    * @spec SPEC-20260602-003 RF-08
+   * @spec SPEC-20260603-001 RF-18 — listagem limitada a 100 registros (P1), a query
+   * anterior não tinha nenhum `.limit()` (não era "20→100" como a spec original supunha).
+   * @spec SPEC-20260603-001 RF-19 — `member_count` exclui membros cujo veículo está
+   * soft-deletado (R-GRP-03): a query original contava todas as linhas de
+   * `vehicle_group_members` sem considerar `vehicles.deleted_at`, inflando o número
+   * exibido no switcher. Em vez de um join `!inner` aninhado (não suportado de forma
+   * simples pelo client do Supabase para contagem), busca-se o conjunto de veículos
+   * ativos do usuário e conta-se em memória — mesmo padrão já usado em `setMembers()`.
    */
   async findAll(accessToken: string, userId: string): Promise<VehicleGroup[]> {
-    const { data, error } = await this.clientForUser(accessToken)
-      .from("vehicle_groups")
-      .select(`${GROUP_COLUMNS}, vehicle_group_members(count)`)
-      .eq("user_id", userId)
-      .order("created_at", { ascending: false });
+    const client = this.clientForUser(accessToken);
 
-    if (error) {
+    const [groupsResult, activeVehiclesResult] = await Promise.all([
+      client
+        .from("vehicle_groups")
+        .select(`${GROUP_COLUMNS}, vehicle_group_members(vehicle_id)`)
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false })
+        .limit(100),
+      client.from("vehicles").select("id").eq("user_id", userId).is("deleted_at", null),
+    ]);
+
+    if (groupsResult.error) {
       throw new NotFoundException("Não foi possível listar os grupos");
     }
+    if (activeVehiclesResult.error) {
+      throw new NotFoundException("Não foi possível validar os veículos do grupo");
+    }
 
-    return ((data ?? []) as Array<VehicleGroup & { vehicle_group_members?: { count: number }[] }>).map(
-      (group) => ({
-        ...group,
-        member_count: group.vehicle_group_members?.[0]?.count ?? 0,
-      }),
+    const activeVehicleIds = new Set(
+      ((activeVehiclesResult.data ?? []) as Array<{ id: string }>).map((vehicle) => vehicle.id),
     );
+
+    return (
+      (groupsResult.data ?? []) as Array<
+        VehicleGroup & { vehicle_group_members?: Array<{ vehicle_id: string }> }
+      >
+    ).map((group) => ({
+      ...group,
+      member_count: (group.vehicle_group_members ?? []).filter((member) =>
+        activeVehicleIds.has(member.vehicle_id),
+      ).length,
+    }));
   }
 
   /**

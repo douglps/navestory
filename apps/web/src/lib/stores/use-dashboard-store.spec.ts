@@ -2,13 +2,13 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { useDashboardStore } from "./use-dashboard-store";
 
 function getPersisted(): { state: { selectionMode: string } } | null {
-  const raw = localStorage.getItem("nave-dashboard-context");
+  const raw = sessionStorage.getItem("nave-dashboard-context");
   return raw ? JSON.parse(raw) : null;
 }
 
 describe("useDashboardStore", () => {
   beforeEach(() => {
-    localStorage.clear();
+    sessionStorage.clear();
     useDashboardStore.getState().clearAllSelection();
   });
 
@@ -48,19 +48,19 @@ describe("useDashboardStore", () => {
     expect(state.activeVehicleId).toBeNull();
   });
 
-  it("R-CTX-02: persiste single em localStorage", () => {
+  it("R-CTX-02: persiste single em sessionStorage", () => {
     useDashboardStore.getState().setActiveVehicle("v1");
 
     expect(getPersisted()?.state.selectionMode).toBe("single");
   });
 
-  it("R-CTX-02: não persiste multi (efêmero) em localStorage", () => {
+  it("R-CTX-02: não persiste multi (efêmero) em sessionStorage", () => {
     useDashboardStore.getState().setMultiSelected(["v1", "v2"]);
 
     expect(getPersisted()?.state.selectionMode).toBe("none");
   });
 
-  it("R-CTX-02: não persiste attribute (efêmero) em localStorage", () => {
+  it("R-CTX-02: não persiste attribute (efêmero) em sessionStorage", () => {
     useDashboardStore.getState().setAttributeFilter({ attribute: "tipo", value: "carro" });
 
     expect(getPersisted()?.state.selectionMode).toBe("none");
@@ -76,7 +76,7 @@ describe("useDashboardStore", () => {
     expect(useDashboardStore.getState().dockOpen).toBe(false);
   });
 
-  it("RF-ST-01: dockOpen não é persistido em localStorage (estado efêmero de UI)", () => {
+  it("RF-ST-01: dockOpen não é persistido em sessionStorage (estado efêmero de UI)", () => {
     useDashboardStore.getState().setActiveVehicle("v1");
     useDashboardStore.getState().setDockOpen(true);
 

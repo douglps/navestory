@@ -1,9 +1,9 @@
 ---
 id: SPEC-20260603-001
 title: "Chip de Contexto de Veículo no Subheader + Dialog/Sheet de Seleção"
-status: draft
+status: approved
 date: 2026-06-03
-author: douglps
+author: Douglas Lopes (lps.doug@protonmail.com)
 rules: [R5, R-CTX-01, R-CTX-02, R-CTX-03, R-CTX-04, R-CTX-05, R-CTX-06, R-CTX-07, R-GRP-03]
 security: [S1, S2]
 camadas: [frontend, backend]
@@ -11,10 +11,18 @@ camadas: [frontend, backend]
 
 # SPEC-20260603-001: Chip de Contexto de Veículo no Subheader + Dialog/Sheet de Seleção
 
-**Status:** Rascunho
+**Status:** Aprovada
 **Criada em:** 2026-06-03
-**Autor:** douglps
+**Aprovada em:** 2026-07-16 (T5.4)
+**Autor:** Douglas Lopes (lps.doug@protonmail.com)
 **Revisores:** —
+
+> **Atualização 2026-07-16 (T5.4):** promovida de `draft` para `approved` e implementada na
+> mesma tarefa (mesmo padrão de SPEC-20260714-001/SPEC-20260715-001). Um levantamento de código
+> pré-implementação encontrou divergências grandes entre esta spec (escrita antes de o
+> `FocusSlot`/`Header` reais existirem) e o estado atual do repositório — ver changelog no
+> rodapé para o detalhamento completo de cada desvio (RF-18, RF-19, RF-20 e a inexistência de
+> `FluidFleetHeader`/`VehicleSwitcherContent`/`Header` citados pela v0.1/v0.2).
 
 > Esta spec implementa os gaps documentados em `docs/user-stories.md §19` (seções 19.1 a 19.12), especificamente os itens G-CTX-01 a G-CTX-99. Consultar aquela seção para o racional de UX completo.
 
@@ -39,10 +47,22 @@ Esta spec **não revoga** as regras R-CTX-01 a R-CTX-06 definidas na SPEC-202606
 
 | Componente | Arquivo | Situação |
 |------------|---------|----------|
-| `FocusSlot` | `apps/web/components/layout/focus-slot.tsx` | Implementado; será removido do sidebar nesta spec |
-| `FluidFleetHeader` | `apps/web/components/layout/fleet-subheader.tsx` | Implementado; receberá o chip de contexto à esquerda dos chips de despesa |
-| `Sidebar` | `apps/web/components/layout/sidebar.tsx` | Importa e renderiza `FocusSlot`; importação será removida |
-| `VehicleSwitcherContent` | `apps/web/components/layout/vehicle-switcher-content.tsx` | Implementado; reutilizado sem modificação como conteúdo do Dialog/Sheet |
+| `FocusSlot` | `apps/web/src/components/layout/focus-slot.tsx` | Implementado; removido do sidebar e do repositório nesta tarefa (lógica extraída para `use-vehicle-context.ts`) |
+| `FluidFleetHeader` | `apps/web/components/layout/fleet-subheader.tsx` | **Nunca existiu no código real** — ver atualização abaixo |
+| `Sidebar` | `apps/web/src/components/layout/sidebar.tsx` | Importava e renderizava `FocusSlot`; import removido, substituído por dot passivo (RF-16) |
+| `VehicleSwitcherContent` | `apps/web/src/components/layout/vehicle-switcher-content.tsx` | **Não existia** — criado nesta tarefa a partir da lógica de `focus-slot.tsx` |
+
+> **Atualização 2026-07-16:** o levantamento de código pré-implementação encontrou que **nenhum
+> componente de Header/subheader existia no projeto** (`FluidFleetHeader`/`fleet-subheader.tsx`
+> citados pela v0.1/v0.2 nunca foram implementados — o app shell tinha apenas `Sidebar` + conteúdo,
+> ver `apps/web/src/app/(app)/layout.tsx`). Criado um `Header` novo e mínimo
+> (`apps/web/src/components/layout/header.tsx`), renderizado acima do conteúdo no layout `(app)`,
+> com o `VehicleContextChip` à direita do logo "Nave". Decisão tomada com o usuário: sem
+> hambúrguer/menu mobile (fora de escopo — o sidebar não é drawer hoje, é sempre visível).
+> `VehicleSwitcherContent` também não existia; a lógica equivalente (fetch de veículos/grupos,
+> resolução de label/ícone, hidratação) estava em `focus-slot.tsx` e foi extraída para o hook
+> compartilhado `apps/web/src/lib/context/use-vehicle-context.ts`, reaproveitado a 100% pelo
+> `VehicleContextChip` e pelo `VehicleSwitcherContent` novo.
 
 ---
 
@@ -197,7 +217,11 @@ O Sheet deve ter `overscroll-behavior: contain` no container de lista para evita
 
 ### RF-14 — Modo offline no Sheet
 
-O Sheet deve exibir a lista cacheada (SWR `staleTime: 60000ms`) com um banner "Sem conexão — dados podem estar desatualizados" quando o hook `useOnlineStatus` detectar `navigator.onLine === false`. O banner não bloqueia a interação com a lista cacheada.
+O Sheet deve exibir a lista cacheada (`staleTime: 60000ms`) com um banner "Sem conexão — dados podem estar desatualizados" quando o hook `useOnlineStatus` detectar `navigator.onLine === false`. O banner não bloqueia a interação com a lista cacheada.
+
+> **Nota:** o projeto usa TanStack Query, não SWR (ADR-008) — `staleTime: 60_000` na config do
+> `useQuery` implementa a mesma ideia com a lib real do projeto. Isso não é um desvio de escopo,
+> apenas terminologia; `useOnlineStatus` não existia e foi criado (`apps/web/src/lib/hooks/use-online-status.ts`).
 
 **Prioridade:** Should
 
@@ -241,15 +265,27 @@ O handler `startHolding()` no sidebar já chama `useDashboardStore.getState().cl
 // @spec SPEC-20260602-001 RF-19, SPEC-20260603-001 RF-17
 ```
 
+> **Atualização 2026-07-16:** não existe gesto de "hold" no botão de logout do sidebar real — é
+> um `onClick` simples chamando `logout()`. Nenhum gesto de hold novo foi implementado (fora do
+> escopo desta tarefa e não solicitado pelo usuário); o requisito já está satisfeito pelo `onClick`
+> existente, que chama `logout()` (corrigido por RF-21/RF-23 nesta mesma tarefa). Anotação
+> atualizada em `apps/web/src/components/layout/sidebar.tsx`.
+
 **Prioridade:** Must
 
 ---
 
 ### RF-18 — Ajuste de limite de veículos na query
 
-A query de veículos no `VehicleSwitcherContent` deve usar `.limit(100)` em vez do atual `.limit(20)` para suportar frotas maiores sem paginação. Este ajuste está alinhado com P1 (listagens paginadas, máximo 100/página).
+A query de veículos e de grupos deve usar `.limit(100)`, alinhado com P1 (listagens paginadas, máximo 100/página).
 
-**Arquivo:** `apps/web/components/layout/vehicle-switcher-content.tsx`, linha 57.
+> **Atualização 2026-07-16:** o texto original supunha uma migração de `.limit(20)` para
+> `.limit(100)` em `VehicleSwitcherContent` (client-side, Supabase direto). Levantamento de
+> código encontrou que: (1) o projeto não faz queries Supabase direto do browser — `VehiclesService.findAll`
+> e `VehicleGroupsService.findAll` (NestJS, `apps/api`) já filtram e retornam os dados via REST;
+> (2) nenhuma das duas queries tinha **qualquer** `.limit()` antes desta tarefa — não era
+> "20→100", e sim "sem limite→100". Corrigido em `apps/api/src/modules/vehicles/vehicles.service.ts::findAll`
+> e `apps/api/src/modules/vehicle-groups/vehicle-groups.service.ts::findAll`.
 
 **Prioridade:** Must
 
@@ -270,19 +306,29 @@ A query de grupos em `VehicleSwitcherContent` deve filtrar membros com `deleted_
 
 Ou alternativamente, contar apenas `memberIds` que estejam presentes na lista de `vehicles` ativos retornada pelo primeiro fetch. O método exato fica a critério do implementador, desde que R-GRP-03 seja satisfeita.
 
+> **Atualização 2026-07-16:** implementado no backend (`VehicleGroupsService.findAll`), não no
+> `VehicleSwitcherContent` (que não faz query direta ao Supabase — ver nota de RF-18). Usada a
+> segunda alternativa descrita acima: busca-se em paralelo os grupos (com `vehicle_group_members(vehicle_id)`)
+> e os veículos ativos do usuário (`.is("deleted_at", null)`), e o `member_count` é calculado em
+> memória filtrando membros cujo `vehicle_id` está no conjunto de veículos ativos.
+
 **Prioridade:** Must
 
 ---
 
-### RF-20 — Resposta 404 para veículo soft-deleted no endpoint de stats
+### RF-20 — Resposta 404 para veículo soft-deleted
 
-O endpoint `GET /dashboard/stats?vehicleId=X` no backend (NestJS) deve retornar:
+Uma request para o veículo em foco deve retornar 404 quando ele está soft-deletado (`deleted_at IS NOT NULL`), permitindo que o frontend detecte o 404 e chame `clearAllSelection()` automaticamente (RF-22).
 
-```json
-{ "error": "VEHICLE_NOT_FOUND", "status": 404 }
-```
-
-quando `X` corresponde a um registro com `deleted_at IS NOT NULL`, em vez de retornar dados zerados ou vazio. Este comportamento permite que o frontend detecte o 404 e chame `clearAllSelection()` automaticamente (RF-22).
+> **Atualização 2026-07-16:** o endpoint `GET /dashboard/stats?vehicleId=X` citado pelo texto
+> original **não existe e não foi criado** para esta tarefa — não há nenhum `DashboardController`
+> com essa rota, e criá-la só para este fim contradiria o padrão já estabelecido no projeto.
+> O comportamento já existe de forma equivalente e mais geral em
+> `VehiclesService.findOne` (`apps/api/src/modules/vehicles/vehicles.service.ts`): a query já
+> filtra `.is("deleted_at", null).maybeSingle()` e lança `NotFoundException` (404) quando o
+> registro não existe ou está soft-deletado. RF-22 foi implementado para reagir a **qualquer**
+> 404 de `GET /vehicles/:id` cujo `:id` bata com o `activeVehicleId` do store, não apenas a um
+> endpoint de stats dedicado.
 
 **Prioridade:** Must
 
@@ -342,7 +388,7 @@ O skeleton deve ter a mesma largura mínima do chip (`min-w-[80px]`) para evitar
 | RNF-01 | Touch target do chip ≥ 44×44px (WCAG 2.5.5) em qualquer viewport | Auditoria Lighthouse Accessibility + teste manual em iOS Safari |
 | RNF-02 | Contraste dos estados âmbar/azul/violeta do chip ≥ 4.5:1 em light mode e dark mode (WCAG 1.4.3) | Verificado com ferramenta de contraste (ex.: `axe-core`) |
 | RNF-03 | O chip não causa layout shift ao navegar entre páginas | CLS = 0 medido via DevTools Performance tab |
-| RNF-04 | A lista de veículos no Dialog/Sheet usa cache SWR com `staleTime: 60000ms` (60s) para evitar requests desnecessários em trocas rápidas de contexto | Network tab sem requests duplicados em menos de 60s |
+| RNF-04 | A lista de veículos no Dialog/Sheet usa cache do TanStack Query com `staleTime: 60000ms` (60s), não SWR (ver nota RF-14) — evita requests desnecessários em trocas rápidas de contexto | Network tab sem requests duplicados em menos de 60s |
 | RNF-05 | Busca client-side no Dialog/Sheet normaliza diacríticos via `String.prototype.normalize('NFD')` e remove hífens de placa antes de comparar com a query | Busca por "ABC1234" encontra "ABC-1234"; busca por "Hilux" encontra "Hilux" com acento |
 
 ---
@@ -411,23 +457,38 @@ Esta spec não cobre:
 ### Estrutura de componentes novos
 
 ```
-apps/web/components/layout/
-  vehicle-context-chip.tsx     ← chip visual + botão X + lógica de resolveMode()
-  vehicle-context-dialog.tsx   ← Dialog desktop (≥ 768px)
-  vehicle-context-sheet.tsx    ← Sheet mobile (< 768px)
+apps/web/src/components/layout/
+  header.tsx                   ← novo — header fixo do app shell (logo + chip)
+  vehicle-context-chip.tsx      ← chip visual + botão X, consome use-vehicle-context.ts
+  vehicle-context-dialog.tsx    ← Dialog desktop (≥ 768px)
+  vehicle-context-sheet.tsx     ← Sheet mobile (< 768px)
+  vehicle-switcher-content.tsx  ← lista + busca, consome use-vehicle-context.ts
+apps/web/src/lib/context/
+  use-vehicle-context.ts        ← novo — hook compartilhado (hidratação, queries, labels)
+apps/web/src/lib/hooks/
+  use-media-query.ts            ← novo
+  use-online-status.ts          ← novo
 ```
 
-O `FluidFleetHeader` importa `VehicleContextChip`. O chip internamente renderiza `VehicleContextDialog` ou `VehicleContextSheet` conforme o breakpoint detectado via `useMediaQuery('(min-width: 768px)')`.
+> **Atualização 2026-07-16:** o `Header` (não `FluidFleetHeader`) importa `VehicleContextChip`
+> diretamente — ver nota em "Estado atual dos componentes relevantes" acima. O chip internamente
+> renderiza `VehicleContextDialog` ou `VehicleContextSheet` conforme o breakpoint detectado via
+> `useMediaQuery('(min-width: 768px)')`.
 
-### Posição do chip no subheader
+### Posição do chip no header
 
-O chip deve ser inserido **antes** dos chips de despesa de categoria, separado por divisor:
+> **Atualização 2026-07-16:** como não existe `FluidFleetHeader`/subheader de categorias de
+> despesa no projeto real, a seção original ("chip antes dos chips de despesa de categoria,
+> separado por divisor") não se aplica. O `Header` novo é mínimo: logo "Nave" à esquerda,
+> `VehicleContextChip` imediatamente ao lado, `h-14` de altura total. O chip mantém `h-11` (RF-03).
 
-```
-[VehicleContextChip][divider][chip Combust.][chip Manut.][chip Lavagem] ... [Multas][Docs]
-```
+### Ícones (atualização 2026-07-16)
 
-O layout atual do `FluidFleetHeader` tem `flex items-center px-4 gap-1.5`. O chip ocupa `h-11` (toda a altura do subheader) enquanto os chips de categoria têm `h-7`. O divisor entre eles é `h-[18px] w-px bg-border/20`.
+O projeto não usa `lucide-react` nem nenhuma lib de ícones — o padrão existente (`VEHICLE_TYPE_ICONS`
+em `apps/web/src/lib/context/context-labels.ts`) usa emojis. Mantido o mesmo padrão para os
+ícones de modo do chip (RF-02): 🚗 `single`, ⬡ `group`, 🚗 `multi`, 🎚️ `attribute` — em vez de
+`Car`/`Boxes`/`SlidersHorizontal`. `lucide-react` **não** foi adicionado como dependência (só
+`@radix-ui/react-dialog` e `vaul`, decisão já aprovada com o usuário).
 
 ### Resolução de breakpoint
 
@@ -440,7 +501,13 @@ const isDesktop = useMediaQuery('(min-width: 768px)');
 
 ### Reutilização de resolveMode()
 
-A lógica `resolveMode()` já existe em `focus-slot.tsx`. Ao criar o `VehicleContextChip`, mover essa função para `apps/web/lib/context-mode.ts` e importar de lá, evitando duplicação. O `FocusSlot` deve ser atualizado para importar do mesmo local antes da remoção.
+A lógica de resolução de label/modo já existia em `focus-slot.tsx` (`getModeLabel`, hidratação,
+queries de veículos/grupos). Ao criar o `VehicleContextChip`, essa lógica foi extraída para o hook
+compartilhado `apps/web/src/lib/context/use-vehicle-context.ts` (não um módulo `context-mode.ts`
+separado, como o texto original previa) — reaproveitado tanto pelo `VehicleContextChip` quanto
+pelo `VehicleSwitcherContent`, sem duplicação. Como o `FocusSlot` foi removido e deletado do
+repositório nesta mesma tarefa (não apenas do sidebar), não houve necessidade de atualizá-lo para
+importar do novo local antes da remoção.
 
 ### Rastreabilidade no código
 
@@ -452,7 +519,10 @@ Todos os arquivos que implementam requisitos desta spec devem anotar no topo ou 
 
 ### Impacto no sidebar — cálculo de fixedElementsHeight
 
-O `ResizeObserver` no `sidebar.tsx` usa `fixedElementsHeight = 280` para calcular o espaço disponível para navegação. Após a remoção do `FocusSlot` (~56px), o valor deve ser ajustado para `224` (280 − 56). Verificar os valores exatos após a remoção.
+> **Atualização 2026-07-16:** este mecanismo não existe no código real (`sidebar.tsx` não tem
+> `ResizeObserver` nem `fixedElementsHeight` — é resíduo da spec original, que descrevia um
+> sidebar diferente do implementado em SPEC-20260602-001/T5.3). Ignorado; nenhum ajuste
+> necessário além da remoção do `<FocusSlot />` em si (RF-15) e da adição do dot passivo (RF-16).
 
 ---
 
@@ -462,3 +532,4 @@ O `ResizeObserver` no `sidebar.tsx` usa `fixedElementsHeight = 280` para calcula
 |--------|------|-------|-----------|
 | 0.1 | 2026-06-03 | douglps | Criação inicial — migração do FocusSlot do sidebar para chip no subheader; análise de gaps UX documentados em `docs/user-stories.md §19` |
 | 0.2 | 2026-06-03 | douglps | Adicionado RF-24: prevenção de flash de hidratação do store Zustand (G-CTX-09); critério de aceite correspondente |
+| 0.3 | 2026-07-16 | Douglas Lopes (lps.doug@protonmail.com) | Promovida de `draft` para `approved` (T5.4). Levantamento de código pré-implementação encontrou divergências grandes entre a spec e o código real (mesmo padrão de T3.9/T5.1/T3.6): `FluidFleetHeader`/`fleet-subheader.tsx`/`VehicleSwitcherContent` nunca existiram (criados do zero); RF-18 corrigido de "20→100" para "sem limite→100" em `VehiclesService.findAll`/`VehicleGroupsService.findAll` (não no client-side); RF-19 implementado no backend via contagem em memória sobre veículos ativos, não em `VehicleSwitcherContent`; RF-20 corrigido — não existe `GET /dashboard/stats?vehicleId=X`, reaproveitado o 404 já existente de `GET /vehicles/:id`; ícones do RF-02 trocados de `lucide-react` (nunca adicionado ao projeto) para emojis, seguindo o padrão de `VEHICLE_TYPE_ICONS`; RF-14/RNF-04 trocam SWR por TanStack Query (`staleTime`, mesma ideia, lib real do projeto); RF-17 confirmado já satisfeito pelo `onClick` simples de logout (sem gesto de hold, fora de escopo); "Impacto no sidebar — fixedElementsHeight" descartado (ResizeObserver não existe no código real). Ver `matrices/rastreabilidade.md` para os caminhos reais de código/teste. |

@@ -72,6 +72,8 @@ export class VehiclesService {
 
   /**
    * @spec SPEC-20260602-002 RF-03, RF-16
+   * @spec SPEC-20260603-001 RF-18 — listagem limitada a 100 registros (P1), a query
+   * anterior não tinha nenhum `.limit()` (não era "20→100" como a spec original supunha).
    */
   async findAll(accessToken: string, userId: string): Promise<Vehicle[]> {
     const { data, error } = await this.clientForUser(accessToken)
@@ -79,7 +81,8 @@ export class VehiclesService {
       .select(VEHICLE_COLUMNS)
       .eq("user_id", userId)
       .is("deleted_at", null)
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false })
+      .limit(100);
 
     if (error) {
       throw new NotFoundException("Não foi possível listar os veículos");

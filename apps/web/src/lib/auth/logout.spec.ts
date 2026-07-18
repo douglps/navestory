@@ -4,7 +4,7 @@ import { logout } from "./logout";
 
 describe("logout", () => {
   beforeEach(() => {
-    localStorage.clear();
+    sessionStorage.clear();
     useDashboardStore.getState().setActiveVehicle("v1");
   });
 
@@ -30,5 +30,17 @@ describe("logout", () => {
     await logout();
 
     expect(useDashboardStore.getState().selectionMode).toBe("none");
+  });
+
+  it("SPEC-20260603-001 RF-23: remove explicitamente a chave de contexto do sessionStorage", async () => {
+    sessionStorage.setItem("nave-dashboard-context", JSON.stringify({ state: {}, version: 0 }));
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({ ok: true, status: 204, json: () => Promise.resolve({}) }),
+    );
+
+    await logout();
+
+    expect(sessionStorage.getItem("nave-dashboard-context")).toBeNull();
   });
 });

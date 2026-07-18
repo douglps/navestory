@@ -1,3 +1,6 @@
+import { useDashboardStore } from "@/lib/stores/use-dashboard-store";
+import { useUIStore } from "@/lib/stores/ui-store";
+
 const REQUEST_TIMEOUT_MS = 10_000;
 
 export class ApiError extends Error {
@@ -63,8 +66,29 @@ export async function apiClient<T>(path: string, options: RequestOptions = {}): 
   };
 
   if (!response.ok) {
+    if (response.status === 404) {
+      handleNotFound(path);
+    }
     throw new ApiError(body.message ?? "Erro inesperado", response.status);
   }
 
   return body.data as T;
+}
+
+/**
+ * @spec SPEC-20260603-001 RF-22 — limpeza automática de contexto em resposta a 404.
+ * Quando um 404 vem de uma request cujo path referencia o `activeVehicleId` ativo no
+ * store (ex.: `GET /vehicles/:id`), assume-se que o veículo em foco foi removido
+ * (soft-delete) e o contexto é limpo, com aviso reaproveitando o toast já existente
+ * (`ContextStaleToast`) — sem criar um sistema de toast novo.
+ *
+ * Match específico (`path.includes(activeVehicleId)` + `activeVehicleId !== null`)
+ * para não disparar em 404s esperados de outras entidades (grupos, categorias etc.).
+ */
+function handleNotFound(path: string): void {
+  const { activeVehicleId, clearAllSelection } = useDashboardStore.getState();
+  if (!activeVehicleId || !path.includes(activeVehicleId)) return;
+
+  clearAllSelection();
+  useUIStore.getState().setContextStaleNotice("O veículo selecionado não está mais disponível");
 }

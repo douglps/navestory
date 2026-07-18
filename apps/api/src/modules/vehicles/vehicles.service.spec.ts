@@ -22,7 +22,8 @@ describe("VehiclesService", () => {
     builder.update = jest.fn().mockReturnValue(builder);
     builder.eq = jest.fn().mockReturnValue(builder);
     builder.is = jest.fn().mockReturnValue(builder);
-    builder.order = jest.fn().mockResolvedValue(result);
+    builder.order = jest.fn().mockReturnValue(builder);
+    builder.limit = jest.fn().mockResolvedValue(result);
     builder.single = jest.fn().mockResolvedValue(result);
     builder.maybeSingle = jest.fn().mockResolvedValue(result);
     const client = { from: jest.fn().mockReturnValue(builder) };
@@ -77,6 +78,15 @@ describe("VehiclesService", () => {
     const vehicles = await service.findAll("token", "u1");
 
     expect(vehicles).toHaveLength(2);
+  });
+
+  it("findAll aplica limit(100) na query (SPEC-20260603-001 RF-18)", async () => {
+    const { builder } = mockClient({ data: [], error: null });
+    const service = createService();
+
+    await service.findAll("token", "u1");
+
+    expect(builder.limit).toHaveBeenCalledWith(100);
   });
 
   it("findOne lança 404 quando o veículo não existe ou não pertence ao usuário (CA-08)", async () => {

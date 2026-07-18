@@ -42,24 +42,70 @@ describe("VehicleGroupsService", () => {
     expect(builder.insert).toHaveBeenCalledWith({ name: "Motos", color: "#ef4444", user_id: "u1" });
   });
 
-  it("findAll retorna grupos com contagem de membros (RF-08)", async () => {
-    const builder: Record<string, unknown> = {};
-    builder.select = jest.fn().mockReturnValue(builder);
-    builder.eq = jest.fn().mockReturnValue(builder);
-    builder.order = jest.fn().mockResolvedValue({
+  it("findAll retorna grupos com contagem de membros, limitado a 100 (RF-08, SPEC-20260603-001 RF-18)", async () => {
+    const groupsBuilder: Record<string, unknown> = {};
+    groupsBuilder.select = jest.fn().mockReturnValue(groupsBuilder);
+    groupsBuilder.eq = jest.fn().mockReturnValue(groupsBuilder);
+    groupsBuilder.order = jest.fn().mockReturnValue(groupsBuilder);
+    groupsBuilder.limit = jest.fn().mockResolvedValue({
       data: [
-        { id: "g1", name: "Motos", vehicle_group_members: [{ count: 3 }] },
+        {
+          id: "g1",
+          name: "Motos",
+          vehicle_group_members: [{ vehicle_id: "v1" }, { vehicle_id: "v2" }, { vehicle_id: "v3" }],
+        },
         { id: "g2", name: "Frota SP", vehicle_group_members: [] },
       ],
       error: null,
     });
-    mockClient({ vehicle_groups: builder as never });
+
+    const vehiclesBuilder: Record<string, unknown> = {};
+    vehiclesBuilder.select = jest.fn().mockReturnValue(vehiclesBuilder);
+    vehiclesBuilder.eq = jest.fn().mockReturnValue(vehiclesBuilder);
+    vehiclesBuilder.is = jest.fn().mockResolvedValue({
+      data: [{ id: "v1" }, { id: "v2" }, { id: "v3" }],
+      error: null,
+    });
+
+    mockClient({ vehicle_groups: groupsBuilder as never, vehicles: vehiclesBuilder as never });
     const service = createService();
 
     const groups = await service.findAll("token", "u1");
 
+    expect(groupsBuilder.limit).toHaveBeenCalledWith(100);
     expect(groups[0]?.member_count).toBe(3);
     expect(groups[1]?.member_count).toBe(0);
+  });
+
+  it("findAll exclui do member_count veículos soft-deletados (SPEC-20260603-001 RF-19, R-GRP-03)", async () => {
+    const groupsBuilder: Record<string, unknown> = {};
+    groupsBuilder.select = jest.fn().mockReturnValue(groupsBuilder);
+    groupsBuilder.eq = jest.fn().mockReturnValue(groupsBuilder);
+    groupsBuilder.order = jest.fn().mockReturnValue(groupsBuilder);
+    groupsBuilder.limit = jest.fn().mockResolvedValue({
+      data: [
+        {
+          id: "g1",
+          name: "Motos",
+          // v2 pertence ao grupo mas foi soft-deletado — não deve contar.
+          vehicle_group_members: [{ vehicle_id: "v1" }, { vehicle_id: "v2" }],
+        },
+      ],
+      error: null,
+    });
+
+    const vehiclesBuilder: Record<string, unknown> = {};
+    vehiclesBuilder.select = jest.fn().mockReturnValue(vehiclesBuilder);
+    vehiclesBuilder.eq = jest.fn().mockReturnValue(vehiclesBuilder);
+    // apenas v1 está ativo (v2 tem deleted_at preenchido, filtrado por `.is`).
+    vehiclesBuilder.is = jest.fn().mockResolvedValue({ data: [{ id: "v1" }], error: null });
+
+    mockClient({ vehicle_groups: groupsBuilder as never, vehicles: vehiclesBuilder as never });
+    const service = createService();
+
+    const groups = await service.findAll("token", "u1");
+
+    expect(groups[0]?.member_count).toBe(1);
   });
 
   it("update lança 404 quando o grupo não pertence ao usuário (CA-08)", async () => {

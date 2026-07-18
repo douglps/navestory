@@ -3,8 +3,8 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { logout } from "@/lib/auth/logout";
+import { useDashboardStore, type SelectionMode } from "@/lib/stores/use-dashboard-store";
 import { useUIStore } from "@/lib/stores/ui-store";
-import { FocusSlot } from "./focus-slot";
 
 interface NavItem {
   href: string;
@@ -20,10 +20,21 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/settings/preferences", label: "Preferências" },
 ];
 
+// @spec SPEC-20260603-001 RF-16 — cor do dot passivo por modo de contexto ativo.
+const DOT_COLOR_BY_MODE: Record<SelectionMode, string> = {
+  none: "bg-muted-foreground/30",
+  single: "bg-amber-400",
+  group: "bg-blue-400",
+  multi: "bg-amber-500",
+  attribute: "bg-violet-400",
+};
+
 // @spec SPEC-20260602-001 RF-01, RF-04
+// @spec SPEC-20260603-001 RF-15, RF-16 — FocusSlot removido; dot passivo adicionado no colapsado.
 export function Sidebar(): ReactNode {
   const isCollapsed = useUIStore((state) => state.isSidebarCollapsed);
   const toggleSidebarCollapsed = useUIStore((state) => state.toggleSidebarCollapsed);
+  const selectionMode = useDashboardStore((state) => state.selectionMode);
 
   return (
     <nav
@@ -43,7 +54,12 @@ export function Sidebar(): ReactNode {
         </button>
       </div>
 
-      <FocusSlot collapsed={isCollapsed} />
+      {isCollapsed && (
+        // RF-16: indicador passivo, sem interação — R-CTX-07 proíbe este componente
+        // de abrir o switcher (o único ponto de entrada é o VehicleContextChip no header).
+        // eslint-disable-next-line security/detect-object-injection -- selectionMode é SelectionMode, union fixa de 5 literais
+        <span aria-hidden="true" className={`h-2 w-2 shrink-0 rounded-full ${DOT_COLOR_BY_MODE[selectionMode]}`} />
+      )}
 
       <ul className="flex w-full flex-col gap-1">
         {NAV_ITEMS.map((item) => (
@@ -61,6 +77,8 @@ export function Sidebar(): ReactNode {
         ))}
       </ul>
 
+      {/* @spec SPEC-20260602-001 RF-19, SPEC-20260603-001 RF-17 — logout já limpa o
+          contexto global (clearAllSelection() + sessionStorage) via logout() */}
       <button
         type="button"
         onClick={() => void logout()}

@@ -59,7 +59,9 @@ export const useDashboardStore = create<DashboardContextState>()(
     }),
     {
       name: "nave-dashboard-context",
-      storage: createJSONStorage(() => localStorage),
+      // @spec SPEC-20260603-001 RF-21 — sessionStorage isola o contexto por aba
+      // (corrige a decisão original de localStorage da SPEC-20260602-001).
+      storage: createJSONStorage(() => sessionStorage),
       skipHydration: true,
       // R-CTX-02: apenas single/group sobrevivem ao reload; multi/attribute são efêmeros.
       partialize: (state) =>

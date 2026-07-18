@@ -34,10 +34,19 @@ describe("DashboardService", () => {
 
   const expensesService = {
     getKpis: jest.fn(),
+    findAll: jest.fn(),
+  };
+  const maintenancesService = {
+    findAll: jest.fn(),
   };
 
   function createService() {
-    return new DashboardService(supabaseAdmin, configService, expensesService as never);
+    return new DashboardService(
+      supabaseAdmin,
+      configService,
+      expensesService as never,
+      maintenancesService as never,
+    );
   }
 
   function addDays(date: Date, days: number): Date {
@@ -112,7 +121,7 @@ describe("DashboardService", () => {
 
   function createQueryBuilder(result: { data?: unknown; error?: unknown; count?: number }) {
     const builder: Record<string, unknown> = {};
-    for (const method of ["select", "eq", "is", "in", "gte", "lte", "order", "limit"]) {
+    for (const method of ["select", "eq", "is", "in", "gte", "lte", "order", "limit", "not"]) {
       // eslint-disable-next-line security/detect-object-injection -- method vem de lista fixa acima, não de input externo
       builder[method] = jest.fn().mockReturnValue(builder);
     }
@@ -181,6 +190,8 @@ describe("DashboardService", () => {
           ],
           error: null,
         },
+        vehicles: { data: [], error: null },
+        vehicle_recurring_costs: { data: [], error: null },
       });
       (createUserScopedClient as jest.Mock).mockReturnValue({ from });
       const service = createService();
@@ -193,13 +204,54 @@ describe("DashboardService", () => {
     });
 
     it("lança NotFoundException quando a query falha", async () => {
-      const from = mockFrom({ maintenances: { data: null, error: { message: "boom" } } });
+      const from = mockFrom({
+        maintenances: { data: null, error: { message: "boom" } },
+        vehicles: { data: [], error: null },
+        vehicle_recurring_costs: { data: [], error: null },
+      });
       (createUserScopedClient as jest.Mock).mockReturnValue({ from });
       const service = createService();
 
       await expect(service.getAlerts("token", "u1")).rejects.toThrow(
         "Não foi possível carregar os alertas da frota",
       );
+    });
+
+    it("gera alerta de documento vencido não reconciliado e omite o pago (CA-S3-02, RF-DB-06)", async () => {
+      const today = new Date();
+      const overdueIpva = toDateString(addDays(today, -3));
+      const overdueInsurance = toDateString(addDays(today, -5));
+
+      const from = mockFrom({
+        maintenances: { data: [], error: null },
+        vehicles: {
+          data: [
+            {
+              id: "v1",
+              plate: "GHI9012",
+              ipva_due_date: overdueIpva,
+              insurance_expires_at: overdueInsurance,
+              crlv_expires_at: null,
+            },
+          ],
+          error: null,
+        },
+        vehicle_recurring_costs: {
+          data: [{ vehicle_id: "v1", cost_type: "insurance" }],
+          error: null,
+        },
+      });
+      (createUserScopedClient as jest.Mock).mockReturnValue({ from });
+      const service = createService();
+
+      const alerts = await service.getAlerts("token", "u1");
+
+      expect(alerts).toHaveLength(1);
+      expect(alerts[0]).toMatchObject({
+        type: "document_overdue",
+        vehicle_plate: "GHI9012",
+        description: "IPVA vencido",
+      });
     });
   });
 

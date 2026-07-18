@@ -1,0 +1,72 @@
+import type { ReactNode } from "react";
+import { Area, AreaChart, CartesianGrid, Line, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import type { FuelTrendPoint } from "@nave/validators";
+
+/**
+ * @spec SPEC-20260622-001 RF-02, RF-13, R-ANA-01, R-FUEL-02, R-FUEL-03
+ * @spec SPEC-20260531-001 RF-DB-05
+ * Extraído de apps/web/src/app/(app)/analytics/page.tsx (T6.1) para ser reaproveitado pelo
+ * VehicleSpotlight (Sprint 2 do dashboard) sem duplicar a lógica de apresentação da tendência.
+ */
+export function FuelTrendChart({ points }: { points: FuelTrendPoint[] }): ReactNode {
+  const chartData = [...points].reverse().map((point) => ({
+    date: point.date,
+    km_per_liter: point.km_per_liter,
+    rolling_avg_kpl: point.rolling_avg_kpl,
+  }));
+
+  return (
+    <div className="flex flex-col gap-3">
+      <div aria-hidden="true" className="h-64">
+        <ResponsiveContainer width="100%" height="100%">
+          <AreaChart data={chartData}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="date" />
+            <YAxis />
+            <Tooltip />
+            <Area
+              type="monotone"
+              dataKey="km_per_liter"
+              name="km/L"
+              stroke="#2563eb"
+              fill="#2563eb"
+              fillOpacity={0.15}
+              connectNulls
+            />
+            <Line
+              type="monotone"
+              dataKey="rolling_avg_kpl"
+              name="Média móvel (5)"
+              stroke="#16a34a"
+              dot={false}
+              connectNulls
+            />
+          </AreaChart>
+        </ResponsiveContainer>
+      </div>
+
+      <details>
+        <summary className="cursor-pointer text-sm text-muted-foreground">Ver dados em tabela</summary>
+        <table className="mt-2 w-full text-sm">
+          <caption className="sr-only">Consumo de combustível por abastecimento</caption>
+          <thead>
+            <tr className="text-left text-muted-foreground">
+              <th scope="col">Data</th>
+              <th scope="col">km/L</th>
+              <th scope="col">Média móvel (5)</th>
+            </tr>
+          </thead>
+          <tbody>
+            {chartData.map((row) => (
+              <tr key={row.date}>
+                <td>{row.date}</td>
+                <td>{row.km_per_liter ?? "—"}</td>
+                <td>{row.rolling_avg_kpl ?? "—"}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </details>
+    </div>
+  );
+}

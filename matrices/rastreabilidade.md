@@ -1507,6 +1507,17 @@ que o artefato ainda não existe no repositório.
 > Zona B (Vehicle Spotlight) e o score de saúde consumido nos flags detalhados ficam para a
 > Sprint 2/3, conforme a migração incremental da própria spec (seção 12.3).
 >
+> **Sprints 2 e 3 concluídas em 2026-07-18** (T5.1, fechamento). Estudo pré-implementação com
+> agentes `impact-analyzer` (gaps técnicos) e `design-system` (padrões de mercado 2026) resultou
+> na revisão v1.3 da spec (changelog): RF-DB-04/05 reaproveitam `GET /analytics/tco/:vehicleId` e
+> `GET /analytics/fuel-trend/:vehicleId` (T6.1), não uma RPC nova; TCO breakdown reaproveitado por
+> ciclo de odômetro ativo, sem filtro de período de calendário (fora de escopo desta rodada);
+> RF-SH-03 (tooltip de flags) promovido de prioridade Baixa para esta rodada; comportamento de
+> "dados insuficientes"/erro nos gráficos da Zona B adicionado como extensão de RNF-08 (sem RF
+> numerado formal). `TcoBreakdownChart`/`FuelTrendChart` extraídos de `analytics/page.tsx` para
+> `apps/web/src/components/charts/`, reutilizados por `/analytics` e por `VehicleSpotlight` — sem
+> duplicação de código `recharts`.
+>
 > **Decisão de escopo (IMPACTO-033):** `KpiCard`/`Tabs`/`EmptyState`/`Alert` (SPEC-20260525-001,
 > T8.1, Fase 8, ainda `draft`) não existiam — construídas versões mínimas inline em
 > `FleetKpis.tsx`/`VehicleHealthCard.tsx`/`DashboardPage`, mesmo padrão já usado em T3.9/T3.10;
@@ -1563,7 +1574,40 @@ que o artefato ainda não existe no repositório.
 | RF-DA-01, RF-DA-03, RF-DA-04, RF-SH-01 | Tipos e schemas de runtime: `fleetKpisQuerySchema`, `FleetKpisQuery`, `FleetHealthEntry`, `FleetAlert`, `FleetAlertType`, `KpiResult`, `FleetKpis`, `DocumentStatus`, `VehicleDocumentsStatus`, `VehicleCard` | `packages/validators/src/dashboard.schemas.ts` | — (tipos e schema puro, sem branches condicionais; consumido por `dashboard.service.spec.ts`) | 🔶 |
 | RF-DA-03 | DTO thin wrapper: `fleetKpisDtoSchema`/`FleetKpisDto` (re-exporta `fleetKpisQuerySchema`) | `apps/api/src/modules/dashboard/dto/fleet-kpis.dto.ts` | — | 🔶 |
 
-**Pendente para Sprint 2/3 (não é dívida desta tarefa — ordem definida pela própria spec, seção 12.3):** `VehicleSpotlight` (Zona B), gráficos reais (`dashboard-charts.tsx`), reconciliação de documentos com `vehicle_recurring_costs` (RF-DB-06), alertas de documentos na `FleetAlertBar` (CA-S3-02), tooltip de flags detalhados do score (RF-SH-03).
+### Backend (`apps/api`) — Sprint 2/3
+
+| Req | Descrição | Código | Teste | Status |
+|-----|-----------|--------|-------|--------|
+| CA-S3-02, RF-DB-06 | `GET /dashboard/alerts` estendido — alertas de documentos vencidos (IPVA/Seguro/CRLV), reconciliados com `vehicle_recurring_costs.paid_at` do ano corrente; combinado e ordenado com alertas de manutenção | `dashboard.service.ts` (`getDocumentOverdueAlerts`, `getPaidDocumentsCurrentYear`) | `dashboard.service.spec.ts` | ✅ |
+| RF-DB-07 | `GET /dashboard/vehicle-history?vehicle_id=` — combina últimas 20 despesas + manutenções, ordenadas por data decrescente, reaproveitando `ExpensesService`/`MaintenancesService.findAll` | `dashboard.service.ts` (`getVehicleHistory`), `dashboard.controller.ts` | `dashboard.service.spec.ts`, `dashboard.controller.spec.ts` | ✅ |
+| CA-S3-03 | `VehicleCard.last_fuel_odometer_missing` — true quando o último abastecimento não tem `odometer_km` | `dashboard.service.ts` (`getVehicleCards`, `getLastFuelExpense`) | `dashboard.service.spec.ts` (suíte existente, sem regressão) | ✅ |
+| RF-DB-04, RF-DB-05 | Reaproveitados (sem código novo): `GET /analytics/tco/:vehicleId`, `GET /analytics/fuel-trend/:vehicleId` (T6.1) | `apps/api/src/modules/analytics/analytics.controller.ts` | `analytics.controller.spec.ts` (suíte existente) | ✅ |
+
+### Frontend (`apps/web`) — Sprint 2/3
+
+| Req | Descrição | Código | Teste | Status |
+|-----|-----------|--------|-------|--------|
+| RF-DB-01 | Chip sticky "Em Foco: [Marca Modelo] [PLACA] ×", nomenclatura canônica de SPEC-20260602-001, "×" chama `clearAllSelection` | `apps/web/src/components/dashboard/VehicleSpotlight.tsx` (`StickyFocusChip`) | `VehicleSpotlight.spec.tsx` | ✅ |
+| RF-DB-02, RF-DB-03 | Tabs em mobile (`useMediaQuery`) / grid em desktop, sem tabs | `VehicleSpotlight.tsx` | `VehicleSpotlight.spec.tsx` | ✅ |
+| RF-DB-04 | Seção Despesas — `TcoBreakdownChart` reaproveitado; empty state quando `total===0`; estado de erro | `VehicleSpotlight.tsx` (`ExpensesSection`), `apps/web/src/components/charts/tco-breakdown-chart.tsx` | `VehicleSpotlight.spec.tsx` | ✅ |
+| RF-DB-05 | Seção Consumo — `FuelTrendChart` reaproveitado; empty state; estado de erro | `VehicleSpotlight.tsx` (`FuelSection`), `apps/web/src/components/charts/fuel-trend-chart.tsx` | — (padrão idêntico a `ExpensesSection`, coberto indiretamente via `analytics/page.spec.tsx` para o componente de gráfico) | 🟡 |
+| RF-DB-06 | Seção Docs — badges Vencido/Atenção/Pago, reconciliados com `GET /recurring-costs` do ano corrente | `VehicleSpotlight.tsx` (`DocsSection`) | `VehicleSpotlight.spec.tsx` | ✅ |
+| RF-DB-07 | Seção Histórico — últimas 20 despesas/manutenções + links "ver todos" | `VehicleSpotlight.tsx` (`HistorySection`) | `VehicleSpotlight.spec.tsx` | ✅ |
+| RF-DB-08 | `EmptyState` quando nenhum veículo em foco | `VehicleSpotlight.tsx` (`NoActiveVehicleEmptyState`) | `VehicleSpotlight.spec.tsx` | ✅ |
+| RF-DA-05 | Scroll suave até a Zona B ao clicar num `VehicleHealthCard` | `apps/web/src/app/(app)/dashboard/page.tsx` (`handleSelectVehicle`, `spotlightRef`) | `page.spec.tsx` | ✅ |
+| RF-SH-03 | Tooltip do semáforo detalha os `flags` da RPC (sem recalcular pesos) | `apps/web/src/components/dashboard/VehicleHealthCard.tsx` (`flagsTooltip`, `FLAG_LABEL`) | `VehicleHealthCard.spec.tsx` | ✅ |
+| CA-S3-03 | Badge de aviso no card quando `last_fuel_odometer_missing` | `VehicleHealthCard.tsx` | `VehicleHealthCard.spec.tsx` | ✅ |
+| — | `FleetAlertBar.type` estendido para `"document_overdue"` (sem mudança de lógica de estilo, já baseada em `days_until_due`) | `apps/web/src/components/dashboard/FleetAlertBar.tsx` | `FleetAlertBar.spec.tsx` (suíte existente, sem regressão) | ✅ |
+
+### Validators (`packages/validators`) — Sprint 2/3
+
+| Req | Descrição | Código | Teste | Status |
+|-----|-----------|--------|-------|--------|
+| CA-S3-02 | `FleetAlertType` estendido com `"document_overdue"` | `packages/validators/src/dashboard.schemas.ts` | — (tipo puro) | 🔶 |
+| RF-DB-07 | `vehicleHistoryQuerySchema`/`VehicleHistoryItem` | `packages/validators/src/dashboard.schemas.ts` | — (tipo puro, consumido por `dashboard.service.spec.ts`) | 🔶 |
+| CA-S3-03 | `VehicleCard.last_fuel_odometer_missing` | `packages/validators/src/dashboard.schemas.ts` | — | 🔶 |
+
+**Fora de escopo desta rodada (documentado no changelog v1.3 da spec):** filtro de período de calendário (mês/trimestre/semestre/ano) no gráfico de Despesas por Categoria — RF-DB-04 reaproveita o breakdown por ciclo de odômetro ativo, já existente; layout master-detail horizontal em desktop (pendência já registrada na seção 14 da spec desde a v1.1); comparação multi-veículo na Zona B.
 
 ---
 

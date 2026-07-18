@@ -8,12 +8,16 @@ import type {
   KpiResult,
   VehicleCard,
   VehicleDocumentsStatus,
+  VehicleHistoryItem,
 } from "@nave/validators";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { escapeCsvField } from "../../shared/csv/csv.util";
 import { createUserScopedClient } from "../../shared/supabase/create-user-scoped-client";
 import { SUPABASE_ADMIN_CLIENT } from "../../shared/supabase/supabase.constants";
 import { ExpensesService } from "../expenses/expenses.service";
+import { MaintenancesService } from "../maintenances/maintenances.service";
+
+const HISTORY_LIMIT = 20;
 
 const ALERT_HORIZON_DAYS = 7;
 const DOCUMENT_ATTENTION_DAYS = 30;
@@ -80,6 +84,32 @@ interface VehicleCardRow {
   crlv_expires_at: string | null;
 }
 
+interface VehicleDocumentDatesRow {
+  id: string;
+  plate: string;
+  ipva_due_date: string | null;
+  insurance_expires_at: string | null;
+  crlv_expires_at: string | null;
+}
+
+interface PaidRecurringCostRow {
+  vehicle_id: string;
+  cost_type: string;
+}
+
+/** @spec SPEC-20260531-001 RF-DB-06, CA-S3-02 — reconciliação vehicles.*_due_date vs vehicle_recurring_costs.paid_at */
+const DOCUMENT_FIELD_TO_COST_TYPE = {
+  ipva_due_date: "ipva",
+  insurance_expires_at: "insurance",
+  crlv_expires_at: "crlv",
+} as const;
+
+const DOCUMENT_LABEL: Record<keyof typeof DOCUMENT_FIELD_TO_COST_TYPE, string> = {
+  ipva_due_date: "IPVA",
+  insurance_expires_at: "Seguro",
+  crlv_expires_at: "CRLV",
+};
+
 const CSV_MAX_ROWS = 5_000;
 const CSV_HEADER = "Data,Placa,Modelo,Categoria,Descricao,Valor";
 
@@ -114,6 +144,7 @@ export class DashboardService {
     @Inject(SUPABASE_ADMIN_CLIENT) private readonly supabaseAdmin: SupabaseClient,
     private readonly configService: ConfigService,
     private readonly expensesService: ExpensesService,
+    private readonly maintenancesService: MaintenancesService,
   ) {}
 
   private clientForUser(accessToken: string): SupabaseClient {
@@ -185,31 +216,34 @@ export class DashboardService {
   }
 
   /**
-   * @spec SPEC-20260531-001 RF-DA-01, RF-DA-02
-   * Escopo Sprint 1: apenas alertas de manutenção (vencida ou em até 7 dias). Alertas de
-   * documentos (IPVA/Seguro/CRLV) entram na Sprint 3 (CA-S3-02), conforme migração incremental
-   * (seção 12.3 da spec). Lista retornada já ordenada por urgência — o frontend recorta os 3
-   * primeiros e monta o link "ver todos (+N)" com o restante.
+   * @spec SPEC-20260531-001 RF-DA-01, RF-DA-02, CA-S3-02
+   * Combina alertas de manutenção (vencida ou em até 7 dias) com alertas de documentos vencidos
+   * (IPVA/Seguro/CRLV), reconciliados com `vehicle_recurring_costs.paid_at` do ano corrente (mesma
+   * reconciliação de RF-DB-06) — documento pago não gera alerta. Lista final ordenada por urgência
+   * (mais vencido primeiro) — o frontend recorta os 3 primeiros e monta o link "ver todos (+N)".
    */
   async getAlerts(accessToken: string, userId: string): Promise<FleetAlert[]> {
     const client = this.clientForUser(accessToken);
     const today = new Date();
     const horizon = addDays(today, ALERT_HORIZON_DAYS);
 
-    const { data, error } = await client
-      .from("maintenances")
-      .select("id, vehicle_id, description, scheduled_date, vehicles(plate)")
-      .eq("user_id", userId)
-      .is("deleted_at", null)
-      .in("status", ["scheduled", "in_progress"])
-      .lte("scheduled_date", toDateString(horizon))
-      .order("scheduled_date", { ascending: true });
+    const [maintenanceResult, documentAlerts] = await Promise.all([
+      client
+        .from("maintenances")
+        .select("id, vehicle_id, description, scheduled_date, vehicles(plate)")
+        .eq("user_id", userId)
+        .is("deleted_at", null)
+        .in("status", ["scheduled", "in_progress"])
+        .lte("scheduled_date", toDateString(horizon))
+        .order("scheduled_date", { ascending: true }),
+      this.getDocumentOverdueAlerts(client, userId, today),
+    ]);
 
-    if (error) {
+    if (maintenanceResult.error) {
       throw new NotFoundException("Não foi possível carregar os alertas da frota");
     }
 
-    return ((data ?? []) as MaintenanceAlertRow[]).map((row) => {
+    const maintenanceAlerts = ((maintenanceResult.data ?? []) as MaintenanceAlertRow[]).map((row) => {
       const daysUntilDue = daysUntil(row.scheduled_date, today);
       return {
         id: row.id,
@@ -221,6 +255,87 @@ export class DashboardService {
         days_until_due: daysUntilDue,
       } satisfies FleetAlert;
     });
+
+    return [...maintenanceAlerts, ...documentAlerts].sort(
+      (a, b) => a.days_until_due - b.days_until_due,
+    );
+  }
+
+  /**
+   * @spec SPEC-20260531-001 RF-DA-01, RF-DB-06, CA-S3-02
+   * Só documentos vencidos entram na barra de alertas (não "a vencer") — RF-DA-01 lista
+   * explicitamente "documentos vencidos", diferente do badge "Atenção" da seção Docs (RF-DB-06,
+   * horizonte de 30 dias, escopo de exibição, não de alerta).
+   */
+  private async getDocumentOverdueAlerts(
+    client: SupabaseClient,
+    userId: string,
+    today: Date,
+  ): Promise<FleetAlert[]> {
+    const [vehiclesResult, paidDocuments] = await Promise.all([
+      client
+        .from("vehicles")
+        .select("id, plate, ipva_due_date, insurance_expires_at, crlv_expires_at")
+        .eq("user_id", userId)
+        .is("deleted_at", null),
+      this.getPaidDocumentsCurrentYear(client, userId, today),
+    ]);
+
+    if (vehiclesResult.error) {
+      throw new NotFoundException("Não foi possível carregar os alertas da frota");
+    }
+
+    const alerts: FleetAlert[] = [];
+    for (const vehicle of (vehiclesResult.data ?? []) as VehicleDocumentDatesRow[]) {
+      for (const field of Object.keys(DOCUMENT_FIELD_TO_COST_TYPE) as Array<
+        keyof typeof DOCUMENT_FIELD_TO_COST_TYPE
+      >) {
+        // eslint-disable-next-line security/detect-object-injection -- field é keyof fixo, união de 3 literais
+        const dueDate = vehicle[field];
+        if (!dueDate) continue;
+
+        const daysUntilDue = daysUntil(dueDate, today);
+        if (daysUntilDue >= 0) continue;
+
+        // eslint-disable-next-line security/detect-object-injection -- field é keyof fixo, união de 3 literais
+        const costType = DOCUMENT_FIELD_TO_COST_TYPE[field];
+        if (paidDocuments.has(`${vehicle.id}:${costType}`)) continue;
+
+        alerts.push({
+          id: `document:${vehicle.id}:${costType}`,
+          type: "document_overdue",
+          vehicle_id: vehicle.id,
+          vehicle_plate: vehicle.plate,
+          // eslint-disable-next-line security/detect-object-injection -- field é keyof fixo, união de 3 literais
+          description: `${DOCUMENT_LABEL[field]} vencido`,
+          due_date: dueDate,
+          days_until_due: daysUntilDue,
+        });
+      }
+    }
+    return alerts;
+  }
+
+  private async getPaidDocumentsCurrentYear(
+    client: SupabaseClient,
+    userId: string,
+    today: Date,
+  ): Promise<Set<string>> {
+    const { data, error } = await client
+      .from("vehicle_recurring_costs")
+      .select("vehicle_id, cost_type")
+      .eq("user_id", userId)
+      .eq("year", today.getUTCFullYear())
+      .not("paid_at", "is", null)
+      .is("deleted_at", null);
+
+    if (error) {
+      throw new NotFoundException("Não foi possível carregar os alertas da frota");
+    }
+
+    return new Set(
+      ((data ?? []) as PaidRecurringCostRow[]).map((row) => `${row.vehicle_id}:${row.cost_type}`),
+    );
   }
 
   /**
@@ -366,6 +481,7 @@ export class DashboardService {
           odometer: vehicle.odometer,
           last_fuel_date: lastFuel?.date ?? null,
           last_fuel_amount: lastFuel?.amount ?? null,
+          last_fuel_odometer_missing: lastFuel != null && lastFuel.odometer_km == null,
           documents: {
             ipva: classifyDocument(vehicle.ipva_due_date, today),
             insurance: classifyDocument(vehicle.insurance_expires_at, today),
@@ -376,14 +492,68 @@ export class DashboardService {
     );
   }
 
+  /**
+   * @spec SPEC-20260531-001 RF-DB-07
+   * Combina as últimas 20 despesas + manutenções do veículo, ordenadas por data decrescente —
+   * reaproveita ExpensesService/MaintenancesService.findAll (sem query própria) para não duplicar
+   * a lógica de isolamento por usuário/veículo já validada nesses módulos.
+   */
+  async getVehicleHistory(
+    accessToken: string,
+    userId: string,
+    vehicleId: string,
+  ): Promise<VehicleHistoryItem[]> {
+    const [expenses, maintenances] = await Promise.all([
+      this.expensesService.findAll(accessToken, userId, {
+        page: 1,
+        limit: HISTORY_LIMIT,
+        vehicle_id: vehicleId,
+        category: undefined,
+        date_from: undefined,
+        date_to: undefined,
+      }),
+      this.maintenancesService.findAll(accessToken, userId, {
+        page: 1,
+        limit: HISTORY_LIMIT,
+        vehicle_id: vehicleId,
+        status: undefined,
+      }),
+    ]);
+
+    const expenseItems: VehicleHistoryItem[] = expenses.data.map((expense) => ({
+      id: expense.id,
+      type: "expense",
+      date: expense.date,
+      description: expense.description ?? expense.category,
+      amount: expense.amount,
+    }));
+
+    const maintenanceItems: VehicleHistoryItem[] = maintenances.data.map((maintenance) => ({
+      id: maintenance.id,
+      type: "maintenance",
+      date: maintenance.completion_date ?? maintenance.scheduled_date,
+      description: maintenance.description,
+      amount: maintenance.cost,
+    }));
+
+    return [...expenseItems, ...maintenanceItems]
+      .sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0))
+      .slice(0, HISTORY_LIMIT);
+  }
+
+  /**
+   * @spec SPEC-20260531-001 CA-S3-03
+   * `odometer_km` só pode ser null em registros anteriores à obrigatoriedade de RF-BD-04
+   * (validação Zod do frontend) — dado legado, não um caminho normal de criação hoje.
+   */
   private async getLastFuelExpense(
     client: SupabaseClient,
     userId: string,
     vehicleId: string,
-  ): Promise<{ date: string; amount: number } | null> {
+  ): Promise<{ date: string; amount: number; odometer_km: number | null } | null> {
     const { data, error } = await client
       .from("expenses")
-      .select("date, amount")
+      .select("date, amount, odometer_km")
       .eq("user_id", userId)
       .eq("vehicle_id", vehicleId)
       .eq("category", "fuel")
@@ -394,6 +564,6 @@ export class DashboardService {
     if (error) {
       throw new Error(error.message);
     }
-    return ((data ?? []) as { date: string; amount: number }[])[0] ?? null;
+    return ((data ?? []) as { date: string; amount: number; odometer_km: number | null }[])[0] ?? null;
   }
 }

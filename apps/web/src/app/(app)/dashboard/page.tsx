@@ -2,12 +2,17 @@
 
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { apiClient } from "@/lib/http/api-client";
 import { ActionDock } from "@/components/layout/action-dock";
 import { FleetAlertBar, type FleetAlertItem } from "@/components/dashboard/FleetAlertBar";
 import { FleetKpis, type FleetKpisData } from "@/components/dashboard/FleetKpis";
-import { VehicleHealthCard, type VehicleCardData } from "@/components/dashboard/VehicleHealthCard";
+import {
+  VehicleHealthCard,
+  type HealthFlag,
+  type VehicleCardData,
+} from "@/components/dashboard/VehicleHealthCard";
+import { VehicleSpotlight } from "@/components/dashboard/VehicleSpotlight";
 import { useDashboardStore } from "@/lib/stores/use-dashboard-store";
 
 const GRID_LIMIT_NO_VIRTUALIZATION = 15;
@@ -16,7 +21,7 @@ const GRID_INITIAL_PAGE_SIZE = 10;
 interface FleetHealthEntry {
   vehicle_id: string;
   score: number;
-  flags: unknown[];
+  flags: HealthFlag[];
 }
 
 function vehicleLabel(vehicle: VehicleCardData): string {
@@ -90,11 +95,13 @@ function NoVehiclesEmptyState(): ReactNode {
 function VehicleGrid({
   vehicles,
   healthByVehicleId,
+  flagsByVehicleId,
   activeVehicleId,
   onSelect,
 }: {
   vehicles: VehicleCardData[];
   healthByVehicleId: Map<string, number>;
+  flagsByVehicleId: Map<string, HealthFlag[]>;
   activeVehicleId: string | null;
   onSelect: (vehicleId: string) => void;
 }): ReactNode {
@@ -120,6 +127,7 @@ function VehicleGrid({
             key={vehicle.id}
             vehicle={vehicle}
             score={healthByVehicleId.get(vehicle.id)}
+            flags={flagsByVehicleId.get(vehicle.id)}
             isActive={vehicle.id === activeVehicleId}
             onSelect={() => onSelect(vehicle.id)}
           />
@@ -135,16 +143,18 @@ function VehicleGrid({
 }
 
 /**
- * @spec SPEC-20260531-001 Sprint 1 (RF-DA-01 a RF-DA-10, RF-DC-01 a RF-DC-06, RF-SH-01, RF-SH-02)
- * Zona B (Vehicle Spotlight) ainda não existe — entra na Sprint 2 (seção 12.3, migração
- * incremental). Clicar num card já atualiza o veículo em foco (RF-DA-05); o scroll suave até a
- * Zona B fica pendente até o container existir.
+ * @spec SPEC-20260531-001 Sprint 1 + Sprint 2 + Sprint 3
+ * Zona A (Fleet Command, RF-DA-01 a RF-DA-10, RF-DC-01 a RF-DC-06) + Zona B (Vehicle Spotlight,
+ * RF-DB-01 a RF-DB-08) + score de saúde (RF-SH-01 a RF-SH-04). Clicar num card atualiza o
+ * veículo em foco (RF-DA-05) e rola suavemente até a Zona B.
  */
 export default function DashboardPage(): ReactNode {
   const hasHydrated = useDashboardStore((state) => state.hasHydrated);
   const selectionMode = useDashboardStore((state) => state.selectionMode);
   const activeVehicleId = useDashboardStore((state) => state.activeVehicleId);
   const setActiveVehicle = useDashboardStore((state) => state.setActiveVehicle);
+  const clearAllSelection = useDashboardStore((state) => state.clearAllSelection);
+  const spotlightRef = useRef<HTMLDivElement>(null);
 
   const { data: vehicles } = useQuery({
     queryKey: ["dashboard", "vehicle-cards"],
@@ -187,6 +197,20 @@ export default function DashboardPage(): ReactNode {
     return map;
   }, [fleetHealth]);
 
+  const flagsByVehicleId = useMemo(() => {
+    const map = new Map<string, HealthFlag[]>();
+    for (const entry of fleetHealth ?? []) map.set(entry.vehicle_id, entry.flags);
+    return map;
+  }, [fleetHealth]);
+
+  const activeVehicle = vehicles?.find((vehicle) => vehicle.id === activeVehicleId);
+
+  /** @spec SPEC-20260531-001 RF-DA-05 */
+  function handleSelectVehicle(vehicleId: string): void {
+    setActiveVehicle(vehicleId);
+    spotlightRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
   const hasNoVehicles = vehicles?.length === 0;
 
   return (
@@ -214,11 +238,16 @@ export default function DashboardPage(): ReactNode {
             <VehicleGrid
               vehicles={vehicles}
               healthByVehicleId={healthByVehicleId}
+              flagsByVehicleId={flagsByVehicleId}
               activeVehicleId={activeVehicleId}
-              onSelect={setActiveVehicle}
+              onSelect={handleSelectVehicle}
             />
           )}
           <ExportControls vehicles={vehicles} />
+
+          <div ref={spotlightRef}>
+            <VehicleSpotlight vehicle={activeVehicle} onClear={clearAllSelection} />
+          </div>
         </>
       )}
 

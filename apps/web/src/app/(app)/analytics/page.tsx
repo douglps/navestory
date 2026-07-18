@@ -26,6 +26,8 @@ import {
 } from "recharts";
 import { apiClient } from "@/lib/http/api-client";
 import { useDashboardStore } from "@/lib/stores/use-dashboard-store";
+import { TcoBreakdownChart } from "@/components/charts/tco-breakdown-chart";
+import { FuelTrendChart } from "@/components/charts/fuel-trend-chart";
 
 interface Vehicle {
   id: string;
@@ -44,14 +46,6 @@ function currency(value: number): string {
   return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
-const BREAKDOWN_LABEL: Record<keyof VehicleTco["breakdown"], string> = {
-  fuel: "Combustível",
-  maintenance: "Manutenção",
-  fines: "Multas",
-  recurring: "Custos recorrentes",
-  other: "Outros",
-};
-
 /**
  * @spec SPEC-20260622-001 RF-01, RF-13, R-ANA-04
  */
@@ -68,11 +62,6 @@ function TcoSection({ tco }: { tco: VehicleTco | undefined }): ReactNode {
       </section>
     );
   }
-
-  const breakdownData = (Object.keys(tco.breakdown) as Array<keyof VehicleTco["breakdown"]>).map(
-    // eslint-disable-next-line security/detect-object-injection -- key é keyof VehicleTco["breakdown"], união fixa de 5 literais
-    (key) => ({ category: BREAKDOWN_LABEL[key], amount: tco.breakdown[key] }),
-  );
 
   return (
     <section aria-label="Custo total de propriedade" className="flex flex-col gap-3 rounded border p-4">
@@ -97,38 +86,7 @@ function TcoSection({ tco }: { tco: VehicleTco | undefined }): ReactNode {
         </div>
       </div>
 
-      <div aria-hidden="true" className="h-64">
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={breakdownData}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="category" />
-            <YAxis />
-            <Tooltip formatter={(value) => currency(Number(value))} />
-            <Bar dataKey="amount" fill="#2563eb" />
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
-
-      <details>
-        <summary className="cursor-pointer text-sm text-muted-foreground">Ver dados em tabela</summary>
-        <table className="mt-2 w-full text-sm">
-          <caption className="sr-only">Breakdown de custo por categoria</caption>
-          <thead>
-            <tr className="text-left text-muted-foreground">
-              <th scope="col">Categoria</th>
-              <th scope="col">Valor</th>
-            </tr>
-          </thead>
-          <tbody>
-            {breakdownData.map((row) => (
-              <tr key={row.category}>
-                <td>{row.category}</td>
-                <td>{currency(row.amount)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </details>
+      <TcoBreakdownChart breakdown={tco.breakdown} />
     </section>
   );
 }
@@ -150,69 +108,13 @@ function FuelTrendSection({ points }: { points: FuelTrendPoint[] | undefined }):
     );
   }
 
-  const chartData = [...points].reverse().map((point) => ({
-    date: point.date,
-    km_per_liter: point.km_per_liter,
-    rolling_avg_kpl: point.rolling_avg_kpl,
-  }));
-
   return (
     <section
       aria-label="Tendência de consumo de combustível"
       className="flex flex-col gap-3 rounded border p-4"
     >
       <h2 className="font-semibold">Combustível — Tendência de km/L</h2>
-
-      <div aria-hidden="true" className="h-64">
-        <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={chartData}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="date" />
-            <YAxis />
-            <Tooltip />
-            <Area
-              type="monotone"
-              dataKey="km_per_liter"
-              name="km/L"
-              stroke="#2563eb"
-              fill="#2563eb"
-              fillOpacity={0.15}
-              connectNulls
-            />
-            <Line
-              type="monotone"
-              dataKey="rolling_avg_kpl"
-              name="Média móvel (5)"
-              stroke="#16a34a"
-              dot={false}
-              connectNulls
-            />
-          </AreaChart>
-        </ResponsiveContainer>
-      </div>
-
-      <details>
-        <summary className="cursor-pointer text-sm text-muted-foreground">Ver dados em tabela</summary>
-        <table className="mt-2 w-full text-sm">
-          <caption className="sr-only">Consumo de combustível por abastecimento</caption>
-          <thead>
-            <tr className="text-left text-muted-foreground">
-              <th scope="col">Data</th>
-              <th scope="col">km/L</th>
-              <th scope="col">Média móvel (5)</th>
-            </tr>
-          </thead>
-          <tbody>
-            {chartData.map((row) => (
-              <tr key={row.date}>
-                <td>{row.date}</td>
-                <td>{row.km_per_liter ?? "—"}</td>
-                <td>{row.rolling_avg_kpl ?? "—"}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </details>
+      <FuelTrendChart points={points} />
     </section>
   );
 }

@@ -26,8 +26,11 @@ export interface FleetHealthEntry {
   flags: Array<{ type: string; [key: string]: unknown }>;
 }
 
-/** @spec SPEC-20260531-001 RF-DA-01 */
-export type FleetAlertType = "maintenance_overdue" | "maintenance_upcoming";
+/** @spec SPEC-20260531-001 RF-DA-01, CA-S3-02 */
+export type FleetAlertType =
+  | "maintenance_overdue"
+  | "maintenance_upcoming"
+  | "document_overdue";
 
 export interface FleetAlert {
   id: string;
@@ -69,5 +72,23 @@ export interface VehicleCard {
   odometer: number | null;
   last_fuel_date: string | null;
   last_fuel_amount: number | null;
+  /** @spec SPEC-20260531-001 CA-S3-03 — true quando o último abastecimento não tem odômetro preenchido (dado legado, anterior à obrigatoriedade de RF-BD-04) */
+  last_fuel_odometer_missing: boolean;
   documents: VehicleDocumentsStatus;
+}
+
+/**
+ * @spec SPEC-20260531-001 RF-DB-07
+ */
+export const vehicleHistoryQuerySchema = z.object({
+  vehicle_id: z.string().uuid(),
+});
+export type VehicleHistoryQuery = z.infer<typeof vehicleHistoryQuerySchema>;
+
+export interface VehicleHistoryItem {
+  id: string;
+  type: "expense" | "maintenance";
+  date: string;
+  description: string;
+  amount: number | null;
 }

@@ -5,7 +5,7 @@ const MAX_VISIBLE_ALERTS = 3;
 
 export interface FleetAlertItem {
   id: string;
-  type: "maintenance_overdue" | "maintenance_upcoming";
+  type: "maintenance_overdue" | "maintenance_upcoming" | "document_overdue";
   vehicle_plate: string;
   description: string;
   days_until_due: number;
@@ -27,9 +27,9 @@ function alertStyles(alert: FleetAlertItem): string {
 }
 
 /**
- * @spec SPEC-20260531-001 RF-DA-01, RF-DA-02
- * Escopo Sprint 1: alertas vêm de `GET /dashboard/alerts` (só manutenção). Alertas de documentos
- * (IPVA/Seguro/CRLV) chegam na Sprint 3 pelo mesmo endpoint — este componente não muda.
+ * @spec SPEC-20260531-001 RF-DA-01, RF-DA-02, CA-S3-02
+ * Alertas de manutenção e de documentos (IPVA/Seguro/CRLV vencidos) vêm combinados e já ordenados
+ * por urgência de `GET /dashboard/alerts` — este componente não distingue tipo, só urgência.
  */
 export function FleetAlertBar({ alerts }: { alerts: FleetAlertItem[] }): ReactNode {
   if (alerts.length === 0) return null;

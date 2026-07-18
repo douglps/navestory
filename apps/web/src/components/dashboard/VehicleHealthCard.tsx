@@ -11,7 +11,35 @@ export interface VehicleCardData {
   odometer: number | null;
   last_fuel_date: string | null;
   last_fuel_amount: number | null;
+  last_fuel_odometer_missing: boolean;
   documents: { ipva: DocumentStatus; insurance: DocumentStatus; crlv: DocumentStatus };
+}
+
+export interface HealthFlag {
+  type: string;
+  [key: string]: unknown;
+}
+
+const FLAG_LABEL: Record<string, (flag: HealthFlag) => string> = {
+  maintenance_overdue: (flag) => `${String(flag.count)} manutenção(ões) vencida(s)`,
+  ipva_expiring: (flag) => `IPVA vence em ${String(flag.days)} dias`,
+  insurance_expiring: (flag) => `Seguro vence em ${String(flag.days)} dias`,
+  crlv_expiring: (flag) => `CRLV vence em ${String(flag.days)} dias`,
+  km_alert: (flag) => `Próxima manutenção em ${String(flag.km_until)} km`,
+  fines_pending: (flag) => `${String(flag.count)} multa(s) pendente(s)`,
+};
+
+/**
+ * @spec SPEC-20260531-001 RF-SH-03
+ * Detalhamento dos `flags` já retornados por calculate_vehicle_health/calculate_fleet_health —
+ * nenhum recálculo de peso aqui, só formatação para leitura humana.
+ */
+function flagsTooltip(score: number | undefined, flags: HealthFlag[] | undefined): string {
+  if (score === undefined) return "Calculando saúde…";
+  if (!flags || flags.length === 0) return `Saúde: ${score}/100 — nenhum problema identificado`;
+
+  const lines = flags.map((flag) => FLAG_LABEL[flag.type]?.(flag) ?? flag.type);
+  return [`Saúde: ${score}/100`, ...lines].join("\n");
 }
 
 function vehicleLabel(vehicle: VehicleCardData): string {
@@ -49,20 +77,21 @@ function DocumentBadge({ label, status }: { label: string; status: DocumentStatu
 }
 
 /**
- * @spec SPEC-20260531-001 RF-DA-04, RF-DA-05, RF-SH-01, RF-SH-02
- * O semáforo consome `calculate_fleet_health` (RF-SH-01) — nunca recalculado aqui.
- * Clicar chama `setActiveVehicle` no store global (RF-DA-05); o scroll suave até a Zona B fica
- * pendente até a Sprint 2 construir o container `VehicleSpotlight` (migração incremental, seção
- * 12.3 da spec) — não há elemento para rolar até lá ainda.
+ * @spec SPEC-20260531-001 RF-DA-04, RF-DA-05, RF-SH-01, RF-SH-02, RF-SH-03, CA-S3-03
+ * O semáforo consome `calculate_fleet_health` (RF-SH-01) — nunca recalculado aqui. O tooltip
+ * (RF-SH-03) só formata os `flags` já retornados pela RPC, sem recalcular pesos. Clicar chama
+ * `setActiveVehicle` no store global (RF-DA-05).
  */
 export function VehicleHealthCard({
   vehicle,
   score,
+  flags,
   isActive,
   onSelect,
 }: {
   vehicle: VehicleCardData;
   score: number | undefined;
+  flags: HealthFlag[] | undefined;
   isActive: boolean;
   onSelect: () => void;
 }): ReactNode {
@@ -80,7 +109,7 @@ export function VehicleHealthCard({
         <span className="font-medium">{vehicleLabel(vehicle)}</span>
         <span
           aria-hidden
-          title={score === undefined ? "Calculando saúde…" : `Saúde: ${score}/100`}
+          title={flagsTooltip(score, flags)}
           className={`h-3 w-3 shrink-0 rounded-full ${semaphoreColor(score)}`}
         />
       </div>
@@ -96,6 +125,15 @@ export function VehicleHealthCard({
             : "Sem abastecimentos"}
         </span>
       </div>
+
+      {vehicle.last_fuel_odometer_missing && (
+        <span
+          role="alert"
+          className="rounded border border-amber-400 bg-amber-50 px-1.5 py-0.5 text-[10px] font-medium text-amber-700"
+        >
+          Último abastecimento sem odômetro registrado
+        </span>
+      )}
 
       <div className="flex flex-wrap gap-1">
         <DocumentBadge label="IPVA" status={vehicle.documents.ipva} />

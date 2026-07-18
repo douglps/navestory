@@ -8,6 +8,7 @@ import { ZodValidationPipe } from "../../common/pipes/zod-validation.pipe";
 import { DashboardService } from "./dashboard.service";
 import { exportExpensesDtoSchema, type ExportExpensesDto } from "./dto/export-expenses.dto";
 import { fleetKpisDtoSchema, type FleetKpisDto } from "./dto/fleet-kpis.dto";
+import { vehicleHistoryDtoSchema, type VehicleHistoryDto } from "./dto/vehicle-history.dto";
 
 const CSV_BOM = "﻿";
 
@@ -85,6 +86,19 @@ export class DashboardController {
   async getVehicleCards(@Req() req: Request, @UserId() userId: string) {
     const accessToken = this.extractAccessToken(req);
     const data = await this.dashboardService.getVehicleCards(accessToken, userId);
+    return { data };
+  }
+
+  @Get("vehicle-history")
+  @ApiOperation({ summary: "Últimas 20 despesas + manutenções do veículo, por data decrescente (RF-DB-07)" })
+  @ApiResponse({ status: 200, description: "Lista de VehicleHistoryItem" })
+  async getVehicleHistory(
+    @Req() req: Request,
+    @UserId() userId: string,
+    @Query(new ZodValidationPipe(vehicleHistoryDtoSchema)) query: VehicleHistoryDto,
+  ) {
+    const accessToken = this.extractAccessToken(req);
+    const data = await this.dashboardService.getVehicleHistory(accessToken, userId, query.vehicle_id);
     return { data };
   }
 

@@ -40,8 +40,8 @@ Esta pasta é a **fonte de verdade de requisitos** do projeto. Antes de implemen
 | Negócio / Estratégia | [business/](business/) | SPEC-20260620-001 |
 | Analytics / BI | [analytics/](analytics/) | SPEC-20260622-001 (Fase 1 implementada) |
 | PWA / Offline | [pwa/](pwa/) | SPEC-20260712-001 (draft) |
-| QA / Testes E2E | [qa/](qa/) | SPEC-20260716-001 (draft) |
-| DevOps / Infra | [devops/](devops/) | SPEC-20260716-001, SPEC-20260716-002 (draft) |
+| QA / Testes E2E | [qa/](qa/) | SPEC-20260716-003 (draft) |
+| DevOps / Infra | [devops/](devops/) | SPEC-20260716-001 (approved), SPEC-20260716-002 (draft) |
 
 ---
 

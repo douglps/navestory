@@ -81,10 +81,21 @@
 > - IMPACTO-033 e IMPACTO-035 atualizados em `matrices/impacto.md` para refletir T5.1 concluída.
 >
 > **ATUALIZAÇÃO — 2026-07-16 (rev. 47)**
-> SPEC-20260716-001 (Testes E2E com Playwright) criada em `specs/qa/`. Configuração do Playwright
+> SPEC-20260716-003 (Testes E2E com Playwright) criada em `specs/qa/`. Configuração do Playwright
 > em `apps/web/e2e/`, fluxos críticos RF-E2E-01 a RF-E2E-07 e integração com CI documentados.
 > Nenhum código existe ainda. `specs/TESTS_SPEC.md` atualizado para referenciar a nova spec como
 > fonte formal da estratégia E2E. Entrada adicionada nesta matriz.
+>
+> **ATUALIZAÇÃO — 2026-07-18**
+> Corrigida colisão de ID: a spec de Testes E2E (`specs/qa/`) e a spec de Deploy Automatizado/CD
+> (`specs/devops/`) foram criadas na mesma rodada (2026-07-16) e ambas receberam o ID
+> `SPEC-20260716-001`, violando a unicidade exigida por `.claude/CLAUDE.md`. A spec de E2E — ainda
+> `draft`, sem código implementado — foi renomeada para `SPEC-20260716-003` (arquivo
+> `specs/qa/SPEC-20260716-003-e2e-playwright.md`); `SPEC-20260716-001` permanece exclusivamente
+> com a spec de CD (`approved`, já referenciada por código real: `.github/workflows/cd.yml`,
+> `docs/operations/runbooks.md`, `docs/reference/environment-variables.md`), evitando qualquer
+> necessidade de tocar código de produção. Referências atualizadas em `specs/README.md` e
+> `specs/TESTS_SPEC.md`; achado identificado pelo agente `doc-keeper` durante o fechamento de T5.1.
 
 ---
 
@@ -1804,7 +1815,7 @@ que o artefato ainda não existe no repositório.
 
 ---
 
-## SPEC-20260716-001 — Testes E2E com Playwright (draft)
+## SPEC-20260716-003 — Testes E2E com Playwright (draft)
 
 > Define configuração do Playwright em `apps/web/e2e/`, suíte mínima de testes E2E para fluxos
 > críticos (autenticação, avisos de odômetro/duplicata, troca de contexto de veículo) e integração

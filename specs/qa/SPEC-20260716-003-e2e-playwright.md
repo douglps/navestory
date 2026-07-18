@@ -1,5 +1,5 @@
 ---
-id: SPEC-20260716-001
+id: SPEC-20260716-003
 title: "Testes E2E com Playwright"
 status: draft
 date: 2026-07-16
@@ -9,7 +9,7 @@ security: [S1]
 camadas: [frontend, qa]
 ---
 
-# SPEC-20260716-001 — Testes E2E com Playwright
+# SPEC-20260716-003 — Testes E2E com Playwright
 
 ---
 

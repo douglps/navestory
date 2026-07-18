@@ -13,7 +13,7 @@
 
 > **Estratégia E2E:** a configuração do Playwright, os fluxos cobertos, o critério de seleção
 > (E2E vs. unitário) e a integração com o CI estão formalizados em
-> [SPEC-20260716-001](qa/SPEC-20260716-001-e2e-playwright.md). Esta tabela é o ponto de entrada
+> [SPEC-20260716-003](qa/SPEC-20260716-003-e2e-playwright.md). Esta tabela é o ponto de entrada
 > da pirâmide; a spec é a fonte canônica dos requisitos de E2E.
 
 **Regra inviolável:** testes de repositório nunca mocam o banco de dados — política ativa desde 2026-06-01.

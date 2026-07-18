@@ -3,7 +3,7 @@ id: SPEC-20260608-003
 title: "Alertas de Custos Recorrentes — IPVA, CRLV, Seguro"
 status: approved
 date: 2026-06-08
-author: douglps
+author: Douglas Lopes (lps.doug@protonmail.com)
 rules: [R-REC-01, R-REC-02]
 security: [S1, S2]
 camadas: [frontend]

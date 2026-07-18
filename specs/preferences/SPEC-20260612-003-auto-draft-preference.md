@@ -3,7 +3,7 @@ id: SPEC-20260612-003
 title: "Preferência de Rascunho Automático em Formulários"
 status: approved
 date: 2026-06-12
-author: douglps
+author: Douglas Lopes (lps.doug@protonmail.com)
 rules: [R-PREF-01, R-PREF-02]
 security: [S2]
 camadas: [database, backend, frontend]

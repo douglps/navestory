@@ -3,7 +3,7 @@ id: SPEC-20260612-002
 title: "Ajustes de Campos e Layout do Formulário de Despesas"
 status: approved
 date: 2026-06-12
-author: douglps
+author: Douglas Lopes (lps.doug@protonmail.com)
 rules: [R-EXP-01, R-ODO-02, R-FUEL-06]
 security: []
 camadas: [frontend, backend]

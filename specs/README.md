@@ -2,6 +2,10 @@
 
 Esta pasta é a **fonte de verdade de requisitos** do projeto. Antes de implementar qualquer feature, a spec deve existir e estar aprovada.
 
+**Nível de maturidade do projeto:** 2 (Produto)
+**Critério:** SaaS multi-módulo com dado sensível/regulado (dados financeiros e pessoais sob LGPD), múltiplos usuários reais previstos e dependências externas reais já em uso (Supabase, Resend). Estrutura completa de specs/matrizes/ADRs já opera nesse regime desde antes da declaração formal deste campo.
+**Última revisão:** 2026-07-16
+
 ---
 
 ## Documentos Centrais
@@ -36,6 +40,8 @@ Esta pasta é a **fonte de verdade de requisitos** do projeto. Antes de implemen
 | Negócio / Estratégia | [business/](business/) | SPEC-20260620-001 |
 | Analytics / BI | [analytics/](analytics/) | SPEC-20260622-001 (Fase 1 implementada) |
 | PWA / Offline | [pwa/](pwa/) | SPEC-20260712-001 (draft) |
+| QA / Testes E2E | [qa/](qa/) | SPEC-20260716-001 (draft) |
+| DevOps / Infra | [devops/](devops/) | SPEC-20260716-001, SPEC-20260716-002 (draft) |
 
 ---
 
@@ -55,7 +61,7 @@ id: SPEC-YYYYMMDD-NNN
 title: "Título da Feature"
 status: draft | review | approved | deprecated
 date: YYYY-MM-DD
-author: <username>
+author: Douglas Lopes (lps.doug@protonmail.com)  # nome completo + email; outro colaborador só se identificado no projeto
 rules: [R1, R4]      # IDs de regras de domínio (ver RULES.md)
 security: [S1]       # IDs de regras de segurança (ver RULES.md)
 camadas: [backend, database]  # camadas técnicas tocadas — vocabulário canônico em ~/.claude/CLAUDE.md

@@ -3,7 +3,7 @@ id: SPEC-20260607-001
 title: "FinesModule — CRUD de Multas de Trânsito"
 status: approved
 date: 2026-06-07
-author: douglps
+author: Douglas Lopes (lps.doug@protonmail.com)
 rules: [R5, S1, S2, R-LED-02, R-LED-03, R-HUB-01]
 security: [S1, S2]
 camadas: [backend, database]

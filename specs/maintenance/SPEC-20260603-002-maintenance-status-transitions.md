@@ -3,7 +3,7 @@ id: SPEC-20260603-002
 title: "Transições de Status de Manutenção"
 status: approved
 date: 2026-06-03
-author: douglps
+author: Douglas Lopes (lps.doug@protonmail.com)
 rules: [R5, R7]
 security: [S1, S2]
 camadas: [backend, database]

@@ -3,7 +3,7 @@ id: SPEC-20260609-003
 title: "Exportação CSV consolidada de todas as origens financeiras"
 status: approved
 date: 2026-06-09
-author: douglps
+author: Douglas Lopes (lps.doug@protonmail.com)
 rules: [R5, R-LED-01, S1, S2]
 security: [S1, S2]
 camadas: [backend, frontend]

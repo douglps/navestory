@@ -3,7 +3,7 @@ id: SPEC-20260608-001
 title: "Upcoming Costs — Próximas Despesas"
 status: approved
 date: 2026-06-08
-author: douglps
+author: Douglas Lopes (lps.doug@protonmail.com)
 rules: [R-LED-01, R-LED-02, R-LED-03, R-REC-01, R-REC-02]
 security: [S1, S2]
 camadas: [backend, frontend, database]

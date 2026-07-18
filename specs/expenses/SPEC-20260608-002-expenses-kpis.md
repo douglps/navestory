@@ -3,7 +3,7 @@ id: SPEC-20260608-002
 title: "Expenses KPIs — Central Financeira"
 status: approved
 date: 2026-06-08
-author: douglps
+author: Douglas Lopes (lps.doug@protonmail.com)
 rules: [R-LED-01]
 security: [S1, S2]
 camadas: [backend, frontend]

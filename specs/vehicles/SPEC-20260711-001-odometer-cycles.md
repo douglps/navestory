@@ -3,7 +3,7 @@ id: SPEC-20260711-001
 title: "Ciclos de Odômetro"
 status: approved
 date: 2026-07-11
-author: douglps
+author: Douglas Lopes (lps.doug@protonmail.com)
 rules: [R-ODO-03, R-ODO-04, R-ODO-05, R-ODO-06]
 security: [S1, S2]
 camadas: [frontend, backend, database]

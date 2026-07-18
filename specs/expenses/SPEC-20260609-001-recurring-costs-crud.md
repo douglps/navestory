@@ -3,7 +3,7 @@ id: SPEC-20260609-001
 title: "CRUD de Custos Recorrentes de Veículos (IPVA, CRLV, Seguro)"
 status: approved
 date: 2026-06-09
-author: douglps
+author: Douglas Lopes (lps.doug@protonmail.com)
 rules: [R-REC-01, R-REC-02, R-LED-05, R-HUB-01, S1, S2]
 security: [S1, S2]
 camadas: [backend, database]

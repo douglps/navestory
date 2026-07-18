@@ -9,7 +9,7 @@
 | ID | Regra | Spec |
 |----|-------|------|
 | R1 | `odometer_km` não pode ser menor que o maior valor já registrado para aquele veículo | [SPEC-20260601-001](expenses/SPEC-20260601-001-odometer-validation.md) |
-| R2 | Despesa criada com os mesmos `vehicle_id`, `category`, `amount` e data de um registro ativo existente do mesmo usuário é sempre persistida (nunca bloqueada); a resposta é enriquecida com `duplicate_warning: true` e `duplicate_id` do registro suspeito. **Nota 2026-07-15 (SPEC-20260715-002):** `expenses.date` foi renomeada para `occurred_at` e migrada de `DATE` para `timestamptz`; "mesma data" passa a significar mesmo **dia calendário no fuso do usuário** (não igualdade de `timestamptz`); a implementação de RF-BK-08 de SPEC-20260715-002 aplica esse critério | [SPEC-20260601-002](expenses/SPEC-20260601-002-duplicate-detection.md) |
+| R2 | Despesa criada com os mesmos `vehicle_id`, `category`, `amount` e data de um registro ativo existente do mesmo usuário é sempre persistida (nunca bloqueada); a resposta é enriquecida com `duplicate_warning: true` e `duplicate_id` do registro suspeito. **v2** — ver [Histórico de Versões](#histórico-de-versões) | [SPEC-20260601-002](expenses/SPEC-20260601-002-duplicate-detection.md) |
 | R3 | Limite de 20 templates por usuário — enforced por DB trigger e validado no service | [SPEC-20260601-003](expenses/SPEC-20260601-003-expense-templates.md) |
 | R4 | `odometer_km` é obrigatório para despesas de categoria `fuel` (abastecimento) | [SPEC-20260601-001](expenses/SPEC-20260601-001-odometer-validation.md) |
 | R5 | Soft-delete via `deleted_at`; registros com `deleted_at IS NOT NULL` são invisíveis por padrão em todas as listagens | todos os domínios |
@@ -29,7 +29,7 @@
 | R-GRP-03 | Apenas veículos ativos (`deleted_at IS NULL`) do próprio usuário podem ser membros de um grupo; veículos inválidos são descartados silenciosamente | [SPEC-20260602-003](vehicles/SPEC-20260602-003.md) |
 | R-GRP-04 | Exclusão de grupo é hard-delete; membros são removidos por cascade FK, não por lógica de aplicação | [SPEC-20260602-003](vehicles/SPEC-20260602-003.md) |
 | R-CTX-01 | Apenas um modo de contexto (`single`, `group`, `multi`, `attribute`) pode estar ativo simultaneamente; ativar qualquer modo zera os demais campos conflitantes no store | [SPEC-20260602-001](context/SPEC-20260602-001-em-foco-contexto-global.md) |
-| R-CTX-02 | Contextos `single` e `group` persistem em localStorage; `multi` e `attribute` são efêmeros (somente sessão); logout limpa todos os campos de contexto | [SPEC-20260602-001](context/SPEC-20260602-001-em-foco-contexto-global.md) |
+| R-CTX-02 | Contextos `single` e `group` persistem em sessionStorage (isolado por aba); `multi` e `attribute` são efêmeros (somente sessão); logout limpa todos os campos de contexto e remove explicitamente a chave do sessionStorage. **v2** — ver [Histórico de Versões](#histórico-de-versões) | [SPEC-20260602-001](context/SPEC-20260602-001-em-foco-contexto-global.md), [SPEC-20260603-001](context/SPEC-20260603-001-context-chip-subheader.md) |
 | R-CTX-03 | Formulários transacionais (despesa, manutenção) exigem `vehicle_id` singular para gravar; contextos coletivos (`group`, `multi`, `attribute`) nunca propagam automaticamente para o campo de veículo | [SPEC-20260602-001](context/SPEC-20260602-001-em-foco-contexto-global.md) |
 | R-CTX-04 | `VehicleActivator` é o único ponto de sincronização entre URL searchParams e o store Zustand; nenhum outro componente deve realizar essa ponte | [SPEC-20260602-001](context/SPEC-20260602-001-em-foco-contexto-global.md) |
 | R-CTX-05 | Staleness de contexto (veículo/grupo com soft-delete detectado) é resolvida no carregamento do `FleetAside`, não no store; o store não valida existência de entidades | [SPEC-20260602-001](context/SPEC-20260602-001-em-foco-contexto-global.md) |
@@ -47,13 +47,13 @@
 | R-LED-01 | Expenses com `source_type IS NOT NULL` têm `is_readonly = true`; tentativas de PATCH ou DELETE retornam 403 | EPIC-FIN-001 |
 | R-LED-02 | Manutenção transitando para `completed` com `cost IS NOT NULL` cria ou atualiza a expense vinculada via `ExpensesService.createFromSource()`; multa criada (`POST /fines`) cria expense vinculada automaticamente com `source_type = 'fine'` — usa `amount_with_discount` quando disponível | EPIC-FIN-001 |
 | R-LED-03 | Manutenção ou multa transitando para `cancelled` soft-deleta (`deleted_at = NOW()`) a expense vinculada via `ExpensesService.softDeleteBySource()` | EPIC-FIN-001 |
-| R-LED-04 | `source_type` e `source_id` são sempre definidos juntos — estado parcial é inválido (enforced por constraint `expenses_source_coherence_check` no banco e por validação de schema). **Nota 2026-07-12:** o diagnóstico [IMPACTO-026](../matrices/impacto.md#impacto-026-diagnóstico-dba-do-banco-real-navesaas-supabase--achados-críticos-de-segurança-e-integridade) #4 confirmou que essa constraint **não existia no banco legado `NaveSaaS`** (descontinuado, sem migração de dados). No projeto atual `Nave`, a constraint **já foi criada e verificada** — ver [IMPACTO-027](../matrices/impacto.md#impacto-027-criação-do-projeto-nave-schema-higienizado-e-fechamento-dos-achados-do-impacto-026) #5. Nenhuma ação pendente para este projeto. | EPIC-FIN-001 |
+| R-LED-04 | `source_type` e `source_id` são sempre definidos juntos — estado parcial é inválido (enforced por constraint `expenses_source_coherence_check` no banco e por validação de schema). Nota de auditoria — ver [Histórico de Versões](#histórico-de-versões) | EPIC-FIN-001 |
 | R-LED-05 | `vehicle_recurring_costs` com `paid_at` preenchido cria expense vinculada com `source_type = 'recurring_cost'` via `ExpensesService.createFromSource()` | EPIC-FIN-001 |
 | R-HUB-01 | Soft-delete individual de manutenção ou multa (`deleted_at` preenchido) também soft-deleta a expense vinculada, se existir | EPIC-FIN-001 |
 | R-HUB-02 | Criação de expense vinculada é idempotente — unique index `uq_expenses_source` garante no máximo uma expense ativa por `(source_type, source_id)` | EPIC-FIN-001 |
 | R-REC-01 | `vehicle_recurring_costs` aceita no máximo um registro por `(vehicle_id, cost_type, year)` — enforced por `UNIQUE` constraint | EPIC-FIN-001 |
 | R-REC-02 | Recorrência anual é manual; UX exibe banner quando vencimento de documento em `vehicles` está ≤ 60 dias sem `vehicle_recurring_costs` correspondente | EPIC-FIN-001 |
-| R-ODO-01 | No fluxo web (server actions de `expenses`), `odometer_km` informado é validado contra o histórico do veículo por data: não pode ser menor que o máximo registrado em data anterior/igual, nem maior que o mínimo registrado em data posterior. Violação rejeita a operação (hard block). Supersede R1 **apenas para o fluxo web**; R1/SPEC-20260601-001 permanece válida para `apps/api` | [SPEC-20260612-001](expenses/SPEC-20260612-001-expense-form-ux-improvements.md) |
+| R-ODO-01 | No fluxo web (server actions de `expenses`), `odometer_km` informado é validado contra o histórico do veículo por data: não pode ser menor que o máximo registrado em data anterior/igual, nem maior que o mínimo registrado em data posterior. Violação rejeita a operação (hard block). Relação com R1 — ver [Histórico de Versões](#histórico-de-versões) | [SPEC-20260612-001](expenses/SPEC-20260612-001-expense-form-ux-improvements.md) |
 | R-ODO-02 | `odometer_km`, quando informado, não pode exceder `9.999.999` (7 dígitos) — validado em `expenseBaseSchema`, alinhado ao limite de digitação do `OdometerInput` | [SPEC-20260612-002](expenses/SPEC-20260612-002-form-fields-adjustments.md) |
 | R-EXP-01 | `amount` de uma despesa deve estar entre `0,01` e `100.000.000,00` (inclusive) | [SPEC-20260612-002](expenses/SPEC-20260612-002-form-fields-adjustments.md) |
 | R-FUEL-06 | `full_tank` é tri-state (`true` / `false` / `null`); default `null` ("Tanque cheio?" sem seleção). `R-FUEL-02` (cálculo de km/L exige `full_tank = true`) permanece válida sem alterações | [SPEC-20260612-002](expenses/SPEC-20260612-002-form-fields-adjustments.md) |
@@ -156,6 +156,7 @@
 | S7 | Functions `SECURITY DEFINER` que aceitam identificador de recurso como parâmetro (`p_user_id`, `p_vehicle_id` etc.) devem validar internamente que `auth.uid()` corresponde ao dono do recurso antes de retornar dado; `EXECUTE` nunca é concedido ao role `anon` a menos que a função seja explicitamente pública por design. **Achado real 2026-07-12:** `calculate_vehicle_health`, `calculate_fleet_health`, `get_upcoming_costs` e `get_vehicle_cost_per_km` violam esta regra no banco de produção (executáveis por `anon`, sem confirmação de validação interna) — achado crítico [IMPACTO-026](../matrices/impacto.md#impacto-026-diagnóstico-dba-do-banco-real-navesaas-supabase--achados-críticos-de-segurança-e-integridade) #1 | — |
 | S8 | Buckets do Supabase Storage nunca têm policy que permita `LIST` público de objetos — apenas acesso por URL/path direto quando o conteúdo é intencionalmente público. **Achado real 2026-07-12:** bucket `vehicles` tem policy `"Public access to vehicle photos"` que permite listar todos os arquivos — achado crítico [IMPACTO-026](../matrices/impacto.md#impacto-026-diagnóstico-dba-do-banco-real-navesaas-supabase--achados-críticos-de-segurança-e-integridade) #2 | — |
 | S9 | Toda function PL/pgSQL define `search_path` fixo (`SET search_path = ''` ou schema explícito) — nunca deixa o `search_path` mutável, especialmente em functions `SECURITY DEFINER`, para evitar sequestro de objeto via schema malicioso. **Achado real 2026-07-12:** 6 functions no banco de produção sem `search_path` fixo — achado [IMPACTO-026](../matrices/impacto.md#impacto-026-diagnóstico-dba-do-banco-real-navesaas-supabase--achados-críticos-de-segurança-e-integridade) #6 | — |
+| S10 | Logs estruturados nunca devem conter PII ou dados sensíveis. Campos proibidos (redacted para `[REDACTED]` pelo serializer do Pino antes de serem escritos): `password`, `token`, `accessToken`, `refreshToken`, `jwt`, `authorization`, `service_role_key`, `cpf`, `email` em texto plano, `photo_url`. Qualquer campo cujo nome case com o padrão `/password\|token\|secret\|key\|cpf\|ssn/i` é redacted automaticamente. Aplica-se a todos os logs de `apps/api` e a qualquer pipeline de logging futuro | [SPEC-20260716-002](devops/SPEC-20260716-002-observabilidade.md) |
 
 ---
 
@@ -167,6 +168,7 @@
 | P2 | Atualização de `last_used_at` em templates é fire-and-forget — não bloqueia a resposta ao usuário |
 | P3 | Sem `console.log`, `console.warn` ou `debugger` em codigo de producao; backend usa `Logger` do NestJS; frontend usa condicionais de `NODE_ENV` para logs de desenvolvimento. **Nota 2026-06-22:** 11 ocorrencias residuais identificadas em IMPACTO-021 #6 |
 | P4 | Policies RLS usam `(SELECT auth.uid())` em vez de `auth.uid()` direto — permite ao planner do Postgres cachear o resultado como InitPlan (avaliado uma vez por query) em vez de reavaliar por linha. **Achado real 2026-07-12:** 35 policies em 15 tabelas do banco de produção usam a forma não otimizada — achado [IMPACTO-026](../matrices/impacto.md#impacto-026-diagnóstico-dba-do-banco-real-navesaas-supabase--achados-críticos-de-segurança-e-integridade) |
+| P5 | O endpoint `GET /health` deve concluir em no máximo 5 segundos, incluindo a verificação de dependências externas; cada dependência individual tem timeout de 3 segundos. Falha de dependência não-crítica retorna `status: "degraded"` (HTTP 200) em vez de interromper o processo — monitores externos não confundem disponibilidade da API com disponibilidade da dependência | [SPEC-20260716-002](devops/SPEC-20260716-002-observabilidade.md) |
 
 ---
 
@@ -176,6 +178,36 @@
 |----|-------|------------|
 | C1 | Dados pessoais processados sob LGPD; exclusão completa acionada via `DELETE /users/me` com cascata em todas as tabelas do usuário | [SPEC-20260521-004](admin/SPEC-20260521-004.md) |
 | C2 | Audit log registrado em toda Server Action mutante e em toda operação REST que altera dados; campos obrigatórios: `action`, `table_name`, `record_id`, `changes` | [SPEC-20260521-001](security/SPEC-20260521-001.md) |
+
+---
+
+## Histórico de Versões
+
+> Formato conforme `~/.claude/CLAUDE.md` — regras cujo comportamento mudou entre specs ganham
+> tabela de histórico aqui, em vez de nota inline na tabela principal. Specs podem citar a versão
+> vigente (`rules: [R2]`) ou travar numa versão específica (`rules: [R2@v1]`).
+
+### R2 — Detecção de duplicata em despesas
+**Versão atual:** v2 (2026-07-15)
+
+| Versão | Data | Mudança |
+|--------|------|---------|
+| v1 | 2026-06-01 | Criação (SPEC-20260601-002): despesa duplicada (mesmo `vehicle_id`/`category`/`amount`/data) nunca é bloqueada — sempre persistida com `duplicate_warning: true` e `duplicate_id` |
+| v2 | 2026-07-15 | SPEC-20260715-002: `expenses.date` renomeada para `occurred_at` e migrada de `DATE` para `timestamptz`; "mesma data" passa a significar mesmo dia calendário no fuso do usuário, não igualdade de `timestamptz` |
+
+### R-CTX-02 — Persistência de contexto (single/group)
+**Versão atual:** v2 (2026-07-16)
+
+| Versão | Data | Mudança |
+|--------|------|---------|
+| v1 | 2026-06-02 | Criação (SPEC-20260602-001): contextos `single` e `group` persistem em `localStorage` |
+| v2 | 2026-07-16 | SPEC-20260603-001 RF-21/RF-23: migrado para `sessionStorage` isolado por aba — `localStorage` compartilhava contexto entre abas simultâneas, sobrescrevendo-se mutuamente |
+
+### R-LED-04 — Nota de auditoria (não é mudança de versão)
+A regra nunca mudou de comportamento — o texto abaixo é status de verificação, não histórico de versão. O diagnóstico [IMPACTO-026](../matrices/impacto.md#impacto-026-diagnóstico-dba-do-banco-real-navesaas-supabase--achados-críticos-de-segurança-e-integridade) #4 (2026-07-12) confirmou que a constraint `expenses_source_coherence_check` **não existia no banco legado `NaveSaaS`** (descontinuado, sem migração de dados). No projeto atual `Nave`, a constraint **já foi criada e verificada** — ver [IMPACTO-027](../matrices/impacto.md#impacto-027-criação-do-projeto-nave-schema-higienizado-e-fechamento-dos-achados-do-impacto-026) #5. Nenhuma ação pendente.
+
+### R-ODO-01 — Nota de relacionamento com R1 (não é mudança de versão)
+R-ODO-01 não é uma versão de R1 — é uma regra própria que supersede R1 **apenas no fluxo web** (server actions de `expenses`); R1/SPEC-20260601-001 permanece válida para `apps/api`. As duas regras coexistem por camada de aplicação, não por substituição temporal de uma pela outra.
 
 ---
 

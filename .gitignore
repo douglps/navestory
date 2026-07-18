@@ -39,6 +39,9 @@ pnpm-debug.log*
 .claude/settings.local.json
 .claude/scheduled_tasks.lock
 
+# Pendências e processos operacionais (rastreamento pessoal, não versionado)
+important/
+
 # Sistema operacional
 .DS_Store
 Thumbs.db

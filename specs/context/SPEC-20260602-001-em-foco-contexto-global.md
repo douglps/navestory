@@ -3,7 +3,7 @@ id: SPEC-20260602-001
 title: "Sistema Em Foco — Contexto de Veículo Global"
 status: approved
 date: 2026-06-02
-author: douglps
+author: Douglas Lopes (lps.doug@protonmail.com)
 rules: [R5, R-CTX-01, R-CTX-02, R-CTX-03, R-CTX-04, R-CTX-05, R-CTX-06]
 security: [S1, S2]
 camadas: [frontend, backend]

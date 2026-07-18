@@ -3,7 +3,7 @@ id: SPEC-20260606-001
 title: "Tipo de Combustível, Tanque Cheio e Cálculo de Consumo"
 status: approved
 date: 2026-06-06
-author: douglps
+author: Douglas Lopes (lps.doug@protonmail.com)
 rules: [R4, R-FUEL-01, R-FUEL-02, R-FUEL-03, R-FUEL-05]
 security: [S2]
 camadas: [backend, frontend, database]

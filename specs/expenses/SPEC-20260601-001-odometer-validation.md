@@ -3,7 +3,7 @@ id: SPEC-20260601-001
 title: Validação de Sequência de Odômetro
 status: approved
 date: 2026-06-01
-author: douglps
+author: Douglas Lopes (lps.doug@protonmail.com)
 rules: [R1, R4]
 security: [S1]
 camadas: [backend, database]

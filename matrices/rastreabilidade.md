@@ -79,6 +79,12 @@
 > - SPEC-20260715-002 (Suporte a Fuso Horário, `draft`) registrada como placeholder — nenhum
 >   código existe ainda; entrada será completada quando a spec avançar para `approved`.
 > - IMPACTO-033 e IMPACTO-035 atualizados em `matrices/impacto.md` para refletir T5.1 concluída.
+>
+> **ATUALIZAÇÃO — 2026-07-16 (rev. 47)**
+> SPEC-20260716-001 (Testes E2E com Playwright) criada em `specs/qa/`. Configuração do Playwright
+> em `apps/web/e2e/`, fluxos críticos RF-E2E-01 a RF-E2E-07 e integração com CI documentados.
+> Nenhum código existe ainda. `specs/TESTS_SPEC.md` atualizado para referenciar a nova spec como
+> fonte formal da estratégia E2E. Entrada adicionada nesta matriz.
 
 ---
 
@@ -301,45 +307,50 @@ que o artefato ainda não existe no repositório.
 
 ## SPEC-20260622-001 — Analytics Engine (approved)
 
-> Motor de BI com 8 módulos (TCO, Fuel Intelligence, Anomalias, Benchmark, Forecast, Seasonal,
-> Maintenance Prediction, Insights NL). Regras: R-ANA-01..R-ANA-07, R-FUEL-02, R-FUEL-03,
-> R-LED-01, R-MON-01, R5. Status: approved — nenhum código implementado ainda.
+> Motor de BI com 7 módulos (TCO, Fuel Intelligence, Anomalias, Benchmark, Forecast, Seasonal,
+> Insights NL). Regras: R-FUEL-02, R-FUEL-03, R5, R-ANA-01..R-ANA-07. Security: S1, S2.
+> Status: approved. Predictive Maintenance está **fora de escopo** desta spec (ver seção
+> "Fora de Escopo" — spec própria futura).
+> Faseamento (T6.1/T6.2/T6.3 no `IMPLEMENTATION_STRATEGY.md`): T6.1/Foundation ✅
+> (RF-01/02/07/08 + parcial de RF-13/RF-15), T6.2/Intelligence ✅ (RF-03/04/09/10), T6.3/Prediction
+> ✅ (RF-05/06/11/12/14/16 concluídos em 2026-07-16, ver `20260716140000_analytics_forecast_seasonal.sql`;
+> RF-13/RF-15 completos com as seções de projeção, sazonalidade e insights). Ver changelog de
+> 2026-07-16 na spec sobre alinhamento com o padrão `SECURITY INVOKER` (IMPACTO-027) e substituição
+> das RPCs dormentes `calculate_vehicle_tco`/`fuel_consumption_trend` (migration `20260712172020`).
 
 ### Backend — AnalyticsModule
 
 | Req | Descrição | Código | Teste | Status |
 |-----|-----------|--------|-------|--------|
-| RF-01 | RPC `calculate_vehicle_tco(vehicle_id)`: TCO com breakdown, cost_per_km, cost_per_month (R-ANA-04) | — | — | ⏳ |
-| RF-02 | RPC `fuel_consumption_trend(vehicle_id, limit)`: km/L, tendência com rolling average (R-ANA-01) | — | — | ⏳ |
-| RF-03 | RPC `detect_expense_anomalies(vehicle_id)`: Z-Score por categoria (R-ANA-02) | — | — | ⏳ |
-| RF-04 | RPC `benchmark_fleet_vehicles()`: ranking entre veículos (R-ANA-05) | — | — | ⏳ |
-| RF-05 | RPC `forecast_costs(vehicle_id, months)`: projeção de custos com média móvel (R-ANA-03) | — | — | ⏳ |
-| RF-06 | RPC `seasonal_analysis()`: heatmap mês x categoria (R-ANA-07) | — | — | ⏳ |
-| RF-07 | `GET /analytics/tco/:vehicleId`: endpoint REST com cache 1h (R-ANA-06); `GET /analytics/fuel-trend/:vehicleId?limit=N` | — | — | ⏳ |
-| RF-08 | `AnalyticsService`: getTco (404 se veículo não encontrado), getFuelTrend (clamp limit 1-100) | — | — | ⏳ |
-| — | `AnalyticsRepositoryPort`: interface abstrata com `calculateVehicleTco` e `fuelConsumptionTrend` | — | — | ⏳ |
-| — | `TcoResult` e `FuelTrendPoint` interfaces de resposta | — | — | ⏳ |
-| — | `AnalyticsModule` registrado em `AppModule` | — | — | ⏳ |
+| RF-01 | RPC `calculate_vehicle_tco(vehicle_id)`: TCO com breakdown fixo (fuel/maintenance/fines/recurring/other), cost_per_km, cost_per_month, total_km, period_days (R-ANA-04) — substitui a função homônima divergente já existente | `supabase/migrations/20260716120000_analytics_tco_fuel_trend.sql`, `apps/api/src/modules/analytics/analytics.service.ts` | `apps/api/src/modules/analytics/analytics.service.spec.ts` | ✅ |
+| RF-02 | RPC `fuel_consumption_trend(vehicle_id, limit)`: km/L, price_per_liter, rolling_avg_kpl (janela 5) (R-ANA-01, R-FUEL-02/03) — substitui a função homônima divergente já existente | `supabase/migrations/20260716120000_analytics_tco_fuel_trend.sql`, `apps/api/src/modules/analytics/analytics.service.ts` | `apps/api/src/modules/analytics/analytics.service.spec.ts` | ✅ |
+| RF-03 | RPC `detect_expense_anomalies(threshold)`: Z-Score por (vehicle_id, category) (R-ANA-02) | `supabase/migrations/20260716130000_analytics_anomalies_benchmark.sql`, `apps/api/src/modules/analytics/analytics.service.ts` | `apps/api/src/modules/analytics/analytics.service.spec.ts` | ✅ |
+| RF-04 | RPC `fleet_benchmark()`: ranking de veículos por custo/km (R-ANA-05) | `supabase/migrations/20260716130000_analytics_anomalies_benchmark.sql`, `apps/api/src/modules/analytics/analytics.service.ts` | `apps/api/src/modules/analytics/analytics.service.spec.ts` | ✅ |
+| RF-05 | RPC `forecast_monthly_costs(vehicle_id?, months_ahead)`: projeção com média móvel 3 meses + banda ±1σ (R-ANA-03) | `supabase/migrations/20260716140000_analytics_forecast_seasonal.sql`, `apps/api/src/modules/analytics/analytics.service.ts` | `apps/api/src/modules/analytics/analytics.service.spec.ts` | ✅ |
+| RF-06 | RPC `seasonal_expense_heatmap(vehicle_id?)`: heatmap mês x categoria (R-ANA-07) | `supabase/migrations/20260716140000_analytics_forecast_seasonal.sql`, `apps/api/src/modules/analytics/analytics.service.ts` | `apps/api/src/modules/analytics/analytics.service.spec.ts` | ✅ |
+| RF-07 | `GET /analytics/tco/:vehicleId`: cache 1h stale-while-revalidate, 404 se veículo não encontrado/não pertence ao usuário | `apps/api/src/modules/analytics/analytics.controller.ts` | `apps/api/src/modules/analytics/analytics.controller.spec.ts` | ✅ |
+| RF-08 | `GET /analytics/fuel-trend/:vehicleId`: query param `limit` (default 20, max 100) | `apps/api/src/modules/analytics/analytics.controller.ts`, `packages/validators/src/analytics.schemas.ts` | `apps/api/src/modules/analytics/analytics.controller.spec.ts` | ✅ |
+| RF-09 | `GET /analytics/anomalies`: query params `threshold` (1.5-4.0), `vehicle_id` opcional (filtro aplicado server-side) | `apps/api/src/modules/analytics/analytics.controller.ts`, `apps/api/src/modules/analytics/dto/anomalies.dto.ts`, `packages/validators/src/analytics.schemas.ts` | `apps/api/src/modules/analytics/analytics.controller.spec.ts` | ✅ |
+| RF-10 | `GET /analytics/benchmark`: array vazio se < 2 veículos (empty state é responsabilidade do frontend, a RPC sempre retorna os dados) | `apps/api/src/modules/analytics/analytics.controller.ts` | `apps/api/src/modules/analytics/analytics.controller.spec.ts` | ✅ |
+| RF-11 | `GET /analytics/forecast`: query params `vehicle_id` opcional, `months` (default 3, max 12) | `apps/api/src/modules/analytics/analytics.controller.ts`, `apps/api/src/modules/analytics/dto/forecast.dto.ts` | `apps/api/src/modules/analytics/analytics.controller.spec.ts` | ✅ |
+| RF-12 | `GET /analytics/seasonal`: query param `vehicle_id` opcional | `apps/api/src/modules/analytics/analytics.controller.ts`, `apps/api/src/modules/analytics/dto/seasonal.dto.ts` | `apps/api/src/modules/analytics/analytics.controller.spec.ts` | ✅ |
+| RF-14 | Geração de insights em linguagem natural (eficiência, degradação de consumo, multas, fornecedor, projeção) (R-ANA-05); exposta via `GET /analytics/insights` (endpoint não numerado na spec, necessário para RF-13 consumir os insights) | `apps/api/src/modules/analytics/analytics.service.ts`, `apps/api/src/modules/analytics/analytics.controller.ts`, `apps/api/src/modules/analytics/dto/insights.dto.ts` | `apps/api/src/modules/analytics/analytics.service.spec.ts`, `apps/api/src/modules/analytics/analytics.controller.spec.ts` | ✅ |
+| RF-16 | `GET /analytics/export`: CSV (TCO breakdown + forecast), throttle 10/5min | `apps/api/src/modules/analytics/analytics.controller.ts`, `apps/api/src/modules/analytics/analytics.service.ts`, `apps/api/src/modules/analytics/dto/export-analytics.dto.ts` | `apps/api/src/modules/analytics/analytics.controller.spec.ts`, `apps/api/src/modules/analytics/analytics.service.spec.ts` | ✅ |
 
 ### Frontend — Página `/analytics`
 
 | Req | Descrição | Código | Teste | Status |
 |-----|-----------|--------|-------|--------|
-| RF-13 | Página `/analytics`: Server Component com auth redirect; lista veículos do usuário | — | — | ⏳ |
-| — | `AnalyticsContent`: componente cliente com seleção de veículo e tabs de módulos | — | — | ⏳ |
-| — | `TcoKpiCards`: cards de KPI (total, custo/km, custo/mês) | — | — | ⏳ |
-| — | `TcoBreakdownChart`: gráfico de breakdown por categoria de custo | — | — | ⏳ |
-| — | `FuelTrendChart`: gráfico de tendência de consumo de combustível | — | — | ⏳ |
-| — | Endpoint `GET /analytics/insights`: insights em linguagem natural (R-ANA-05) | — | — | ⏳ |
-| — | RPC `predict_maintenance_needs(vehicle_id)`: previsão baseada em km/tempo | — | — | ⏳ |
+| RF-13 | Página `/analytics`: KPI cards, TCO (stacked bar + donut), fuel trend (area chart), anomalias (alert cards), benchmark (horizontal bar), forecast (area chart com banda), sazonalidade (heatmap), insights (cards); responsivo mobile/desktop; usa `recharts` (dependência nova, ver spec) | `apps/web/src/app/(app)/analytics/page.tsx` | `apps/web/src/app/(app)/analytics/page.spec.tsx` | ✅ todas as seções (TCO, fuel trend, anomalias, benchmark, forecast, sazonalidade, insights) prontas com seletor de veículo e botão "Exportar" (RF-16) |
+| RF-15 | Empty states por seção com CTA (TCO, combustível, anomalias, benchmark, forecast, sazonalidade, insights) | `apps/web/src/app/(app)/analytics/page.tsx` | `apps/web/src/app/(app)/analytics/page.spec.tsx` | ✅ todas as 7 seções com empty state; benchmark com CTA "Adicionar Veículo →" — demais sem CTA de navegação, conforme redação original de cada linha da RF-15 |
 
 ### Implementação por Fase
 
-| Fase | Módulos | Status |
-|------|---------|--------|
-| Fase 1 — Fundação | TCO, Fuel Intelligence | ⏳ Não iniciado |
-| Fase 2 — Inteligência | Anomalias, Benchmark, Forecast | ⏳ |
-| Fase 3 — Avançado | Seasonal, Maintenance Prediction, Insights NL | ⏳ |
+| Fase | Tarefa | Módulos | Status |
+|------|--------|---------|--------|
+| T6.1 — Foundation | RPCs TCO + Fuel Trend, endpoints, página `/analytics` (TCO + fuel chart) | TCO, Fuel Intelligence | ✅ concluído em 2026-07-16 |
+| T6.2 — Intelligence | RPCs de anomalias e benchmark, endpoints, seções na página | Anomalias, Benchmark | ✅ concluído em 2026-07-16 |
+| T6.3 — Prediction | RPCs de forecast e sazonalidade, insights NL, export CSV, empty states completos | Forecast, Seasonal, Insights NL | ✅ concluído em 2026-07-16 |
 
 ---
 
@@ -806,36 +817,71 @@ que o artefato ainda não existe no repositório.
 
 ---
 
-## SPEC-20260603-001 — Chip de Contexto de Veículo no Subheader (draft)
+## SPEC-20260603-001 — Chip de Contexto de Veículo no Subheader (approved)
 
-> Chip persistente de seleção de veículo/grupo no header. Substitui RF-01 da SPEC-20260602-001.
-> Status: draft — nenhum código implementado.
+> **2026-07-16 (T5.4):** promovida de `draft` para `approved` e implementada na mesma tarefa.
+> Levantamento de código pré-implementação encontrou divergências grandes entre a spec (escrita
+> antes de o código real existir) e o estado atual do repositório — mesmo padrão de T3.9/T5.1/T3.6
+> (ver changelog v0.3 da spec e o changelog de `docs/IMPLEMENTATION_STRATEGY.md`). Header
+> (`apps/web/src/components/layout/header.tsx`) criado do zero — nenhum Header/subheader existia
+> no app shell. `VehicleSwitcherContent` e o hook compartilhado `use-vehicle-context.ts` também
+> criados do zero, extraindo a lógica de `focus-slot.tsx` (removido e deletado do repositório).
+
+### Hook compartilhado e hooks utilitários
+
+| Req | Descrição | Código | Teste | Status |
+|-----|-----------|--------|-------|--------|
+| — | `useVehicleContext`: hidratação, queries de veículos/grupos sob demanda, resolução de label/aria-label por modo — extraído de `focus-slot.tsx`, reaproveitado por chip e switcher | `apps/web/src/lib/context/use-vehicle-context.ts` | Coberto indiretamente por `vehicle-context-chip.spec.tsx`, `header.spec.tsx` | ✅ |
+| Notas Técnicas | `useMediaQuery('(min-width: 768px)')` — SSR-safe, sem `window.innerWidth` direto | `apps/web/src/lib/hooks/use-media-query.ts` | `apps/web/src/lib/hooks/use-media-query.spec.ts` | ✅ |
+| RF-14 | `useOnlineStatus` — eventos `online`/`offline` + `navigator.onLine` | `apps/web/src/lib/hooks/use-online-status.ts` | `apps/web/src/lib/hooks/use-online-status.spec.ts` | ✅ |
 
 ### VehicleContextChip
 
 | Req | Descrição | Código | Teste | Status |
 |-----|-----------|--------|-------|--------|
-| RF-01 | Chip visível no header superior em todos os breakpoints e páginas autenticadas | — | — | ⏳ |
-| RF-02 | Estados visuais por modo (none/single/group/multi/attribute) | — | — | ⏳ |
-| RF-03 | Dimensões h-11 (44px) + max-width 140px + text truncation (WCAG 2.5.5) | — | — | ⏳ |
-| RF-04 | Botão X com `clearAllSelection()` | — | — | ⏳ |
-| RF-05 | `aria-label` dinâmico por modo descrevendo contexto ativo | — | — | ⏳ |
-| RF-06 | Estado hover (`ring-1`) e focus-visible (`ring-2 ring-primary`) | — | — | ⏳ |
+| RF-01 | Chip visível no `Header` (novo, não `FluidFleetHeader`) em todos os breakpoints e páginas autenticadas | `apps/web/src/components/layout/header.tsx`, `apps/web/src/app/(app)/layout.tsx` | `apps/web/src/components/layout/header.spec.tsx` | ✅ |
+| RF-02 | Estados visuais por modo (none/single/group/multi/attribute); ícones emoji em vez de `lucide-react` (não adicionado ao projeto) | `apps/web/src/components/layout/vehicle-context-chip.tsx` | `apps/web/src/components/layout/vehicle-context-chip.spec.tsx` | ✅ |
+| RF-03 | Dimensões h-11 (44px) + max-width 140px + text truncation (WCAG 2.5.5) | `apps/web/src/components/layout/vehicle-context-chip.tsx` | — (verificação visual/classe Tailwind, sem teste dedicado de dimensão) | 🔶 |
+| RF-04 | Botão X com `clearAllSelection()` + `stopPropagation` | `apps/web/src/components/layout/vehicle-context-chip.tsx` | `apps/web/src/components/layout/vehicle-context-chip.spec.tsx` | ✅ |
+| RF-05 | `aria-label` dinâmico por modo descrevendo contexto ativo | `apps/web/src/lib/context/use-vehicle-context.ts` (`getModeAriaLabel`) | `apps/web/src/components/layout/vehicle-context-chip.spec.tsx` (via texto do label) | ✅ |
+| RF-06 | Estado hover (`ring-1`) e focus-visible (`ring-2 ring-primary`) | `apps/web/src/components/layout/vehicle-context-chip.tsx` | — (classes Tailwind, sem teste de estilo computado) | 🔶 |
+| RF-24 | Skeleton `w-32 h-11 animate-pulse` durante hidratação; nunca exibe `none` transitório | `apps/web/src/components/layout/vehicle-context-chip.tsx` | Coberto indiretamente (demais testes aguardam hidratação via `waitFor`) | 🔶 |
 
-### VehicleContextDialog e VehicleContextSheet
-
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-07..RF-10 | Dialog desktop: backdrop blur, `max-w-[380px]`, skeleton de carregamento, animação de fechamento | — | — | ⏳ |
-| RF-11..RF-14 | Sheet mobile: bottom-up cobrindo 70%, handle de drag, safe-area, banner offline com cache SWR | — | — | ⏳ |
-
-### Migração do Sidebar e Backend
+### VehicleContextDialog, VehicleContextSheet e VehicleSwitcherContent
 
 | Req | Descrição | Código | Teste | Status |
 |-----|-----------|--------|-------|--------|
-| RF-15..RF-17 | Remoção de `FocusSlot` do sidebar; dot passivo no sidebar colapsado; anotação `@spec` atualizada | — | — | ⏳ |
-| RF-18..RF-20 | `.limit(100)` na query de veículos; filtro `deleted_at IS NULL` em joins; 404 para veículo soft-deleted | — | — | ⏳ |
-| RF-21..RF-23 | `zustand/persist` com `sessionStorage`; interceptor global para 404; logout com `sessionStorage.clear()` | — | — | ⏳ |
+| RF-07/RF-08 | Dialog desktop (`@radix-ui/react-dialog`): backdrop blur, `max-w-[380px]`, `Esc` com `stopPropagation` | `apps/web/src/components/layout/vehicle-context-dialog.tsx` | `apps/web/src/components/layout/vehicle-context-chip.spec.tsx` (abertura via clique) | 🔶 (sem teste dedicado de `Esc`) |
+| RF-09 | Skeleton `animate-pulse` durante loading; erro com retry após 8s (`setTimeout`) | `apps/web/src/components/layout/vehicle-switcher-content.tsx` | — (sem teste dedicado de timeout/retry) | 🔶 |
+| RF-10 | Fechamento do Dialog com animação `data-[state=closed]:fade-out duration-150` ao selecionar item | `apps/web/src/components/layout/vehicle-context-dialog.tsx` | — | 🔶 |
+| RF-11..RF-13 | Sheet mobile (`vaul`): bottom-up `snapPoints=[0.7]`, handle de drag, `overscroll-behavior: contain` | `apps/web/src/components/layout/vehicle-context-sheet.tsx` | `apps/web/src/components/layout/vehicle-context-chip.spec.tsx` (abertura via clique) | 🔶 (sem teste de snap-point/drag, específico do vaul) |
+| RF-12 | `padding-bottom: env(safe-area-inset-bottom)` | `apps/web/src/components/layout/vehicle-switcher-content.tsx` | — | 🔶 |
+| RF-14 | Banner offline via `useOnlineStatus`; cache TanStack Query `staleTime: 60_000` (não SWR, ver nota RF-14 da spec) | `apps/web/src/components/layout/vehicle-switcher-content.tsx`, `apps/web/src/lib/context/use-vehicle-context.ts` | — (sem teste dedicado do banner offline) | 🔶 |
+| RNF-05 | Busca client-side normaliza diacríticos (`normalize('NFD')`) e remove hífens de placa | `apps/web/src/components/layout/vehicle-switcher-content.tsx` (`normalizeForSearch`) | — (sem teste unitário dedicado da função de busca) | 🔶 |
+
+### Migração do Sidebar
+
+| Req | Descrição | Código | Teste | Status |
+|-----|-----------|--------|-------|--------|
+| RF-15 | Remoção de `FocusSlot` do sidebar; arquivo deletado do repositório (`focus-slot.tsx`/`focus-slot.spec.tsx`) | `apps/web/src/components/layout/sidebar.tsx` | `apps/web/src/components/layout/sidebar.spec.tsx` (RF-15) | ✅ |
+| RF-16 | Dot passivo (`w-2 h-2 rounded-full`, `aria-hidden`) no sidebar colapsado, cor por `selectionMode`, sem interação | `apps/web/src/components/layout/sidebar.tsx` | `apps/web/src/components/layout/sidebar.spec.tsx` (RF-16) | ✅ |
+| RF-17 | Confirmado satisfeito pelo `onClick` de logout já existente (sem gesto de hold — fora de escopo) | `apps/web/src/components/layout/sidebar.tsx` (comentário `@spec`) | — (nenhum comportamento novo a testar) | ✅ |
+
+### Backend
+
+| Req | Descrição | Código | Teste | Status |
+|-----|-----------|--------|-------|--------|
+| RF-18 | `.limit(100)` em `VehiclesService.findAll`/`VehicleGroupsService.findAll` — corrigido de "sem limite" (não "20→100", ver changelog da spec) | `apps/api/src/modules/vehicles/vehicles.service.ts`, `apps/api/src/modules/vehicle-groups/vehicle-groups.service.ts` | `apps/api/src/modules/vehicles/vehicles.service.spec.ts`, `apps/api/src/modules/vehicle-groups/vehicle-groups.service.spec.ts` | ✅ |
+| RF-19 | `member_count` exclui membros com veículo soft-deletado (busca veículos ativos + conta em memória) | `apps/api/src/modules/vehicle-groups/vehicle-groups.service.ts` (`findAll`) | `apps/api/src/modules/vehicle-groups/vehicle-groups.service.spec.ts` | ✅ |
+| RF-20 | 404 para veículo soft-deleted — reaproveitado de `VehiclesService.findOne` (não criado endpoint `/dashboard/stats` novo) | `apps/api/src/modules/vehicles/vehicles.service.ts` (`findOne`, já existente) | `apps/api/src/modules/vehicles/vehicles.service.spec.ts` (já existente) | ✅ |
+
+### Persistência e limpeza de contexto
+
+| Req | Descrição | Código | Teste | Status |
+|-----|-----------|--------|-------|--------|
+| RF-21 | `zustand/persist` com `sessionStorage` (corrige localStorage da SPEC-20260602-001) | `apps/web/src/lib/stores/use-dashboard-store.ts` | `apps/web/src/lib/stores/use-dashboard-store.spec.ts` | ✅ |
+| RF-22 | Limpeza automática de contexto em 404 de `GET /vehicles/:id` do veículo ativo; reutiliza `ContextStaleToast`/`ui-store` já existentes | `apps/web/src/lib/http/api-client.ts` (`handleNotFound`) | `apps/web/src/lib/http/api-client.spec.ts` | ✅ |
+| RF-23 | `sessionStorage.removeItem("nave-dashboard-context")` explícito no logout, além de `clearAllSelection()` | `apps/web/src/lib/auth/logout.ts` | `apps/web/src/lib/auth/logout.spec.ts` | ✅ |
 
 ---
 
@@ -1695,6 +1741,126 @@ que o artefato ainda não existe no repositório.
 |-----|-----------|--------|-------|--------|
 | RF-BK-01 a RF-BK-12 | Backend: migrations `occurred_at`/`completion_date` `timestamptz`, campo `user_preferences.timezone`, endpoint `PATCH /preferences` estendido, lógica de "hoje no fuso do usuário" em dashboard e expenses | — | — | ⏳ |
 | RF-FE-01 a RF-FE-08 | Frontend: `datetime-local` + `Intl.DateTimeFormat`, detecção automática de timezone, envio com offset explícito | — | — | ⏳ |
+
+---
+
+## SPEC-20260716-001 — Testes E2E com Playwright (draft)
+
+> Define configuração do Playwright em `apps/web/e2e/`, suíte mínima de testes E2E para fluxos
+> críticos (autenticação, avisos de odômetro/duplicata, troca de contexto de veículo) e integração
+> com CI. Regras: R1, R2, R-CTX-07. Segurança: S1. Camadas: frontend, qa.
+> **Status: draft — nenhum código ou teste existe.** Entrada incompleta por design: será
+> preenchida quando a spec avançar para `approved` e a implementação iniciar.
+
+### Configuração do Playwright (RF-CFG)
+
+| Req | Descrição | Código | Teste | Status |
+|-----|-----------|--------|-------|--------|
+| RF-CFG-01 a RF-CFG-08 | Instalação de `@playwright/test`, `playwright.config.ts`, estrutura `e2e/fixtures/`/`pages/`/`tests/`, scripts `e2e` e `e2e:ui`, setup global de autenticação reutilizável via `storageState`, `.gitignore` local | — | — | ⏳ |
+
+### Fluxos E2E Obrigatórios (RF-E2E)
+
+| Req | Descrição | Código | Teste | Status |
+|-----|-----------|--------|-------|--------|
+| RF-E2E-01 | Acesso a rota privada sem sessão → redirect para `/login` (S1, CT-006) | — | `apps/web/e2e/tests/auth.e2e.ts` | ⏳ |
+| RF-E2E-02 | Login com credenciais válidas → acesso ao dashboard (S1, CT-006) | — | `apps/web/e2e/tests/auth.e2e.ts` | ⏳ |
+| RF-E2E-03 | Logout → redirect para `/login` e bloqueio de acesso (S1) | — | `apps/web/e2e/tests/auth.e2e.ts` | ⏳ |
+| RF-E2E-04 | Criação de despesa com odômetro retroativo → exibe aviso `odometer_warning` na tela (R1, CT-001) | — | `apps/web/e2e/tests/expenses.e2e.ts` | ⏳ |
+| RF-E2E-05 | Criação de despesa duplicada → exibe aviso de duplicata (R2, CT-002) | — | `apps/web/e2e/tests/expenses.e2e.ts` | ⏳ |
+| RF-E2E-06 | Clicar no VehicleContextChip → abre dialog → seleciona veículo → chip atualiza (R-CTX-07) | — | `apps/web/e2e/tests/vehicle-context.e2e.ts` | ⏳ |
+| RF-E2E-07 | Troca de contexto propaga para campo `vehicle_id` do formulário de despesa (R-CTX-06, R-CTX-07) | — | `apps/web/e2e/tests/vehicle-context.e2e.ts` | ⏳ |
+
+### Integração com CI (RF-CI)
+
+| Req | Descrição | Código | Teste | Status |
+|-----|-----------|--------|-------|--------|
+| RF-CI-01 a RF-CI-06 | Job `e2e` em `.github/workflows/ci.yml`: depende de `build`, executa em `main`/`master`, instala chromium, provisiona Supabase local + API + Next.js, publica relatório HTML como artifact em falha | — | — | ⏳ |
+
+---
+
+## SPEC-20260716-001 — Deploy Automatizado (CD) (approved)
+
+> Formaliza o pipeline de entrega contínua do Nave: deploy de preview automático de `apps/web`
+> no Vercel em cada PR; deploy de produção de `apps/web` automático via merge em `master`;
+> deploy de `apps/api` em staging automático + gate humano obrigatório para produção; job de
+> migrations Supabase CLI no pipeline; rollback documentado. Todos os jobs de deploy dependem
+> dos jobs de qualidade do CI existente (lint, type-check, test, build). Segurança: S3.
+> Camadas: devops, infra. **Status: approved — workflow implementado em 2026-07-16
+> (`.github/workflows/cd.yml`), mas nenhuma conta/token real foi provisionada ainda (Vercel,
+> Railway, GitHub Environments com required reviewers) — decisão explícita do usuário. CA-01 a
+> CA-09 não são verificáveis em produção real até essa configuração externa acontecer.** Ver
+> changelog v1.1 da spec para as decisões de design tomadas durante a implementação (plataforma
+> Railway para `apps/api`, gate humano em `migrate-db`, gatilho `workflow_run`/`workflow_dispatch`).
+
+| Req | Descrição | Código | Teste | Status |
+|-----|-----------|--------|-------|--------|
+| RF-01 | Deploy de preview de `apps/web` no Vercel em cada PR; URL postada como comentário | `.github/workflows/cd.yml` (`deploy-web-preview`) | — | 🟡 código pronto, não verificável sem conta Vercel |
+| RF-02 | Deploy de produção de `apps/web` no Vercel automático após merge em `master` com CI verde | `.github/workflows/cd.yml` (`deploy-web-prod`) | — | 🟡 código pronto, não verificável sem conta Vercel |
+| RF-03 | Deploy de `apps/api` em staging automático após merge em `master` com CI verde | `.github/workflows/cd.yml` (`deploy-api-staging`) | — | 🟡 código pronto, não verificável sem conta Railway |
+| RF-04 | Deploy de `apps/api` em produção exige aprovação manual via GitHub Environment `production` | `.github/workflows/cd.yml` (`environment: production` em `migrate-db`, herdado por `deploy-api-prod` via `needs`) | — | 🟡 código pronto, GitHub Environment ainda não criado/configurado |
+| RF-05 | Jobs de deploy dependem de lint, type-check, test e build (nenhum deploy em CI vermelho) | `.github/workflows/cd.yml` (gatilho `workflow_run` com `conclusion == 'success'` sobre o workflow CI) | — | ✅ |
+| RF-06 | Job `migrate-db` (Supabase CLI) executa após gate humano, antes do restart da API em produção | `.github/workflows/cd.yml` (`migrate-db`) | — | 🟡 código pronto, não verificável sem projeto Supabase de produção configurado no pipeline |
+| RF-07 | Rollback de `apps/web` via Vercel Instant Rollback em ≤ 2 min; procedimento em `docs/operations/runbooks.md` | `docs/operations/runbooks.md` | — | ✅ documentado |
+| RF-08 | Rollback de `apps/api` via re-dispatch do job de deploy apontando para tag anterior + gate humano | `.github/workflows/cd.yml` (gatilho `workflow_dispatch`), `docs/operations/runbooks.md` | — | ✅ documentado e implementado |
+| RF-09/S3 | Segredos de produção e staging como GitHub Secrets scoped por environment; nenhum hardcoded | `.github/workflows/cd.yml`, `docs/reference/environment-variables.md` (seção "GitHub Secrets — CD") | — | 🟡 workflow referencia os secrets corretos; secrets em si não provisionados |
+| RF-10/S3 | Variáveis de staging segregadas de produção; `SUPABASE_SERVICE_ROLE_KEY` de produção inacessível a jobs de staging | `.github/workflows/cd.yml` (`environment: staging` em `deploy-api-staging`, tokens Railway distintos) | — | 🟡 estrutura pronta, segregação real depende dos GitHub Environments serem criados |
+| RF-11 | Job `migrate-db` usa `supabase db push`; falha aborta deploy antes do restart | `.github/workflows/cd.yml` (`migrate-db`, `deploy-api-prod` via `needs`) | — | ✅ |
+| RF-12 | Status de deploy reportado como GitHub Deployment check no PR | `.github/workflows/cd.yml` (`github-comment: true` na action de preview) | — | 🟡 comentário de PR coberto; GitHub Deployments API formal não implementada (prioridade Média na spec) |
+
+---
+
+## SPEC-20260716-002 — Observabilidade em Produção (approved)
+
+> Implanta error tracking (Sentry) em `apps/api` e `apps/web`, substitui `console.log` por
+> logging estruturado via Pino/nestjs-pino no NestJS (fecha 11 ocorrências residuais de P3),
+> e evolui `GET /health` para verificar conectividade com o Supabase (nova regra P5). Logs
+> nunca contêm PII (nova regra S10). Segurança: S3, S5, S10. Camadas: backend, frontend, devops.
+> **Status: código implementado em 2026-07-16 — nenhuma conta Sentry real foi provisionada
+> ainda** (mesma situação de SPEC-20260716-001 com Vercel/Railway — decisão explícita do
+> usuário). RF marcados 🟡 têm código pronto mas não são verificáveis fim-a-fim (evento
+> chegando no painel Sentry) até a conta existir; ver `important/PENDENCIAS-E-PROCESSOS.md`.
+> **2026-07-18:** spec promovida de `draft` para `approved` (v1.1) — código já existia antes da
+> aprovação, desvio de processo sanado retroativamente após revisão, sem mudança de requisito.
+
+### Error Tracking (Sentry)
+
+| Req | Descrição | Código | Teste | Status |
+|-----|-----------|--------|-------|--------|
+| RF-01 | `@sentry/nestjs` integrado ao `apps/api`; DSN via `SENTRY_DSN`; ausência não impede inicialização | `apps/api/src/instrument.ts`, `apps/api/src/main.ts`, `apps/api/src/app.module.ts` | — | 🟡 código pronto, entrega ao Sentry não verificável sem conta real |
+| RF-02 | `@sentry/nextjs` integrado ao `apps/web`; DSN público via `NEXT_PUBLIC_SENTRY_DSN` (aplica S3) | `apps/web/instrumentation-client.ts`, `apps/web/instrumentation.ts` | — | 🟡 código pronto, idem |
+| RF-03 | `HttpExceptionFilter` captura exceções HTTP 5xx e não-HTTP via `Sentry.captureException()` | `apps/api/src/common/filters/http-exception.filter.ts` | `http-exception.filter.spec.ts` | ✅ |
+| RF-04 | Uncaught exceptions e unhandled rejections em `apps/api` capturados pelo `SentryModule` | `apps/api/src/instrument.ts` (`Sentry.init`), `apps/api/src/app.module.ts` (`SentryModule.forRoot()`) | — | 🟡 código pronto, captura automática do SDK não exercida em teste (exigiria matar o processo) |
+| RF-05 | Erros de renderização em `apps/web` capturados via `error.tsx` global integrado ao Sentry | `apps/web/src/app/global-error.tsx` | — | 🟡 código pronto, sem teste automatizado de error boundary |
+| RF-06 | Source maps enviados ao Sentry no build do CD (via `SENTRY_AUTH_TOKEN`); não expostos publicamente | `apps/web/next.config.ts` (`withSentryConfig`) | — | 🟡 build local verificado sem token (upload pulado); upload real depende de `SENTRY_AUTH_TOKEN` no CI/Vercel |
+| RF-07 | Alertas de issue nova/regressão configurados no painel Sentry (sem mudança de código) | — (config fora do repositório) | — | ⏳ depende da conta Sentry existir |
+
+### Logging Estruturado
+
+| Req | Descrição | Código | Teste | Status |
+|-----|-----------|--------|-------|--------|
+| RF-08 | `nestjs-pino` + `pino-http` integrados; Pino substitui logger padrão do NestJS | `apps/api/src/common/logging/logger.module.ts`, `apps/api/src/main.ts` (`app.useLogger`) | build + suíte completa passando com o módulo importado | ✅ |
+| RF-09 | Cada log de request inclui `requestId`, `method`, `url`, `statusCode`, `responseTimeMs`, `userId` | `apps/api/src/common/logging/logger.module.ts` (`customAttributeKeys`, `customProps`) | — | 🟡 código pronto, sem teste de integração dedicado (exigiria supertest) |
+| RF-10 | JSON em produção; `pino-pretty` em desenvolvimento | `apps/api/src/common/logging/logger.module.ts` (`transport` condicional a `NODE_ENV`) | — | 🟡 código pronto, sem teste dedicado |
+| RF-11/S10 | Serializer de redaction: campos PII/sensíveis substituídos por `[REDACTED]`; lista em `PINO_REDACT_PATHS` | `apps/api/src/common/logging/redact-paths.ts` | `redact-paths.spec.ts` (CA-05) | ✅ |
+| RF-12/P3 | Zero `console.*` em `apps/api/src/`; fecha as 11 ocorrências residuais identificadas em IMPACTO-021 #6 | — (ausência verificada) | `grep -rn "console\." apps/api/src` sem resultado; `pnpm --filter api lint` (CA-03) | ✅ |
+| RF-13 | `requestId` propagado no header `X-Request-Id` e como tag no Sentry | `apps/api/src/common/interceptors/request-id.interceptor.ts` | — | 🟡 código pronto, sem teste dedicado |
+
+### Health Check com Dependências
+
+| Req | Descrição | Código | Teste | Status |
+|-----|-----------|--------|-------|--------|
+| RF-14 | `GET /health` executa ping mínimo no Supabase com timeout de 3s para verificar conectividade | `apps/api/src/health/health.controller.ts` | `health.controller.spec.ts` | ✅ |
+| RF-15 | Schema de resposta: `{ status, timestamp, checks: { supabase: { status, latencyMs, error? } } }` | `apps/api/src/health/health.controller.ts` | `health.controller.spec.ts` | ✅ |
+| RF-16 | Supabase acessível → `status: "ok"`, HTTP 200 | `apps/api/src/health/health.controller.ts` | `health.controller.spec.ts` (CA-06) | ✅ |
+| RF-17/P5 | Supabase inacessível/timeout → `status: "degraded"`, HTTP 200 (não 503) | `apps/api/src/health/health.controller.ts` | `health.controller.spec.ts` (CA-07) | ✅ |
+| RF-18/S5 | `checks.supabase.error` exibe apenas `"connection_timeout"` ou `"query_failed"`, nunca mensagem bruta de banco | `apps/api/src/health/health.controller.ts` | `health.controller.spec.ts` | ✅ |
+| RF-19/P5 | Timeout máximo total do endpoint: 5 segundos | `apps/api/src/health/health.controller.ts` (timeout de 3s da única dependência) | — | 🟡 garantido por construção (única dependência com timeout de 3s), sem teste de latência total dedicado |
+| RF-20 | `GET /health` permanece rota pública (sem `SupabaseAuthGuard`); comportamento preservado | `apps/api/src/health/health.controller.ts` (sem `@UseGuards`) | `health.controller.spec.ts` | ✅ |
+
+**Nota sobre RF-14:** o Supabase JS Client não expõe execução de SQL bruto (`SELECT 1`) sem uma
+function RPC dedicada; a implementação usa uma query `HEAD` (`select(..., { head: true })`) contra
+a tabela `profiles`, que não transfere linhas — equivalente em custo/latência a um ping, mas
+depende da tabela `profiles` existir e ser acessível pelo client service role (já é, ver S7/S9).
 
 ---
 

@@ -3,7 +3,7 @@ id: SPEC-20260603-004
 title: "Migration: Tabela Consolidada user_preferences"
 status: approved
 date: 2026-06-03
-author: douglps
+author: Douglas Lopes (lps.doug@protonmail.com)
 rules: [S1, S2, R-DISP-03, R-PREF-01]
 security: [S1, S2]
 camadas: [database, backend]

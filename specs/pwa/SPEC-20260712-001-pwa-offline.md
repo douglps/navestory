@@ -3,7 +3,7 @@ id: SPEC-20260712-001
 title: "PWA Offline — Instalação, Cache e Modo Somente-Leitura Sem Conexão"
 status: draft
 date: 2026-07-12
-author: douglps
+author: Douglas Lopes (lps.doug@protonmail.com)
 rules: [R-PWA-01, R-PWA-02, R-PWA-03, R-PWA-04, R-PWA-05, R-PWA-06]
 security: [S1, S2, S6]
 camadas: [frontend, infra]

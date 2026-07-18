@@ -3,7 +3,7 @@ id: SPEC-20260606-002
 title: "Fornecedor / Posto de Combustível"
 status: approved
 date: 2026-06-06
-author: douglps
+author: Douglas Lopes (lps.doug@protonmail.com)
 rules: [R-FUEL-04, R-FUEL-05]
 security: [S2]
 camadas: [backend, frontend, database]

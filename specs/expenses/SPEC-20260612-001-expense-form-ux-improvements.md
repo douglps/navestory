@@ -3,7 +3,7 @@ id: SPEC-20260612-001
 title: "Melhorias de UX no Formulário de Despesas e Hub Financeiro"
 status: approved
 date: 2026-06-12
-author: douglps
+author: Douglas Lopes (lps.doug@protonmail.com)
 rules: [R-ODO-01, R-CTX-06, R-FUEL-03, R-LED-01]
 security: [S1, S2]
 camadas: [frontend, backend, database]

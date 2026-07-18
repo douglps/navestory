@@ -3,7 +3,7 @@ id: SPEC-20260601-002
 title: Detecção de Duplicata de Despesa
 status: approved
 date: 2026-06-01
-author: douglps
+author: Douglas Lopes (lps.doug@protonmail.com)
 rules: [R2]
 security: [S1]
 camadas: [backend, database]

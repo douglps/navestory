@@ -3,7 +3,7 @@ id: SPEC-20260601-003
 title: Sistema de Modelos Rápidos de Despesas
 status: approved
 date: 2026-06-01
-author: douglps
+author: Douglas Lopes (lps.doug@protonmail.com)
 rules: [R3, R6]
 security: [S1, S2]
 camadas: [backend, frontend, database]

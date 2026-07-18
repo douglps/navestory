@@ -3,7 +3,7 @@ id: SPEC-20260619-001
 title: "Padrão de Comportamento de Formulários"
 status: approved
 date: 2026-06-19
-author: douglps
+author: Douglas Lopes (lps.doug@protonmail.com)
 rules: [R-CTX-03, R-CTX-06, R-PREF-02, R-FUEL-07, R-FUEL-08, R-FORM-01, R-FORM-02, R-FORM-03, R-FORM-04, R-FORM-05, R-FORM-06, R-FORM-07, R-SAN-01, R-SAN-02, R-SAN-03, R-SAN-04, R-SAN-05, R-SAN-06]
 security: [S1, S2]
 camadas: [frontend, backend]

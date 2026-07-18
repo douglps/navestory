@@ -3,7 +3,7 @@ id: SPEC-20260609-002
 title: "Tab 'Por Veículo' em /expenses com accordion e subtotais"
 status: approved
 date: 2026-06-09
-author: douglps
+author: Douglas Lopes (lps.doug@protonmail.com)
 rules: [R5, S1, S2]
 security: [S1, S2]
 camadas: [frontend]

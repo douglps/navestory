@@ -1,20 +1,24 @@
+import "./instrument";
 import "reflect-metadata";
-import { Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { NestFactory } from "@nestjs/core";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 import cookieParser from "cookie-parser";
 import helmet from "helmet";
+import { Logger } from "nestjs-pino";
 import { AppModule } from "./app.module";
+import { RequestIdInterceptor } from "./common/interceptors/request-id.interceptor";
 import { HttpExceptionFilter } from "./common/filters/http-exception.filter";
 
 async function bootstrap(): Promise<void> {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, { bufferLogs: true });
+  app.useLogger(app.get(Logger));
   const configService = app.get(ConfigService);
 
   app.use(helmet());
   app.use(cookieParser());
   app.enableCors({ origin: true, credentials: true });
+  app.useGlobalInterceptors(new RequestIdInterceptor());
   app.useGlobalFilters(new HttpExceptionFilter());
 
   const nodeEnv = configService.get<string>("NODE_ENV");
@@ -35,7 +39,7 @@ async function bootstrap(): Promise<void> {
 
   const port = configService.get<number>("PORT") ?? 3001;
   await app.listen(port);
-  Logger.log(`API rodando na porta ${port}`, "Bootstrap");
+  app.get(Logger).log(`API rodando na porta ${port}`, "Bootstrap");
 }
 
 void bootstrap();

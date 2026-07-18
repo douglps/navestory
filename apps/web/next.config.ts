@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { withSentryConfig } from "@sentry/nextjs";
 
 /**
  * Rewrite de `/api/backend/*` para o NestJS local — faz o browser enxergar tudo como
@@ -18,4 +19,12 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+// @spec SPEC-20260716-002 RF-06, CA-09
+// Envia source maps ao Sentry no build quando SENTRY_AUTH_TOKEN está presente (CI apenas);
+// ausência do token não quebra o build — o upload é pulado silenciosamente.
+// `deleteSourcemapsAfterUpload` (default true) evita que os .map fiquem acessíveis
+// publicamente após o deploy.
+export default withSentryConfig(nextConfig, {
+  silent: true,
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+});

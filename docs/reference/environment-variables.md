@@ -2,7 +2,7 @@
 
 > Toda variável de ambiente deve ser configurada antes de iniciar qualquer serviço. Valores reais nunca devem ser commitados no repositório — usar `.env.local` (ignorado pelo `.gitignore`). Copiar `.env.example` como ponto de partida.
 
-**Última atualização:** 2026-07-13
+**Última atualização:** 2026-07-16 (SPEC-20260716-002 — observabilidade)
 
 ---
 
@@ -27,6 +27,7 @@ RF-SEC-001 de SPEC-20260521-001 exige que essas variáveis sejam lidas via `Conf
 | `SUPABASE_SERVICE_ROLE_KEY` | sim | Chave de serviço do Supabase; bypassa RLS. Usada exclusivamente no `AdminSupabaseService` e na Edge Function de alertas de manutenção. Nunca compartilhar com o frontend | `<service-role-key-do-dashboard>` |
 | `RESEND_API_KEY` | sim* | Chave da API do Resend para envio de e-mails de alerta de manutenção (SPEC-20260521-002). Obrigatória somente quando o módulo de alertas for ativado | `re_...` |
 | `SWAGGER_ENABLED` | não | Se `true`, habilita o Swagger UI mesmo em `production` (útil para staging). Por padrão, Swagger só é ativo em `development` (SPEC-20260521-005) | `true` |
+| `SENTRY_DSN` | não | DSN do projeto Sentry (backend). Ausente → Sentry desabilitado silenciosamente, API inicia normalmente (SPEC-20260716-002 RF-01, CA-08) | `https://<key>@o<org>.ingest.sentry.io/<project>` |
 
 > **Nota sobre `SUPABASE_URL`:** versões anteriores do repositório usavam `NEXT_PUBLIC_SUPABASE_URL` no backend (achado crítico P1 de SPEC-20260521-001). A variável correta para o backend é `SUPABASE_URL`, sem prefixo.
 
@@ -43,6 +44,7 @@ Variáveis com prefixo `NEXT_PUBLIC_` são embutidas no bundle cliente pelo Next
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | sim | Chave anônima (anon key) do Supabase; sujeita às políticas RLS. Segura para uso no navegador | `eyJ...` |
 | `NEXT_PUBLIC_APP_URL` | não | URL pública do frontend; usada para gerar links em e-mails (ex: link de manutenção no alerta) | `https://nave.app` |
 | `NEXT_PUBLIC_EXPENSE_TEMPLATES_ENABLED` | não | Feature flag da tray de templates de despesas (SPEC-20260601-003). Padrão implícito: desabilitado quando ausente | `true` |
+| `NEXT_PUBLIC_SENTRY_DSN` | não | DSN público do projeto Sentry (frontend). Apenas DSN de ingestão — nunca chave com permissão de escrita (S3). Ausente → Sentry desabilitado no browser (SPEC-20260716-002 RF-02, CA-08) | `https://<key>@o<org>.ingest.sentry.io/<project>` |
 
 ---
 
@@ -54,6 +56,25 @@ Estas variáveis são necessárias para workflows de CLI local (`supabase start`
 |----------|-------------|-----------|---------|
 | `SUPABASE_ACCESS_TOKEN` | sim (CI) | Token pessoal de acesso à API de gerenciamento do Supabase; usado pelo CLI em pipelines de CI para aplicar migrations | `sbp_...` |
 | `SUPABASE_PROJECT_ID` | sim (CI) | ID do projeto Supabase alvo do deploy (`sfkefpoanmoiagwxbwld` para o projeto `Nave`) | `sfkefpoanmoiagwxbwld` |
+| `SUPABASE_DB_PASSWORD` | sim (CD) | Senha do banco Postgres do projeto Supabase, usada pelo job `migrate-db` (`.github/workflows/cd.yml`) para autenticar `supabase db push` em produção. Scoped ao GitHub Environment `production` (S3) | `<senha-do-dashboard-supabase>` |
+
+---
+
+## GitHub Secrets — CD (`.github/workflows/cd.yml`)
+
+> @spec SPEC-20260716-001 RF-09/RF-10 — segredos de deploy, nunca hardcoded em workflow. Scoped por GitHub Environment (`staging`/`production`) conforme a coluna abaixo. **Status em 2026-07-16: nenhum destes secrets está provisionado ainda** — o workflow foi implementado, mas as contas Vercel/Railway e os GitHub Environments precisam ser criados e os secrets preenchidos antes do pipeline funcionar de ponta a ponta.
+
+| Secret | Environment | Descrição |
+|--------|-------------|-----------|
+| `VERCEL_TOKEN` | (repo-level) | Token de API da Vercel, usado tanto para preview (PR) quanto produção de `apps/web` |
+| `VERCEL_ORG_ID` | (repo-level) | ID da organização/conta Vercel |
+| `VERCEL_PROJECT_ID` | (repo-level) | ID do projeto Vercel correspondente a `apps/web` |
+| `RAILWAY_STAGING_TOKEN` | `staging` | Token de projeto Railway com acesso apenas ao serviço `nave-api-staging` |
+| `RAILWAY_PRODUCTION_TOKEN` | `production` | Token de projeto Railway com acesso apenas ao serviço `nave-api-production` — nunca o mesmo token de staging (aplica S3/RF-10) |
+| `SUPABASE_ACCESS_TOKEN` | `production` | Ver seção "Supabase / infraestrutura" acima |
+| `SUPABASE_DB_PASSWORD` | `production` | Ver seção "Supabase / infraestrutura" acima |
+| `SUPABASE_PROJECT_ID` | `production` | Ver seção "Supabase / infraestrutura" acima |
+| `SENTRY_AUTH_TOKEN` | (repo-level, CI apenas) | Token de auth do Sentry usado só no pipeline para upload de source maps de `apps/web` (`@sentry/nextjs` via `withSentryConfig`); nunca em runtime. Ausente → upload de source map é pulado silenciosamente, build não quebra (SPEC-20260716-002 RF-06, CA-08/CA-09). Para deploy via Vercel, também precisa estar configurado como env var do projeto no painel Vercel (o `vercel-action` do CD não repassa secrets do GitHub automaticamente para o build da Vercel) |
 
 ---
 
@@ -84,6 +105,5 @@ As variáveis a seguir foram identificadas como possivelmente necessárias com b
 
 | Variável | Contexto | Status |
 |----------|----------|--------|
-| `SENTRY_DSN` ou equivalente | Monitoramento de erros em produção | Pendente — nenhum ADR ou spec define o provedor de observabilidade |
-| `LOG_LEVEL` | Controle de verbosidade de logs do NestJS | Pendente — `LOG_LEVEL=debug` é prática comum mas não está formalmente especificado |
+| `LOG_LEVEL` | Controle de verbosidade de logs do NestJS (Pino) | Pendente — `LOG_LEVEL=debug` é prática comum mas não está formalmente especificado; SPEC-20260716-002 não define este nível de controle, Pino usa `info` como default fixo |
 | Variáveis de rate limit (`THROTTLE_TTL`, `THROTTLE_LIMIT`) | Configuração do `ThrottlerGuard` (S4); atualmente os valores (100 req/60s, 5 req/15min para register, 10 req/15min para login) parecem hardcoded na spec — confirmar se serão externalizados | Pendente de confirmação na implementação de T1.2 |

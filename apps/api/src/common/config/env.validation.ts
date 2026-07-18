@@ -12,4 +12,6 @@ export const envValidationSchema = Joi.object({
   SUPABASE_SERVICE_ROLE_KEY: Joi.string().required(),
   SWAGGER_ENABLED: Joi.boolean().default(false),
   RESEND_API_KEY: Joi.string().allow("").optional(),
+  // @spec SPEC-20260716-002 RF-01
+  SENTRY_DSN: Joi.string().allow("").optional(),
 });

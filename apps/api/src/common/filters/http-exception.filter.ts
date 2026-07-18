@@ -6,6 +6,7 @@ import {
   HttpStatus,
   Logger,
 } from "@nestjs/common";
+import * as Sentry from "@sentry/nestjs";
 import type { Response } from "express";
 
 interface ErrorResponseBody {
@@ -45,6 +46,12 @@ export class HttpExceptionFilter implements ExceptionFilter {
       message = Array.isArray(rawMessage) ? rawMessage.join(", ") : rawMessage;
     } else {
       message = isProduction ? genericMessage : (exception as Error)?.message ?? genericMessage;
+    }
+
+    // @spec SPEC-20260716-002 RF-03 — captura 5xx e exceções não-HTTP; 4xx não são bugs
+    const shouldCaptureInSentry = !isHttpException || statusCode >= HttpStatus.INTERNAL_SERVER_ERROR;
+    if (shouldCaptureInSentry) {
+      Sentry.captureException(exception);
     }
 
     if (!isHttpException) {

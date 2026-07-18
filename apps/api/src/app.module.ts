@@ -2,9 +2,12 @@ import { Module } from "@nestjs/common";
 import { ConfigModule } from "@nestjs/config";
 import { APP_GUARD } from "@nestjs/core";
 import { ThrottlerGuard, ThrottlerModule } from "@nestjs/throttler";
+import { SentryModule } from "@sentry/nestjs/setup";
 import { envValidationSchema } from "./common/config/env.validation";
+import { LoggerModule } from "./common/logging/logger.module";
 import { HealthModule } from "./health/health.module";
 import { AdminModule } from "./modules/admin/admin.module";
+import { AnalyticsModule } from "./modules/analytics/analytics.module";
 import { AuthModule } from "./modules/auth/auth.module";
 import { CategoriesModule } from "./modules/categories/categories.module";
 import { DashboardModule } from "./modules/dashboard/dashboard.module";
@@ -24,10 +27,12 @@ import { SupabaseModule } from "./shared/supabase/supabase.module";
 
 @Module({
   imports: [
+    SentryModule.forRoot(),
     ConfigModule.forRoot({
       isGlobal: true,
       validationSchema: envValidationSchema,
     }),
+    LoggerModule,
     ThrottlerModule.forRoot([
       {
         ttl: 60_000,
@@ -52,6 +57,7 @@ import { SupabaseModule } from "./shared/supabase/supabase.module";
     PreferencesModule,
     DashboardModule,
     RecurringCostsModule,
+    AnalyticsModule,
   ],
   providers: [
     {

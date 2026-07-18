@@ -1,5 +1,8 @@
-import { ArgumentsHost, BadRequestException } from "@nestjs/common";
+import { ArgumentsHost, BadRequestException, InternalServerErrorException } from "@nestjs/common";
+import * as Sentry from "@sentry/nestjs";
 import { HttpExceptionFilter } from "./http-exception.filter";
+
+jest.mock("@sentry/nestjs", () => ({ captureException: jest.fn() }));
 
 function createHost(): { host: ArgumentsHost; json: jest.Mock; status: jest.Mock } {
   const json = jest.fn();
@@ -18,6 +21,7 @@ describe("HttpExceptionFilter", () => {
 
   afterEach(() => {
     process.env.NODE_ENV = originalEnv;
+    jest.clearAllMocks();
   });
 
   it("retorna statusCode e message de uma HttpException", () => {
@@ -30,6 +34,35 @@ describe("HttpExceptionFilter", () => {
     expect(json).toHaveBeenCalledWith(
       expect.objectContaining({ statusCode: 400, message: "email inválido" }),
     );
+  });
+
+  it("RF-03: não captura no Sentry uma HttpException 4xx", () => {
+    const filter = new HttpExceptionFilter();
+    const { host } = createHost();
+
+    filter.catch(new BadRequestException("email inválido"), host);
+
+    expect(Sentry.captureException).not.toHaveBeenCalled();
+  });
+
+  it("RF-03: captura no Sentry uma HttpException 5xx", () => {
+    const filter = new HttpExceptionFilter();
+    const { host } = createHost();
+    const exception = new InternalServerErrorException("falha ao processar");
+
+    filter.catch(exception, host);
+
+    expect(Sentry.captureException).toHaveBeenCalledWith(exception);
+  });
+
+  it("RF-03: captura no Sentry uma exceção não-HTTP", () => {
+    const filter = new HttpExceptionFilter();
+    const { host } = createHost();
+    const exception = new Error("falha inesperada");
+
+    filter.catch(exception, host);
+
+    expect(Sentry.captureException).toHaveBeenCalledWith(exception);
   });
 
   it("oculta detalhe de erro genérico em produção (S5)", () => {

@@ -2,10 +2,10 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "outDir": "dist",
-    "rootDir": "src",
+    "rootDir": ".",
     "jsx": "react-jsx",
     "lib": ["ES2022", "DOM"],
     "types": ["react", "react-dom"]
   },
-  "include": ["src"]
+  "include": ["src", "vitest.setup.ts", "vitest.config.ts"]
 }

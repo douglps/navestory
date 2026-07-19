@@ -1,3 +1,55 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/*
+ * @spec SPEC-20260525-001 §4.1
+ * Fonte de verdade dos valores é `packages/ui/src/tokens/`. Os canais aqui devem
+ * permanecer sincronizados manualmente com `colorChannels`/`spacingTokens`/`radiusTokens`
+ * até existir um passo de build que gere este bloco automaticamente.
+ */
+@layer base {
+  :root {
+    --background: 98.5% 0 0;
+    --foreground: 15% 0 0;
+
+    --card: 97% 0 0;
+    --card-foreground: 15% 0 0;
+
+    --border: 90% 0 0;
+
+    --muted: 97% 0 0;
+    --muted-foreground: 45% 0 0;
+
+    --primary: 55.6% 0.15 260;
+    --primary-foreground: 98.5% 0 0;
+
+    --secondary: 55.6% 0.15 200;
+    --secondary-foreground: 98.5% 0 0;
+
+    --accent: 55.6% 0.15 140;
+    --accent-foreground: 15% 0 0;
+
+    --success: 60% 0.15 150;
+    --success-foreground: 98.5% 0 0;
+    --success-pastel: 92% 0.12 150;
+
+    --warning: 75% 0.16 85;
+    --warning-foreground: 15% 0 0;
+    --warning-pastel: 92% 0.15 85;
+
+    --danger: 57.7% 0.2 25;
+    --danger-foreground: 98.5% 0 0;
+    --danger-pastel: 92% 0.08 25;
+
+    --info: 55.6% 0.15 240;
+    --info-foreground: 98.5% 0 0;
+    --info-pastel: 92% 0.08 240;
+
+    --radius-sm: 0.25rem;
+    --radius-md: 0.375rem;
+    --radius-lg: 0.5rem;
+
+    --spacing-touch-target: 2.75rem;
+  }
+}

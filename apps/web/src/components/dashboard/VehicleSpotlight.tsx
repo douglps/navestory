@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { useState, type ReactNode } from "react";
 import type { FuelTrendPoint, RecurringCost, VehicleHistoryItem, VehicleTco } from "@nave/validators";
+import { Tabs } from "@nave/ui";
 import { apiClient } from "@/lib/http/api-client";
 import { useMediaQuery } from "@/lib/hooks/use-media-query";
 import { TcoBreakdownChart } from "@/components/charts/tco-breakdown-chart";
@@ -302,22 +303,13 @@ export function VehicleSpotlight({
         </div>
       ) : (
         <div className="flex flex-col gap-3">
-          <div role="tablist" aria-label="Seções do veículo em foco" className="flex gap-1 border-b">
-            {TABS.map((tab) => (
-              <button
-                key={tab.id}
-                type="button"
-                role="tab"
-                aria-selected={activeTab === tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`px-3 py-2 text-sm ${
-                  activeTab === tab.id ? "border-b-2 border-primary font-medium" : "text-muted-foreground"
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
+          <Tabs
+            items={TABS.map((tab) => ({ value: tab.id, label: tab.label }))}
+            value={activeTab}
+            onValueChange={(value) => setActiveTab(value as SpotlightTab)}
+            variant="underline"
+            aria-label="Seções do veículo em foco"
+          />
           {/* eslint-disable-next-line security/detect-object-injection -- activeTab é union fixa de 4 literais */}
           <div role="tabpanel">{sections[activeTab]}</div>
         </div>

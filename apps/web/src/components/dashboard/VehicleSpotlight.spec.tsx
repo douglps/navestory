@@ -1,4 +1,5 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { QueryProvider } from "@/lib/query/providers";
 import { VehicleSpotlight, type SpotlightVehicle } from "./VehicleSpotlight";
@@ -87,7 +88,7 @@ describe("VehicleSpotlight", () => {
     mockApi({ recurringCosts: [{ cost_type: "ipva", paid_at: "2026-01-10" }] });
     renderSpotlight();
 
-    fireEvent.click(screen.getByRole("tab", { name: "Docs" }));
+    await userEvent.click(screen.getByRole("tab", { name: "Docs" }));
 
     await waitFor(() => expect(screen.getByText("Pago")).toBeInTheDocument());
   });
@@ -96,7 +97,7 @@ describe("VehicleSpotlight", () => {
     mockApi({ recurringCosts: [] });
     renderSpotlight();
 
-    fireEvent.click(screen.getByRole("tab", { name: "Docs" }));
+    await userEvent.click(screen.getByRole("tab", { name: "Docs" }));
 
     await waitFor(() => expect(screen.getByText("Vencido")).toBeInTheDocument());
   });
@@ -118,7 +119,7 @@ describe("VehicleSpotlight", () => {
     });
     renderSpotlight();
 
-    fireEvent.click(screen.getByRole("tab", { name: "Histórico" }));
+    await userEvent.click(screen.getByRole("tab", { name: "Histórico" }));
 
     await waitFor(() => expect(screen.getByText("Combustível")).toBeInTheDocument());
     expect(screen.getByRole("link", { name: "ver todas as despesas" })).toHaveAttribute(

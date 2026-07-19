@@ -1,4 +1,5 @@
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { QueryProvider } from "@/lib/query/providers";
 import ExpensesPage from "./page";
@@ -120,7 +121,7 @@ describe("ExpensesPage", () => {
     });
     renderPage();
 
-    screen.getByText("Próximas").click();
+    await userEvent.click(screen.getByText("Próximas"));
 
     expect(await screen.findByText(/Multa — Excesso de velocidade/)).toBeInTheDocument();
   });
@@ -129,7 +130,7 @@ describe("ExpensesPage", () => {
     mockApi();
     renderPage();
 
-    screen.getByText("Próximas").click();
+    await userEvent.click(screen.getByText("Próximas"));
 
     expect(
       await screen.findByText("Nenhuma despesa prevista no horizonte selecionado."),
@@ -146,7 +147,7 @@ describe("ExpensesPage", () => {
     });
     renderPage();
 
-    screen.getByText("Por veículo").click();
+    await userEvent.click(screen.getByText("Por veículo"));
 
     expect(await screen.findByText("Fiat Uno")).toBeInTheDocument();
     const totals = await screen.findAllByText("R$ 150,00");
@@ -157,7 +158,7 @@ describe("ExpensesPage", () => {
     mockApi();
     renderPage();
 
-    screen.getByText("Por veículo").click();
+    await userEvent.click(screen.getByText("Por veículo"));
 
     expect(await screen.findByText("Nenhuma despesa no período.")).toBeInTheDocument();
   });

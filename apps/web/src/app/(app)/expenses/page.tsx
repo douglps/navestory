@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState, type ReactNode } from "react";
+import { Tabs } from "@nave/ui";
 import { apiClient } from "@/lib/http/api-client";
 
 interface Expense {
@@ -333,7 +334,6 @@ function ExpensesPageContent(): ReactNode {
   });
 
   const vehicleById = new Map((vehicles ?? []).map((vehicle) => [vehicle.id, vehicle]));
-  const overdueOrUrgentCount = (upcoming ?? []).filter((item) => daysUntil(item.due_date) < 0).length;
 
   return (
     <main className="mx-auto flex max-w-2xl flex-col gap-4 p-8">
@@ -349,36 +349,21 @@ function ExpensesPageContent(): ReactNode {
 
       <KpiCards kpis={kpis} />
 
-      <div className="flex gap-4 border-b">
-        <button
-          type="button"
-          onClick={() => setTab("lista")}
-          className={`pb-2 ${activeTab === "lista" ? "border-b-2 border-foreground font-medium" : "text-muted-foreground"}`}
-        >
-          Lista
-        </button>
-        <button
-          type="button"
-          onClick={() => setTab("proximas")}
-          className={`pb-2 ${activeTab === "proximas" ? "border-b-2 border-foreground font-medium" : "text-muted-foreground"}`}
-        >
-          Próximas
-          {kpis && kpis.upcoming_30_days_count > 0 && (
-            <span
-              className={`ml-1 rounded-full px-1.5 text-xs ${overdueOrUrgentCount > 0 ? "bg-red-600 text-white" : "bg-muted"}`}
-            >
-              {kpis.upcoming_30_days_count}
-            </span>
-          )}
-        </button>
-        <button
-          type="button"
-          onClick={() => setTab("por-veiculo")}
-          className={`pb-2 ${activeTab === "por-veiculo" ? "border-b-2 border-foreground font-medium" : "text-muted-foreground"}`}
-        >
-          Por veículo
-        </button>
-      </div>
+      <Tabs
+        items={[
+          { value: "lista", label: "Lista" },
+          {
+            value: "proximas",
+            label: "Próximas",
+            badge: kpis && kpis.upcoming_30_days_count > 0 ? kpis.upcoming_30_days_count : undefined,
+          },
+          { value: "por-veiculo", label: "Por veículo" },
+        ]}
+        value={activeTab}
+        onValueChange={(value) => setTab(value as "lista" | "proximas" | "por-veiculo")}
+        variant="underline"
+        aria-label="Seções de despesas"
+      />
 
       {activeTab === "lista" && (
         <>

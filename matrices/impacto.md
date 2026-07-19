@@ -985,6 +985,58 @@ Introdução da primeira camada de cache client-side do projeto, via `@serwist/t
 
 ---
 
+### IMPACTO-038 — Estudo Pré-Implementação: T8.1 (Design System, SPEC-20260525-001) (2026-07-19)
+
+| Campo | Valor |
+|-------|-------|
+| **Spec** | SPEC-20260525-001 (draft → revisão v0.2 nesta rodada) |
+| **Status** | Estudo concluído; spec revisada; implementação não iniciada |
+| **Risco geral** | Médio |
+
+Mesmo padrão de estudo pré-implementação já usado em T3.9/T5.1/T5.4/T7.1: antes de promover a spec e iniciar T8.1, acionados os agentes `Explore` (inventário do código real) e `design-system` (padrões de mercado 2026), seguidos de 4 decisões tomadas com o usuário. Achados e decisões:
+
+| # | Achado/Decisão | Módulos afetados | Risco | Mitigação/Nota |
+|---|---|---|---|---|
+| 1 | §1 da spec (Contexto) afirmava que `packages/ui` já possuía `Button`/`Input`/`StatsCard`/`Card`/`Table` "bem estruturados". Falso: `packages/ui/src/components/` só contém `masked-input.tsx`. Mesmo padrão de resíduo de outro contexto já visto em `SPEC-20260602-001` (IMPACTO-032) | `specs/design-system/SPEC-20260525-001.md` §1/§4.1 | Alto | `Button`/`Card`/`Table` promovidos a pré-requisito de T8.1 (novo grupo "Base"), construídos antes/junto dos 11 componentes originais |
+| 2 | 5 dos 11 componentes originais já têm implementação inline duplicada em produção: `KpiCard` (`FleetKpis.tsx` + `expenses/page.tsx`), `EmptyState` (6 locais: expenses/maintenance/analytics/dashboard/atividades/VehicleSpotlight), `Alert` (padrão `className` ad hoc em ~30 arquivos), `Tabs` (`expenses/page.tsx` sem ARIA + `VehicleSpotlight.tsx` com `role="tab"` correto), `Toast` (3 componentes dedicados com campo próprio no `ui-store`) | `apps/web/src/` (múltiplos) | Médio | Ordem de implementação (spec §10) passa a distinguir migração (risco de regressão em tela já funcionando) de greenfield; `Combobox`/`DateRangePicker`/`FileUpload`/`Steps`/`Breadcrumb`/`ChartWrapper` (parcial) confirmados como 100% inexistentes, sem risco de regressão |
+| 3 | `@base-ui/react`, `class-variance-authority`, `sonner`, `lucide-react` — nenhuma instalada no monorepo; Storybook sem nenhuma dependência apesar de script órfão em `packages/ui/package.json` | `apps/web/package.json`, `packages/ui/package.json` | Médio | Decisão: `@base-ui/react` descartado (ficar 100% Radix, evita 3ª API de composição junto de `@radix-ui/react-dialog`/`vaul`); CVA adotado (única dependência nova); `sonner` descartado; Storybook removido do escopo |
+| 4 | `icon: LucideIcon` tipado em 7 interfaces da spec original, mas `lucide-react` nunca foi instalado — contradiz a decisão de ícones emoji já tomada em T5.4 (IMPACTO-036/037, D10). Os próprios mockups ASCII da spec já usavam emoji, evidenciando autoinconsistência | `specs/design-system/SPEC-20260525-001.md` (KpiCard/Tabs/Alert/EmptyState/Breadcrumb/Steps/Combobox) | Médio | Pesquisa de mercado + WCAG SC 1.1.1/H86: abordagem híbrida — `icon?: React.ReactNode` (emoji) nos componentes decorativos; SVG fixo embutido (sem lib nova) só nos 2 pontos semânticos (variante de `Alert`, indicador de estado de `Steps`), com `aria-hidden`/`role` conforme H86 |
+| 5 | `Toast` da spec original propunha `sonner`/`@base-ui/react/toast` (hook imperativo genérico) sobre um padrão já em produção de 3 toasts ad hoc com campo dedicado no `ui-store` — código-fonte dos 3 já documenta explicitamente a decisão de não unificar (D10, "sem introduzir lib de toast nova") | `apps/web/src/lib/stores/ui-store.ts`, `apps/web/src/components/pwa/*-toast.tsx` | Alto | Decisão revertida: generalizar em fila única (`toasts: ToastItem[]`) no `ui-store` existente, mantendo ADR-008 sem exceção; migração dos 3 toasts existentes entra no escopo de T8.1, tocando indiretamente `SPEC-20260602-001`/`SPEC-20260712-001` (specs `approved`) — verificação de paridade visual/comportamental obrigatória na implementação |
+| 6 | `Combobox` da spec original citava `@base-ui/react/select` OU `Popover`+`Command` (shadcn) | `specs/design-system/SPEC-20260525-001.md` §7.2 | Baixo | Fixado: `@radix-ui/react-popover` + `cmdk`, coerente com a decisão #3 |
+
+**Decisões de escopo tomadas com o usuário** (via `AskUserQuestion`, não é correção de erro — são 4 trade-offs explícitos): (1) ampliar T8.1 para incluir `Button`/`Card`/`Table`; (2) ícones híbridos (emoji decorativo + SVG fixo semântico), após pesquisa dedicada de acessibilidade a pedido do usuário; (3) generalizar os 3 toasts existentes em fila única, aceitando o risco de migração; (4) ficar 100% em Radix, sem somar `@base-ui/react`. Registradas no changelog v0.2 da spec (`Histórico de Revisões`).
+
+**Numeração de seções corrigida:** a v1.0 da spec tinha duas seções `## 7.` simultâneas (`Padrões de Listagem` e `Ordem de Implementação Sugerida`) — corrigido na v0.2 (agora §9 e §10). Seção obrigatória "Histórias de Usuário e Critérios de Aceitação" (ausente na v1.0) adicionada como §3.
+
+**Pendência:** spec ainda em `status: draft`. Gate de sincronia (matriz de rastreabilidade) já satisfeito nesta rodada — ver linha `SPEC-20260525-001` em `matrices/rastreabilidade.md`, atualizada com as 14 linhas (3 base + 11 originais) e a distinção migração/greenfield. Promoção a `approved` e início da implementação (T8.1) ficam para decisão/rodada seguinte.
+
+**Adendo v0.3 (2026-07-19, mesmo dia):** usuário trouxe uma proposta externa de estruturação do design system (`packages/design-tokens` separado, Radix+CVA, shadcn como referência, Storybook, Atomic Design, Chromatic/regressão visual, validação de variantes via Zod, `jest-axe`) para avaliação contra o que já havia sido decidido nesta rodada. Avaliação:
+
+| Ponto da proposta | Veredito | Motivo |
+|---|---|---|
+| Radix + CVA, shadcn como referência (não dependência), Atomic Design como mentalidade | Confirmado — já era a decisão tomada | Sem conflito |
+| **Auditoria de tokens reais em uso antes de codar** | **Aceito e ampliou o escopo** | Verificação motivada pela proposta revelou um 2º achado crítico não pego na v0.2 (ver abaixo) |
+| `jest-axe`/`@axe-core` como critério de aceite | Aceito, incorporado à spec (§4.4) | Gap real — nenhuma cobertura de a11y automatizada hoje (`TESTS_SPEC.md`/`RULES.md` não mencionam) |
+| Storybook / Chromatic / regressão visual | Rejeitado, reafirma decisão v0.2 | Storybook já descartado por ser projeto solo; a própria proposta cita "essencial quando o time crescer além de você" como justificativa — inconsistente com listar como próximo passo agora; Chromatic tipicamente depende de Storybook |
+| `packages/design-tokens` como pacote separado | Rejeitado — tokens ficam em `packages/ui/src/tokens/` | Sem 2º consumidor real hoje (mobile/PDF são hipotéticos, fora de roadmap) — pacote próprio é complexidade adiantada, contra o princípio de não abstrair para requisito hipotético futuro |
+| "Validar variantes com Zod em tempo de build" | Rejeitado — imprecisão técnica | Zod é validação em runtime, não build-time; CVA + TypeScript já garantem segurança de tipo em compile-time para variantes; Zod só se justificaria se a variante viesse de fonte externa não confiável, o que não é o caso |
+
+**2º achado crítico (motivado pela auditoria sugerida pela proposta):** a v0.2 desta spec (achado #1 desta mesma entrada) já havia corrigido a afirmação falsa sobre `Button`/`Card`/`Table` existirem, mas manteve sem verificar a frase "Tailwind CSS + variáveis OKLCH do `globals.css`" herdada da v1.0 — mesmo padrão de erro, não pego na primeira passada. Auditoria confirma: `apps/web/tailwind.config.ts` tem `theme.extend: {}` vazio; `apps/web/src/app/globals.css` tem só as 3 diretivas `@tailwind base/components/utilities`, sem nenhum `:root {}`/variável CSS; projeto em Tailwind v3.4.17 (não v4). **Classes já em uso em produção não têm efeito:** `bg-muted`, `text-primary`, `border-l-primary`, `bg-muted-foreground/30` aparecem em `sidebar.tsx`, `analytics/page.tsx`, `atividades/page.tsx`, `expenses/page.tsx` e outros, mas como esses nomes de cor não existem no tema, o compilador JIT do Tailwind não gera CSS para eles — são classes mortas, sem efeito visual, silenciosamente, hoje em produção.
+
+**Decisão:** nova §4.1 "Tokens de Design" na spec, como pré-requisito 0 (bloqueia até `Button`/`Card`/`Table`, §4.2). Tokens formalizados em `packages/ui/src/tokens/*.ts`, aplicados via `tailwind.config.ts` (`theme.extend`) + `globals.css` (`@layer base { :root {...} }`) — fonte de verdade é o TS (Tailwind v3, sem `@theme` CSS-first do v4). Primeiro passo da implementação de tokens é auditar os nomes semânticos já referenciados no código (`primary`/`muted`/`success`/`danger`/`warning`/`info`) para não redefinir sem considerar a intenção original.
+
+**Adendo — fechamento de T8.1, rodada 1 (2026-07-19):** escopo desta rodada combinado com o usuário via `AskUserQuestion` — prioridades 0–1 (tokens + `Button`/`Card`/`Table`), deixando os 11 componentes originais (incluindo a migração de `Toast`, que toca `SPEC-20260602-001`/`SPEC-20260712-001` `approved`) para rodada seguinte, por serem maior escopo/risco.
+
+| # | Achado/Decisão | Módulos afetados | Risco | Mitigação/Nota |
+|---|---|---|---|---|
+| 7 | Auditoria de tokens (agente `Explore`) achou paleta oklch já documentada em `.agents/nave-ui-pwa/SKILL.md` (primary/secondary/accent/success/warning/error/info + background/foreground/card), nunca aplicada ao Tailwind; `#3b70ca` (≈ primary) já hardcoded em `manifest.ts`, `layout.tsx`, `service-worker-update-toast.tsx`, `install-prompt-banner.tsx` | `packages/ui/src/tokens/colors.ts` | Baixo | Adotada como fonte dos tokens `primary`/`secondary`/`accent`/`background`/`foreground`/`card` — mesmo matiz, sem reinventar. Migração dos hex hardcoded para os novos tokens fica para quando os arquivos que os usam forem tocados por outra tarefa, fora do escopo mínimo de T8.1 rodada 1 |
+| 8 | `success`/`warning`/`danger`/`info` **não existem** como classe Tailwind em produção hoje — status/alerta usam cores literais (`red-*`, `amber-*`/`yellow-*`, `green-*`/`emerald-*`, `blue-*`) espalhadas em `atividades/page.tsx`, `expenses/page.tsx`, `VehicleHealthCard.tsx`, `maintenance/page.tsx`, `sidebar.tsx` | `packages/ui/src/tokens/colors.ts` | Baixo | Tokens novos (não migração): tom "pastel" (L=0.92) do `SKILL.md` mantido para fundo; tom "solid" (ícone/borda/texto, L 0.55–0.75 conforme legibilidade por matiz) é derivação nova desta implementação, mesmo H do pastel. Migrar os hex/Tailwind-literal existentes para os tokens novos é trabalho futuro (não regride nada hoje, classes antigas continuam funcionando) |
+| 9 | `.agents/nave-ui-pwa/SKILL.md` também instrui `lucide-react` e componentes `shadcn/ui` prontos — contradiz a decisão já `approved` da spec (§1/§4.3: sem `lucide-react`, ícones híbridos emoji+SVG fixo; Radix headless com visual shadcn só como referência, sem instalar o pacote) | — | Baixo | Conflito não resolvido nesta rodada, só sinalizado: a spec `approved` prevalece por ser a decisão mais recente e explicitamente revisada (v0.2/v0.3); o `SKILL.md` parece resíduo de orientação anterior à spec. Recomendação para o usuário: atualizar `SKILL.md` para não divergir da spec approved, evitando que um agente futuro siga a instrução desatualizada |
+
+**Resultado:** tokens (`packages/ui/src/tokens/{colors,spacing,radius}.ts`) aplicados em `apps/web/tailwind.config.ts`/`globals.css`; `Button`/`Card`/`Table` implementados em `packages/ui/src/components/` com CVA, cada um com `[nome].test.tsx` cobrindo interação + `jest-axe` (25 testes, 100% cobertura em `packages/ui`); `pnpm lint`/`type-check`/`test`/`build` (`apps/web`) verdes. Matriz de rastreabilidade atualizada (`SPEC-20260525-001`, 4 linhas `⏳`→`✅`).
+
+---
+
 ## Legenda de Risco
 
 | Nível | Critério |

@@ -1,12 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useDashboardStore } from "@/lib/stores/use-dashboard-store";
 import { useUIStore } from "@/lib/stores/ui-store";
-import { apiClient, ApiError, ApiUnavailableError } from "./api-client";
+import { useConnectivityStore } from "@/lib/pwa/connectivity-store";
+import { apiClient, ApiError, ApiUnavailableError, OfflineWriteBlockedError } from "./api-client";
 
 describe("apiClient", () => {
   beforeEach(() => {
     useDashboardStore.getState().clearAllSelection();
     useUIStore.getState().clearContextStaleNotice();
+    useConnectivityStore.setState({ isOnline: true });
   });
 
   afterEach(() => {
@@ -53,10 +55,44 @@ describe("apiClient", () => {
     await expect(apiClient("/auth/login")).rejects.toBeInstanceOf(ApiUnavailableError);
   });
 
-  it("lança ApiUnavailableError quando offline (navigator.onLine=false)", async () => {
-    vi.stubGlobal("navigator", { onLine: false });
+  it("SPEC-20260712-001 RF-11: GET não é bloqueado antes da rede quando offline — precisa chegar ao fetch() para o Service Worker poder responder do cache (RF-08)", async () => {
+    useConnectivityStore.setState({ isOnline: false });
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({ ok: true, status: 200, json: async () => ({ data: [] }) }),
+    );
 
-    await expect(apiClient("/auth/login")).rejects.toBeInstanceOf(ApiUnavailableError);
+    const result = await apiClient("/vehicles");
+
+    expect(result).toEqual([]);
+    expect(fetch).toHaveBeenCalled();
+  });
+
+  it("SPEC-20260712-001 RF-11: bloqueia mutação antes de qualquer chamada de rede quando offline", async () => {
+    useConnectivityStore.setState({ isOnline: false });
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(
+      apiClient("/expenses", { method: "POST", body: { amount: 10 } }),
+    ).rejects.toBeInstanceOf(OfflineWriteBlockedError);
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(useUIStore.getState().offlineWriteBlockedNotice).toBe(
+      "Sem conexão — não é possível salvar agora. Tente novamente quando a internet voltar.",
+    );
+  });
+
+  it("SPEC-20260712-001 RF-11.1/R-PWA-08: trata falha de rede real numa mutação como offline retroativo mesmo com navigator.onLine=true (EC-08)", async () => {
+    useConnectivityStore.setState({ isOnline: true });
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockRejectedValue(new TypeError("Failed to fetch")),
+    );
+
+    await expect(
+      apiClient("/expenses", { method: "POST", body: { amount: 10 } }),
+    ).rejects.toBeInstanceOf(OfflineWriteBlockedError);
+    expect(useConnectivityStore.getState().isOnline).toBe(false);
   });
 
   it("lança ApiUnavailableError em timeout (>10s, STORY-08)", async () => {

@@ -67,6 +67,12 @@ async function tryRefreshSession(request: NextRequest): Promise<NextResponse | n
   }
 }
 
+// @spec SPEC-20260712-001 RF-05, RF-07
+// `/serwist`, `/manifest.webmanifest`, `/icons` e `/offline` precisam ser alcançáveis sem
+// sessão válida: o navegador registra/re-busca o Service Worker mesmo deslogado ou com JWT
+// expirado (EC-04), e a página de fallback offline (RF-07) não pode depender de auth.
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|api/backend).*)"],
+  matcher: [
+    "/((?!_next/static|_next/image|favicon.ico|api/backend|serwist|manifest.webmanifest|icons|offline).*)",
+  ],
 };

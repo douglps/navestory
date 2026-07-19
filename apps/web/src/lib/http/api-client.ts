@@ -1,7 +1,11 @@
 import { useDashboardStore } from "@/lib/stores/use-dashboard-store";
 import { useUIStore } from "@/lib/stores/ui-store";
+import { useConnectivityStore } from "@/lib/pwa/connectivity-store";
 
 const REQUEST_TIMEOUT_MS = 10_000;
+const OFFLINE_WRITE_MESSAGE =
+  "Sem conexão — não é possível salvar agora. Tente novamente quando a internet voltar.";
+const MUTATING_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
 
 export class ApiError extends Error {
   constructor(
@@ -20,6 +24,21 @@ export class ApiUnavailableError extends Error {
   }
 }
 
+/**
+ * @spec SPEC-20260712-001 RF-11, RF-11.1, RF-12
+ * Erro específico de mutação bloqueada por falta de conexão — distinto de
+ * `ApiUnavailableError` para que a UI mostre a mensagem exata da spec e preserve o
+ * formulário (RF-12) em vez de um erro genérico de rede. O toast é disparado centralmente
+ * em `apiClient` (mesmo padrão já usado para o aviso de 404 abaixo), então nenhuma tela
+ * precisa tratar este erro individualmente.
+ */
+export class OfflineWriteBlockedError extends Error {
+  constructor(message = OFFLINE_WRITE_MESSAGE) {
+    super(message);
+    this.name = "OfflineWriteBlockedError";
+  }
+}
+
 interface RequestOptions {
   method?: "GET" | "POST" | "PATCH" | "PUT" | "DELETE";
   body?: unknown;
@@ -31,8 +50,16 @@ interface RequestOptions {
  * `/api/backend/*` (mesma origem do Next) — ver next.config.ts.
  */
 export async function apiClient<T>(path: string, options: RequestOptions = {}): Promise<T> {
-  if (typeof navigator !== "undefined" && !navigator.onLine) {
-    throw new ApiUnavailableError("Sem conexão com a internet.");
+  const method = options.method ?? "GET";
+  const isMutation = MUTATING_METHODS.has(method);
+
+  // @spec SPEC-20260712-001 RF-11 — valida R-PWA-02
+  // Bloqueia mutação ANTES de qualquer tentativa de rede quando offline. GET nunca é
+  // bloqueado aqui: precisa chegar ao fetch() para o Service Worker poder responder com o
+  // cache (RF-08) mesmo sem conexão — bloquear GET cedo quebraria a leitura offline inteira.
+  if (isMutation && !useConnectivityStore.getState().isOnline) {
+    useUIStore.getState().setOfflineWriteBlockedNotice(OFFLINE_WRITE_MESSAGE);
+    throw new OfflineWriteBlockedError();
   }
 
   const controller = new AbortController();
@@ -41,7 +68,7 @@ export async function apiClient<T>(path: string, options: RequestOptions = {}): 
   let response: Response;
   try {
     response = await fetch(`/api/backend${path}`, {
-      method: options.method ?? "GET",
+      method,
       credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: options.body ? JSON.stringify(options.body) : undefined,
@@ -50,6 +77,16 @@ export async function apiClient<T>(path: string, options: RequestOptions = {}): 
   } catch (error) {
     if ((error as Error).name === "AbortError") {
       throw new ApiUnavailableError("A requisição demorou demais para responder.");
+    }
+    // @spec SPEC-20260712-001 RF-11.1, EC-08 — valida R-PWA-08
+    // Falha de rede real (TypeError/"Failed to fetch", não uma resposta HTTP de erro) numa
+    // mutação é tratada como offline retroativo, mesmo com `navigator.onLine === true`
+    // (falso positivo — Wi-Fi de posto sem saída à internet). Corrige o estado global de
+    // conectividade (RF-13) e mostra a mesma mensagem de RF-11, nunca um erro genérico.
+    if (isMutation) {
+      useConnectivityStore.getState().markOffline();
+      useUIStore.getState().setOfflineWriteBlockedNotice(OFFLINE_WRITE_MESSAGE);
+      throw new OfflineWriteBlockedError();
     }
     throw new ApiUnavailableError();
   } finally {

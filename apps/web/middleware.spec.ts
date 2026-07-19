@@ -6,7 +6,7 @@ vi.mock("./src/lib/auth/decode-jwt-exp", () => ({
 }));
 
 import { decodeJwtExp } from "./src/lib/auth/decode-jwt-exp";
-import { middleware } from "./middleware";
+import { config, middleware } from "./middleware";
 
 function createRequest(path: string, cookies: Record<string, string> = {}): NextRequest {
   const cookieHeader = Object.entries(cookies)
@@ -106,5 +106,18 @@ describe("middleware", () => {
     const response = await middleware(request);
 
     expect(response.status).toBe(307);
+  });
+
+  describe("SPEC-20260712-001 RF-05, RF-07 — matcher exclui rotas PWA públicas", () => {
+    // O matcher do Next.js usa sintaxe própria de negative lookahead — testado fim-a-fim via
+    // `pnpm build && pnpm start` (200 em /serwist/sw.js, /manifest.webmanifest, /offline sem
+    // sessão; 307 em /dashboard). Aqui apenas garante que ninguém remova as exclusões sem
+    // querer — checagem estrutural do padrão, não execução do regex.
+    it.each(["serwist", "manifest.webmanifest", "icons", "offline"])(
+      "exclui '%s' do matcher de autenticação",
+      (excludedSegment) => {
+        expect(config.matcher[0]).toContain(excludedSegment);
+      },
+    );
   });
 });

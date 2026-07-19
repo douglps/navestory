@@ -955,6 +955,36 @@ Sprints 2 e 3 do redesign do dashboard implementadas sobre a base de T5.1 Sprint
 
 ---
 
+### IMPACTO-037 — Adoção de PWA/Offline com Serwist: Service Worker, Cache Client-Side e Store de Conectividade (SPEC-20260712-001) (2026-07-18)
+
+| Campo | Valor |
+|-------|-------|
+| **Spec** | SPEC-20260712-001 (approved, v0.5) |
+| **Status** | Implementado em 2026-07-18 (T7.1) |
+| **Risco geral** | Médio |
+
+Introdução da primeira camada de cache client-side do projeto, via `@serwist/turbopack` v9 sobre Next.js 16 App Router com Turbopack. Inclui Service Worker, Web App Manifest, store de conectividade compartilhado (Zustand), indicador de status offline e limpeza de cache no logout.
+
+| # | Mudança | Módulos afetados | Risco | Mitigação |
+|---|---------|-----------------|-------|-----------|
+| 1 | `@serwist/next` (v8, webpack) descartado em favor de `@serwist/turbopack` (v9): build com Turbopack não executa plugins de webpack — o SW simplesmente não era gerado com a lib original. Compilado via route handler `src/app/serwist/[path]/route.ts` | `apps/web/next.config.ts`, `apps/web/pnpm-lock.yaml`, `apps/web/src/app/serwist/` | Médio | Verificado com `pnpm build && pnpm start && curl /serwist/sw.js` → 200 com precache entries; nomes de cache (`nave-pages`/`nave-api-data`) e estratégias por RF mantidos como especificado |
+| 2 | `apps/web/middleware.ts` estendido: `/serwist`, `/manifest.webmanifest`, `/icons` e `/offline` marcados como rotas públicas (excluídas do redirecionamento do guard de autenticação) | `apps/web/middleware.ts` | Alto | Sem esse ajuste, o middleware de auth redirecionava todas essas rotas para `/login`, impedindo o registro do Service Worker pelo navegador — bug descoberto durante verificação end-to-end |
+| 3 | `apps/web/src/app/manifest.ts`: Web App Manifest dinâmico via API nativa do Next.js App Router (RF-01/RF-02) | `apps/web/src/app/` | Baixo | Ícones 192×192 e 512×512 em variantes `any` e `maskable` disponíveis em `apps/web/public/icons/` |
+| 4 | `apps/web/src/app/sw.ts`: entry point do Service Worker com estratégias diferenciadas por tipo de recurso — `CacheFirst` (assets), `NetworkFirst` (navegação, timeout 3s), `StaleWhileRevalidate` (GET /api/), `NetworkOnly` (mutações) (RF-05–RF-10) | `apps/web/src/app/sw.ts` | Médio | Plugin `api-cache-retention-plugin.ts` garante que entradas além de 30 dias (R-PWA-06) só são removidas quando há conexão disponível — nunca corta exibição offline (RF-10/D9) |
+| 5 | `useConnectivityStore` (Zustand): store compartilhado entre `useOnlineStatus` (UI) e `api-client.ts` (requisições). Falhas de rede reais com `navigator.onLine === true` chamam `markOffline()` diretamente via `api-client.ts` (RF-11.1/R-PWA-08/EC-08) | `apps/web/src/lib/pwa/connectivity-store.ts`, `apps/web/src/lib/http/api-client.ts`, `apps/web/src/lib/hooks/use-online-status.ts` | Médio | Padrão de fonte única de verdade para conectividade — evita dessincronização entre a UI e a camada HTTP |
+| 6 | Limpeza de cache no logout via `apps/web/src/lib/auth/logout.ts` em vez de `supabase.auth.onAuthStateChange` — este projeto não usa Supabase Auth Client no browser (sessão via cookie httpOnly + JWT) (RF-16/RF-17/S6) | `apps/web/src/lib/auth/logout.ts`, `apps/web/src/lib/pwa/clear-api-cache.ts` | Alto | EC-03 (troca de usuário sem logout explícito) ficou ⏸️ adiado: o backend não expõe `user_id` ao client, tornando a detecção de troca impossível sem endpoint novo (`/auth/me` ou `/auth/login` retornando `user_id`); retomar quando essa API existir |
+| 7 | Indicador `ConnectivityIndicator` no Header com guard `mounted` (useState + useEffect) para evitar hydration mismatch: primeiro render do client idêntico ao SSR, sem ler `navigator.onLine` antes da hidratação (RF-13) | `apps/web/src/components/pwa/connectivity-indicator.tsx`, `apps/web/src/components/layout/header.tsx` | Baixo | Bug de hydration mismatch corrigido via guard — o componente retorna `null` tanto no SSR quanto no primeiro render do client; apenas após `setMounted(true)` passa a refletir o estado real de conectividade |
+| 8 | Novos componentes PWA: `install-prompt-banner.tsx` (RF-03), `ios-install-banner.tsx` (RF-04), `service-worker-update-toast.tsx` (RF-14/RF-15), `offline-write-blocked-toast.tsx` (RF-11/RF-11.1/RF-12) — todos integram o `ui-store` (Zustand) existente; sem dependências novas (`Sonner`/`lucide-react` descartadas — D10) | `apps/web/src/components/pwa/`, `apps/web/src/lib/stores/ui-store.ts` | Baixo | Reaproveitam o padrão de toast já estabelecido em T5.4 (`ContextStaleToast`/`ui-store`) |
+
+**Riscos a observar:**
+- EC-03 (troca de usuário sem logout explícito) permanece ⏸️ aberto — risco de exibir dados residuais do usuário A para o usuário B em dispositivo compartilhado, caso a troca ocorra sem logout. Mitigação parcial: o TTL de 30 dias (R-PWA-06) eventualmente remove entradas; mas a proteção primária (limpeza imediata no `SIGNED_IN` de user_id diferente) depende de endpoint backend ainda não existente.
+- O Service Worker em cache no browser dos usuários tem lifecycle independente do deploy — rollback de emergência do frontend demora até a próxima atualização normal ser detectada pelo navegador do usuário (RF-14/RF-15).
+- `platform-detection.ts` usa `navigator.userAgent` para detecção de iOS/Safari — sujeito a user-agent spoofing; limitação conhecida e documentada (RF-04/EC-07), aceitável para esta fase.
+
+**Pendência: ADR não criado** — a spec (§16/Q3) decidiu explicitamente não formalizar ADR agora, pois o cache client-side ainda não é um padrão replicado em outras partes do app. Registrado aqui para consulta futura: criar ADR se o padrão de Service Worker/cache for estendido a outros domínios do projeto.
+
+---
+
 ## Legenda de Risco
 
 | Nível | Critério |

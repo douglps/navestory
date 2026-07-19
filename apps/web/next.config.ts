@@ -1,5 +1,6 @@
 import type { NextConfig } from "next";
 import { withSentryConfig } from "@sentry/nextjs";
+import { withSerwist } from "@serwist/turbopack";
 
 /**
  * Rewrite de `/api/backend/*` para o NestJS local — faz o browser enxergar tudo como
@@ -19,12 +20,20 @@ const nextConfig: NextConfig = {
   },
 };
 
+// @spec SPEC-20260712-001 RF-05
+// `@serwist/turbopack` (v9) em vez de `@serwist/next` (v8): este projeto builda com
+// Turbopack (padrão do Next.js 16 — ver "▲ Next.js (Turbopack)" no output de `next build`),
+// e o plugin v8 depende do `@serwist/webpack-plugin`, que o Turbopack não executa (build
+// terminava "com sucesso" sem gerar nenhum service worker). O bundling do SW acontece via
+// route handler dedicado (src/app/serwist/[path]/route.ts), compatível com ambos bundlers.
+const withPWA = withSerwist(nextConfig);
+
 // @spec SPEC-20260716-002 RF-06, CA-09
 // Envia source maps ao Sentry no build quando SENTRY_AUTH_TOKEN está presente (CI apenas);
 // ausência do token não quebra o build — o upload é pulado silenciosamente.
 // `deleteSourcemapsAfterUpload` (default true) evita que os .map fiquem acessíveis
 // publicamente após o deploy.
-export default withSentryConfig(nextConfig, {
+export default withSentryConfig(withPWA, {
   silent: true,
   authToken: process.env.SENTRY_AUTH_TOKEN,
 });

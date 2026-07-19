@@ -1,21 +1,22 @@
 ---
 id: SPEC-20260712-001
 title: "PWA Offline — Instalação, Cache e Modo Somente-Leitura Sem Conexão"
-status: draft
+status: approved
 date: 2026-07-12
 author: Douglas Lopes (lps.doug@protonmail.com)
-rules: [R-PWA-01, R-PWA-02, R-PWA-03, R-PWA-04, R-PWA-05, R-PWA-06]
+rules: [R-PWA-01, R-PWA-02, R-PWA-03, R-PWA-04, R-PWA-05, R-PWA-06, R-PWA-07, R-PWA-08]
 security: [S1, S2, S6]
 camadas: [frontend, infra]
 ---
 
 # SPEC-20260712-001: PWA Offline — Instalação, Cache e Modo Somente-Leitura Sem Conexão
 
-**Versão:** 0.1 (rascunho)
-**Status:** Draft — em revisão
+**Versão:** 0.5 (aprovada — implementada)
+**Status:** Approved
 **Autor:** douglps
 **Data:** 2026-07-12
-**Reviewers:** —
+**Data de aprovação:** 2026-07-18
+**Reviewers:** douglps
 **ADR de referência:** nenhuma ainda — o Decision Log (§17) desta spec cobre o racional; formalizar como ADR é uma decisão em aberto (ver §16)
 **Análise de impacto:** não aplicável — feature greenfield, ainda sem código em `apps/web`
 
@@ -73,7 +74,7 @@ O PRD já compromete PWA básico para o MVP, e o time de UX/PWA (`.agents/nave-u
 ## 4. Goals (Objetivos)
 
 - [ ] G-01: O Nave pode ser instalado como app na tela inicial em Android/Chrome (via prompt automático) e em iOS/Safari (via instrução manual), com ícone, nome e cores da marca Nave corretos.
-- [ ] G-02: Ao abrir o app sem conexão, o usuário vê a última versão em cache do shell (layout, navegação) e dos dados já visitados (dashboard, lista de despesas, veículos) em vez de uma tela de erro — com um banner claro informando que está offline e que os dados podem estar desatualizados.
+- [ ] G-02: Ao abrir o app sem conexão, o usuário vê a última versão em cache do shell (layout, navegação) e dos dados já visitados (dashboard, lista de despesas, veículos) em vez de uma tela de erro — com um indicador fixo e sempre visível mostrando exatamente há quanto tempo aqueles dados foram atualizados pela última vez (RF-13, R-PWA-07), nunca um aviso genérico de "pode estar desatualizado" sem precisão.
 - [ ] G-03: Qualquer tentativa de criar, editar ou excluir um registro (despesa, manutenção, multa, veículo) enquanto offline é bloqueada no cliente **antes** da tentativa de rede, com mensagem clara — nunca falha silenciosamente nem trava a UI.
 - [ ] G-04: Quando uma nova versão do Service Worker é publicada, o usuário em uma aba aberta é avisado por um toast e escolhe quando recarregar — nunca há reload automático sem aviso.
 - [ ] G-05: O app atinge nota Lighthouse PWA e Mobile Performance consistentes com as metas já definidas no PRD (Performance > 90, FCP < 1.8s).
@@ -119,8 +120,8 @@ Reaproveita as personas já definidas em `specs/PRD.md`:
 1. Carlos abriu o Nave pela manhã, com internet, e navegou pelo dashboard e pela lista de despesas.
 2. No posto, sem sinal, ele abre o app (instalado na tela inicial ou via navegador).
 3. O Service Worker responde com a última versão em cache do shell e dos dados já visitados.
-4. Um banner no topo informa: **"Você está offline — dados podem estar desatualizados."**
-5. Carlos confere o total gasto no mês (dado do dashboard já em cache) — consulta resolvida sem precisar de sinal.
+4. O indicador fixo no `Header` mostra: **"Offline · Atualizado Hoje 08:42"**.
+5. Carlos confere o total gasto no mês (dado do dashboard já em cache) — consulta resolvida sem precisar de sinal, sabendo exatamente a idade do dado.
 
 **Jornada futura — tentativa de escrita offline:**
 
@@ -166,7 +167,7 @@ Reaproveita as personas já definidas em `specs/PRD.md`:
 |----|-----------|-----------|-------------------|
 | RF-05 | O Service Worker (`apps/web/app/sw.ts`, registrado via `@serwist/next`) faz precache do shell da aplicação (HTML de layout, CSS, JS dos bundles principais) no momento da instalação, usando a estratégia `CacheFirst` para assets versionados (hash no nome do arquivo, gerado pelo build do Next.js). | Must | Após a 1ª visita, DevTools → Application → Cache Storage mostra os assets do build precacheados. Segunda visita com rede desligada (`chrome://inspect` offline) carrega o shell sem erro de rede. |
 | RF-06 | Requisições de navegação (HTML de rota, ex: `/dashboard`, `/expenses`) usam estratégia `NetworkFirst` com timeout curto (ex: 3s) e fallback para a versão em cache da mesma rota, ou para a página `/offline` (RF-07) quando a rota nunca foi visitada. | Must | Rota já visitada online: ao ficar offline, recarregar a mesma rota exibe a versão em cache. Rota nunca visitada: exibe `/offline`. |
-| RF-07 | Existe uma página `apps/web/app/offline/page.tsx` com mensagem amigável ("Você está sem conexão. Algumas informações podem não estar disponíveis.") e um botão "Tentar novamente", exibida como fallback de navegação (RF-06). | Must | Acessar uma rota nunca visitada com o dispositivo offline exibe esta página, não um erro de navegador. |
+| RF-07 | Existe uma página `apps/web/app/offline/page.tsx` (rota dedicada — decisão fixada, ver Q2/D12) com mensagem amigável ("Você está sem conexão. Algumas informações podem não estar disponíveis.") e um botão "Tentar novamente", exibida como fallback de navegação (RF-06). | Must | Acessar uma rota nunca visitada com o dispositivo offline exibe esta página, não um erro de navegador. |
 
 ### 7.3 Cache de Dados de Leitura da API (R-PWA-01, R-PWA-06)
 
@@ -174,15 +175,17 @@ Reaproveita as personas já definidas em `specs/PRD.md`:
 |----|-----------|-----------|-------------------|
 | RF-08 | Requisições `GET` para rotas de dados da API (ex: `/api/vehicles`, `/api/expenses`, `/api/dashboard/summary`) usam estratégia `StaleWhileRevalidate`: responde imediatamente com o cache (se existir) e atualiza o cache em segundo plano quando há rede. | Must | Com rede normal, dois `GET` seguidos à mesma rota: o 2º é servido do cache imediatamente e depois atualizado (visível no DevTools como duas entradas de timing). |
 | RF-09 | Requisições `POST`, `PUT`, `PATCH` e `DELETE` **nunca** são interceptadas pelo Service Worker — passam direto para a rede sem estratégia de cache, sob qualquer condição. | Must | Nenhuma entrada de mutação aparece no Cache Storage. Interceptar a requisição via DevTools confirma `networkOnly`. |
-| RF-10 | Toda entrada de cache de dados de API tem um TTL máximo de 7 dias (alinhado à validade do refresh token, ADR-003) — entradas mais antigas são consideradas inválidas e removidas na próxima leitura. | Must | Simular `Date.now()` 8 dias no futuro: leitura do cache expirado força fallback para estado vazio/erro tratado, nunca dado de mais de 7 dias sem aviso. |
+| RF-10 | Entradas de cache de dados de API **não têm prazo de invalidação atrelado à exibição** — permanecem exibíveis indefinidamente enquanto existirem no Cache Storage, sempre acompanhadas do indicador de idade do dado (RF-13, R-PWA-07). O TTL de 30 dias (R-PWA-06) é só um teto de **armazenamento em disco por higiene/segurança**: entradas mais antigas que isso são removidas na próxima abertura do app **com conexão disponível** — nunca força estado vazio enquanto o usuário está offline consultando aquele dado. | Must | Simular `Date.now()` 31 dias no futuro com o dispositivo **online**: a entrada expirada é removida na próxima leitura, revalidando via rede. Com o dispositivo **offline**, mesmo além de 30 dias, o dado em cache continua sendo exibido com o indicador de idade — nunca substituído por estado vazio só por estar offline. |
 
 ### 7.4 Bloqueio Explícito de Escrita Offline (R-PWA-02)
 
 | ID | Requisito | Prioridade | Critério de Aceite |
 |----|-----------|-----------|-------------------|
-| RF-11 | Antes de qualquer submissão de formulário (Server Action ou chamada REST) que resulte em `POST`/`PUT`/`PATCH`/`DELETE`, o cliente verifica `navigator.onLine` (ou equivalente via evento `online`/`offline`) e, se offline, bloqueia o envio e exibe a mensagem: **"Sem conexão — não é possível salvar agora. Tente novamente quando a internet voltar."** | Must | Com o dispositivo offline, submeter qualquer formulário transacional exibe a mensagem e não dispara nenhuma requisição de rede. |
+| RF-11 | Antes de qualquer submissão de formulário (Server Action ou chamada REST) que resulte em `POST`/`PUT`/`PATCH`/`DELETE`, o cliente verifica `navigator.onLine` (ou equivalente via evento `online`/`offline`) como sinal rápido inicial e, se offline, bloqueia o envio e exibe a mensagem: **"Sem conexão — não é possível salvar agora. Tente novamente quando a internet voltar."** `navigator.onLine` só reflete se há uma interface de rede ativa, não se há conectividade real — ver RF-11.1 para o caso em que ele reporta "online" incorretamente. | Must | Com o dispositivo offline, submeter qualquer formulário transacional exibe a mensagem e não dispara nenhuma requisição de rede. |
+| RF-11.1 (R-PWA-08) | Se `navigator.onLine` indicar "online" mas a submissão falhar por erro de rede (falha de conexão — `TypeError`/`Failed to fetch`, não uma resposta HTTP de erro do servidor), o cliente trata essa falha como indicativo de estar offline: exibe a mesma mensagem de RF-11 (nunca um erro genérico de rede), preserva os dados do formulário (RF-12) e atualiza o indicador de RF-13 para o estado offline. | Must | Simular `navigator.onLine === true` com a requisição de rede forçada a falhar por erro de conexão (não HTTP): a UI exibe a mensagem de RF-11, não um erro genérico, e o indicador de RF-13 muda para offline. |
 | RF-12 | O conteúdo já digitado no formulário nunca é descartado quando a submissão é bloqueada por falta de conexão (RF-11) — o usuário pode tentar novamente sem redigitar. | Must | Após o bloqueio de RF-11, os campos do formulário mantêm os valores digitados. |
-| RF-13 | Um indicador visual global e persistente (banner fixo, não um toast que desaparece) informa quando o app está offline, em qualquer tela — não apenas nas telas de formulário. | Must | Desligar a rede em qualquer tela do app exibe o banner "Você está offline" dentro de 2 segundos (detecção via eventos `online`/`offline` do navegador). |
+| RF-13 | Um indicador fixo e compacto (pill/badge — não um banner full-width) ocupa uma posição estratégica constante do layout (ao lado do `VehicleContextChip` no `Header`, ver §10.1) informando o estado de conectividade, em qualquer tela. Estado online: indicador discreto ou ausente. Estado offline: exibe `"Offline · Atualizado [Hoje HH:mm / Ontem HH:mm / DD/MM/AA HH:mm]"` (R-PWA-07), calculado a partir do timestamp mais recente entre as entradas de cache relevantes à tela atual. | Must | Desligar a rede em qualquer tela do app exibe o indicador "Offline · Atualizado ..." dentro de 2 segundos (detecção via eventos `online`/`offline` do navegador), sem deslocar o layout existente (sem CLS — o espaço já é reservado pelo `Header`). |
+| RF-13.1 (R-PWA-07) | Formato do timestamp de "última atualização": mesma data (calendário local) → `"Hoje HH:mm"`; um dia antes → `"Ontem HH:mm"`; mais antigo → `"DD/MM/AA HH:mm"`. | Must | Simular `Date.now()` em cada uma das três faixas e verificar o texto exato exibido no indicador. |
 
 ### 7.5 Atualização do Service Worker (R-PWA-03)
 
@@ -215,7 +218,7 @@ Reaproveita as personas já definidas em `specs/PRD.md`:
 2. No posto, sem sinal, ele reabre o app (instalado ou via navegador).
 3. A requisição de navegação para `/dashboard` cai no timeout de `NetworkFirst` (RF-06) e recorre ao cache da mesma rota.
 4. As chamadas `GET /api/dashboard/summary` e `GET /api/expenses` respondem com o cache (RF-08), sem tentar rede (offline detectado).
-5. O banner "Você está offline — dados podem estar desatualizados" é exibido (RF-13).
+5. O indicador fixo "Offline · Atualizado ..." é exibido no `Header` (RF-13).
 6. Carlos vê o total gasto no mês, calculado a partir dos dados em cache.
 
 ### 8.3 Fluxo Alternativo C — Tentativa de Escrita Offline
@@ -263,30 +266,32 @@ Reaproveita as personas já definidas em `specs/PRD.md`:
 | RNF-03 | First Contentful Paint (mobile, 4G simulado) | < 1.8s | Meta já definida no PRD; shell servido do cache deve reduzir esse tempo em visitas subsequentes. |
 | RNF-04 | Tempo de detecção de offline/online | < 2s | Via eventos nativos `online`/`offline`, sem polling custoso. |
 | RNF-05 | Tamanho total do precache do shell | < 5 MB | Evitar precache de todo o bundle da aplicação — apenas o necessário para renderizar o layout base e a última rota visitada. |
-| RNF-06 | Cache de dados de API nunca sobrevive além da validade do refresh token | 7 dias (ADR-003) | R-PWA-06 — reforça que dados offline não ficam "eternos" no dispositivo. |
+| RNF-06 | Teto de retenção em disco do cache de dados de API (higiene/segurança de armazenamento — não é mais um prazo de exibição, ver RF-10) | 30 dias | R-PWA-06 — decisão de produto explícita (não decorre do ADR-003, que não define validade de refresh token por tempo fixo — ver Decision Log D9). Reforça que dados offline não ficam "eternos" no dispositivo, sem cortar a experiência de leitura offline enquanto o usuário está sem conexão. |
 | RNF-07 | Zero reload automático sem interação do usuário | 100% dos casos de atualização de SW | R-PWA-03 — proteção contra perda de dados de formulário em digitação. |
 
 ---
 
 ## 10. Design e Interface
 
-### 10.1 Banner de Status Offline
+### 10.1 Indicador Fixo de Status de Conectividade
 
-- Fixo no topo da viewport (abaixo do header, para não conflitar com o `VehicleContextChip` do subheader — ver `specs/context/SPEC-20260603-001-context-chip-subheader.md`), cor de fundo `warning` (pastel, conforme paleta em `.agents/nave-ui-pwa/SKILL.md` — nunca vermelho puro).
-- Texto: "Você está offline — dados podem estar desatualizados."
-- Desaparece automaticamente ao detectar o evento `online` (sem necessidade de ação do usuário).
+- Pill/badge compacto dentro do `Header` (`apps/web/src/components/layout/header.tsx`), ao lado do `VehicleContextChip` — não um banner full-width. Não desloca o layout (sem CLS): o espaço é reservado dentro da altura fixa do `Header` (`h-14`).
+- Estado online: indicador discreto (ponto verde) ou ausente, conforme decisão de UI a refinar com o agente `design-system`.
+- Estado offline: texto `"Offline · Atualizado [Hoje HH:mm / Ontem HH:mm / DD/MM/AA HH:mm]"` (RF-13.1/R-PWA-07), cor de fundo `warning` (pastel, conforme paleta em `.agents/nave-ui-pwa/SKILL.md` — nunca vermelho puro).
+- Volta ao estado online automaticamente ao detectar o evento `online` (sem necessidade de ação do usuário).
+- `aria-live="polite"` na transição online↔offline, para leitores de tela anunciarem a mudança (WCAG 2.2 AA, `.agents/rules/accessibility.md`).
 
 ### 10.2 Toast de Atualização Disponível
 
-- Usa o padrão de toast já existente no design system (Shadcn/ui `Sonner` ou equivalente).
+- Reaproveita o padrão de toast já implementado no projeto (`apps/web/src/components/layout/context-stale-toast.tsx` + store `ui-store` do Zustand, construído em T5.4) — **não** introduz `Sonner` nem qualquer lib de toast nova.
 - Texto: "Nova versão disponível." Ação: botão "Recarregar".
 - Persistente (não expira automaticamente) até o usuário interagir ou recarregar a página manualmente.
 
 ### 10.3 Banner de Instalação Manual (iOS)
 
 - Card discreto, dismissível, exibido uma vez por sessão (não repetir se o usuário já dispensou).
-- Texto: "Instale o Nave: toque em [ícone Compartilhar] e depois em 'Adicionar à Tela de Início'."
-- Inclui um ícone ilustrativo do gesto (Compartilhar do iOS), usando `lucide-react` conforme convenção de ícones do projeto.
+- Texto: "Instale o Nave: toque em 📤 Compartilhar e depois em 'Adicionar à Tela de Início'."
+- Ícone ilustrativo do gesto via emoji (📤), seguindo a convenção de ícones já estabelecida no projeto (`VEHICLE_TYPE_ICONS`, T5.4) — **não** introduz `lucide-react`, que nunca foi adicionado como dependência.
 
 ### 10.4 CTA de Instalação (Android/Chrome)
 
@@ -314,9 +319,10 @@ apps/web/
 ├── next.config.ts               → withSerwist({ swSrc: 'app/sw.ts', swDest: 'public/sw.js' })
 └── lib/
     └── pwa/
-        ├── use-online-status.ts     → hook `navigator.onLine` + eventos online/offline (RF-11, RF-13)
+        ├── use-online-status.ts     → hook `navigator.onLine` + eventos online/offline + fallback de falha de rede (RF-11, RF-11.1/R-PWA-08, RF-13)
         ├── use-install-prompt.ts    → captura de `beforeinstallprompt` (RF-03)
         ├── platform-detection.ts    → detecção de iOS/Safari sem beforeinstallprompt (RF-04)
+        ├── format-cache-age.ts      → formata "Hoje/Ontem/DD-MM-AA HH:mm" a partir do timestamp de cache (RF-13.1/R-PWA-07)
         └── clear-cache-on-signout.ts → listener do evento SIGNED_OUT do Supabase (RF-16)
 ```
 
@@ -338,12 +344,17 @@ installSerwist({
     },
     {
       // Leitura de dados da API — RF-08, RF-10
+      // maxAgeSeconds aqui é só o teto de RETENÇÃO EM DISCO (RNF-06/R-PWA-06) — a
+      // expiração do plugin do Workbox só remove entradas quando há uma tentativa de
+      // rede (fetch) que dispara a checagem; nunca invalida silenciosamente uma leitura
+      // servida puramente do cache offline (RF-10/D9) — não usar essa opção sozinha para
+      // decidir o que exibir na UI, só para limpeza de armazenamento.
       matcher: ({ url, request }) =>
         request.method === 'GET' && url.pathname.startsWith('/api/'),
       handler: 'StaleWhileRevalidate',
       options: {
         cacheName: 'nave-api-data',
-        expiration: { maxAgeSeconds: 60 * 60 * 24 * 7 }, // 7 dias — R-PWA-06
+        expiration: { maxAgeSeconds: 60 * 60 * 24 * 30 }, // 30 dias — R-PWA-06
       },
     },
     {
@@ -392,11 +403,12 @@ supabase.auth.onAuthStateChange(async (event) => {
 |----|---------|---------|----------------------|
 | EC-01 | Primeira visita ao app, sem nenhum cache ainda, e o dispositivo já está offline | Usuário abre o app pela primeira vez sem ter tido conexão antes | Nenhum shell em cache disponível — navegador exibe o erro padrão de "sem conexão"; fora do alcance do Service Worker (não há como cachear o que nunca foi buscado). Documentar como limitação conhecida. |
 | EC-02 | Cota de armazenamento do navegador excedida (`QuotaExceededError`) ao tentar cachear uma resposta | Dispositivo com pouco espaço livre | O Service Worker captura a exceção no `runtimeCaching` e ignora a tentativa de cache silenciosamente — a resposta de rede ainda é entregue normalmente ao usuário; apenas o cache falha. Nunca bloquear a resposta por falha de cache. |
-| EC-03 | Troca de conta no mesmo dispositivo sem logout explícito (ex: sessão expirada e novo login direto) | Refresh token expira e um usuário diferente faz login | Login sempre passa por `SIGNED_IN`; o app deve tratar `SIGNED_IN` para um `user_id` diferente do último cache conhecido como equivalente a um `SIGNED_OUT` implícito, disparando a limpeza de RF-16 antes de servir qualquer dado em cache. |
-| EC-04 | JWT de acesso expirado enquanto o dispositivo está offline | Usuário abre o app offline após 15+ minutos sem uso (ADR-003) | Sem conexão, não há como renovar o token. A leitura de dados em cache (RF-08) não depende de token válido no momento da leitura (já foi buscado com token válido antes) — o app permanece funcional para leitura. Qualquer tentativa de escrita já é bloqueada por RF-11 independentemente do estado do token. |
+| EC-03 | Troca de conta no mesmo dispositivo sem logout explícito (ex: sessão expirada e novo login direto) | Refresh token expira e um usuário diferente faz login | **Prioridade: Must** (elevada de "a validar" para obrigatória — Q4/D13, mesmo padrão de proteção de RF-16/RF-17, custo de implementação baixo frente ao risco de exposição de dado entre usuários). Login sempre passa por `SIGNED_IN`; o app deve tratar `SIGNED_IN` para um `user_id` diferente do último cache conhecido como equivalente a um `SIGNED_OUT` implícito, disparando a limpeza de RF-16 antes de servir qualquer dado em cache. |
+| EC-04 | JWT de acesso expirado enquanto o dispositivo está offline | Usuário abre o app offline após 60+ minutos sem uso (`jwt_expiry = 3600` em `supabase/config.toml`; o ADR-003 não fixa esse número, só declara o princípio de tokens de acesso curtos — verificado em 2026-07-18) | Sem conexão, não há como renovar o token. A leitura de dados em cache (RF-08) não depende de token válido no momento da leitura (já foi buscado com token válido antes) — o app permanece funcional para leitura. Qualquer tentativa de escrita já é bloqueada por RF-11 independentemente do estado do token. |
 | EC-05 | Safari iOS descarta o Service Worker/cache após período de inatividade do site (política de ITP da Apple) | Usuário não abre o app por várias semanas | Comportamento fora do controle do app — documentar como limitação conhecida do iOS (ver §6, jornada iOS) e reforçar mensagem de instalação (RF-04) como mitigação parcial (apps instalados têm política de retenção mais generosa que abas de navegador). |
 | EC-06 | Nova versão do Service Worker publicada mas o usuário nunca reabre nenhuma aba do app | Deploy silencioso, usuário ausente | Próxima visita já carrega o SW novo diretamente na instalação (sem página antiga para avisar) — comportamento aceitável, sem necessidade de RF-14 nesse caso. |
 | EC-07 | `beforeinstallprompt` disparado antes da lógica de RF-03 estar pronta para capturá-lo (ordem de carregamento de scripts) | Navegador dispara o evento muito cedo no ciclo de vida da página | O listener deve ser registrado o mais próximo possível do carregamento inicial do app (idealmente fora de componentes lazy-loaded) para minimizar a janela de perda do evento; se perdido, o CTA de instalação simplesmente não aparece nessa sessão — sem erro visível ao usuário. |
+| EC-08 | `navigator.onLine` reporta `true` sem conectividade real (ex: Wi-Fi de posto/hotel conectado mas sem acesso à internet, portal cativo não autenticado) | Dispositivo conectado a uma rede local que não tem saída para a internet | O app assume "online" inicialmente (RF-11 não bloqueia preventivamente); a primeira tentativa de rede falha por erro de conexão, não por resposta HTTP — RF-11.1/R-PWA-08 intercepta esse erro e trata como offline retroativamente, sem deixar o usuário com um erro genérico. O indicador de RF-13 só reflete o estado real após essa primeira tentativa falhar. |
 
 ---
 
@@ -405,7 +417,7 @@ supabase.auth.onAuthStateChange(async (event) => {
 - **Autenticação (S1) e Autorização (S2):** o Service Worker não introduz nenhum novo caminho de acesso a dados — ele apenas cacheia respostas que já passaram pelas verificações normais de `SupabaseAuthGuard` e RLS no momento em que foram buscadas com sucesso. Nenhuma resposta de erro (401/403) é cacheada.
 - **Limpeza de cache no logout (S6 — nova regra desta spec):** o Cache Storage de dados de API (`nave-api-data`) é removido no evento `SIGNED_OUT` (RF-16), mitigando o risco de um segundo usuário no mesmo dispositivo visualizar dados residuais do usuário anterior — cenário realista para gestores de frota que compartilham tablets.
 - **Sem PII adicional:** o Service Worker não coleta nem armazena nenhum dado que o app não já exiba ao usuário autenticado — é uma cópia local do que a API já retornou. Não há novo processamento de dados pessoais além do já descrito em `docs/legal/privacy-policy.md` (que já menciona "Service Worker cache" como categoria existente de dado armazenado).
-- **Expiração alinhada à sessão (R-PWA-06):** o TTL de 7 dias do cache de API (RNF-06) é deliberadamente igual à validade do refresh token (ADR-003) — evita a situação de dados "offline para sempre" que nunca são revalidados nem removidos.
+- **Teto de retenção em disco (R-PWA-06):** o TTL de 30 dias do cache de API (RNF-06) é uma decisão de produto para evitar a situação de dados "offline para sempre" que nunca são revalidados nem removidos — não é mais amarrado à validade do refresh token (D9), que no `supabase/config.toml` deste projeto não tem prazo fixo configurado (`inactivity_timeout` desabilitado). A limpeza por RF-16 no `SIGNED_OUT` continua sendo a proteção primária contra exposição em dispositivo compartilhado; o TTL de 30 dias é uma camada adicional de higiene, não a defesa principal.
 - **LGPD (C1):** a exclusão de conta via `DELETE /users/me` já aciona cascata no banco (C1); esta spec não altera esse fluxo. Cache local seguiria a mesma limpeza do logout (RF-16), já que exclusão de conta implica desautenticação.
 
 ---
@@ -417,7 +429,7 @@ supabase.auth.onAuthStateChange(async (event) => {
 | Etapa | Entregável | Pré-requisito | Risco se pulada |
 |-------|-----------|--------------|-----------------|
 | **Etapa 1** | Manifest + ícones + registro do Service Worker com precache do shell (RF-01–RF-07) | Nenhum | Sem instalabilidade nem cache de shell — nenhuma outra etapa tem valor sem esta base. |
-| **Etapa 2** | Cache de leitura da API + banner de status offline (RF-08–RF-13) | Etapa 1 concluída | Usuário instala o app mas não ganha nenhuma capacidade real de uso offline. |
+| **Etapa 2** | Cache de leitura da API + indicador fixo de status offline com timestamp (RF-08–RF-13.1) | Etapa 1 concluída | Usuário instala o app mas não ganha nenhuma capacidade real de uso offline. |
 | **Etapa 3** | Fluxo de atualização de versão + limpeza de cache no logout (RF-14–RF-17) | Etapas 1 e 2 concluídas | Risco de segurança em dispositivo compartilhado (sem RF-16/RF-17) e de reload destrutivo sem aviso (sem RF-14). |
 
 **Rollback:**
@@ -433,12 +445,15 @@ supabase.auth.onAuthStateChange(async (event) => {
 
 ## 16. Open Questions
 
-| # | Questão | Por que está aberta |
-|---|---------|---------------------|
-| Q1 | O TTL de 7 dias do cache de API (RNF-06) é o valor certo, ou deveria ser mais curto para dados financeiros sensíveis a mudanças (ex: 24h)? | Nenhum dado de uso real ainda para calibrar; proposto por simetria com o refresh token, não por medição de comportamento do usuário. |
-| Q2 | A página `/offline` (RF-07) deve ser uma rota dedicada ou um overlay renderizado sobre a última tela válida? | Impacta a experiência (rota dedicada é mais simples de implementar; overlay preserva mais contexto visual). Recomenda-se decidir durante a implementação da Etapa 1. |
-| Q3 | Vale formalizar esta spec como ADR também, dado que introduz um padrão arquitetural novo (client-side caching layer)? | Convenção do projeto (`CLAUDE.md`) exige ADR para mudança de padrão arquitetural *estabelecido* — este é um padrão *novo*, não uma mudança; ADR é recomendável mas não obrigatório pela regra atual. Decisão do responsável pela arquitetura. |
-| Q4 | Qual o comportamento exato de EC-03 (troca de usuário sem logout explícito) deve ter prioridade de implementação — é um caso raro ou algo que gestores de frota com tablets compartilhados encontrarão com frequência? | Depende de validação com usuários reais (persona Ana); nenhum dado de uso ainda. |
+Todas as questões abaixo foram revisadas e resolvidas em 2026-07-18 (v0.3). Mantidas na spec como registro de decisão (não removidas), conforme convenção de changelog do projeto.
+
+| # | Questão | Resolução (2026-07-18) |
+|---|---------|-------------------------|
+| Q1 | O teto de retenção em disco de 30 dias (RNF-06) é o valor certo? | **Resolvida — aceito como está.** Desde D9, o TTL não corta mais exibição, só decide quando o dado é removido do disco por higiene; o risco de "dado desatualizado sem aviso" já é coberto pelo indicador de idade (RF-13.1). Fica aberto para recalibração futura com dado de uso real, sem bloquear aprovação. |
+| Q2 | A página `/offline` (RF-07) deve ser uma rota dedicada ou um overlay renderizado sobre a última tela válida? | **Resolvida — rota dedicada (D12).** É a opção mais simples de implementar, alinhada ao padrão de App Router já usado no projeto (nenhuma tela hoje usa overlay global), e o cenário em que aparece (EC-01) é raro o suficiente para não justificar a complexidade extra. RF-07 já reflete essa decisão. |
+| Q3 | Vale formalizar esta spec como ADR também, dado que introduz um padrão arquitetural novo (client-side caching layer)? | **Resolvida — não criar ADR agora.** O `CLAUDE.md` exige ADR para mudança de padrão *estabelecido*, não para um padrão *novo*; o Decision Log (§17) já documenta o racional com o mesmo rigor. Revisitar só se o cache client-side virar padrão replicado em outras partes do app. |
+| Q4 | Qual prioridade de implementação para EC-03 (troca de usuário sem logout explícito)? | **Resolvida — prioridade elevada para Must (D13).** Custo de implementação é baixo (reaproveita a limpeza de RF-16 já existente) frente ao risco de exposição de dado entre usuários em dispositivo compartilhado; não vale esperar validação com usuários reais para uma proteção de segurança já barata de cobrir. EC-03 já reflete essa decisão. |
+| Q5 | Vale empacotar o PWA como Trusted Web Activity (TWA) para distribuição via Play Store, depois desta fase estar validada em produção? | **Resolvida — não bloqueia esta spec.** Análise de mercado (2026-07-18): TWA reaproveita 100% do manifest/ícones/SW já previstos aqui (RF-01/02/05), custo baixo (US$ 25, sem tocar iOS). Padrão de mercado para produtos de nicho é validar retenção via PWA puro primeiro. Revisitar como spec própria (`specs/pwa/`) após T7.1 estar em produção e houver dados de uso reais. |
 
 ---
 
@@ -453,6 +468,12 @@ supabase.auth.onAuthStateChange(async (event) => {
 | D5 | Atualização do Service Worker é opt-in via toast (RF-14), nunca reload automático silencioso | `skipWaiting()` automático assim que uma nova versão é detectada | Reload automático em segundo plano pode descartar dados não salvos de um formulário em digitação — prioriza não perder trabalho do usuário sobre "estar sempre na versão mais nova". |
 | D6 | Cache de dados de API é limpo no evento `SIGNED_OUT` do Supabase Auth (RF-16) | Deixar o cache expirar naturalmente pelo TTL (RNF-06) | Dispositivos compartilhados (tablets de frota, persona Ana) tornam a limpeza imediata no logout uma exigência de segurança, não apenas de higiene de dados — TTL de 7 dias sozinho deixaria uma janela grande de exposição a um segundo usuário. |
 | D7 | Bloqueio de escrita offline (RF-11) ocorre no cliente, antes de qualquer chamada de rede — não depende do backend detectar ausência de payload | Deixar a requisição falhar naturalmente por timeout de rede e tratar o erro genérico resultante | Detecção client-side via `navigator.onLine`/eventos é instantânea e permite a mensagem específica ("sem conexão") em vez de um erro genérico de rede após um timeout longo — melhor experiência percebida. |
+| D8 | Indicador de status trocado de banner full-width para pill fixo no `Header`, com timestamp de última atualização (RF-13/R-PWA-07) em vez de aviso genérico | Manter o banner full-width original (v0.1) | Revisão de v0.1 (2026-07-18) identificou que um banner que aparece/desaparece é fonte clássica de layout shift (contraria RNF-02/03) e competiria visualmente com o `VehicleContextChip`, que ocupa a mesma região do layout desde T5.4 (posterior à v0.1 desta spec). Um indicador de posição fixa, sempre presente (visível ou "vazio"), não desloca nada. O timestamp explícito também substitui um aviso vago ("pode estar desatualizado") por informação acionável. |
+| D9 | TTL de 30 dias (RNF-06/R-PWA-06) deixa de ser prazo de exibição e vira só teto de retenção em disco por higiene/segurança; RF-10 não força mais estado vazio por dado antigo enquanto o usuário está offline | Manter TTL de 7 dias cortando a exibição (v0.1) | Revisão de v0.1 identificou que o corte de exibição aos 7 dias quebra a promessa central da feature (G-02) justamente no cenário mais relevante para a persona Carlos — viagens longas sem sinal. Combinado com D8 (indicador de idade sempre visível), passa a ser seguro manter o dado exibível por mais tempo: o usuário nunca é enganado sobre a idade do dado, então não há necessidade de escondê-lo. O valor de 30 dias é uma decisão de produto explícita nesta rodada — não decorre do ADR-003, que não define validade de refresh token por tempo fixo (verificado em `supabase/config.toml`: `inactivity_timeout` desabilitado). |
+| D10 | §10.2 (toast de atualização) e §10.3 (banner de instalação iOS) reescritos para reaproveitar `ContextStaleToast`/`ui-store` (Zustand) e ícone em emoji, em vez de `Sonner` e `lucide-react` | Manter as referências originais (v0.1) a `Sonner`/`lucide-react` | v0.1 foi escrita antes de T5.4 estabelecer o padrão real de toast (`ContextStaleToast`) e a convenção de ícones do projeto (emoji, `VEHICLE_TYPE_ICONS`) — nenhuma das duas libs citadas originalmente está instalada em `apps/web/package.json`. Implementar como estava introduziria duas dependências novas e dois padrões visuais concorrentes com o que já existe, contrariando a regra global de não reinventar o que já existe. |
+| D11 | `navigator.onLine` tratado como sinal rápido, não como fonte única de verdade — falha de rede com `navigator.onLine === true` é reinterpretada como offline (RF-11.1/R-PWA-08/EC-08) | Confiar apenas em `navigator.onLine`/eventos `online`/`offline` (v0.1); ou implementar um endpoint de ping dedicado para checagem ativa de conectividade | `navigator.onLine` só reflete se há interface de rede ativa, não conectividade real (ex: Wi-Fi de posto sem internet) — API conhecidamente não confiável para esse fim. Reinterpretar falhas de rede (erro de conexão, não resposta HTTP) como sinal de offline resolve o caso mais comum sem exigir infraestrutura nova (endpoint de ping dedicado foi considerado e descartado por complexidade desproporcional ao ganho nesta fase). |
+| D12 | Q2 resolvida: `/offline` (RF-07) é rota dedicada (`apps/web/app/offline/page.tsx`), não um overlay sobre a última tela válida | Overlay renderizado sobre a última tela válida, preservando mais contexto visual | Rota dedicada é mais simples de implementar, segue o padrão de App Router já usado em todo o projeto (nenhuma tela hoje usa overlay global de página), e o cenário em que aparece (EC-01, primeira visita sem cache) é raro o suficiente para não justificar a complexidade extra de um overlay. |
+| D13 | Q4 resolvida: EC-03 (troca de usuário sem logout explícito) elevado de "prioridade a validar" para **Must** | Deixar como caso a validar com usuários reais antes de decidir se implementa | O custo de implementar é baixo — reaproveita a limpeza de cache já construída para RF-16/RF-17 — enquanto o custo de não implementar é exposição real de dado entre usuários num dispositivo compartilhado (persona Ana, tablets de frota). Não há motivo para esperar validação de uso quando a proteção já é barata e o risco é de segurança, não de UX. |
 
 ---
 
@@ -466,7 +487,7 @@ supabase.auth.onAuthStateChange(async (event) => {
 - `.agents/pwa-offline-serwist.md` — esboço técnico original de estratégia de cache
 - `.agents/nave-ui-pwa/SKILL.md` — paleta de cores Nave e regras de UI mobile-first (touch targets, ícones)
 - `docs/architecture/overview.md` — Serwist já listado na stack técnica
-- `docs/architecture/decisions/003-auth-jwt-strategy.md` (ADR-003) — validade de access/refresh token, referenciada em RNF-06 e R-PWA-06
+- `docs/architecture/decisions/003-auth-jwt-strategy.md` (ADR-003) — validade de access token (`jwt_expiry`, referenciada em EC-04); **não** define validade de refresh token por tempo fixo — o TTL de RNF-06/R-PWA-06 é decisão de produto independente (ver D9), confirmado contra `supabase/config.toml` (`inactivity_timeout` desabilitado)
 - `docs/legal/privacy-policy.md` — menção existente a "Service Worker cache" como categoria de dado armazenado
 - `specs/PRD.md` — personas P-001 (Carlos) e P-002 (Ana)
 - `specs/dashboard/SPEC-20260531-001.md` RNF-05 — funcionamento offline do dashboard (Zona A), já aprovado, coerente com esta spec
@@ -494,13 +515,20 @@ Ao implementar esta spec (quando sair de `draft` para `approved`), respeitar:
 - `// valida R-PWA-01` na configuração de `runtimeCaching` do `sw.ts`.
 - `// valida R-PWA-02` no ponto de bloqueio de submissão offline.
 - `// valida R-PWA-06` / `// valida S6` no listener de `SIGNED_OUT`.
+- `// valida R-PWA-07` na função de formatação do timestamp "Hoje/Ontem/DD-MM-AA" do indicador (RF-13.1).
+- `// valida R-PWA-08` no tratamento de falha de rede com `navigator.onLine === true` (RF-11.1).
 
 **Atenção especial:**
-- Esta spec está em `status: draft` — não implementar antes de passar para `review`/`approved`, conforme o ciclo de vida definido em `specs/README.md`.
-- As Open Questions (§16) devem ser resolvidas (ou explicitamente aceitas como está) antes da aprovação, especialmente Q2 (rota dedicada vs. overlay para `/offline`), que afeta a estrutura de arquivos do §11.
+- Esta spec está `approved` (v0.3, 2026-07-18) — pronta para implementação, conforme o gate de sincronia do `.claude/CLAUDE.md` (entrada correspondente já registrada em `matrices/rastreabilidade.md`).
+- As Open Questions (§16) foram todas resolvidas em 2026-07-18 (v0.3) — mantidas na tabela como registro de decisão, não como pendências.
+- Qualquer edição de conteúdo pós-aprovação exige entrada de changelog no rodapé desta spec (Histórico de Revisões), conforme regra do projeto para specs `approved`.
 
 ### Histórico de Revisões
 
 | Versão | Data | Autor | Mudanças |
 |--------|------|-------|---------|
 | 0.1 | 2026-07-12 | douglps | Criação do rascunho inicial — consolida decisões dispersas em PRD, user-stories e esboços de `.agents/`; escopo restrito a instalação + leitura offline (Fase 1); fila de sync e push explicitamente adiados (Non-Goals) |
+| 0.2 | 2026-07-18 | douglps | Revisão pré-aprovação: banner full-width de status (RF-13) substituído por indicador fixo com timestamp de última atualização (RF-13.1/R-PWA-07, D8); TTL de cache de API deixa de forçar estado vazio (RF-10) e vira teto de retenção em disco de 30 dias, desacoplado da UI (RNF-06/R-PWA-06, D9); G-02 reescrito para refletir o indicador com timestamp em vez de aviso genérico; `aria-live` adicionado ao indicador (§10.1, WCAG 2.2 AA); §10.2/§10.3 reescritos para reaproveitar `ContextStaleToast`/`ui-store` e ícone em emoji, em vez de `Sonner`/`lucide-react` (D10); `navigator.onLine` deixa de ser fonte única de verdade — falha de rede com "online" incorretamente reportado agora é tratada como offline retroativo (RF-11.1/R-PWA-08, EC-08, D11). Q5 (TWA/Play Store) também adicionada nesta revisão. **Passada final de consistência (mesmo dia):** removidos resíduos de texto "banner" nas jornadas de §6/§8.2; referência cruzada corrigida em RNF-06 (apontava para D8, é D9); exemplo de código em §11.1 atualizado de 7 para 30 dias com comentário explicando que a expiração do Workbox só limpa por higiene, nunca decide o que a UI exibe; §14 reescrito para não afirmar mais "alinhado à validade do refresh token"; Q1 recalibrada para refletir que o TTL não corta mais exibição; EC-04 corrigido de "15+ minutos" para "60+ minutos" após checar `jwt_expiry = 3600` em `supabase/config.toml` (o número anterior também não tinha fonte real); referência ao ADR-003 no Apêndice corrigida para não implicar que ele define o TTL de 30 dias; convenções de rastreabilidade e estrutura de arquivos (§11, Contexto para Agentes de IA) atualizadas com R-PWA-07/R-PWA-08 e o util `format-cache-age.ts`. |
+| 0.3 | 2026-07-18 | douglps | Todas as 5 Open Questions (§16) resolvidas: Q1 (TTL de 30 dias) aceito como está; Q2 (rota dedicada vs. overlay para `/offline`) decidido por rota dedicada (D12), refletido em RF-07; Q3 (ADR) decidido por não criar agora; Q4 (prioridade de EC-03) elevada para Must (D13), refletido em EC-03; Q5 (TWA/Play Store) mantido como não-bloqueante, revisitar após T7.1 em produção. Nenhuma Open Question permanece bloqueando a aprovação. |
+| 0.4 | 2026-07-18 | douglps | Implementação (T7.1) — RF-01 a RF-17 e edge cases relevantes codificados em `apps/web`; matriz de rastreabilidade atualizada com caminhos reais. Duas correções técnicas pós-aprovação, sem mudar comportamento observável nem exigir spec nova (mudança pequena, não estrutural): **(1)** §11.2/Apêndice pressupunham `supabase.auth.onAuthStateChange` no client para RF-16/RF-17 — este projeto não tem Supabase Auth Client no browser (sessão via cookie httpOnly + JWT, `apps/web/middleware.ts`); o gancho real é `apps/web/src/lib/auth/logout.ts`. EC-03 fica **⏸️ adiado**: o backend não expõe `user_id` ao client (`/auth/login` retorna só `{message}`), então não há como detectar troca de usuário sem logout explícito sem uma mudança de API fora do escopo desta implementação frontend — sinalizado na matriz de rastreabilidade, não implementado às cegas. **(2)** §11.1 exemplificava `@serwist/next` (v8, API `withSerwist(nextConfig)`), que depende do plugin de webpack — o build deste projeto usa Turbopack (padrão do Next.js 16), que não executa esse plugin (build "passava" sem gerar nenhum Service Worker). Migrado para `@serwist/turbopack` (v9), que compila o SW via route handler (`src/app/serwist/[path]/route.ts`) — compatível com Turbopack. Nomes de cache (`nave-pages`/`nave-api-data`) e estratégias por RF mantidos exatamente como especificado. Também corrigido em `apps/web/middleware.ts`: `/serwist`, `/manifest.webmanifest`, `/icons` e `/offline` precisam ser públicos (o middleware de auth os redirecionava para `/login`, quebrando o registro do Service Worker) — bug descoberto e corrigido durante a verificação end-to-end (`pnpm build && pnpm start` + `curl`). |
+| 0.5 | 2026-07-18 | douglps | Correção técnica pós-aprovação (mudança pequena, não estrutural — sem alteração de comportamento observável para o usuário): `apps/web/src/components/pwa/connectivity-indicator.tsx` adicionou guard `mounted` (useState + useEffect) para evitar hydration mismatch em RF-13. O problema: `useOnlineStatus()` lê `navigator.onLine` no client — se o dispositivo já estiver offline no momento do mount, o componente renderizava conteúdo diferente do SSR (que não tem `navigator`), causando erro de hidratação do React. Correção: o componente retorna `null` tanto no SSR quanto no primeiro render do client (antes de `setMounted(true)`); a partir do segundo tick do useEffect ele passa a refletir o estado real. Comportamento funcional do RF-13 preservado integralmente. IMPACTO-037 registrado em `matrices/impacto.md` (item 7). |

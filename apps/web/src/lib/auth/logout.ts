@@ -1,5 +1,6 @@
 import { apiClient } from "@/lib/http/api-client";
 import { useDashboardStore } from "@/lib/stores/use-dashboard-store";
+import { clearApiCache } from "@/lib/pwa/clear-api-cache";
 
 /**
  * Encerra a sessão no backend e limpa todo o contexto global do store,
@@ -9,6 +10,10 @@ import { useDashboardStore } from "@/lib/stores/use-dashboard-store";
  * só reseta o estado em memória, o que dispara um novo `set()` que persiste o storage;
  * a remoção explícita garante que nenhum contexto vaze entre sessões de usuários
  * diferentes no mesmo dispositivo, mesmo que o `set()` falhe silenciosamente.
+ * @spec SPEC-20260712-001 RF-16, RF-17, S6 — valida S6
+ * Limpa também o Cache Storage de dados de API (dispositivo compartilhado, ex: tablets de
+ * frota) antes de redirecionar, para que um segundo usuário nunca veja dado residual do
+ * anterior (RF-17), nem mesmo brevemente antes da 1ª resposta de rede completar.
  */
 export async function logout(): Promise<void> {
   try {
@@ -20,6 +25,7 @@ export async function logout(): Promise<void> {
     if (typeof sessionStorage !== "undefined") {
       sessionStorage.removeItem("nave-dashboard-context");
     }
+    await clearApiCache();
     window.location.href = "/login";
   }
 }

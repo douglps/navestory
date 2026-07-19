@@ -119,59 +119,77 @@ que o artefato ainda não existe no repositório.
 
 ---
 
-## SPEC-20260712-001 — PWA Offline (draft)
+## SPEC-20260712-001 — PWA Offline (approved, v0.5)
 
 > Primeira fase do PWA do Nave: instalação (manifest + ícones + prompt) e modo offline
 > somente-leitura via Service Worker (Serwist) — cache de shell, assets e leitura de API.
 > Escrita offline (fila de sync), resolução de conflito e push notifications ficam fora de
-> escopo (Fase 2). Status: draft — nenhum código ou teste existe; feature não iniciada.
+> escopo (Fase 2). **Aprovada em 2026-07-18 (v0.3)** após revisão de gaps/incoerências — ver
+> versões anteriores desta entrada. **Implementada em 2026-07-18 (v0.4).** Duas correções
+> técnicas descobertas durante a implementação, sem mudar comportamento observável (ver
+> changelog da spec):
+> 1. O projeto **não usa Supabase Auth Client no browser** (sessão via cookie httpOnly + JWT,
+>    `apps/web/middleware.ts`) — RF-16/RF-17 usam `apps/web/src/lib/auth/logout.ts` como
+>    gancho, não `onAuthStateChange`. EC-03 (troca de usuário sem logout explícito) fica
+>    **⏸️ adiado**: o backend não expõe `user_id` ao client (login retorna só `{message}`),
+>    não há como comparar usuário atual vs. anterior sem endpoint novo (fora do escopo desta
+>    implementação frontend) — retomar quando `/auth/login` ou um `/auth/me` expuser o id.
+> 2. `@serwist/next` v8 (citado no código-exemplo original da spec) depende do plugin de
+>    webpack, que o Turbopack (bundler padrão do Next.js 16 usado neste projeto) não executa —
+>    build terminava "com sucesso" sem gerar nenhum Service Worker. Migrado para
+>    `@serwist/turbopack` (v9), que compila o SW via route handler
+>    (`src/app/serwist/[path]/route.ts`), compatível com Turbopack. Nomes de cache
+>    (`nave-pages`/`nave-api-data`) e todas as estratégias por RF permanecem como especificado.
 
 ### Manifest e Instalação (R-PWA-04, R-PWA-05)
 
 | Req | Descrição | Código | Teste | Status |
 |-----|-----------|--------|-------|--------|
-| RF-01 | Web App Manifest via `app/manifest.ts` (nome, ícones, `display: standalone`, cores da marca Nave) | — | — | ⏳ |
-| RF-02 | Ícones 192×192 e 512×512 em formato `any` e `maskable` | — | — | ⏳ |
-| RF-03 | Captura de `beforeinstallprompt` + CTA próprio de instalação após 2ª visita (Android/Chrome) | — | — | ⏳ |
-| RF-04 | Banner de instrução manual de instalação para Safari iOS (sem `beforeinstallprompt`) | — | — | ⏳ |
+| RF-01 | Web App Manifest via `app/manifest.ts` (nome, ícones, `display: standalone`, cores da marca Nave) | `apps/web/src/app/manifest.ts` | manual (Lighthouse/`curl /manifest.webmanifest`) | 🔶 |
+| RF-02 | Ícones 192×192 e 512×512 em formato `any` e `maskable` | `apps/web/public/icons/icon-{192,512}-{any,maskable}.png` | — | 🔶 |
+| RF-03 | Captura de `beforeinstallprompt` + CTA próprio de instalação após 2ª visita (Android/Chrome) | `apps/web/src/lib/pwa/use-install-prompt.ts`, `apps/web/src/components/pwa/install-prompt-banner.tsx` | — | 🔶 |
+| RF-04 | Banner de instrução manual de instalação para Safari iOS (sem `beforeinstallprompt`) | `apps/web/src/lib/pwa/platform-detection.ts`, `apps/web/src/components/pwa/ios-install-banner.tsx` | `apps/web/src/lib/pwa/platform-detection.spec.ts` | ✅ |
 
 ### Cache de Shell e Assets (R-PWA-01)
 
 | Req | Descrição | Código | Teste | Status |
 |-----|-----------|--------|-------|--------|
-| RF-05 | Precache do shell (HTML de layout, CSS, JS) via Service Worker com `CacheFirst` para assets versionados | — | — | ⏳ |
-| RF-06 | Navegação HTML com `NetworkFirst` (timeout 3s) e fallback para cache da rota ou página offline | — | — | ⏳ |
-| RF-07 | Página `apps/web/app/offline/page.tsx` como fallback de navegação para rotas nunca visitadas | — | — | ⏳ |
+| RF-05 | Precache do shell (HTML de layout, CSS, JS) via Service Worker com `CacheFirst` para assets versionados | `apps/web/src/app/sw.ts`, `apps/web/src/app/serwist/[path]/route.ts`, `apps/web/next.config.ts` | manual (`pnpm build && pnpm start` + `curl /serwist/sw.js` → 200, 50 precache entries) | 🔶 |
+| RF-06 | Navegação HTML com `NetworkFirst` (timeout 3s) e fallback para cache da rota ou página offline | `apps/web/src/app/sw.ts` | manual | 🔶 |
+| RF-07 | Página de fallback de navegação para rotas nunca visitadas (D12: rota dedicada) | `apps/web/src/app/offline/page.tsx` | manual | 🔶 |
 
 ### Cache de Leitura da API (R-PWA-01, R-PWA-06)
 
 | Req | Descrição | Código | Teste | Status |
 |-----|-----------|--------|-------|--------|
-| RF-08 | `GET` de rotas de dados via `StaleWhileRevalidate` | — | — | ⏳ |
-| RF-09 | Mutações (`POST`/`PUT`/`PATCH`/`DELETE`) nunca interceptadas pelo Service Worker — `NetworkOnly` | — | — | ⏳ |
-| RF-10 | TTL máximo de 7 dias no cache de dados de API, alinhado à validade do refresh token (ADR-003) | — | — | ⏳ |
+| RF-08 | `GET` de rotas de dados via `StaleWhileRevalidate` | `apps/web/src/app/sw.ts` | `apps/web/src/lib/http/api-client.spec.ts` (garante que GET chega ao fetch mesmo offline, pré-requisito para o SW poder responder do cache) | 🔶 |
+| RF-09 | Mutações (`POST`/`PUT`/`PATCH`/`DELETE`) nunca interceptadas pelo Service Worker — `NetworkOnly` | `apps/web/src/app/sw.ts` | — | 🔶 |
+| RF-10 | Cache de dados de API sem prazo de invalidação atrelado à exibição; TTL de 30 dias (R-PWA-06) é só teto de retenção em disco, removido apenas com conexão disponível | `apps/web/src/lib/pwa/api-cache-retention-plugin.ts` | — | 🔶 |
 
 ### Bloqueio Explícito de Escrita Offline (R-PWA-02)
 
 | Req | Descrição | Código | Teste | Status |
 |-----|-----------|--------|-------|--------|
-| RF-11 | Bloqueio client-side de submissões quando `navigator.onLine === false`, com mensagem explícita | — | — | ⏳ |
-| RF-12 | Conteúdo do formulário preservado quando a submissão é bloqueada por falta de conexão | — | — | ⏳ |
-| RF-13 | Banner global persistente de status offline em qualquer tela | — | — | ⏳ |
+| RF-11 | Bloqueio client-side de submissões quando offline, com mensagem explícita | `apps/web/src/lib/http/api-client.ts`, `apps/web/src/lib/pwa/connectivity-store.ts` | `apps/web/src/lib/http/api-client.spec.ts` | ✅ |
+| RF-11.1 | Falha de rede real com `navigator.onLine === true` (falso positivo) tratada como offline retroativo, mesma mensagem de RF-11 (R-PWA-08) | `apps/web/src/lib/http/api-client.ts` | `apps/web/src/lib/http/api-client.spec.ts` | ✅ |
+| RF-12 | Conteúdo do formulário preservado quando a submissão é bloqueada por falta de conexão | `apps/web/src/lib/http/api-client.ts` (erro dedicado não limpa estado local do formulário) | — | 🔶 |
+| RF-13 | Indicador fixo e compacto de status de conectividade, ao lado do `VehicleContextChip` no `Header` | `apps/web/src/components/pwa/connectivity-indicator.tsx`, `apps/web/src/components/layout/header.tsx` | — | 🔶 |
+| RF-13.1 | Formato do timestamp de última atualização exibido offline: "Hoje HH:mm" / "Ontem HH:mm" / "DD/MM/AA HH:mm" (R-PWA-07) | `apps/web/src/lib/pwa/format-cache-age.ts`, `apps/web/src/lib/pwa/get-cache-age.ts` | `apps/web/src/lib/pwa/format-cache-age.spec.ts` | ✅ |
 
 ### Atualização do Service Worker (R-PWA-03)
 
 | Req | Descrição | Código | Teste | Status |
 |-----|-----------|--------|-------|--------|
-| RF-14 | Toast de nova versão disponível; `skipWaiting()`/`clientsClaim()` somente após ação explícita do usuário | — | — | ⏳ |
-| RF-15 | Nova versão carregada automaticamente ao reabrir o app após fechar todas as abas | — | — | ⏳ |
+| RF-14 | Toast de nova versão disponível; `skipWaiting()`/`clientsClaim()` somente após ação explícita do usuário | `apps/web/src/components/pwa/service-worker-update-toast.tsx`, `apps/web/src/app/layout.tsx` (`SerwistProvider`) | — | 🔶 |
+| RF-15 | Nova versão carregada automaticamente ao reabrir o app após fechar todas as abas | (comportamento padrão do ciclo de vida do SW — sem lógica adicional) | — | 🔶 |
 
 ### Limpeza de Cache no Logout (R-PWA-06, S6)
 
 | Req | Descrição | Código | Teste | Status |
 |-----|-----------|--------|-------|--------|
-| RF-16 | Limpeza do Cache Storage de dados de usuário (`nave-api-data`) no evento `SIGNED_OUT` do Supabase Auth | — | — | ⏳ |
-| RF-17 | Nenhum dado residual do usuário anterior visível após troca de conta no mesmo dispositivo | — | — | ⏳ |
+| RF-16 | Limpeza do Cache Storage de dados de usuário (`nave-api-data`) no logout — via `logout.ts`, não `onAuthStateChange` (ver nota técnica acima) | `apps/web/src/lib/pwa/clear-api-cache.ts`, `apps/web/src/lib/auth/logout.ts` | `apps/web/src/lib/pwa/clear-api-cache.spec.ts` | ✅ |
+| RF-17 | Nenhum dado residual do usuário anterior visível após troca de conta no mesmo dispositivo | `apps/web/src/lib/auth/logout.ts` | — | 🔶 |
+| EC-03 | Troca de usuário sem logout explícito tratada como `SIGNED_OUT` implícito (Must, D13) | — | — | ⏸️ — bloqueado por falta de `user_id` exposto ao client (backend); retomar quando `/auth/login`/`/auth/me` expuser o id |
 
 ---
 

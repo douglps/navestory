@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 import { VehicleContextChip } from "./vehicle-context-chip";
+import { ConnectivityIndicator } from "@/components/pwa/connectivity-indicator";
 
 /**
  * Header superior fixo do app shell — logo + chip de contexto de veículo,
@@ -14,6 +15,8 @@ export function Header(): ReactNode {
     <header className="sticky top-0 z-20 flex h-14 items-center gap-3 border-b border-neutral-200 bg-white px-4">
       <span className="text-base font-semibold">Nave</span>
       <VehicleContextChip />
+      {/* @spec SPEC-20260712-001 RF-13 */}
+      <ConnectivityIndicator />
     </header>
   );
 }

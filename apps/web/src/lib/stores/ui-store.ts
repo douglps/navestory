@@ -13,6 +13,13 @@ interface UIState {
   contextStaleNotice: string | null;
   setContextStaleNotice: (message: string) => void;
   clearContextStaleNotice: () => void;
+  // @spec SPEC-20260712-001 RF-14 — toast persistente de nova versão do Service Worker
+  swUpdateAvailable: boolean;
+  setSwUpdateAvailable: (available: boolean) => void;
+  // @spec SPEC-20260712-001 RF-11, RF-11.1 — aviso de escrita bloqueada por falta de conexão
+  offlineWriteBlockedNotice: string | null;
+  setOfflineWriteBlockedNotice: (message: string) => void;
+  clearOfflineWriteBlockedNotice: () => void;
 }
 
 export const useUIStore = create<UIState>((set) => ({
@@ -24,4 +31,9 @@ export const useUIStore = create<UIState>((set) => ({
   contextStaleNotice: null,
   setContextStaleNotice: (message) => set({ contextStaleNotice: message }),
   clearContextStaleNotice: () => set({ contextStaleNotice: null }),
+  swUpdateAvailable: false,
+  setSwUpdateAvailable: (available) => set({ swUpdateAvailable: available }),
+  offlineWriteBlockedNotice: null,
+  setOfflineWriteBlockedNotice: (message) => set({ offlineWriteBlockedNotice: message }),
+  clearOfflineWriteBlockedNotice: () => set({ offlineWriteBlockedNotice: null }),
 }));

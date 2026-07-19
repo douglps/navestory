@@ -4,7 +4,7 @@ Esta pasta é a **fonte de verdade de requisitos** do projeto. Antes de implemen
 
 **Nível de maturidade do projeto:** 2 (Produto)
 **Critério:** SaaS multi-módulo com dado sensível/regulado (dados financeiros e pessoais sob LGPD), múltiplos usuários reais previstos e dependências externas reais já em uso (Supabase, Resend). Estrutura completa de specs/matrizes/ADRs já opera nesse regime desde antes da declaração formal deste campo.
-**Última revisão:** 2026-07-16
+**Última revisão:** 2026-07-19
 
 ---
 
@@ -34,7 +34,7 @@ Esta pasta é a **fonte de verdade de requisitos** do projeto. Antes de implemen
 | Preferencias | [preferences/](preferences/) | SPEC-20260603-004, SPEC-20260612-003 |
 | Segurança | [security/](security/) | SPEC-20260521-001 |
 | Admin / LGPD | [admin/](admin/) | SPEC-20260521-004, SPEC-20260521-005 |
-| Design System | [design-system/](design-system/) | SPEC-20260525-001 |
+| Design System | [design-system/](design-system/) | SPEC-20260525-001 (approved — §10 implementado em componentes; migração de consumidores ⏳) |
 | Contexto Global | [context/](context/) | SPEC-20260602-001, SPEC-20260603-001 |
 | Formulários | [forms/](forms/) | SPEC-20260619-001 |
 | Negócio / Estratégia | [business/](business/) | SPEC-20260620-001 |

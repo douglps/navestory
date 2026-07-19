@@ -180,7 +180,7 @@ que o artefato ainda não existe no repositório.
 
 | Req | Descrição | Código | Teste | Status |
 |-----|-----------|--------|-------|--------|
-| RF-14 | Toast de nova versão disponível; `skipWaiting()`/`clientsClaim()` somente após ação explícita do usuário | `apps/web/src/components/pwa/service-worker-update-toast.tsx`, `apps/web/src/app/layout.tsx` (`SerwistProvider`) | — | 🔶 |
+| RF-14 | Toast de nova versão disponível; `skipWaiting()`/`clientsClaim()` somente após ação explícita do usuário — migrado para a fila única de toasts (SPEC-20260525-001 §8.2) | `apps/web/src/components/pwa/service-worker-update-listener.tsx`, `apps/web/src/components/layout/app-toast-viewport.tsx`, `apps/web/src/app/layout.tsx` (`SerwistProvider`) | — | 🔶 |
 | RF-15 | Nova versão carregada automaticamente ao reabrir o app após fechar todas as abas | (comportamento padrão do ciclo de vida do SW — sem lógica adicional) | — | 🔶 |
 
 ### Limpeza de Cache no Logout (R-PWA-06, S6)
@@ -909,7 +909,7 @@ que o artefato ainda não existe no repositório.
 | Req | Descrição | Código | Teste | Status |
 |-----|-----------|--------|-------|--------|
 | RF-21 | `zustand/persist` com `sessionStorage` (corrige localStorage da SPEC-20260602-001) | `apps/web/src/lib/stores/use-dashboard-store.ts` | `apps/web/src/lib/stores/use-dashboard-store.spec.ts` | ✅ |
-| RF-22 | Limpeza automática de contexto em 404 de `GET /vehicles/:id` do veículo ativo; reutiliza `ContextStaleToast`/`ui-store` já existentes | `apps/web/src/lib/http/api-client.ts` (`handleNotFound`) | `apps/web/src/lib/http/api-client.spec.ts` | ✅ |
+| RF-22 | Limpeza automática de contexto em 404 de `GET /vehicles/:id` do veículo ativo; usa a fila única de toasts do `ui-store` (`pushToast`, migrado em SPEC-20260525-001 §8.2) | `apps/web/src/lib/http/api-client.ts` (`handleNotFound`) | `apps/web/src/lib/http/api-client.spec.ts` | ✅ |
 | RF-23 | `sessionStorage.removeItem("nave-dashboard-context")` explícito no logout, além de `clearAllSelection()` | `apps/web/src/lib/auth/logout.ts` | `apps/web/src/lib/auth/logout.spec.ts` | ✅ |
 
 ---
@@ -1187,7 +1187,7 @@ que o artefato ainda não existe no repositório.
 | RF-17.1 | `ContextFilterSync` (mesma implementação): reage só a mudanças do store; lê `window.location.search` não-reativamente para não conflitar com filtros locais de página | `apps/web/src/components/layout/vehicle-activator.tsx` | `apps/web/src/components/layout/vehicle-activator.spec.tsx` | ✅ |
 | RF-16 | `FleetAside`: staleness de `activeVehicleId` (toast + clear) e `activeGroupId` (clear silencioso) | `apps/web/src/components/layout/fleet-aside.tsx` | `apps/web/src/components/layout/fleet-aside.spec.tsx` | ✅ |
 | RNF-03 | Staleness reaproveita as query keys `["vehicles"]`/`["vehicle-groups"]` já ativas no `focus-slot` — sem request extra (dedupe do TanStack Query) | `apps/web/src/components/layout/fleet-aside.tsx` | — | ✅ |
-| RNF-04 | Toast não-obstrutivo, descartável, some sozinho em 5s | `apps/web/src/components/layout/context-stale-toast.tsx` | `apps/web/src/components/layout/context-stale-toast.spec.tsx` | ✅ |
+| RNF-04 | Toast não-obstrutivo, descartável, some sozinho em 5s — migrado para a fila única de toasts (SPEC-20260525-001 §8.2), `duration: 5000` | `packages/ui/src/components/toast.tsx`, `apps/web/src/components/layout/fleet-aside.tsx` | `packages/ui/src/components/toast.test.tsx`, `apps/web/src/components/layout/fleet-aside.spec.tsx` | ✅ |
 | RF-19 | Logout limpa todos os campos de contexto | `apps/web/src/lib/auth/logout.ts`, botão "Sair" em `sidebar.tsx` | `apps/web/src/lib/auth/logout.spec.ts` | ✅ |
 | RF-07, R-CTX-06 | `use-vehicle-context-field.ts`: captura o contexto do store apenas no mount; pré-seleciona `vehicle_id` só no modo `single` | `apps/web/src/lib/hooks/use-vehicle-context-field.ts` | `apps/web/src/lib/hooks/use-vehicle-context-field.spec.tsx` | ✅ |
 | RF-08 | Ícone ↩ + fundo/borda âmbar quando o campo está herdado do contexto | `apps/web/src/app/(app)/expenses/new/page.tsx`, `.../maintenance/new/page.tsx` | `page.spec.tsx` de cada formulário | ✅ |
@@ -1322,24 +1322,85 @@ que o artefato ainda não existe no repositório.
 
 ---
 
-## SPEC-20260525-001 — Design System: Novos Componentes UI (rascunho)
+## SPEC-20260525-001 — Design System: Novos Componentes UI (aprovado, v0.3)
 
-> Define 11 novos componentes para o dashboard mobile-first. Status: rascunho — nenhum
-> componente implementado.
+> Define tokens + 14 componentes (3 de base + 11 originais) para o dashboard mobile-first.
+> Status: approved (2026-07-19). Revisada em 2 rodadas antes da aprovação (estudo
+> pré-implementação, ver IMPACTO-038 e seu adendo v0.3). **T8.1, rodada 1 (2026-07-19):**
+> tokens (§4.1) e `Button`/`Card`/`Table` (§4.2) implementados. **T8.1, rodada 2
+> (2026-07-19):** `EmptyState` (prioridade 2) e `Alert` (prioridade 3) implementados como
+> primitivos em `packages/ui`, seguindo a ordem de §10. **T8.1, rodada 3 (2026-07-19):**
+> `KpiCard` (prioridade 4, §5.1) implementado sobre `<Card>`, com sparkline SVG inline e
+> variantes calculadas por `trend`/`reverseTrend`. Migração das duplicatas inline reais
+> (`FleetKpis.tsx`, `expenses/page.tsx`, `expenses`, `maintenance`, `analytics`,
+> `dashboard`, `atividades`, `VehicleSpotlight`, ~30 arquivos com padrão ad hoc de alerta)
+> ainda não feita, fica para rodada de consumo dedicada. **T8.1, rodada 4 (2026-07-19):**
+> `Toast`/`ToastViewport` (prioridade 5, §8.2) implementado como fila única no `ui-store`
+> (`toasts: ToastItem[]`, `pushToast`, `dismissToast`), substituindo os 3 toasts ad hoc
+> (`ContextStaleToast`, `ServiceWorkerUpdateToast`, `OfflineWriteBlockedToast`) — os campos
+> dedicados que existiam (`contextStaleNotice`, `swUpdateAvailable`,
+> `offlineWriteBlockedNotice`) foram removidos do `ui-store` na mesma tarefa, conforme
+> planejado em §8.2. `<AppToastViewport />` (wrapper de wiring) montado no root layout;
+> `<ServiceWorkerUpdateListener />` substitui `ServiceWorkerUpdateToast` como listener
+> headless do evento `"waiting"` do Serwist. Comportamento visual (posição, timing, texto,
+> ação) preservado — verificado nos testes migrados de `fleet-aside.spec.tsx` e
+> `api-client.spec.ts`. **T8.1, rodada 5 (2026-07-19):** `Combobox` (prioridade 6, §7.2)
+> implementado com `@radix-ui/react-popover` + `cmdk` (decisão de IMPACTO-038 — mantém
+> Radix como única árvore headless do projeto, coerente com `@radix-ui/react-dialog`/`vaul`
+> já em produção). Busca client-side (filtro `cmdk` embutido, fuzzy, sem chamada de rede),
+> `emptyMessage`, estados `loading`/`disabled`/`error`, chevron e check fixos (SVG, §4.3).
+> `packages/ui` ganhou `@radix-ui/react-popover`/`cmdk` como dependências diretas;
+> `vitest.setup.ts` do pacote ganhou polyfills de `ResizeObserver`/Pointer Capture/
+> `scrollIntoView` (mesmo padrão já usado em `apps/web/vitest.setup.ts` para
+> `ResizeObserver`), exigidos por Radix Popover/`cmdk` em jsdom. Migração das 3 telas com
+> `<select>` nativo (`expenses/new`, `maintenance/new`, `expenses/[id]`) ainda não feita,
+> fica para rodada de consumo dedicada — mesmo padrão de adiamento das rodadas anteriores.
+> **T8.1, rodada 6 (2026-07-19):** `Tabs` (prioridade 7, §6.1) implementado sobre
+> `@radix-ui/react-tabs`, consolidando as duas implementações manuais existentes
+> (`VehicleSpotlight.tsx`, com `role="tablist"`/`role="tab"`/`aria-selected` já corretos, e
+> `expenses/page.tsx`, sem ARIA) — ambas migradas na mesma rodada, diferente do padrão de
+> adiamento anterior, pois a migração era o próprio objetivo desta prioridade (§10).
+> Componente renderiza só a faixa de abas (`role="tablist"`/`Tabs.Trigger`), sem
+> `Tabs.Content` — o painel associado a cada `value` continua responsabilidade do
+> consumidor, preservando o padrão já usado nas duas telas. `aria-controls` automático do
+> Radix (apontando para um `Tabs.Content` inexistente) foi neutralizado explicitamente
+> (`aria-controls={undefined}` no trigger) para não violar `aria-valid-attr-value`
+> (capturado por `jest-axe` antes do ajuste). Variantes `default`/`underline`/`pills`
+> via CVA; badge (`group-data-[state=active]`) e `icon` decorativo (§4.3) suportados.
+> Migração de `VehicleSpotlight.tsx` e `expenses/page.tsx` exigiu trocar `fireEvent.click`/
+> `.click()` nativo por `userEvent.click` nos specs, pois o Radix Trigger ativa a aba no
+> `onMouseDown` (não em `click` puro) — `@testing-library/user-event` adicionado como
+> devDependency de `apps/web` (já existia em `packages/ui`). `packages/ui` ganhou
+> `@radix-ui/react-tabs` como dependência direta. **T8.1, rodadas 7–11 (2026-07-19):** os 5
+> componentes finais de §10 concluídos — `Steps` (prioridade 8, wizard horizontal com
+> estados `completed`/`current`/`upcoming`/`error`), `DateRangePicker` (prioridade 9, dois
+> `<input type="date">` nativos + presets, sem lib de calendário nova), `FileUpload`
+> (prioridade 10, dropzone com drag-and-drop + validação de tipo/tamanho client-side),
+> `ChartWrapper` (prioridade 11, consolida header/loading/empty state hoje duplicado em
+> `TcoBreakdownChart`/`FuelTrendChart`) e `Breadcrumb` (prioridade 12, colapso central via
+> `maxItems`). Todos greenfield sem consumidor imediato no produto hoje (exceto
+> `ChartWrapper`, cuja migração de consumidor fica adiada, mesmo padrão de
+> `EmptyState`/`Alert`/`KpiCard`/`Combobox`) — detalhe completo no changelog de
+> `docs/IMPLEMENTATION_STRATEGY.md`. §10 da spec está 100% implementado em componentes;
+> resta apenas a migração de telas consumidoras (ver tabela abaixo).
 
-| Componente | Arquivo destino planejado | Status |
-|------------|--------------------------|--------|
-| `KpiCard` (vertical + sparkline) | `packages/ui/src/components/kpi-card.tsx` | ⏳ |
-| `ChartWrapper` | `packages/ui/src/components/chart-wrapper.tsx` | ⏳ |
-| `Steps` (horizontal) | `packages/ui/src/components/steps.tsx` | ⏳ |
-| `Tabs` | `packages/ui/src/components/tabs.tsx` | ⏳ |
-| `Breadcrumb` | `packages/ui/src/components/breadcrumb.tsx` | ⏳ |
-| `Combobox` | `packages/ui/src/components/combobox.tsx` | ⏳ |
-| `DateRangePicker` | `packages/ui/src/components/date-range-picker.tsx` | ⏳ |
-| `FileUpload` | `packages/ui/src/components/file-upload.tsx` | ⏳ |
-| `Alert` | `packages/ui/src/components/alert.tsx` | ⏳ |
-| `Toast` | `packages/ui/src/components/toast.tsx` | ⏳ |
-| `EmptyState` | `packages/ui/src/components/empty-state.tsx` | ⏳ |
+| Componente | Arquivo destino planejado | Tipo | Status |
+|------------|--------------------------|------|--------|
+| Tokens (cores, espaçamento, raio) | `packages/ui/src/tokens/{colors,spacing,radius}.ts`; aplicado em `apps/web/tailwind.config.ts` e `apps/web/src/app/globals.css` | Greenfield (bloqueante absoluto) | ✅ |
+| `Button` | `packages/ui/src/components/button.tsx` | Greenfield (pré-requisito) | ✅ (`button.test.tsx`, jest-axe) |
+| `Card` | `packages/ui/src/components/card.tsx` | Greenfield (pré-requisito) | ✅ (`card.test.tsx`, jest-axe) |
+| `Table` | `packages/ui/src/components/table.tsx` | Greenfield (pré-requisito) | ✅ (`table.test.tsx`, jest-axe) |
+| `EmptyState` | `packages/ui/src/components/empty-state.tsx` | Migração (6 duplicatas) | ✅ (`empty-state.test.tsx`, jest-axe) — componente pronto; migração das telas consumidoras ⏳ |
+| `Alert` | `packages/ui/src/components/alert.tsx` | Migração (padrão ad hoc em ~30 arquivos) | ✅ (`alert.test.tsx`, jest-axe) — componente pronto; migração das telas consumidoras ⏳ |
+| `KpiCard` (vertical + sparkline) | `packages/ui/src/components/kpi-card.tsx` | Migração (`FleetKpis.tsx`, `expenses/page.tsx`) | ✅ (`kpi-card.test.tsx`, jest-axe) — componente pronto; migração das telas consumidoras ⏳ |
+| `Toast` | `packages/ui/src/components/toast.tsx` | Migração (3 componentes ad hoc no `ui-store`) | ✅ (`toast.test.tsx`, jest-axe) — componente pronto; migração dos 3 toasts ad hoc (`ContextStaleToast`, `ServiceWorkerUpdateToast`, `OfflineWriteBlockedToast`) para a fila única concluída na mesma tarefa |
+| `Combobox` | `packages/ui/src/components/combobox.tsx` | Greenfield (substitui `<select>` nativo) | ✅ (`combobox.test.tsx`, jest-axe) — componente pronto; migração das telas consumidoras (`expenses/new`, `maintenance/new`, `expenses/[id]`) ⏳ |
+| `Tabs` | `packages/ui/src/components/tabs.tsx` | Migração (`expenses/page.tsx`, `VehicleSpotlight.tsx`) | ✅ (`tabs.test.tsx`, jest-axe) — componente pronto; `expenses/page.tsx` e `VehicleSpotlight.tsx` migrados na mesma rodada |
+| `Steps` (horizontal) | `packages/ui/src/components/steps.tsx` | Greenfield | ✅ (`steps.test.tsx`, jest-axe) — componente pronto; sem consumidor ainda (aguarda wizard de cadastro de veículo, fora do escopo desta spec) |
+| `DateRangePicker` | `packages/ui/src/components/date-range-picker.tsx` | Greenfield | ✅ (`date-range-picker.test.tsx`, jest-axe) — componente pronto; sem consumidor ainda (aguarda filtros de relatório, fase posterior) |
+| `FileUpload` | `packages/ui/src/components/file-upload.tsx` | Greenfield, sem consumidor imediato | ✅ (`file-upload.test.tsx`, jest-axe) — componente pronto; sem consumidor (aguarda feature de anexos, fora do escopo desta spec) |
+| `ChartWrapper` | `packages/ui/src/components/chart-wrapper.tsx` | Migração (lógica duplicada em `charts/`) | ✅ (`chart-wrapper.test.tsx`, jest-axe) — componente pronto; migração de `TcoBreakdownChart`/`FuelTrendChart` (`apps/web/src/components/charts/`) para usá-lo como container ⏳ |
+| `Breadcrumb` | `packages/ui/src/components/breadcrumb.tsx` | Greenfield | ✅ (`breadcrumb.test.tsx`, jest-axe) — componente pronto; sem consumidor ainda (navegação hoje é só via sidebar) |
 
 ---
 

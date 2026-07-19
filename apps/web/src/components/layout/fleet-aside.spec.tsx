@@ -19,7 +19,7 @@ describe("FleetAside", () => {
   beforeEach(() => {
     localStorage.clear();
     useDashboardStore.getState().clearAllSelection();
-    useUIStore.getState().clearContextStaleNotice();
+    useUIStore.setState({ toasts: [] });
   });
 
   afterEach(() => {
@@ -40,7 +40,7 @@ describe("FleetAside", () => {
     renderFleetAside();
 
     await waitFor(() => expect(useDashboardStore.getState().selectionMode).toBe("none"));
-    expect(useUIStore.getState().contextStaleNotice).toMatch(/veículo em foco foi removido/);
+    expect(useUIStore.getState().toasts[0]?.title).toMatch(/veículo em foco foi removido/);
   });
 
   it("não altera o contexto quando o veículo em foco ainda existe", async () => {
@@ -57,7 +57,7 @@ describe("FleetAside", () => {
     renderFleetAside();
 
     await waitFor(() => expect(useDashboardStore.getState().activeVehicleId).toBe("v1"));
-    expect(useUIStore.getState().contextStaleNotice).toBeNull();
+    expect(useUIStore.getState().toasts).toHaveLength(0);
   });
 
   it("RF-16: limpa o contexto silenciosamente (sem toast) quando o grupo em foco foi excluído", async () => {
@@ -74,6 +74,6 @@ describe("FleetAside", () => {
     renderFleetAside();
 
     await waitFor(() => expect(useDashboardStore.getState().selectionMode).toBe("none"));
-    expect(useUIStore.getState().contextStaleNotice).toBeNull();
+    expect(useUIStore.getState().toasts).toHaveLength(0);
   });
 });

@@ -27,7 +27,7 @@ export function FleetAside(): null {
   const activeVehicleId = useDashboardStore((state) => state.activeVehicleId);
   const activeGroupId = useDashboardStore((state) => state.activeGroupId);
   const clearAllSelection = useDashboardStore((state) => state.clearAllSelection);
-  const setContextStaleNotice = useUIStore((state) => state.setContextStaleNotice);
+  const pushToast = useUIStore((state) => state.pushToast);
 
   const { data: vehicles } = useQuery({
     queryKey: ["vehicles"],
@@ -49,8 +49,12 @@ export function FleetAside(): null {
     if (stillExists) return;
 
     clearAllSelection();
-    setContextStaleNotice("O veículo em foco foi removido. Contexto limpo — exibindo toda a frota.");
-  }, [selectionMode, activeVehicleId, vehicles, clearAllSelection, setContextStaleNotice]);
+    pushToast({
+      variant: "info",
+      title: "O veículo em foco foi removido. Contexto limpo — exibindo toda a frota.",
+      duration: 5000,
+    });
+  }, [selectionMode, activeVehicleId, vehicles, clearAllSelection, pushToast]);
 
   useEffect(() => {
     if (selectionMode !== "group" || !activeGroupId || !groups) return;

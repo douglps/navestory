@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import type { ToastItem } from "@nave/ui";
 
 /**
  * Exemplo de estado puramente client-side (ADR-008): nunca guardar dado
@@ -9,17 +10,12 @@ interface UIState {
   toggleMobileNav: () => void;
   isSidebarCollapsed: boolean;
   toggleSidebarCollapsed: () => void;
-  // @spec SPEC-20260602-001 RF-16, RNF-04 — aviso não-obstrutivo de staleness de contexto
-  contextStaleNotice: string | null;
-  setContextStaleNotice: (message: string) => void;
-  clearContextStaleNotice: () => void;
-  // @spec SPEC-20260712-001 RF-14 — toast persistente de nova versão do Service Worker
-  swUpdateAvailable: boolean;
-  setSwUpdateAvailable: (available: boolean) => void;
-  // @spec SPEC-20260712-001 RF-11, RF-11.1 — aviso de escrita bloqueada por falta de conexão
-  offlineWriteBlockedNotice: string | null;
-  setOfflineWriteBlockedNotice: (message: string) => void;
-  clearOfflineWriteBlockedNotice: () => void;
+  // @spec SPEC-20260525-001 §8.2 — fila única de toasts; migra os campos dedicados de
+  // SPEC-20260602-001 RF-16 (contextStaleNotice) e SPEC-20260712-001 RF-14/RF-11.1
+  // (swUpdateAvailable/offlineWriteBlockedNotice), removidos nesta tarefa.
+  toasts: ToastItem[];
+  pushToast: (toast: Omit<ToastItem, "id">) => void;
+  dismissToast: (id: string) => void;
 }
 
 export const useUIStore = create<UIState>((set) => ({
@@ -28,12 +24,8 @@ export const useUIStore = create<UIState>((set) => ({
   isSidebarCollapsed: false,
   toggleSidebarCollapsed: () =>
     set((state) => ({ isSidebarCollapsed: !state.isSidebarCollapsed })),
-  contextStaleNotice: null,
-  setContextStaleNotice: (message) => set({ contextStaleNotice: message }),
-  clearContextStaleNotice: () => set({ contextStaleNotice: null }),
-  swUpdateAvailable: false,
-  setSwUpdateAvailable: (available) => set({ swUpdateAvailable: available }),
-  offlineWriteBlockedNotice: null,
-  setOfflineWriteBlockedNotice: (message) => set({ offlineWriteBlockedNotice: message }),
-  clearOfflineWriteBlockedNotice: () => set({ offlineWriteBlockedNotice: null }),
+  toasts: [],
+  pushToast: (toast) =>
+    set((state) => ({ toasts: [...state.toasts, { ...toast, id: crypto.randomUUID() }] })),
+  dismissToast: (id) => set((state) => ({ toasts: state.toasts.filter((t) => t.id !== id) })),
 }));

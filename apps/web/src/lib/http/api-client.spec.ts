@@ -7,7 +7,7 @@ import { apiClient, ApiError, ApiUnavailableError, OfflineWriteBlockedError } fr
 describe("apiClient", () => {
   beforeEach(() => {
     useDashboardStore.getState().clearAllSelection();
-    useUIStore.getState().clearContextStaleNotice();
+    useUIStore.setState({ toasts: [] });
     useConnectivityStore.setState({ isOnline: true });
   });
 
@@ -77,7 +77,7 @@ describe("apiClient", () => {
       apiClient("/expenses", { method: "POST", body: { amount: 10 } }),
     ).rejects.toBeInstanceOf(OfflineWriteBlockedError);
     expect(fetchMock).not.toHaveBeenCalled();
-    expect(useUIStore.getState().offlineWriteBlockedNotice).toBe(
+    expect(useUIStore.getState().toasts[0]?.title).toBe(
       "Sem conexão — não é possível salvar agora. Tente novamente quando a internet voltar.",
     );
   });
@@ -139,7 +139,7 @@ describe("apiClient", () => {
 
     expect(useDashboardStore.getState().selectionMode).toBe("none");
     expect(useDashboardStore.getState().activeVehicleId).toBeNull();
-    expect(useUIStore.getState().contextStaleNotice).toBe(
+    expect(useUIStore.getState().toasts[0]?.title).toBe(
       "O veículo selecionado não está mais disponível",
     );
   });
@@ -158,7 +158,7 @@ describe("apiClient", () => {
     await expect(apiClient("/categories/other-id")).rejects.toBeInstanceOf(ApiError);
 
     expect(useDashboardStore.getState().activeVehicleId).toBe("v1");
-    expect(useUIStore.getState().contextStaleNotice).toBeNull();
+    expect(useUIStore.getState().toasts).toHaveLength(0);
   });
 
   it("RF-22: 404 sem veículo ativo no store não dispara limpeza", async () => {
@@ -169,6 +169,6 @@ describe("apiClient", () => {
 
     await expect(apiClient("/vehicles/v1")).rejects.toBeInstanceOf(ApiError);
 
-    expect(useUIStore.getState().contextStaleNotice).toBeNull();
+    expect(useUIStore.getState().toasts).toHaveLength(0);
   });
 });

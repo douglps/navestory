@@ -58,7 +58,7 @@ export async function apiClient<T>(path: string, options: RequestOptions = {}): 
   // bloqueado aqui: precisa chegar ao fetch() para o Service Worker poder responder com o
   // cache (RF-08) mesmo sem conexão — bloquear GET cedo quebraria a leitura offline inteira.
   if (isMutation && !useConnectivityStore.getState().isOnline) {
-    useUIStore.getState().setOfflineWriteBlockedNotice(OFFLINE_WRITE_MESSAGE);
+    useUIStore.getState().pushToast({ variant: "warning", title: OFFLINE_WRITE_MESSAGE, duration: 5000 });
     throw new OfflineWriteBlockedError();
   }
 
@@ -85,7 +85,7 @@ export async function apiClient<T>(path: string, options: RequestOptions = {}): 
     // conectividade (RF-13) e mostra a mesma mensagem de RF-11, nunca um erro genérico.
     if (isMutation) {
       useConnectivityStore.getState().markOffline();
-      useUIStore.getState().setOfflineWriteBlockedNotice(OFFLINE_WRITE_MESSAGE);
+      useUIStore.getState().pushToast({ variant: "warning", title: OFFLINE_WRITE_MESSAGE, duration: 5000 });
       throw new OfflineWriteBlockedError();
     }
     throw new ApiUnavailableError();
@@ -116,8 +116,8 @@ export async function apiClient<T>(path: string, options: RequestOptions = {}): 
  * @spec SPEC-20260603-001 RF-22 — limpeza automática de contexto em resposta a 404.
  * Quando um 404 vem de uma request cujo path referencia o `activeVehicleId` ativo no
  * store (ex.: `GET /vehicles/:id`), assume-se que o veículo em foco foi removido
- * (soft-delete) e o contexto é limpo, com aviso reaproveitando o toast já existente
- * (`ContextStaleToast`) — sem criar um sistema de toast novo.
+ * (soft-delete) e o contexto é limpo, com aviso na fila única de toasts (§8.2 da
+ * SPEC-20260525-001) — sem criar um sistema de notificação novo.
  *
  * Match específico (`path.includes(activeVehicleId)` + `activeVehicleId !== null`)
  * para não disparar em 404s esperados de outras entidades (grupos, categorias etc.).
@@ -127,5 +127,9 @@ function handleNotFound(path: string): void {
   if (!activeVehicleId || !path.includes(activeVehicleId)) return;
 
   clearAllSelection();
-  useUIStore.getState().setContextStaleNotice("O veículo selecionado não está mais disponível");
+  useUIStore.getState().pushToast({
+    variant: "info",
+    title: "O veículo selecionado não está mais disponível",
+    duration: 5000,
+  });
 }

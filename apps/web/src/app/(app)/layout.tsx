@@ -1,12 +1,10 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { ContextStaleToast } from "@/components/layout/context-stale-toast";
 import { FleetAside } from "@/components/layout/fleet-aside";
 import { Header } from "@/components/layout/header";
 import { Sidebar } from "@/components/layout/sidebar";
 import { VehicleActivator } from "@/components/layout/vehicle-activator";
-import { OfflineWriteBlockedToast } from "@/components/pwa/offline-write-blocked-toast";
 import { InstallPromptBanner } from "@/components/pwa/install-prompt-banner";
 import { IosInstallBanner } from "@/components/pwa/ios-install-banner";
 import { useUIStore } from "@/lib/stores/ui-store";
@@ -24,8 +22,6 @@ export default function AppLayout({ children }: { children: ReactNode }): ReactN
         <Header />
         {children}
       </div>
-      <ContextStaleToast />
-      <OfflineWriteBlockedToast />
       <InstallPromptBanner />
       <IosInstallBanner />
     </div>

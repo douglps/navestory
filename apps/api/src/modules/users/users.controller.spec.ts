@@ -16,17 +16,25 @@ describe("UsersController", () => {
 
   it("getMe extrai o token do header Authorization e retorna o perfil", async () => {
     const { controller, usersService } = createController();
-    const req = { headers: { authorization: "Bearer token-123" }, cookies: {} } as Request;
+    const req = {
+      headers: { authorization: "Bearer token-123" },
+      cookies: {},
+      user: { sub: "u1", email: "ana@example.com", aud: "authenticated" },
+    } as unknown as Request;
 
     const result = await controller.getMe(req, "u1");
 
     expect(usersService.getProfile).toHaveBeenCalledWith("token-123", "u1");
-    expect(result.data).toEqual({ id: "u1", name: "Ana" });
+    expect(result.data).toEqual({ id: "u1", name: "Ana", email: "ana@example.com" });
   });
 
   it("getMe usa o cookie de sessão quando não há header Authorization", async () => {
     const { controller, usersService } = createController();
-    const req = { headers: {}, cookies: { nave_access_token: "cookie-token" } } as unknown as Request;
+    const req = {
+      headers: {},
+      cookies: { nave_access_token: "cookie-token" },
+      user: { sub: "u1", email: "ana@example.com", aud: "authenticated" },
+    } as unknown as Request;
 
     await controller.getMe(req, "u1");
 
@@ -52,7 +60,7 @@ describe("UsersController", () => {
     expect(result.data.name).toBe("Ana Atualizada");
   });
 
-  it("deleteMe exclui a conta do usuário autenticado (RF-01)", async () => {
+  it("deleteMe solicita a exclusão (soft-delete) da conta do usuário autenticado (RF-01)", async () => {
     const { controller, usersService } = createController();
 
     await controller.deleteMe("u1", { confirm: true });

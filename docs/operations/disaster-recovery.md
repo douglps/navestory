@@ -54,7 +54,7 @@ O Supabase realiza backups automáticos do PostgreSQL gerenciado. O comportament
 2. Navegar para **Database → Backups → Point in Time**
 3. Selecionar o timestamp de restore desejado
 4. Iniciar o restore — o Supabase cria um novo projeto com os dados do ponto selecionado
-5. Atualizar `SUPABASE_URL`, `SUPABASE_JWT_SECRET`, `SUPABASE_SERVICE_ROLE_KEY` e `NEXT_PUBLIC_SUPABASE_ANON_KEY` no ambiente de produção para apontar para o novo projeto
+5. Atualizar `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` e `NEXT_PUBLIC_SUPABASE_ANON_KEY` no ambiente de produção para apontar para o novo projeto
 6. Redeployar `apps/api` e `apps/web` com as novas variáveis
 
 ### Restore via snapshot diário (plano Free)

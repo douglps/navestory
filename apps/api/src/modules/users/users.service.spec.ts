@@ -1,4 +1,4 @@
-import { NotFoundException } from "@nestjs/common";
+import { ConflictException, NotFoundException } from "@nestjs/common";
 import type { ConfigService } from "@nestjs/config";
 import type { AuditService } from "../../shared/audit/audit.service";
 import { UsersService } from "./users.service";
@@ -70,27 +70,68 @@ describe("UsersService", () => {
     ).rejects.toBeInstanceOf(NotFoundException);
   });
 
-  it("deleteAccount lança 404 quando a exclusão falha", async () => {
+  function mockAdminProfilesBuilder(result: { data: unknown; error: unknown }) {
+    const builder: Record<string, unknown> = {};
+    builder.update = jest.fn().mockReturnValue(builder);
+    builder.eq = jest.fn().mockReturnValue(builder);
+    builder.is = jest.fn().mockReturnValue(builder);
+    builder.not = jest.fn().mockReturnValue(builder);
+    builder.select = jest.fn().mockReturnValue(builder);
+    builder.maybeSingle = jest.fn().mockResolvedValue(result);
+    const supabaseAdmin = { from: jest.fn().mockReturnValue(builder) };
+    return { supabaseAdmin, builder };
+  }
+
+  it("deleteAccount marca profiles.deleted_at e audita ACCOUNT_DELETION_REQUESTED (RF-01)", async () => {
     const auditService = { log: jest.fn() } as unknown as AuditService;
-    const supabaseAdmin = {
-      auth: { admin: { deleteUser: jest.fn().mockResolvedValue({ error: new Error("falhou") }) } },
-    };
+    const { supabaseAdmin, builder } = mockAdminProfilesBuilder({ data: { id: "u1" }, error: null });
+    const service = new UsersService(supabaseAdmin as never, configService, auditService);
+
+    await service.deleteAccount("u1");
+
+    expect(builder.update).toHaveBeenCalledWith(
+      expect.objectContaining({ deleted_at: expect.any(String) }),
+    );
+    expect(builder.eq).toHaveBeenCalledWith("id", "u1");
+    expect(auditService.log).toHaveBeenCalledWith(
+      expect.objectContaining({ action: "ACCOUNT_DELETION_REQUESTED", recordId: "u1" }),
+    );
+  });
+
+  it("deleteAccount lança 404 quando a conta não existe ou já está soft-deleted (RF-02)", async () => {
+    const auditService = { log: jest.fn() } as unknown as AuditService;
+    const { supabaseAdmin } = mockAdminProfilesBuilder({ data: null, error: null });
     const service = new UsersService(supabaseAdmin as never, configService, auditService);
 
     await expect(service.deleteAccount("u1")).rejects.toBeInstanceOf(NotFoundException);
   });
 
-  it("deleteAccount chama auth.admin.deleteUser e audita ACCOUNT_DELETED (RF-01, RF-03)", async () => {
+  it("restoreAccount zera profiles.deleted_at e audita ACCOUNT_RESTORED (RF-08)", async () => {
     const auditService = { log: jest.fn() } as unknown as AuditService;
-    const deleteUser = jest.fn().mockResolvedValue({ error: null });
-    const supabaseAdmin = { auth: { admin: { deleteUser } } };
+    const { supabaseAdmin, builder } = mockAdminProfilesBuilder({ data: { id: "u1" }, error: null });
     const service = new UsersService(supabaseAdmin as never, configService, auditService);
 
-    await service.deleteAccount("u1");
+    await service.restoreAccount("u1");
 
-    expect(deleteUser).toHaveBeenCalledWith("u1");
+    expect(builder.update).toHaveBeenCalledWith({ deleted_at: null });
     expect(auditService.log).toHaveBeenCalledWith(
-      expect.objectContaining({ action: "ACCOUNT_DELETED", recordId: "u1" }),
+      expect.objectContaining({ action: "ACCOUNT_RESTORED", recordId: "u1" }),
     );
+  });
+
+  it("restoreAccount lança 409 quando a conta não estava marcada para exclusão", async () => {
+    const auditService = { log: jest.fn() } as unknown as AuditService;
+    const { supabaseAdmin } = mockAdminProfilesBuilder({ data: null, error: null });
+    const service = new UsersService(supabaseAdmin as never, configService, auditService);
+
+    await expect(service.restoreAccount("u1")).rejects.toBeInstanceOf(ConflictException);
+  });
+
+  it("restoreAccount lança 404 quando a query falha", async () => {
+    const auditService = { log: jest.fn() } as unknown as AuditService;
+    const { supabaseAdmin } = mockAdminProfilesBuilder({ data: null, error: new Error("falhou") });
+    const service = new UsersService(supabaseAdmin as never, configService, auditService);
+
+    await expect(service.restoreAccount("u1")).rejects.toBeInstanceOf(NotFoundException);
   });
 });

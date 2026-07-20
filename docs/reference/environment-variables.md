@@ -16,20 +16,21 @@
 
 ## Backend — `apps/api`
 
-RF-SEC-001 de SPEC-20260521-001 exige que essas variáveis sejam lidas via `ConfigService.getOrThrow()`, nunca `process.env` direto no código de domínio. **Status real em 2026-07-13:** o stub de T0.3 usa `process.env.PORT` e `process.env.SUPABASE_JWT_SECRET` diretamente (ver `apps/api/src/main.ts` e `apps/api/src/auth/jwt.strategy.ts`) — a migração para `ConfigModule`/`ConfigService` é trabalho pendente, não implementado ainda.
+RF-SEC-001 de SPEC-20260521-001 exige que essas variáveis sejam lidas via `ConfigService.getOrThrow()`, nunca `process.env` direto no código de domínio. **Status real em 2026-07-13:** o stub de T0.3 usa `process.env.PORT` diretamente (ver `apps/api/src/main.ts`) — a migração para `ConfigModule`/`ConfigService` é trabalho pendente, não implementado ainda.
 
 | Variável | Obrigatória | Descrição | Exemplo |
 |----------|-------------|-----------|---------|
 | `PORT` | não | Porta em que o servidor NestJS escuta. Padrão: `3001` | `3001` |
 | `NODE_ENV` | não | Modo de execução. Controla stack trace (S5), Swagger (SPEC-20260521-005) e logs de debug | `development` ou `production` |
 | `SUPABASE_URL` | sim | URL do projeto Supabase (sem prefixo `NEXT_PUBLIC_`). Usada no módulo de auth e no `AdminSupabaseService` | `https://sfkefpoanmoiagwxbwld.supabase.co` |
-| `SUPABASE_JWT_SECRET` | sim | Segredo JWT do projeto Supabase, usado pelo `JwtStrategy` (`passport-jwt`) para validar tokens de acesso emitidos pelo GoTrue | `<valor-do-dashboard-supabase>` |
-| `SUPABASE_SERVICE_ROLE_KEY` | sim | Chave de serviço do Supabase; bypassa RLS. Usada exclusivamente no `AdminSupabaseService` e na Edge Function de alertas de manutenção. Nunca compartilhar com o frontend | `<service-role-key-do-dashboard>` |
+| `SUPABASE_SERVICE_ROLE_KEY` | sim | Chave de serviço do Supabase; bypassa RLS. Usada no `AdminSupabaseService`, na Edge Function de alertas de manutenção e no `SupabaseAuthGuard` (`auth.getUser()` para validar o token de sessão — ver nota abaixo). Nunca compartilhar com o frontend | `<service-role-key-do-dashboard>` |
 | `RESEND_API_KEY` | sim* | Chave da API do Resend para envio de e-mails de alerta de manutenção (SPEC-20260521-002). Obrigatória somente quando o módulo de alertas for ativado | `re_...` |
 | `SWAGGER_ENABLED` | não | Se `true`, habilita o Swagger UI mesmo em `production` (útil para staging). Por padrão, Swagger só é ativo em `development` (SPEC-20260521-005) | `true` |
 | `SENTRY_DSN` | não | DSN do projeto Sentry (backend). Ausente → Sentry desabilitado silenciosamente, API inicia normalmente (SPEC-20260716-002 RF-01, CA-08) | `https://<key>@o<org>.ingest.sentry.io/<project>` |
 
 > **Nota sobre `SUPABASE_URL`:** versões anteriores do repositório usavam `NEXT_PUBLIC_SUPABASE_URL` no backend (achado crítico P1 de SPEC-20260521-001). A variável correta para o backend é `SUPABASE_URL`, sem prefixo.
+
+> **`SUPABASE_JWT_SECRET` removida em 2026-07-19:** o `SupabaseAuthGuard` validava o token localmente contra esse segredo (HS256), mas o Supabase CLI atual assina tokens com chave assimétrica rotacionável (ES256/JWKS) — a verificação local sempre falhava (401 em toda rota autenticada, achado do teste de ambiente local). Corrigido para validar via `auth.getUser()` do próprio Supabase, que não depende de segredo estático nenhum. A variável não é mais lida em nenhum lugar do código.
 
 ---
 

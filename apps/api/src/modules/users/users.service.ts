@@ -1,4 +1,4 @@
-import { Inject, Injectable, NotFoundException } from "@nestjs/common";
+import { ConflictException, Inject, Injectable, NotFoundException } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { AuditService } from "../../shared/audit/audit.service";
@@ -64,20 +64,60 @@ export class UsersService {
   }
 
   /**
-   * @spec SPEC-20260521-004 RF-01, RF-02, RF-03
-   * Regra de negócio C1 (LGPD): exclusão completa via cascata (`ON DELETE CASCADE` a partir
-   * de auth.users), não retenção anonimizada — o `auth.admin.deleteUser` já revoga todos
-   * os JWTs emitidos para o usuário.
+   * @spec SPEC-20260719-002 RF-01, RF-02, RF-03
+   * Regra de negócio C1 (LGPD) / R-BIZ-05 (janela de 30 dias): soft-delete real — marca
+   * `profiles.deleted_at`, sem chamar `auth.admin.deleteUser` (isso passa a acontecer só no
+   * job de hard-delete, `hard_delete_expired_accounts()`, após 30 dias). Não há chamada
+   * de revogação explícita de sessão: a GoTrue Admin API não expõe um método para invalidar
+   * todas as sessões de um usuário por id (apenas por JWT de sessão ou via `deleteUser`) —
+   * o bloqueio de acesso já é garantido pelo `SupabaseAuthGuard`, que rejeita toda requisição
+   * autenticada assim que `deleted_at != null` (ver Notas Técnicas da spec).
    */
   async deleteAccount(userId: string): Promise<void> {
-    const { error } = await this.supabaseAdmin.auth.admin.deleteUser(userId);
-    if (error) {
+    const { data, error } = await this.supabaseAdmin
+      .from("profiles")
+      .update({ deleted_at: new Date().toISOString() })
+      .eq("id", userId)
+      .is("deleted_at", null)
+      .select("id")
+      .maybeSingle();
+
+    if (error || !data) {
       throw new NotFoundException("Conta não encontrada");
     }
 
     void this.auditService.log({
       userId,
-      action: "ACCOUNT_DELETED",
+      action: "ACCOUNT_DELETION_REQUESTED",
+      tableName: "profiles",
+      recordId: userId,
+    });
+  }
+
+  /**
+   * @spec SPEC-20260719-002 RF-08
+   * Reverte o soft-delete dentro da janela de 30 dias. Requer `SoftDeletedUserGuard` no
+   * controller (aceita token de conta com `deleted_at != null`).
+   */
+  async restoreAccount(userId: string): Promise<void> {
+    const { data, error } = await this.supabaseAdmin
+      .from("profiles")
+      .update({ deleted_at: null })
+      .eq("id", userId)
+      .not("deleted_at", "is", null)
+      .select("id")
+      .maybeSingle();
+
+    if (error) {
+      throw new NotFoundException("Conta não encontrada");
+    }
+    if (!data) {
+      throw new ConflictException("Conta não está marcada para exclusão");
+    }
+
+    void this.auditService.log({
+      userId,
+      action: "ACCOUNT_RESTORED",
       tableName: "profiles",
       recordId: userId,
     });

@@ -72,7 +72,10 @@ as $$
     select
       e.vehicle_id,
       sum(e.amount) as total_expenses,
-      (max(e.odometer_km) - min(e.odometer_km)) filter (where e.odometer_km is not null) as total_km
+      -- FILTER só é válido sobre uma chamada de agregação isolada, não sobre a expressão
+      -- aritmética das duas juntas (erro de sintaxe corrigido em 2026-07-19) — redundante de
+      -- qualquer forma, já que max()/min() já ignoram NULL nativamente.
+      (max(e.odometer_km) - min(e.odometer_km)) as total_km
     from public.expenses e
     where e.user_id = auth.uid() and e.deleted_at is null
     group by e.vehicle_id

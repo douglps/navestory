@@ -15,6 +15,7 @@ import { ApiBearerAuth, ApiBody, ApiOperation, ApiResponse, ApiTags } from "@nes
 import type { Request } from "express";
 import { UserId } from "../../common/decorators/user-id.decorator";
 import { SupabaseAuthGuard } from "../../common/guards/supabase-auth.guard";
+import type { JwtPayload } from "../../modules/auth/jwt.strategy";
 import { ZodValidationPipe } from "../../common/pipes/zod-validation.pipe";
 import { deleteAccountDtoSchema, type DeleteAccountDto } from "./dto/delete-account.dto";
 import { updateProfileDtoSchema, type UpdateProfileDto } from "./dto/update-profile.dto";
@@ -38,7 +39,10 @@ export class UsersController {
   async getMe(@Req() req: Request, @UserId() userId: string) {
     const accessToken = this.extractAccessToken(req);
     const profile = await this.usersService.getProfile(accessToken, userId);
-    return { data: profile };
+    // @spec SPEC-20260719-001 RF-04 — e-mail vem do JWT (SupabaseAuthGuard já o populou em
+    // request.user), não da tabela `profiles`, que não armazena e-mail.
+    const jwtUser = (req as Request & { user?: JwtPayload }).user;
+    return { data: { ...profile, email: jwtUser?.email ?? null } };
   }
 
   @Patch("me")
@@ -65,10 +69,13 @@ export class UsersController {
     return { data: profile };
   }
 
+  /**
+   * @spec SPEC-20260719-002 RF-01, RF-02
+   */
   @Delete("me")
   @HttpCode(HttpStatus.NO_CONTENT)
   @UsePipes(new ZodValidationPipe(deleteAccountDtoSchema))
-  @ApiOperation({ summary: "Excluir a própria conta (LGPD Art. 18)" })
+  @ApiOperation({ summary: "Excluir a própria conta — soft-delete com retenção de 30 dias (LGPD Art. 18)" })
   @ApiBody({
     schema: {
       type: "object",

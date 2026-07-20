@@ -3,7 +3,6 @@ import { envValidationSchema } from "./env.validation";
 const validEnv = {
   SUPABASE_URL: "https://example.supabase.co",
   SUPABASE_ANON_KEY: "anon-key",
-  SUPABASE_JWT_SECRET: "secret",
   SUPABASE_SERVICE_ROLE_KEY: "service-role-key",
 };
 

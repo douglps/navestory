@@ -13,6 +13,8 @@ interface ErrorResponseBody {
   statusCode: number;
   message: string;
   timestamp: string;
+  code?: string;
+  deleted_at?: string;
 }
 
 /**
@@ -36,14 +38,29 @@ export class HttpExceptionFilter implements ExceptionFilter {
     const genericMessage = "Erro interno do servidor";
 
     let message: string;
+    let code: string | undefined;
+    let deletedAt: string | undefined;
     if (isHttpException) {
       const exceptionResponse = exception.getResponse();
-      const rawMessage =
-        typeof exceptionResponse === "string"
-          ? exceptionResponse
-          : ((exceptionResponse as { message?: string | string[] }).message ??
-            exception.message);
-      message = Array.isArray(rawMessage) ? rawMessage.join(", ") : rawMessage;
+      if (typeof exceptionResponse === "string") {
+        message = exceptionResponse;
+      } else {
+        /**
+         * @spec SPEC-20260719-002 RF-09
+         * `code`/`deleted_at` são um contrato explícito e restrito (whitelist), não um
+         * passthrough genérico do payload da exceção — evita vazar campos não previstos de
+         * outras exceções que também usem `getResponse()` com objeto.
+         */
+        const typedResponse = exceptionResponse as {
+          message?: string | string[];
+          code?: string;
+          deleted_at?: string;
+        };
+        const rawMessage = typedResponse.message ?? exception.message;
+        message = Array.isArray(rawMessage) ? rawMessage.join(", ") : rawMessage;
+        code = typedResponse.code;
+        deletedAt = typedResponse.deleted_at;
+      }
     } else {
       message = isProduction ? genericMessage : (exception as Error)?.message ?? genericMessage;
     }
@@ -65,6 +82,8 @@ export class HttpExceptionFilter implements ExceptionFilter {
       statusCode,
       message,
       timestamp: new Date().toISOString(),
+      ...(code ? { code } : {}),
+      ...(deletedAt ? { deleted_at: deletedAt } : {}),
     };
 
     response.status(statusCode).json(body);

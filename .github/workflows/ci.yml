@@ -37,6 +37,19 @@ jobs:
       - uses: ./.github/actions/setup
       - run: pnpm test:coverage
 
+  test-pairing-gate:
+    name: Gate de pareamento código/teste
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: ./.github/actions/setup
+      - name: Checagem mecânica de presença de teste e rastreabilidade de regra
+        env:
+          DIFF_BASE: ${{ github.event_name == 'pull_request' && format('origin/{0}', github.base_ref) || github.event.before }}
+        run: node scripts/check-test-pairing.mjs
+
   integration-test:
     name: Integration test (Supabase local — CT-006, CT-007)
     runs-on: ubuntu-latest

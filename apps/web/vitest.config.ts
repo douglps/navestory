@@ -16,10 +16,11 @@ export default defineConfig({
       reporter: ["text", "lcov"],
       exclude: [
         "src/app/layout.tsx",
-        "src/app/page.tsx",
         "next-env.d.ts",
         "**/*.spec.tsx",
         "**/*.config.*",
+        ".next/**",
+        "public/**",
       ],
       thresholds: {
         lines: 88,

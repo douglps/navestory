@@ -5,7 +5,7 @@ export default defineConfig({
     environment: "node",
     coverage: {
       reporter: ["text", "lcov"],
-      exclude: ["src/index.ts", "**/*.config.*"],
+      exclude: ["src/index.ts", "**/*.config.*", "dist/**"],
       thresholds: {
         lines: 88,
         statements: 88,

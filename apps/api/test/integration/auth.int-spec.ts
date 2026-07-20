@@ -39,8 +39,13 @@ describe("Auth (integração, Supabase local)", () => {
 
     const registerResponse = await request(app.getHttpServer())
       .post("/auth/register")
-      .send({ name: "Teste Integração", email, password: "abc12!" })
-      .expect(201);
+      .send({ name: "Teste Integração", email, password: "abc12!" });
+
+    if (registerResponse.status !== 201) {
+      throw new Error(
+        `esperado 201, recebido ${registerResponse.status}: ${JSON.stringify(registerResponse.body)}`,
+      );
+    }
 
     expect(registerResponse.body.data.message).toBe("Conta criada com sucesso");
     expect(registerResponse.headers["set-cookie"]).toBeDefined();
@@ -54,10 +59,15 @@ describe("Auth (integração, Supabase local)", () => {
   it("bloqueia registro duplicado com 409 (STORY-REG-01)", async () => {
     const email = `test-dup-${Date.now()}@example.com`;
 
-    await request(app.getHttpServer())
+    const firstResponse = await request(app.getHttpServer())
       .post("/auth/register")
-      .send({ name: "Teste", email, password: "abc12!" })
-      .expect(201);
+      .send({ name: "Teste", email, password: "abc12!" });
+
+    if (firstResponse.status !== 201) {
+      throw new Error(
+        `esperado 201, recebido ${firstResponse.status}: ${JSON.stringify(firstResponse.body)}`,
+      );
+    }
 
     await request(app.getHttpServer())
       .post("/auth/register")

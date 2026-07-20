@@ -24,14 +24,16 @@ Cada item abaixo precisa de uma checagem rápida antes de decidir se falta teste
 | `apps/web/src/components/legal-document.tsx` | Renderiza Markdown (`react-markdown` + `remark-gfm`) do conteúdo legal | Verificar se `privacidade/page.spec.tsx` e `termos/page.spec.tsx` já cobrem a renderização via esse componente compartilhado (cobertura indireta provável, dado que são as duas únicas páginas que o usam). |
 | `apps/web/src/components/legal-footer.tsx` | Rodapé com links para `/privacidade` e `/termos` | Componente pequeno e puramente apresentacional, usado em `/`, `/login` e `/register`. Candidato mais forte a "cosmético, não precisa de teste dedicado" (`specs/TESTS_SPEC.md`, seção "O que NÃO Testar") — mas confirmar que os links corretos aparecem em pelo menos um teste dos pais que o consomem. |
 
-## Próximo passo sugerido
+## Resultado da checagem (2026-07-20, execução deste documento)
 
-Para cada linha: abrir o arquivo `.spec.tsx` do componente pai (se existir) e confirmar se o
-comportamento do filho é exercitado. Se sim, não é necessário teste dedicado — mas vale registrar
-isso explicitamente (comentário ou nota na spec) para o gate não continuar reclamando a cada PR
-que toque esses arquivos (o check atual só olha "arquivo novo", então PRs futuros que só editem
-esses arquivos não disparam o alerta de novo — mas se algum deles for recriado/movido, dispara).
-Onde não houver cobertura indireta real, escrever o teste faltante seguindo o padrão de
-`specs/TESTS_SPEC.md`.
+| Arquivo | Veredito | Detalhe |
+|---|---|---|
+| `apps/web/src/app/(app)/error.tsx` | **Teste dedicado escrito** | Apesar da suposição inicial, o componente é uma função React comum (`error`/`reset` como props) — testável direto com RTL sem harness especial do App Router. Criado `apps/web/src/app/(app)/error.spec.tsx`: valida `Sentry.captureException(error)` e o clique em "Tentar novamente" chamando `reset`. |
+| `apps/web/src/app/(app)/settings/account/delete-account-dialog.tsx` | **Cobertura indireta confirmada** | `page.spec.tsx` já exercita o fluxo completo do dialog (abrir, digitar `EXCLUIR`, confirmar, erro mantém dialog aberto e limpa campo) através da página pai. Nenhum teste novo necessário. |
+| `apps/web/src/app/page.tsx` | **Teste dedicado escrito** | Não havia spec nem e2e cobrindo o conteúdo da landing (o redirect para usuário logado já é coberto por `apps/web/middleware.spec.ts`). Criado `apps/web/src/app/page.spec.tsx`: valida links "Entrar"→`/login` e "Criar conta"→`/register`. |
+| `apps/web/src/components/legal-document.tsx` | **Cobertura indireta confirmada** | `privacidade/page.spec.tsx` e `termos/page.spec.tsx` renderizam a página real (sem mock), lendo o Markdown de `docs/legal/*.md` de verdade e verificando heading + conteúdo — exercita o `ReactMarkdown`+`remark-gfm` do componente compartilhado. Nenhum teste novo necessário. |
+| `apps/web/src/components/legal-footer.tsx` | **Resolvido via teste da landing** | Em vez de um `legal-footer.spec.tsx` isolado, o novo `apps/web/src/app/page.spec.tsx` já verifica os links corretos ("Termos de Uso"→`/termos`, "Política de Privacidade"→`/privacidade`) através de um dos três pais que o consomem (`/`), como sugerido abaixo. |
 
-Nenhuma dessas lacunas foi corrigida nesta sessão — fica para a próxima rodada de implementação.
+**Nota para o gate:** `delete-account-dialog.tsx` e `legal-document.tsx` continuam sem `.spec` próprio — o check `check-test-pairing.mjs` só olha "arquivo novo por nome", então se algum dos dois for recriado/movido em um PR futuro, o alerta dispara de novo. Isso é esperado e aceitável (falso-positivo já documentado); não requer ação adicional, só re-consultar esta tabela.
+
+Rodado `npx vitest run src/app/page.spec.tsx "src/app/(app)/error.spec.tsx"` em `apps/web` — 2 arquivos, 4 testes, todos passando.

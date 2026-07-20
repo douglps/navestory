@@ -5,6 +5,7 @@ import { useMutation } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent, type ReactNode } from "react";
+import { LegalFooter } from "@/components/legal-footer";
 import { PasswordInput } from "@/components/password-input";
 import { apiClient, ApiError } from "@/lib/http/api-client";
 
@@ -22,6 +23,7 @@ export default function RegisterPage(): ReactNode {
   const [password, setPassword] = useState("");
   const [fieldError, setFieldError] = useState<string | null>(null);
   const [emailAlreadyExists, setEmailAlreadyExists] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
 
   const mutation = useMutation({
     mutationFn: (input: { name: string; email: string; password: string }) =>
@@ -107,10 +109,32 @@ export default function RegisterPage(): ReactNode {
           </p>
         )}
 
-        <button type="submit" disabled={mutation.isPending}>
+        {/* @spec SPEC-20260720-001 RF-06, US-03 */}
+        <label className="flex items-start gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={acceptedTerms}
+            onChange={(event) => setAcceptedTerms(event.target.checked)}
+            required
+          />
+          <span>
+            Li e concordo com os{" "}
+            <Link href="/termos" target="_blank" className="underline">
+              Termos de Uso
+            </Link>{" "}
+            e a{" "}
+            <Link href="/privacidade" target="_blank" className="underline">
+              Política de Privacidade
+            </Link>
+          </span>
+        </label>
+
+        <button type="submit" disabled={mutation.isPending || !acceptedTerms}>
           {mutation.isPending ? "Criando Conta..." : "Criar conta"}
         </button>
       </form>
+
+      <LegalFooter />
     </main>
   );
 }

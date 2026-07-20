@@ -18,6 +18,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/expenses", label: "Despesas" },
   { href: "/maintenance", label: "Manutenções" },
   { href: "/settings/preferences", label: "Preferências" },
+  { href: "/settings/account", label: "Minha conta" },
 ];
 
 // @spec SPEC-20260603-001 RF-16 — cor do dot passivo por modo de contexto ativo.

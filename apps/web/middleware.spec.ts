@@ -43,14 +43,14 @@ describe("middleware", () => {
     expect(response.status).toBe(200);
   });
 
-  it("redireciona /login → / quando já autenticado (STORY-01 cenário 4)", async () => {
+  it("redireciona /login → /dashboard quando já autenticado (STORY-01 cenário 4)", async () => {
     vi.mocked(decodeJwtExp).mockReturnValue(Date.now() + 60_000);
     const request = createRequest("/login", { nave_access_token: "valid-token" });
 
     const response = await middleware(request);
 
     expect(response.status).toBe(307);
-    expect(response.headers.get("location")).toBe("http://localhost:3000/");
+    expect(response.headers.get("location")).toBe("http://localhost:3000/dashboard");
   });
 
   it("permite acesso a rota pública sem token", async () => {
@@ -59,6 +59,55 @@ describe("middleware", () => {
     const response = await middleware(request);
 
     expect(response.status).toBe(200);
+  });
+
+  it("permite acesso à landing pública ('/') sem token", async () => {
+    const request = createRequest("/");
+
+    const response = await middleware(request);
+
+    expect(response.status).toBe(200);
+  });
+
+  it("SPEC-20260719-001: permite acesso a /restore-account sem token, sem redirecionar", async () => {
+    const request = createRequest("/restore-account");
+
+    const response = await middleware(request);
+
+    expect(response.status).toBe(200);
+  });
+
+  it.each(["/privacidade", "/termos"])(
+    "SPEC-20260720-001 RF-04: permite acesso a '%s' sem token, sem redirecionar",
+    async (path) => {
+      const request = createRequest(path);
+
+      const response = await middleware(request);
+
+      expect(response.status).toBe(200);
+    },
+  );
+
+  it.each(["/privacidade", "/termos"])(
+    "SPEC-20260720-001 RF-04: permite acesso a '%s' mesmo autenticado, sem redirecionar",
+    async (path) => {
+      vi.mocked(decodeJwtExp).mockReturnValue(Date.now() + 60_000);
+      const request = createRequest(path, { nave_access_token: "valid-token" });
+
+      const response = await middleware(request);
+
+      expect(response.status).toBe(200);
+    },
+  );
+
+  it("redireciona '/' → /dashboard quando já autenticado", async () => {
+    vi.mocked(decodeJwtExp).mockReturnValue(Date.now() + 60_000);
+    const request = createRequest("/", { nave_access_token: "valid-token" });
+
+    const response = await middleware(request);
+
+    expect(response.status).toBe(307);
+    expect(response.headers.get("location")).toBe("http://localhost:3000/dashboard");
   });
 
   it("renova a sessão via /auth/refresh quando o access token expirou mas há refresh token", async () => {

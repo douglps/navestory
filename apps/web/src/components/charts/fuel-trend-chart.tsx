@@ -9,6 +9,12 @@ import type { FuelTrendPoint } from "@nave/validators";
  * VehicleSpotlight (Sprint 2 do dashboard) sem duplicar a lógica de apresentação da tendência.
  */
 export function FuelTrendChart({ points }: { points: FuelTrendPoint[] }): ReactNode {
+  // Mesma defesa de TcoBreakdownChart: `points` ausente/malformado (ex: resposta antiga presa
+  // no cache do Service Worker) não pode derrubar a tela.
+  if (!points) {
+    return <p className="text-sm text-muted-foreground">Não foi possível carregar a tendência de consumo.</p>;
+  }
+
   const chartData = [...points].reverse().map((point) => ({
     date: point.date,
     km_per_liter: point.km_per_liter,

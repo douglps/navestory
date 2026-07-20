@@ -1,9 +1,11 @@
 "use client";
 
+import { Alert } from "@nave/ui";
 import { useMutation } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState, type FormEvent, type ReactNode } from "react";
+import { LegalFooter } from "@/components/legal-footer";
 import { PasswordInput } from "@/components/password-input";
 import { apiClient, ApiError } from "@/lib/http/api-client";
 
@@ -35,8 +37,23 @@ function LoginForm(): ReactNode {
         method: "POST",
         body: { email, password, rememberMe },
       }),
-    onSuccess: () => {
-      const redirect = searchParams.get("redirect") ?? "/";
+    /**
+     * @spec SPEC-20260719-001 RF-13
+     * Confirma que a conta não está em soft-delete antes de navegar ao dashboard.
+     * Se `GET /users/me` retornar 403 ACCOUNT_PENDING_DELETION, `apiClient` já dispara o
+     * redirecionamento global para `/restore-account` (ver `redirectToRestoreAccount`) —
+     * aqui só evitamos empurrar o usuário para `/dashboard` nesse caso. Qualquer outro erro
+     * ao checar o perfil não deve travar o login (falha aberta: segue para o dashboard).
+     */
+    onSuccess: async () => {
+      try {
+        await apiClient("/users/me");
+      } catch (error) {
+        if (error instanceof ApiError && error.code === "ACCOUNT_PENDING_DELETION") {
+          return;
+        }
+      }
+      const redirect = searchParams.get("redirect") ?? "/dashboard";
       router.push(redirect);
     },
   });
@@ -49,9 +66,20 @@ function LoginForm(): ReactNode {
   const isLocked =
     mutation.error instanceof ApiError && mutation.error.statusCode === 403;
 
+  // @spec SPEC-20260719-001 RF-09, US-03
+  const showAccountDeletedNotice = searchParams.get("message") === "conta_excluida";
+
   return (
     <main className="mx-auto flex max-w-sm flex-col gap-4 p-8">
       <h1 className="text-xl font-semibold">Entrar</h1>
+
+      {showAccountDeletedNotice && (
+        <Alert
+          variant="info"
+          description="Sua solicitação de exclusão de conta foi registrada. Você tem 30 dias para cancelar fazendo login novamente."
+        />
+      )}
+
       <form onSubmit={handleSubmit} className="flex flex-col gap-3">
         <label htmlFor="email">E-mail</label>
         <input
@@ -96,6 +124,15 @@ function LoginForm(): ReactNode {
           Esqueci minha senha
         </Link>
       </form>
+
+      <p className="text-sm">
+        Ainda não tem conta?{" "}
+        <Link href="/register" className="underline">
+          Criar conta
+        </Link>
+      </p>
+
+      <LegalFooter />
     </main>
   );
 }

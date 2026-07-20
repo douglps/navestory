@@ -21,6 +21,13 @@ const BREAKDOWN_LABEL: Record<keyof VehicleTco["breakdown"], string> = {
  * VehicleSpotlight (Sprint 2 do dashboard) sem duplicar a lógica de apresentação do breakdown.
  */
 export function TcoBreakdownChart({ breakdown }: { breakdown: VehicleTco["breakdown"] }): ReactNode {
+  // Defesa contra `breakdown` ausente/malformado (ex: resposta de API antiga presa no cache do
+  // Service Worker — StaleWhileRevalidate, SPEC-20260712-001 RF-08 — servida antes de um fix de
+  // contrato de API): o TypeScript garante o formato em tempo de build, não em runtime.
+  if (!breakdown) {
+    return <p className="text-sm text-muted-foreground">Não foi possível carregar o breakdown de custos.</p>;
+  }
+
   const data = (Object.keys(breakdown) as Array<keyof VehicleTco["breakdown"]>).map(
     // eslint-disable-next-line security/detect-object-injection -- key é keyof VehicleTco["breakdown"], união fixa de 5 literais
     (key) => ({ category: BREAKDOWN_LABEL[key], amount: breakdown[key] }),

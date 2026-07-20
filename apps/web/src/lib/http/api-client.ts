@@ -11,9 +11,45 @@ export class ApiError extends Error {
   constructor(
     message: string,
     public readonly statusCode: number,
+    public readonly code?: string,
   ) {
     super(message);
     this.name = "ApiError";
+  }
+}
+
+/**
+ * @spec SPEC-20260719-002 RF-09
+ * Código retornado pelo `SupabaseAuthGuard` quando a conta está em soft-delete
+ * (`profiles.deleted_at != null`) — distinto de um 403 genérico de permissão.
+ */
+const ACCOUNT_PENDING_DELETION_CODE = "ACCOUNT_PENDING_DELETION";
+
+/**
+ * @spec SPEC-20260719-001 RF-13
+ * Interceptação global (não só no login): qualquer chamada autenticada — de qualquer
+ * página — pode retornar esse código assim que a conta é marcada para exclusão, já que o
+ * guard bloqueia toda rota protegida. Centralizar aqui evita duplicar o tratamento em cada
+ * tela que consome `apiClient` e garante que uma navegação direta a uma rota já autenticada
+ * (sessão Supabase ainda tecnicamente válida) também seja redirecionada para o fluxo de
+ * restore, não só o login feito pelo formulário.
+ */
+/** Exportado só para teste unitário puro — evita depender de `window.location` real em jsdom. */
+export function getRestoreAccountRedirectUrl(pathname: string, deletedAt?: string): string | null {
+  if (pathname === "/restore-account") {
+    return null;
+  }
+  const query = deletedAt ? `?deletedAt=${encodeURIComponent(deletedAt)}` : "";
+  return `/restore-account${query}`;
+}
+
+function redirectToRestoreAccount(deletedAt?: string): void {
+  if (typeof window === "undefined") {
+    return;
+  }
+  const url = getRestoreAccountRedirectUrl(window.location.pathname, deletedAt);
+  if (url) {
+    window.location.assign(url);
   }
 }
 
@@ -100,13 +136,18 @@ export async function apiClient<T>(path: string, options: RequestOptions = {}): 
   const body = (await response.json().catch(() => ({}))) as {
     data?: T;
     message?: string;
+    code?: string;
+    deleted_at?: string;
   };
 
   if (!response.ok) {
     if (response.status === 404) {
       handleNotFound(path);
     }
-    throw new ApiError(body.message ?? "Erro inesperado", response.status);
+    if (response.status === 403 && body.code === ACCOUNT_PENDING_DELETION_CODE) {
+      redirectToRestoreAccount(body.deleted_at);
+    }
+    throw new ApiError(body.message ?? "Erro inesperado", response.status, body.code);
   }
 
   return body.data as T;

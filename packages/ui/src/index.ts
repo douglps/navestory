@@ -43,5 +43,16 @@ export {
 export { FileUpload, type FileUploadProps } from "./components/file-upload";
 export { ChartWrapper, type ChartWrapperProps } from "./components/chart-wrapper";
 export { Breadcrumb, type BreadcrumbProps, type BreadcrumbItem } from "./components/breadcrumb";
+export {
+  Dialog,
+  DialogTrigger,
+  DialogClose,
+  DialogContent,
+  type DialogContentProps,
+  DialogHeader,
+  DialogFooter,
+  DialogTitle,
+  DialogDescription,
+} from "./components/dialog";
 
 export { cn } from "./lib/cn";

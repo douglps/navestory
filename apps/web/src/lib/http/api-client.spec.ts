@@ -2,7 +2,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useDashboardStore } from "@/lib/stores/use-dashboard-store";
 import { useUIStore } from "@/lib/stores/ui-store";
 import { useConnectivityStore } from "@/lib/pwa/connectivity-store";
-import { apiClient, ApiError, ApiUnavailableError, OfflineWriteBlockedError } from "./api-client";
+import {
+  apiClient,
+  ApiError,
+  ApiUnavailableError,
+  OfflineWriteBlockedError,
+  getRestoreAccountRedirectUrl,
+} from "./api-client";
 
 describe("apiClient", () => {
   beforeEach(() => {
@@ -170,5 +176,39 @@ describe("apiClient", () => {
     await expect(apiClient("/vehicles/v1")).rejects.toBeInstanceOf(ApiError);
 
     expect(useUIStore.getState().toasts).toHaveLength(0);
+  });
+
+  describe("SPEC-20260719-001 RF-13: 403 ACCOUNT_PENDING_DELETION", () => {
+    it("propaga o code no ApiError", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: false,
+          status: 403,
+          json: async () => ({ message: "Conta marcada para exclusão.", code: "ACCOUNT_PENDING_DELETION" }),
+        }),
+      );
+
+      await expect(apiClient("/users/me")).rejects.toMatchObject({
+        statusCode: 403,
+        code: "ACCOUNT_PENDING_DELETION",
+      });
+    });
+  });
+
+  describe("getRestoreAccountRedirectUrl", () => {
+    it("monta a URL de restore com deletedAt codificado", () => {
+      expect(getRestoreAccountRedirectUrl("/dashboard", "2026-07-20T00:00:00.000Z")).toBe(
+        "/restore-account?deletedAt=2026-07-20T00%3A00%3A00.000Z",
+      );
+    });
+
+    it("monta a URL de restore sem query string quando não há deletedAt", () => {
+      expect(getRestoreAccountRedirectUrl("/dashboard")).toBe("/restore-account");
+    });
+
+    it("retorna null quando já está em /restore-account (evita loop de redirect)", () => {
+      expect(getRestoreAccountRedirectUrl("/restore-account", "2026-07-20T00:00:00.000Z")).toBeNull();
+    });
   });
 });

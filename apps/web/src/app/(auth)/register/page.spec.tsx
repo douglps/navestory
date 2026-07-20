@@ -37,6 +37,7 @@ describe("RegisterPage", () => {
     fireEvent.change(screen.getByLabelText("Nome"), { target: { value: "Ana" } });
     fireEvent.change(screen.getByLabelText("E-mail"), { target: { value: "ana@example.com" } });
     fireEvent.change(screen.getByLabelText("Senha"), { target: { value: "123" } });
+    fireEvent.click(screen.getByRole("checkbox"));
     fireEvent.click(screen.getByRole("button", { name: "Criar conta" }));
 
     expect(await screen.findByRole("alert")).toBeInTheDocument();
@@ -50,6 +51,7 @@ describe("RegisterPage", () => {
     fireEvent.change(screen.getByLabelText("Nome"), { target: { value: "Ana" } });
     fireEvent.change(screen.getByLabelText("E-mail"), { target: { value: "ana@example.com" } });
     fireEvent.change(screen.getByLabelText("Senha"), { target: { value: "abc12!" } });
+    fireEvent.click(screen.getByRole("checkbox"));
     fireEvent.click(screen.getByRole("button", { name: "Criar conta" }));
 
     await waitFor(() => expect(pushMock).toHaveBeenCalledWith("/login"));
@@ -62,8 +64,23 @@ describe("RegisterPage", () => {
     fireEvent.change(screen.getByLabelText("Nome"), { target: { value: "Ana" } });
     fireEvent.change(screen.getByLabelText("E-mail"), { target: { value: "ana@example.com" } });
     fireEvent.change(screen.getByLabelText("Senha"), { target: { value: "abc12!" } });
+    fireEvent.click(screen.getByRole("checkbox"));
     fireEvent.click(screen.getByRole("button", { name: "Criar conta" }));
 
     expect(await screen.findByText(/já está cadastrado/)).toBeInTheDocument();
+  });
+
+  it("SPEC-20260720-001 US-03: botão 'Criar conta' fica desabilitado até marcar o aceite dos termos", async () => {
+    renderPage();
+
+    fireEvent.change(screen.getByLabelText("Nome"), { target: { value: "Ana" } });
+    fireEvent.change(screen.getByLabelText("E-mail"), { target: { value: "ana@example.com" } });
+    fireEvent.change(screen.getByLabelText("Senha"), { target: { value: "abc12!" } });
+
+    expect(screen.getByRole("button", { name: "Criar conta" })).toBeDisabled();
+
+    fireEvent.click(screen.getByRole("checkbox"));
+
+    expect(screen.getByRole("button", { name: "Criar conta" })).toBeEnabled();
   });
 });

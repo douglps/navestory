@@ -2,21 +2,43 @@ import { NextResponse, type NextRequest } from "next/server";
 import { decodeJwtExp } from "./src/lib/auth/decode-jwt-exp";
 
 const PUBLIC_PATHS = ["/login", "/register", "/recover-password", "/reset-password"];
+// @spec SPEC-20260720-001 RF-04 — acessíveis com ou sem sessão, sem nenhum redirect
+// (diferente de PUBLIC_PATHS, que redireciona usuário já logado para AUTHENTICATED_HOME).
+// @spec SPEC-20260719-001 (Notas Técnicas — "Tela de restore e grupo de rota") — /restore-account
+// também entra aqui: o usuário chega com uma conta soft-deleted (JWT do Supabase ainda válido,
+// mas bloqueada pelo guard do Nave). Sem token nenhum, a própria chamada a POST /users/me/restore
+// falha com 401 tratado pela página; não há necessidade de o middleware forçar /login antes.
+const ALWAYS_PUBLIC_PATHS = ["/privacidade", "/termos", "/restore-account"];
+const AUTHENTICATED_HOME = "/dashboard";
 
 /**
  * @spec RULES.md S1, matrices/permissoes.md
- * Middleware SSR de proteção de rota — hoje ausente do repositório (achado IMPACTO-021 #1).
+ * Middleware SSR de proteção de rota.
  */
 export async function middleware(request: NextRequest): Promise<NextResponse> {
   const { pathname } = request.nextUrl;
-  const isPublicPath = PUBLIC_PATHS.some((path) => pathname.startsWith(path));
 
   const accessToken = request.cookies.get("nave_access_token")?.value;
   const accessTokenValid = accessToken ? isTokenValid(accessToken) : false;
 
+  // "/" é a landing pública (não faz parte de PUBLIC_PATHS via startsWith porque
+  // toda pathname começa com "/" — precisa de comparação exata).
+  if (pathname === "/") {
+    if (accessTokenValid) {
+      return NextResponse.redirect(new URL(AUTHENTICATED_HOME, request.url));
+    }
+    return NextResponse.next();
+  }
+
+  if (ALWAYS_PUBLIC_PATHS.some((path) => pathname.startsWith(path))) {
+    return NextResponse.next();
+  }
+
+  const isPublicPath = PUBLIC_PATHS.some((path) => pathname.startsWith(path));
+
   if (isPublicPath) {
     if (accessTokenValid) {
-      return NextResponse.redirect(new URL("/", request.url));
+      return NextResponse.redirect(new URL(AUTHENTICATED_HOME, request.url));
     }
     return NextResponse.next();
   }

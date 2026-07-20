@@ -24,6 +24,7 @@ describe("LoginPage", () => {
   afterEach(() => {
     vi.clearAllMocks();
     searchParams.delete("redirect");
+    searchParams.delete("message");
   });
 
   function renderPage() {
@@ -34,7 +35,7 @@ describe("LoginPage", () => {
     );
   }
 
-  it("redireciona para / após login bem-sucedido (STORY-01)", async () => {
+  it("redireciona para /dashboard após login bem-sucedido (STORY-01)", async () => {
     vi.mocked(apiClient).mockResolvedValue({ message: "ok" });
     renderPage();
 
@@ -42,7 +43,7 @@ describe("LoginPage", () => {
     fireEvent.change(screen.getByLabelText("Senha"), { target: { value: "abc12!" } });
     fireEvent.click(screen.getByRole("button", { name: "Entrar" }));
 
-    await waitFor(() => expect(pushMock).toHaveBeenCalledWith("/"));
+    await waitFor(() => expect(pushMock).toHaveBeenCalledWith("/dashboard"));
   });
 
   it("redireciona para a rota de destino salva na query string (STORY-01)", async () => {
@@ -77,5 +78,51 @@ describe("LoginPage", () => {
     fireEvent.click(screen.getByRole("button", { name: "Entrar" }));
 
     expect(await screen.findByText(/temporariamente bloqueada/i)).toBeInTheDocument();
+  });
+
+  it("SPEC-20260719-001 RF-13: não navega para /dashboard quando a conta está soft-deleted", async () => {
+    vi.mocked(apiClient).mockImplementation((path: string) => {
+      if (path === "/auth/login") return Promise.resolve({ message: "ok" });
+      return Promise.reject(
+        new ApiError("Conta marcada para exclusão.", 403, "ACCOUNT_PENDING_DELETION"),
+      );
+    });
+    renderPage();
+
+    fireEvent.change(screen.getByLabelText("E-mail"), { target: { value: "ana@example.com" } });
+    fireEvent.change(screen.getByLabelText("Senha"), { target: { value: "abc12!" } });
+    fireEvent.click(screen.getByRole("button", { name: "Entrar" }));
+
+    await waitFor(() => expect(apiClient).toHaveBeenCalledWith("/users/me"));
+    expect(pushMock).not.toHaveBeenCalled();
+  });
+
+  it("navega para /dashboard quando a checagem de /users/me falha por outro motivo (falha aberta)", async () => {
+    vi.mocked(apiClient).mockImplementation((path: string) => {
+      if (path === "/auth/login") return Promise.resolve({ message: "ok" });
+      return Promise.reject(new ApiError("Serviço indisponível", 503));
+    });
+    renderPage();
+
+    fireEvent.change(screen.getByLabelText("E-mail"), { target: { value: "ana@example.com" } });
+    fireEvent.change(screen.getByLabelText("Senha"), { target: { value: "abc12!" } });
+    fireEvent.click(screen.getByRole("button", { name: "Entrar" }));
+
+    await waitFor(() => expect(pushMock).toHaveBeenCalledWith("/dashboard"));
+  });
+
+  it("SPEC-20260719-001 US-03: exibe aviso de exclusão registrada quando ?message=conta_excluida", () => {
+    searchParams.set("message", "conta_excluida");
+    renderPage();
+
+    expect(screen.getByText(/solicitação de exclusão de conta foi registrada/i)).toBeInTheDocument();
+  });
+
+  it("não exibe o aviso de exclusão sem o parâmetro message na URL", () => {
+    renderPage();
+
+    expect(
+      screen.queryByText(/solicitação de exclusão de conta foi registrada/i),
+    ).not.toBeInTheDocument();
   });
 });

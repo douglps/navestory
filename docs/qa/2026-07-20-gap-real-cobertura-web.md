@@ -72,3 +72,12 @@ Sem bug de config aqui (o pacote não gera `dist/`, `main` aponta direto para `s
 
 Não corrigido nesta sessão (fora do escopo de investigar o pipeline de CI) — candidato a tarefa
 pontual e rápida numa próxima rodada de QA do design system.
+
+## Addendum: `@nave/api` também abaixo do threshold (branches 70.87% vs 88%)
+
+Descoberto só depois do fix do job `Integration test` (ver `docs/qa/2026-07-20-rls-profiles-sem-grant.md`)
+— antes disso o pipeline nunca chegava a rodar `apps/api` até o fim de forma confiável. Sem bug de
+config aqui (não há `dist/` nem build gerado poluindo o relatório); é dívida técnica real, grande
+o suficiente para não ser um "quick fix" de sessão — precisa de uma rodada dedicada com o agente
+`tester` para mapear os branches sem cobertura módulo a módulo. Não investigado a fundo nem
+corrigido nesta sessão.

@@ -136,6 +136,26 @@ describe("AuthService", () => {
       ).rejects.toThrow();
       expect(supabase.auth.admin.deleteUser).toHaveBeenCalledWith("user-1");
     });
+
+    it("tolera lag entre o INSERT da trigger e a leitura via PostgREST (retry encontra o profile na 2ª tentativa)", async () => {
+      const { service, supabaseAdmin } = createService();
+      const profilesBuilder = supabaseAdmin.from("profiles") as ReturnType<
+        typeof createQueryBuilder
+      >;
+      (profilesBuilder.maybeSingle as jest.Mock)
+        .mockResolvedValueOnce({ data: null, error: null })
+        .mockResolvedValueOnce({ data: { id: "user-1" }, error: null });
+
+      const session = await service.register({
+        name: "Ana",
+        email: "ana@example.com",
+        password: "abc12!",
+        profile_type: "autonomous",
+      });
+
+      expect(session.accessToken).toBe("access-token");
+      expect(profilesBuilder.maybeSingle).toHaveBeenCalledTimes(2);
+    });
   });
 
   describe("login", () => {

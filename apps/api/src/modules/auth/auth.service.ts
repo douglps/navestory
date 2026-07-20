@@ -61,11 +61,7 @@ export class AuthService {
       throw new InternalServerErrorException("Falha ao criar conta");
     }
 
-    const { data: profile } = await this.supabaseAdmin
-      .from("profiles")
-      .select("id")
-      .eq("id", data.user.id)
-      .maybeSingle();
+    const profile = await this.findProfileWithRetry(data.user.id);
 
     if (!profile) {
       await this.supabaseAdmin.auth.admin.deleteUser(data.user.id);
@@ -165,6 +161,37 @@ export class AuthService {
     if (updateError) {
       throw new InternalServerErrorException(updateError.message);
     }
+  }
+
+  /**
+   * @spec SPEC-20260524-001 STORY-REG-01
+   * `handle_new_user` insere o profile na mesma transação do INSERT em auth.users feito pelo
+   * GoTrue, mas a leitura seguinte via PostgREST é uma requisição HTTP separada — sob latência
+   * (observado na CI, nunca localmente), a primeira leitura pode ocorrer antes da visibilidade
+   * do commit se propagar. Poucas tentativas curtas absorvem essa janela sem mascarar uma falha
+   * real da trigger (que continuaria retornando null após todas as tentativas).
+   */
+  private async findProfileWithRetry(
+    userId: string,
+    attempts = 3,
+    delayMs = 150,
+  ): Promise<{ id: string } | null> {
+    for (let attempt = 1; attempt <= attempts; attempt++) {
+      const { data: profile } = await this.supabaseAdmin
+        .from("profiles")
+        .select("id")
+        .eq("id", userId)
+        .maybeSingle();
+
+      if (profile) {
+        return profile;
+      }
+
+      if (attempt < attempts) {
+        await new Promise((resolve) => setTimeout(resolve, delayMs));
+      }
+    }
+    return null;
   }
 
   private toAuthSession(

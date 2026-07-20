@@ -65,13 +65,13 @@ export class HttpExceptionFilter implements ExceptionFilter {
       message = isProduction ? genericMessage : (exception as Error)?.message ?? genericMessage;
     }
 
-    // @spec SPEC-20260716-002 RF-03 — captura 5xx e exceções não-HTTP; 4xx não são bugs
-    const shouldCaptureInSentry = !isHttpException || statusCode >= HttpStatus.INTERNAL_SERVER_ERROR;
-    if (shouldCaptureInSentry) {
+    // @spec SPEC-20260716-002 RF-03 — captura/loga qualquer 5xx (HttpException intencional ou
+    // não) e qualquer exceção não-HTTP; 4xx não são bugs e não passam por aqui. Sem essa checagem
+    // por status, um 500 lançado via HttpException (ex: InternalServerErrorException) nunca era
+    // logado nem reportado ao Sentry — só aparecia no corpo da resposta HTTP.
+    const isServerError = !isHttpException || statusCode >= HttpStatus.INTERNAL_SERVER_ERROR;
+    if (isServerError) {
       Sentry.captureException(exception);
-    }
-
-    if (!isHttpException) {
       this.logger.error(
         exception instanceof Error ? exception.stack : exception,
         HttpExceptionFilter.name,

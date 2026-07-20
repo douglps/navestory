@@ -3,6 +3,7 @@ import {
   BadRequestException,
   ForbiddenException,
   InternalServerErrorException,
+  Logger,
 } from "@nestjs/common";
 import * as Sentry from "@sentry/nestjs";
 import { HttpExceptionFilter } from "./http-exception.filter";
@@ -81,6 +82,29 @@ describe("HttpExceptionFilter", () => {
     expect(json).toHaveBeenCalledWith(
       expect.objectContaining({ statusCode: 500, message: "Erro interno do servidor" }),
     );
+  });
+
+  it("RF-03: loga stack de um 500 lançado como HttpException intencional (ex: InternalServerErrorException)", () => {
+    const filter = new HttpExceptionFilter();
+    const { host } = createHost();
+    const loggerSpy = jest.spyOn(Logger.prototype, "error").mockImplementation();
+    const exception = new InternalServerErrorException("falha ao criar perfil da conta");
+
+    filter.catch(exception, host);
+
+    expect(loggerSpy).toHaveBeenCalledWith(exception.stack, HttpExceptionFilter.name);
+    loggerSpy.mockRestore();
+  });
+
+  it("RF-03: não loga uma HttpException 4xx", () => {
+    const filter = new HttpExceptionFilter();
+    const { host } = createHost();
+    const loggerSpy = jest.spyOn(Logger.prototype, "error").mockImplementation();
+
+    filter.catch(new BadRequestException("email inválido"), host);
+
+    expect(loggerSpy).not.toHaveBeenCalled();
+    loggerSpy.mockRestore();
   });
 
   it("propaga code e deleted_at de uma exceção com payload de objeto (RF-09 SPEC-20260719-002)", () => {

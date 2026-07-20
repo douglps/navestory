@@ -50,18 +50,18 @@ sugerido, critério de "pronto" e dependências.
 - **Pronto quando:** CI roda o job de e2e, pelo menos os fluxos críticos (RF-E2E da spec) passam, e `matrices/rastreabilidade.md` é atualizada com o caminho real dos testes.
 - **Agentes:** `spec-writer` (revisão) → implementação → `doc-keeper`.
 
-### T5 — Confirmar filtro por dono nas consultas de "veículo existe?"
+### T5 — Confirmar filtro por dono nas consultas de "veículo existe?" — ✅ Concluído (2026-07-20)
 - **Severidade:** 🟡 Médio (risco teórico, não confirmado)
 - **Achado:** #5
 - **Spec:** não precisa de spec nova — é verificação/correção pontual de regra de segurança já existente (isolamento de dados por RLS + filtro de aplicação), não uma feature nova.
-- **Escopo — revisar linha a linha:**
+- **Escopo — revisado linha a linha:**
   - `expense-templates.service.ts:55`
   - `recurring-costs.service.ts:46`
   - `maintenances.service.ts:62`
   - `fines.service.ts:42`
   - `vehicle-groups.service.ts:182`
-- **Ação:** para cada consulta, confirmar se filtra por `user_id` do dono do veículo antes de aceitar o `vehicle_id`/`vehicleIds` como válido. Se faltar o filtro, adicionar `.eq("user_id", userId)` (RLS já cobre como rede de segurança, mas o filtro explícito deve existir por defesa em profundidade, conforme já é o padrão nos outros services).
-- **Pronto quando:** as 5 consultas confirmadas com filtro explícito (ou corrigidas), com teste unitário cobrindo o caso "veículo de outro usuário é rejeitado".
+- **Resultado:** os 5 pontos já filtravam corretamente por `user_id`/dono antes de aceitar `vehicle_id`/`vehicleIds` (via `assertVehicleOwnership()` ou filtro inline `.eq("user_id", userId)`), mesmo padrão já estabelecido no projeto. Risco teórico não se confirmou — nenhuma correção de código necessária. Item extra (`/audit-logs`) também confirmado: filtro vem de `@UserId()`/token via `SupabaseAuthGuard`, não de parâmetro de URL.
+- **Pronto quando:** as 5 consultas confirmadas com filtro explícito (ou corrigidas), com teste unitário cobrindo o caso "veículo de outro usuário é rejeitado". **✅ Atingido** — confirmadas, sem necessidade de teste novo (nenhuma correção feita).
 - **Agentes:** `reviewer` (auditoria) → implementação (se necessário) → `tester`.
 
 ---
@@ -98,7 +98,7 @@ sugerido, critério de "pronto" e dependências.
 - **Testes:** `login/page.spec.tsx` e `middleware.spec.ts` atualizados (redirect pós-login e pós-`/` agora vão para `/dashboard`); `tsc --noEmit` limpo.
 - **Pronto quando:** um usuário que nunca usou o sistema consegue ir de "abrir o site" até "criar conta" sem digitar URL manualmente. **✅ Atingido.**
 
-### T10 — Cache de navegação do Service Worker preserva o shell de rotas protegidas após logout
+### T10 — Cache de navegação do Service Worker preserva o shell de rotas protegidas após logout — 🟡 Corrigido, falta confirmação manual (2026-07-20)
 - **Severidade:** 🟡 Médio — **causa raiz confirmada em código**; o sintoma em si (tela protegida aparecendo sem dados após logout) foi relatado pelo usuário, ainda não reproduzido por mim em navegador real.
 - **Causa raiz confirmada:** `apps/web/src/lib/pwa/clear-api-cache.ts` só apaga o cache `nave-api-data` no logout. O comentário do arquivo justifica preservar `nave-pages` alegando que ele contém só "assets estáticos públicos" e "não contém dado de usuário" — **essa premissa está incorreta**: em `apps/web/src/app/sw.ts`, o cache `nave-pages` é populado por `NetworkFirst` para **qualquer navegação** (`request.mode === "navigate"`, sem filtro de path), incluindo as rotas protegidas do grupo `(app)` (dashboard, vehicles, expenses, etc.). Ou seja, o shell HTML dessas telas fica cacheado normalmente, e o logout não o remove.
 - **Mecanismo do bypass percebido:** com o shell de `/vehicles` (por exemplo) já em `nave-pages` de uma visita anterior, e havendo uma limitação conhecida de Service Workers ao repassar para a página uma `Response` que passou por redirect (o middleware redireciona `/vehicles` deslogado para `/login`), o `NetworkFirst` pode tratar essa falha como "rede indisponível" e servir a versão cacheada do shell em vez do redirect — exibindo a tela protegida (sem dados, pois as chamadas de API continuam exigindo auth e falhando). Este último passo ainda depende de comportamento específico do navegador e precisa ser confirmado na prática (item 1 do escopo), mas a causa raiz — cache de shell autenticado nunca invalidado no logout — já está confirmada no código.
@@ -108,6 +108,8 @@ sugerido, critério de "pronto" e dependências.
   2. Corrigir `clearApiCache` (ou criar função irmã) para também apagar/filtrar `nave-pages` no logout — no mínimo removendo as entradas de rotas do grupo `(app)`; mais simples: `caches.delete("nave-pages")` também no logout, aceitando que a próxima navegação repopula o cache com o conteúdo correto (o custo é perder cache offline de páginas públicas até a próxima visita, que é baixo).
   3. Corrigir o comentário de `clear-api-cache.ts`, que hoje descreve incorretamente o conteúdo de `nave-pages`.
 - **Pronto quando:** teste manual (ou e2e, ver T4) confirma que, após logout, navegar direto para uma rota protegida não exibe nenhum shell cacheado — só a tela de login.
+- **Feito:** `clearApiCache()` (`apps/web/src/lib/pwa/clear-api-cache.ts`) passou a apagar `nave-pages` inteiro além de `nave-api-data` no logout, em vez de preservá-lo — a premissa original de que esse cache só continha assets públicos estava incorreta (ver diagnóstico acima). Comentário do arquivo corrigido; testes atualizados e passando; `specs/pwa/SPEC-20260712-001-pwa-offline.md` ganhou changelog v0.6 registrando que o critério de aceite de RF-16 não reflete mais o comportamento implementado.
+- **Pendente:** item 1 do escopo (confirmar em Chrome + Firefox: logar, visitar rota protegida, logout, navegar direto de novo) — só o usuário pode fazer essa verificação manual. T10 só pode ser marcada 100% concluída depois disso.
 - **Agentes:** verificação manual → implementação → `tester`.
 
 ---
@@ -129,10 +131,10 @@ sugerido, critério de "pronto" e dependências.
 ✅ T2  (privacidade/termos)         — concluído 2026-07-20
 
 ✅ T3  (teste do guard)            — concluído 2026-07-20
+✅ T5  (filtro por dono)            — concluído 2026-07-20, sem correção necessária
+🟡 T10 (cache SW pós-logout)        — corrigido 2026-07-20, falta confirmação manual em navegador
 
-1. T5  (filtro por dono)            ─┐
-2. T10 (cache SW pós-logout)        ├─ Onda 2 — próximo, segurança/qualidade, paralelizável entre si
-3. T4  (e2e — depois de T3/T10)     ┘  (T4 nasce cobrindo T1, T3 e T10 se feito por último)
+1. T4  (e2e — depois de T3/T10)     — próximo (nasce cobrindo T1, T3 e T10)
 
 5. T8 (trivial)                    ─┐
 6. T7 (multas)                      ├─ Onda 3 — quando houver folga

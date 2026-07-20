@@ -1037,6 +1037,32 @@ Mesmo padrão de estudo pré-implementação já usado em T3.9/T5.1/T5.4/T7.1: a
 
 ---
 
+### IMPACTO-039 — Correções de Bugs e Mudança de Ambiente de Dev — Sessão de Testes Manuais (2026-07-19)
+
+| Campo | Valor |
+|-------|-------|
+| **Spec** | SPEC-20260521-001 (S1 — autenticação); sem spec nova — são bugfixes restaurando o comportamento pretendido |
+| **Status** | Implementado em 2026-07-19/2026-07-20 |
+| **Risco geral** | Alto (Bug #1 — autenticação quebrada) / Baixo (demais) |
+
+Achados identificados durante sessão de testes manuais end-to-end. Relatório completo de QA em `docs/qa/2026-07-19-teste-cadastro-local.md`. Nenhum requisito novo — apenas correções que restauram o comportamento especificado pelas specs já aprovadas.
+
+| # | Mudança | Módulos afetados | Risco | Mitigação |
+|---|---------|-----------------|-------|-----------|
+| 1 | **Bug #1 — Validação de JWT assimétrico (S1):** `apps/api/src/common/guards/supabase-auth.guard.ts` validava o token localmente via `SUPABASE_JWT_SECRET` (HS256 estático), incompatível com o algoritmo real do projeto Supabase `Nave` (ES256/JWKS). Toda rota autenticada retornava 401 com token válido. Corrigido para usar `auth.getUser(token)` do SDK oficial Supabase — robusto a qualquer algoritmo e sem depender de secret local. O guard também passou a aceitar o token tanto via header `Authorization` quanto via cookie httpOnly (antes só header, o que quebraria o fluxo real do navegador) | `apps/api/src/common/guards/supabase-auth.guard.ts` | Alto | Corrigido; coberto por `supabase-auth.guard.spec.ts` (mock de `auth.getUser`). `apps/api/src/modules/auth/jwt.strategy.ts` foi simplificado para manter apenas o tipo `JwtPayload` (a `PassportStrategy` passport-jwt foi removida junto com o registro em `auth.module.ts`, pois a validação migrou para o guard) |
+| 2 | **Bug #2 — `ZodValidationPipe` validando parâmetro errado (2 rodadas):** `apps/api/src/common/pipes/zod-validation.pipe.ts`, usado tanto via `@UsePipes` (valida `@Body()`) quanto via `@Query(pipe)`, era aplicado pelo Nest a TODOS os parâmetros decorados do handler (incluindo `@UserId()` e `@Param("id")`), gerando 400 "Expected object, received string" em toda mutação real. Primeira correção (filtrar por `metadata.type !== 'body'`) quebrou os defaults de paginação de todos os endpoints de listagem (`GET /expenses`, `/fines`, `/maintenances` etc.). Segunda correção (final): o pipe usa `metadata.data` como sinal — pula quando é extração de chave específica (`@Query("strict")`, `@Param("id")`), valida quando é o objeto inteiro (`@Body()`, `@Query()` sem chave) | `apps/api/src/common/pipes/zod-validation.pipe.ts` | Alto | Corrigido; coberto por `zod-validation.pipe.spec.ts`. O bug não aparecia em testes unitários porque eles chamam o controller diretamente, sem passar pelo pipeline de pipes do Nest |
+| 3 | **Bug #3 — Erro de sintaxe SQL em migration:** `supabase/migrations/20260716130000_analytics_anomalies_benchmark.sql` usava `FILTER (WHERE ...)` sobre `(max(...) - min(...))` — construção inválida no Postgres (`FILTER` só aceita agregação isolada, não expressão). Quebraria a aplicação da migration em CI, staging e produção. Corrigido removendo o `FILTER` (que era redundante — `max()`/`min()` já ignoram NULL) | `supabase/migrations/20260716130000_analytics_anomalies_benchmark.sql` | Alto | Corrigido; migration verificada e aplicada via `supabase db push` ao remoto após a correção |
+| 4 | **Hardening de frontend — charts e error boundary:** `apps/web/src/components/charts/tco-breakdown-chart.tsx` e `fuel-trend-chart.tsx` passaram a tratar `breakdown`/`points` ausente como estado vazio em vez de lançar `Object.keys(undefined)`. Novo `apps/web/src/app/(app)/error.tsx` — error boundary do App Router cobrindo toda a área autenticada, usando `Alert` do design system (`@nave/ui`) com botão "Tentar novamente" e `Sentry.captureException` | `apps/web/src/components/charts/`, `apps/web/src/app/(app)/error.tsx` | Baixo | Defensivo; não altera lógica de negócio |
+| 5 | **Mudança de ambiente de dev (decisão explícita do usuário, 2026-07-19):** `apps/api/.env` passou a apontar para o projeto Supabase remoto real `Nave` (`sfkefpoanmoiagwxbwld`) em vez do Supabase local via Docker. Eliminado o drift de migrations e o problema de "dados temporários difíceis de reproduzir". `scripts/lab.mjs` atualizado para só rodar `supabase start` quando `SUPABASE_URL` aponta para localhost/127.0.0.1 — senão pula. Implicação conhecida e aceita pelo usuário: dados de teste estão misturados no banco remoto até a limpeza pré-lançamento (ver item 6) | `apps/api/.env`, `scripts/lab.mjs` | Médio | Implicação rastreada: TRUNCATE obrigatório antes de abrir para usuários reais (registrado em `important/PENDENCIAS-E-PROCESSOS.md`, Bloco 1) |
+| 6 | **Remoção de `SUPABASE_JWT_SECRET`:** após o Bug #1, a variável ficou morta (nenhum arquivo lê). Removida de `apps/api/.env`, `.env.test`, `.env.example`, `apps/api/src/common/config/env.validation.ts` (Joi schema), `.github/workflows/ci.yml`, `docs/reference/environment-variables.md` e `docs/operations/disaster-recovery.md` | `apps/api` (infra/config) | Baixo | Mudança de limpeza; docs atualizados com nota explicativa |
+| 7 | **Realinhamento de migrations remotas:** o projeto Supabase remoto `Nave` tinha 4 migrations aplicadas sob timestamps diferentes dos arquivos locais (mesmo conteúdo, renomeados localmente em ciclo anterior). Realinhado via `supabase migration repair` (bookkeeping puro, sem re-executar SQL); as 3 migrations de analytics (incluindo a do Bug #3, já corrigida) aplicadas via `supabase db push`. Remoto agora 100% sincronizado com `supabase/migrations/` | `supabase/migrations/` | Baixo | Operação de reparo apenas; nenhum SQL de dados foi executado |
+
+**Riscos a observar:**
+- O banco remoto `Nave` (que será produção) contém dados de teste misturados com dados reais de desenvolvimento. Um TRUNCATE controlado das tabelas de dados de usuário (`expenses`, `maintenances`, `fines`, `vehicle_recurring_costs`, `vehicles`, `profiles`, `audit_logs`) é **pré-requisito obrigatório antes de abrir o acesso a usuários reais**. Não existe staging separado ainda (pendência conhecida registrada em `important/PENDENCIAS-E-PROCESSOS.md`).
+- A remoção da estratégia passport-jwt em `auth.module.ts` torna o módulo incompatível com qualquer `@UseGuards(AuthGuard('jwt'))` remanescente — confirmar via `grep` que nenhum controller usa esse guard (todos devem usar `SupabaseAuthGuard`).
+
+---
+
 ## Legenda de Risco
 
 | Nível | Critério |

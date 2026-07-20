@@ -179,7 +179,7 @@
 
 | ID | Regra | Referência |
 |----|-------|------------|
-| C1 | Dados pessoais processados sob LGPD; exclusão completa acionada via `DELETE /users/me` com cascata em todas as tabelas do usuário | [SPEC-20260521-004](admin/SPEC-20260521-004.md) |
+| C1 | Dados pessoais processados sob LGPD; exclusão completa acionada via `DELETE /users/me`. Fluxo: (1) soft-delete imediato — `profiles.deleted_at` preenchido, `name`/`preferences` permanecem intactos durante a janela (sem anonimização imediata — estratégia definitiva de anonimização de PII fica para spec dedicada futura), acesso bloqueado pelo `SupabaseAuthGuard` em toda rota autenticada; (2) restauração possível via `POST /users/me/restore` dentro da janela (R-BIZ-05); (3) hard delete via job agendado (`pg_cron`) após 30 dias de período de graça, caso não haja restore. Cascata `ON DELETE CASCADE` a partir de `auth.users` remove todos os dados transacionais do usuário no hard delete. Admin pode executar hard delete imediato via `DELETE /admin/users/:id` (sem período de graça) para atender pedidos urgentes de compliance | [SPEC-20260521-004](admin/SPEC-20260521-004.md), [SPEC-20260719-002](admin/SPEC-20260719-002-soft-delete-retencao-conta.md) |
 | C2 | Audit log registrado em toda Server Action mutante e em toda operação REST que altera dados; campos obrigatórios: `action`, `table_name`, `record_id`, `changes` | [SPEC-20260521-001](security/SPEC-20260521-001.md) |
 
 ---

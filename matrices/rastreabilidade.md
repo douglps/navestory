@@ -1438,7 +1438,7 @@ que o artefato ainda não existe no repositório.
 |-----|-----------|--------|-------|--------|
 | STORY-REG-01 | Registro com rollback atômico em falha de criação de perfil; `POST /auth/register` | `apps/api/src/modules/auth/auth.service.ts`, `apps/api/src/modules/auth/auth.controller.ts`, `apps/api/src/modules/auth/dto/register.dto.ts` | `apps/api/` (Jest, 67 testes, 90%+ cobertura); `apps/api/test/integration/auth.int-spec.ts` (CT-006) | ✅ |
 | STORY-REG-01 | E-mail duplicado → 409 + mensagem direcionada no frontend | `apps/api/src/modules/auth/auth.service.ts` | `apps/api/` (Jest) | ✅ |
-| STORY-01 | `POST /auth/login` — retorna JWT; audit REGISTER/LOGIN | `apps/api/src/modules/auth/auth.service.ts`, `apps/api/src/modules/auth/auth.controller.ts`, `apps/api/src/modules/auth/dto/login.dto.ts`, `apps/api/src/modules/auth/jwt.strategy.ts` | `apps/api/` (Jest); `apps/api/test/integration/auth.int-spec.ts` | ✅ |
+| STORY-01 | `POST /auth/login` — retorna JWT; audit REGISTER/LOGIN | `apps/api/src/modules/auth/auth.service.ts`, `apps/api/src/modules/auth/auth.controller.ts`, `apps/api/src/modules/auth/dto/login.dto.ts`, `apps/api/src/modules/auth/jwt.strategy.ts` (tipo `JwtPayload` — a `PassportStrategy` foi removida em 2026-07-19; validação migrada para `SupabaseAuthGuard`) | `apps/api/` (Jest); `apps/api/test/integration/auth.int-spec.ts` | ✅ |
 | STORY-02 | Mensagem INVALID_CREDENTIALS genérica (anti-enumeração) | `apps/api/src/modules/auth/auth.service.ts` | `apps/api/` (Jest) | ✅ |
 | STORY-03 | Bloqueio por tentativas via `supabase/migrations/20260713190000_auth_login_attempts.sql` | `supabase/migrations/20260713190000_auth_login_attempts.sql`, `apps/api/src/modules/auth/auth.service.ts` | `apps/api/` (Jest) | ✅ |
 | STORY-04 | `POST /auth/recover-password` → 200 sempre; rate limit 3/15min | `apps/api/src/modules/auth/auth.controller.ts`, `apps/api/src/modules/auth/dto/recover-password.dto.ts` | `apps/api/` (Jest) | ✅ |
@@ -1510,6 +1510,113 @@ que o artefato ainda não existe no repositório.
 |-----|-----------|--------|-------|--------|
 | — | `@UserId()` decorator — extrai userId do JWT para controllers | `apps/api/src/common/decorators/user-id.decorator.ts` | `apps/api/` (Jest) | ✅ |
 | — | `GET /users/me` e `PATCH /users/me` — perfil do usuário autenticado | `apps/api/src/modules/users/users.controller.ts`, `apps/api/src/modules/users/users.service.ts` | `apps/api/` (Jest) | ✅ |
+
+---
+
+## SPEC-20260719-002 — Soft-Delete Real com Retenção de 30 Dias — Exclusão de Conta (Draft)
+
+> Correção do achado de auditoria 2026-07-19: `DELETE /users/me` passa a ser soft-delete real
+> (`profiles.deleted_at = now()` sem anonimização imediata — anonimização movida para o
+> hard-delete final); hard delete executado por job `pg_cron` após 30 dias. Inclui restore
+> (`POST /users/me/restore`) e distinção 403 ACCOUNT_PENDING_DELETION no guard.
+> Complementa SPEC-20260521-004 RNF-03. Ver changelog de SPEC-20260521-004.
+> **Atualização 2026-07-20**: restore adicionado ao escopo (RF-08/RF-09/RF-10); anonimização
+> imediata revertida (RF-01 atualizado); RF-11/RF-12 para Storage especificados. Implementação
+> concluída — RF-03 (`signOut` explícito) removido do escopo real: a GoTrue Admin API não
+> expõe invalidação de sessão por `userId` (só por JWT ou `deleteUser`); o guard (RF-09) já
+> garante o bloqueio de acesso independentemente da sessão Supabase ainda ser tecnicamente
+> válida. Estratégia definitiva de anonimização de PII fica para spec dedicada futura (ver
+> memória de projeto).
+
+### Backend — UsersModule
+
+| Req | Descrição | Código | Teste | Status |
+|-----|-----------|--------|-------|--------|
+| RF-01 | `deleteAccount` refatorado: UPDATE em `profiles` (`deleted_at = now()` apenas, sem anonimização), audit log `ACCOUNT_DELETION_REQUESTED`. Sem chamada explícita de revogação de sessão — GoTrue Admin API não expõe invalidação por `userId` (só por JWT de sessão ou `deleteUser`); o bloqueio é garantido pelo guard (RF-09) | `apps/api/src/modules/users/users.service.ts` | `apps/api/src/modules/users/users.service.spec.ts` | ✅ |
+| RF-02 | 404 se `profiles` não encontrado ou já soft-deleted | `apps/api/src/modules/users/users.service.ts` | `apps/api/src/modules/users/users.service.spec.ts` | ✅ |
+| RF-03 | *(revisado)* Não há chamada de `signOut` a reverter — nota técnica da spec atualizada para refletir que a GoTrue Admin API não suporta essa operação por `userId` (ver RF-01) | — | — | ✅ (não aplicável — ver RF-01) |
+| RF-07 | `DELETE /admin/users/:id` mantém hard-delete imediato (sem período de graça) | já implementado (SPEC-20260521-004 RF-08) | já coberto | ✅ |
+| RF-08 | `POST /users/me/restore` — zera `deleted_at`, audit log `ACCOUNT_RESTORED`, retorna 200/409 | `apps/api/src/modules/users/users.service.ts`, `apps/api/src/modules/users/account-restore.controller.ts` | `apps/api/src/modules/users/users.service.spec.ts`, `apps/api/src/modules/users/account-restore.controller.spec.ts` | ✅ |
+| RF-09 | `SupabaseAuthGuard` retorna 403 + `{ code: "ACCOUNT_PENDING_DELETION" }` para contas soft-deleted (antes retornava 401 genérico). Inclui correção do `HttpExceptionFilter`, que descartava `code`/`deleted_at` antes de chegar ao frontend | `apps/api/src/common/guards/supabase-auth.guard.ts`, `apps/api/src/common/filters/http-exception.filter.ts` | `apps/api/src/common/guards/supabase-auth.guard.spec.ts`, `apps/api/src/common/filters/http-exception.filter.spec.ts` | ✅ |
+| RF-10 | `SoftDeletedUserGuard` — guard que aceita tokens de contas com `deleted_at IS NOT NULL`, usado exclusivamente em `POST /users/me/restore` | `apps/api/src/common/guards/soft-deleted-user.guard.ts` | `apps/api/src/common/guards/soft-deleted-user.guard.spec.ts` | ✅ |
+
+### Database — Migration
+
+| Req | Descrição | Código | Teste | Status |
+|-----|-----------|--------|-------|--------|
+| RF-04 | Migration: function `hard_delete_expired_accounts()` + job `pg_cron` | `supabase/migrations/20260720000000_soft_delete_account_job.sql` | manual (`supabase db reset` local) — sem harness de teste de migration no projeto | ✅ código / ⏳ teste manual |
+| RF-05 | Function executa audit log + DELETE em `auth.users` para contas com `deleted_at < now() - 30 days` | `supabase/migrations/20260720000000_soft_delete_account_job.sql` | idem RF-04 | ✅ código / ⏳ teste manual |
+| RF-06 | Migration dropa trigger `before_delete_profiles` | `supabase/migrations/20260720000000_soft_delete_account_job.sql` | idem RF-04 | ✅ |
+
+### Storage e Limitações (MVP)
+
+| Req | Descrição | Código | Teste | Status |
+|-----|-----------|--------|-------|--------|
+| RF-11 | Arquivos físicos no Storage permanecem intactos durante os 30 dias (sem job de limpeza antecipada) | (comportamento por omissão — sem código novo) | — | ✅ por omissão |
+| RF-12 | Limitação MVP: job SQL não remove objetos físicos do Storage no hard-delete. Dívida técnica documentada em `important/PENDENCIAS-E-PROCESSOS.md` | — | — | ❌ limitação MVP |
+
+---
+
+## SPEC-20260719-001 — UI de Exclusão de Conta pelo Próprio Usuário (Draft)
+
+> UI para LGPD Art. 18 (direito ao esquecimento em autoatendimento). Inclui: componente
+> `Dialog` no design system, página `/settings/account`, fluxo de exclusão em duas etapas,
+> fluxo de restore via login (detecta 403 ACCOUNT_PENDING_DELETION).
+> Depende de SPEC-20260719-002 (pré-requisito backend, implementação concluída).
+> **Atualização 2026-07-20**: implementação concluída para RF-01 a RF-15. RF-11 (banner de
+> aviso dentro do grupo `(app)`) revelou-se inalcançável na prática — o guard já bloqueia toda
+> rota autenticada antes que qualquer página do app renderize com uma conta pendente,
+> substituindo o banner in-app pelo redirecionamento global já existente (RF-13). RF-16
+> (fallback de imagem) não tem elemento de UI para se aplicar ainda — não implementado, ver
+> nota na tabela abaixo.
+
+### Design System — Componente Dialog
+
+| Req | Descrição | Código | Teste | Status |
+|-----|-----------|--------|-------|--------|
+| RF-01 | Componente `Dialog` em `packages/ui/src/components/dialog.tsx` com subcomponentes Radix (`Dialog`, `DialogTrigger`, `DialogContent`, `DialogHeader`, `DialogFooter`, `DialogTitle`, `DialogDescription`, `DialogClose`) | `packages/ui/src/components/dialog.tsx` | `packages/ui/src/components/dialog.test.tsx` | ✅ |
+| RF-02 | `DialogContent` com focus-trap, `Esc`, `aria-labelledby`, `aria-describedby` (herdados do Radix via `Title`/`Description`) | `packages/ui/src/components/dialog.tsx` | `packages/ui/src/components/dialog.test.tsx` | ✅ |
+| RF-03 | Testes do Dialog (`dialog.test.tsx`) — abrir/fechar via trigger, close button, `DialogClose` customizado, Esc, `onOpenChange`, `hideCloseButton`, jest-axe | `packages/ui/src/components/dialog.test.tsx` | idem | ✅ |
+| RF-12 | Export do Dialog em `packages/ui/src/index.ts` | `packages/ui/src/index.ts` | `packages/ui/src/components/dialog.test.tsx` | ✅ |
+
+### Frontend — Página `/settings/account`
+
+| Req | Descrição | Código | Teste | Status |
+|-----|-----------|--------|-------|--------|
+| RF-04 | Página `(app)/settings/account/page.tsx` com seção de identificação e "Zona de perigo"; `GET /users/me` estendido com `email` (extraído do JWT via `SupabaseAuthGuard`, não existe em `profiles`) | `apps/web/src/app/(app)/settings/account/page.tsx`, `apps/api/src/modules/users/users.controller.ts` | `apps/web/src/app/(app)/settings/account/page.spec.tsx`, `apps/api/src/modules/users/users.controller.spec.ts` | ✅ |
+| RF-05 | Botão `variant="destructive"` "Excluir minha conta" abre Dialog | `apps/web/src/app/(app)/settings/account/delete-account-dialog.tsx` | `apps/web/src/app/(app)/settings/account/page.spec.tsx` | ✅ |
+| RF-06 | Dialog de confirmação com consequências e campo de texto | `apps/web/src/app/(app)/settings/account/delete-account-dialog.tsx` | idem | ✅ |
+| RF-07 | Campo de confirmação: habilitado só com `value.trim() === 'EXCLUIR'` | `apps/web/src/app/(app)/settings/account/delete-account-dialog.tsx` | idem | ✅ |
+| RF-08 | Chama `DELETE /users/me` com `{ confirm: true }` | `apps/web/src/app/(app)/settings/account/delete-account-dialog.tsx` | idem | ✅ |
+| RF-09 | Em 204: fechar Dialog, redirecionar `/login?message=conta_excluida`, exibir `Alert variant="info"` na página de login informando que a solicitação foi registrada | `apps/web/src/app/(app)/settings/account/delete-account-dialog.tsx`, `apps/web/src/app/(auth)/login/page.tsx` | `apps/web/src/app/(app)/settings/account/page.spec.tsx`, `apps/web/src/app/(auth)/login/page.spec.tsx` | ✅ (sem chamada explícita de logout — o backend não invalida sessão por `userId`, ver SPEC-20260719-002 RF-01/RF-03; o próximo request autenticado já cai em 403 ACCOUNT_PENDING_DELETION e é redirecionado globalmente pelo `apiClient`, RF-13) |
+| RF-10 | Em erro: manter Dialog, exibir `Alert variant="error"`, limpar campo | `apps/web/src/app/(app)/settings/account/delete-account-dialog.tsx` | idem | ✅ |
+| RF-11 | Se `deleted_at IS NOT NULL`: Alert warning + data de hard-delete + botão "Cancelar exclusão" | — | — | ✅ não aplicável — o `SupabaseAuthGuard` já bloqueia **toda** rota autenticada com 403 `ACCOUNT_PENDING_DELETION` quando `deleted_at != null` (SPEC-20260719-002 RF-09); a interceptação global do `apiClient` (RF-13) redireciona para `/restore-account` antes de `/settings/account` conseguir renderizar com uma conta pendente — o estado descrito neste RF é inalcançável na prática, a UI de aviso vive inteiramente em `/restore-account` |
+
+### Frontend — Fluxo de Restore
+
+| Req | Descrição | Código | Teste | Status |
+|-----|-----------|--------|-------|--------|
+| RF-13 | Interceptação global: qualquer 403 `ACCOUNT_PENDING_DELETION` (não só no login) redireciona para `/restore-account` | `apps/web/src/lib/http/api-client.ts`, `apps/web/src/app/(auth)/login/page.tsx` | `apps/web/src/lib/http/api-client.spec.ts`, `apps/web/src/app/(auth)/login/page.spec.tsx` | ✅ |
+| RF-14 | Página `/restore-account` com data de exclusão, lista do que é preservado, botão de restore e botão de desistência. Rota sempre pública no middleware (sem redirect em nenhum sentido) — acesso direto sem cookie não força `/login` antes, alinhado à nota técnica da spec ("Tela de restore e grupo de rota") | `apps/web/src/app/(auth)/restore-account/page.tsx`, `apps/web/middleware.ts` | `apps/web/src/app/(auth)/restore-account/page.spec.tsx`, `apps/web/middleware.spec.ts` | ✅ |
+| RF-15 | Chama `POST /users/me/restore`; em 200: redireciona dashboard com toast; em erro: Alert sem deslogar | `apps/web/src/app/(auth)/restore-account/page.tsx` | `apps/web/src/app/(auth)/restore-account/page.spec.tsx` | ✅ |
+| RF-16 | Graceful degradation para imagens Storage com `onError` → placeholder `ImageOff` | — | — | ❌ não implementado — nenhuma tela do app hoje renderiza `<img>` de URL de Storage (nem `vehicles/[id]`, nem listagens); campo `photo_url`/`photo_thumbnail_url` existe no backend mas não tem consumidor de UI ainda. Sem elemento existente para aplicar `onError`. Dívida documentada em `important/PENDENCIAS-E-PROCESSOS.md` — revisitar quando a feature de fotos de veículo ganhar UI |
+
+---
+
+## SPEC-20260720-001 — Páginas Públicas de Política de Privacidade e Termos de Uso (Aprovada)
+
+> Auditoria 2026-07-19, Achado #2 (T2). O conteúdo jurídico já existia em `docs/legal/` (fonte
+> única de verdade); faltava a distribuição — rotas públicas, link nos pontos de entrada e
+> aceite explícito no cadastro.
+
+| Req | Descrição | Código | Teste | Status |
+|-----|-----------|--------|-------|--------|
+| RF-01 | Página `/privacidade` (Server Component) lê `docs/legal/privacy-policy.md` e renderiza como Markdown | `apps/web/src/app/privacidade/page.tsx`, `apps/web/src/components/legal-document.tsx` | `apps/web/src/app/privacidade/page.spec.tsx` | ✅ |
+| RF-02 | Página `/termos` análoga, lendo `docs/legal/terms-of-service.md` | `apps/web/src/app/termos/page.tsx` | `apps/web/src/app/termos/page.spec.tsx` | ✅ |
+| RF-03 | `react-markdown` + `remark-gfm` (tabelas) + `@tailwindcss/typography` adicionados a `apps/web` | `apps/web/package.json`, `apps/web/tailwind.config.ts` | build de produção (`next build`) gera `/privacidade` e `/termos` como rotas estáticas — confirma que a leitura de `docs/legal/*.md` funciona em build time | ✅ |
+| RF-04 | `/privacidade` e `/termos` sempre públicas no middleware (sem redirect em nenhum sentido) | `apps/web/middleware.ts` | `apps/web/middleware.spec.ts` | ✅ |
+| RF-05 | `LegalFooter` (links para `/termos` e `/privacidade`) incluído em `/`, `/login` e `/register` | `apps/web/src/components/legal-footer.tsx`, `apps/web/src/app/page.tsx`, `apps/web/src/app/(auth)/login/page.tsx`, `apps/web/src/app/(auth)/register/page.tsx` | coberto indiretamente pelos specs de cada página (rodapé estático, sem lógica) | ✅ |
+| RF-06 | Checkbox obrigatório de aceite dos Termos/Privacidade em `/register`; botão "Criar conta" desabilitado até marcar | `apps/web/src/app/(auth)/register/page.tsx` | `apps/web/src/app/(auth)/register/page.spec.tsx` | ✅ |
 
 ---
 

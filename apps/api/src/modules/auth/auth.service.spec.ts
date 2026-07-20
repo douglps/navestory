@@ -156,6 +156,20 @@ describe("AuthService", () => {
       expect(session.accessToken).toBe("access-token");
       expect(profilesBuilder.maybeSingle).toHaveBeenCalledTimes(2);
     });
+
+    it("reporta o erro real e desiste sem retry quando a consulta de profile falha (ex: credencial inválida)", async () => {
+      const { service, supabaseAdmin } = createService({
+        profilesResult: { data: null, error: { message: "JWT invalid" } },
+      });
+      const profilesBuilder = supabaseAdmin.from("profiles") as ReturnType<
+        typeof createQueryBuilder
+      >;
+
+      await expect(
+        service.register({ name: "Ana", email: "ana@example.com", password: "abc12!", profile_type: "autonomous" }),
+      ).rejects.toThrow("Falha ao consultar perfil da conta: JWT invalid");
+      expect(profilesBuilder.maybeSingle).toHaveBeenCalledTimes(1);
+    });
   });
 
   describe("login", () => {

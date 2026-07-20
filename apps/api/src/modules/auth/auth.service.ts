@@ -166,10 +166,10 @@ export class AuthService {
   /**
    * @spec SPEC-20260524-001 STORY-REG-01
    * `handle_new_user` insere o profile na mesma transação do INSERT em auth.users feito pelo
-   * GoTrue, mas a leitura seguinte via PostgREST é uma requisição HTTP separada — sob latência
-   * (observado na CI, nunca localmente), a primeira leitura pode ocorrer antes da visibilidade
-   * do commit se propagar. Poucas tentativas curtas absorvem essa janela sem mascarar uma falha
-   * real da trigger (que continuaria retornando null após todas as tentativas).
+   * GoTrue, mas a leitura seguinte via PostgREST é uma requisição HTTP separada — retries curtos
+   * absorvem uma eventual janela de lag de visibilidade sem mascarar uma falha real da trigger
+   * (que continuaria retornando null após todas as tentativas). Erro de query (ex: credencial
+   * inválida) não é lag — é reportado imediatamente, sem retry, para não esconder a causa real.
    */
   private async findProfileWithRetry(
     userId: string,
@@ -177,7 +177,7 @@ export class AuthService {
     delayMs = 150,
   ): Promise<{ id: string } | null> {
     for (let attempt = 1; attempt <= attempts; attempt++) {
-      const { data: profile } = await this.supabaseAdmin
+      const { data: profile, error } = await this.supabaseAdmin
         .from("profiles")
         .select("id")
         .eq("id", userId)
@@ -185,6 +185,12 @@ export class AuthService {
 
       if (profile) {
         return profile;
+      }
+
+      // Erro de query (ex: chave/permissão inválida) não é "lag de leitura" — retry não resolve
+      // e mascarar como "perfil não encontrado" esconde a causa real. Falha alto e imediatamente.
+      if (error) {
+        throw new InternalServerErrorException(`Falha ao consultar perfil da conta: ${error.message}`);
       }
 
       if (attempt < attempts) {

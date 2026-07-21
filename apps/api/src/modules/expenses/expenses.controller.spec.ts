@@ -158,4 +158,20 @@ describe("ExpensesController", () => {
       controller.findAll(reqSemToken, "u1", { page: 1, limit: 20 } as never),
     ).rejects.toBeInstanceOf(UnauthorizedException);
   });
+
+  it("usa o cookie de sessão quando não há header Authorization", async () => {
+    const { controller, expensesService } = createController();
+    const reqComCookie = {
+      headers: {},
+      cookies: { nave_access_token: "cookie-token" },
+    } as unknown as Request;
+
+    await controller.findAll(reqComCookie, "u1", { page: 1, limit: 20 } as never);
+
+    expect(expensesService.findAll).toHaveBeenCalledWith(
+      "cookie-token",
+      "u1",
+      { page: 1, limit: 20 },
+    );
+  });
 });

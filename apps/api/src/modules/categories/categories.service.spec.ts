@@ -40,6 +40,43 @@ describe("CategoriesService", () => {
     expect(result.custom).toHaveLength(1);
   });
 
+  it("findAll lança 404 quando a query falha", async () => {
+    const builder: Record<string, unknown> = {};
+    builder.select = jest.fn().mockReturnValue(builder);
+    builder.eq = jest.fn().mockReturnValue(builder);
+    builder.order = jest.fn().mockResolvedValue({ data: null, error: { message: "boom" } });
+    mockClient(builder);
+    const service = createService();
+
+    await expect(service.findAll("token", "u1")).rejects.toBeInstanceOf(NotFoundException);
+  });
+
+  it("create lança 404 quando a contagem do limite falha", async () => {
+    const builder: Record<string, unknown> = {};
+    builder.select = jest.fn().mockReturnValue(builder);
+    builder.eq = jest.fn().mockResolvedValue({ count: null, error: { message: "boom" } });
+    mockClient(builder);
+    const service = createService();
+
+    await expect(
+      service.create("token", "u1", { value: "custom", label: "X" }),
+    ).rejects.toBeInstanceOf(NotFoundException);
+  });
+
+  it("create lança 404 em erro genérico do insert (não violação de unicidade)", async () => {
+    const builder: Record<string, unknown> = {};
+    builder.select = jest.fn().mockReturnValue(builder);
+    builder.eq = jest.fn().mockResolvedValueOnce({ count: 0, error: null });
+    builder.insert = jest.fn().mockReturnValue(builder);
+    builder.single = jest.fn().mockResolvedValue({ data: null, error: { message: "boom" } });
+    mockClient(builder);
+    const service = createService();
+
+    await expect(
+      service.create("token", "u1", { value: "custom", label: "X" }),
+    ).rejects.toBeInstanceOf(NotFoundException);
+  });
+
   it("create lança 409 quando value coincide com categoria padrão (RF-04, CA-02)", async () => {
     const service = createService();
 
@@ -123,5 +160,21 @@ describe("CategoriesService", () => {
 
     await expect(service.remove("token", "u1", "c1")).resolves.toBeUndefined();
     expect(builder.delete).toHaveBeenCalled();
+  });
+
+  it("remove lança 404 quando o delete falha", async () => {
+    const builder: Record<string, unknown> = {};
+    builder.select = jest.fn().mockReturnValue(builder);
+    let eqCalls = 0;
+    builder.eq = jest.fn().mockImplementation(() => {
+      eqCalls += 1;
+      return eqCalls === 4 ? { error: { message: "boom" } } : builder;
+    });
+    builder.maybeSingle = jest.fn().mockResolvedValue({ data: { id: "c1" }, error: null });
+    builder.delete = jest.fn().mockReturnValue(builder);
+    mockClient(builder);
+    const service = createService();
+
+    await expect(service.remove("token", "u1", "c1")).rejects.toBeInstanceOf(NotFoundException);
   });
 });

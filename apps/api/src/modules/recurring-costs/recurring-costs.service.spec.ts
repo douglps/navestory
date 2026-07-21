@@ -234,4 +234,107 @@ describe("RecurringCostsService", () => {
 
     await expect(service.findOne("token", "u1", "rc1")).rejects.toBeInstanceOf(NotFoundException);
   });
+
+  it("findAll aplica filtros de vehicle_id, year e cost_type", async () => {
+    const { builders } = mockClient({
+      vehicle_recurring_costs: { data: [], error: null },
+    });
+    const { service } = createService();
+
+    await service.findAll("token", "u1", {
+      vehicle_id: "veh1",
+      year: 2026,
+      cost_type: "ipva",
+    } as never);
+
+    expect(builders.get("vehicle_recurring_costs")!.eq).toHaveBeenCalledWith("vehicle_id", "veh1");
+    expect(builders.get("vehicle_recurring_costs")!.eq).toHaveBeenCalledWith("year", 2026);
+    expect(builders.get("vehicle_recurring_costs")!.eq).toHaveBeenCalledWith("cost_type", "ipva");
+  });
+
+  it("findAll aplica filtro paid=false", async () => {
+    const { builders } = mockClient({
+      vehicle_recurring_costs: { data: [], error: null },
+    });
+    const { service } = createService();
+
+    await service.findAll("token", "u1", { paid: false } as never);
+
+    expect(builders.get("vehicle_recurring_costs")!.is).toHaveBeenCalledWith("paid_at", null);
+  });
+
+  it("findAll lança 404 quando a query falha", async () => {
+    mockClient({ vehicle_recurring_costs: { data: null, error: { message: "boom" } } });
+    const { service } = createService();
+
+    await expect(service.findAll("token", "u1", {} as never)).rejects.toBeInstanceOf(
+      NotFoundException,
+    );
+  });
+
+  it("create lança 404 quando o insert falha", async () => {
+    mockClient({
+      vehicles: { data: { id: "veh1" }, error: null },
+      vehicle_recurring_costs: [
+        { data: null, error: null },
+        { data: null, error: { message: "boom" } },
+      ],
+    });
+    const { service } = createService();
+
+    await expect(service.create("token", "u1", createDto as never)).rejects.toBeInstanceOf(
+      NotFoundException,
+    );
+  });
+
+  it("update lança 404 quando o update falha", async () => {
+    mockClient({
+      vehicle_recurring_costs: [
+        { data: { id: "rc1", vehicle_id: "veh1", cost_type: "ipva", year: 2026, amount: 1250, paid_at: null }, error: null },
+        { data: null, error: { message: "boom" } },
+      ],
+    });
+    const { service } = createService();
+
+    await expect(
+      service.update("token", "u1", "rc1", { notes: "x" } as never),
+    ).rejects.toBeInstanceOf(NotFoundException);
+  });
+
+  it("remove lança 404 quando o soft-delete falha", async () => {
+    mockClient({
+      vehicle_recurring_costs: [
+        { data: { id: "rc1", paid_at: null }, error: null },
+        { error: { message: "boom" } },
+      ],
+    });
+    const { service } = createService();
+
+    await expect(service.remove("token", "u1", "rc1")).rejects.toBeInstanceOf(NotFoundException);
+  });
+
+  it("update ao pagar mantém o registro original quando o linkToLedger falha ao gravar o expense_id", async () => {
+    mockClient({
+      vehicle_recurring_costs: [
+        { data: { id: "rc1", vehicle_id: "veh1", cost_type: "ipva", year: 2026, amount: 1250, paid_at: null }, error: null },
+        {
+          data: {
+            id: "rc1",
+            vehicle_id: "veh1",
+            cost_type: "ipva",
+            year: 2026,
+            amount: 1250,
+            paid_at: "2026-03-15",
+          },
+          error: null,
+        },
+        { data: null, error: { message: "boom" } },
+      ],
+    });
+    const { service } = createService();
+
+    const result = await service.update("token", "u1", "rc1", { paid_at: "2026-03-15" } as never);
+
+    expect(result).toMatchObject({ id: "rc1", paid_at: "2026-03-15" });
+  });
 });

@@ -85,4 +85,16 @@ describe("FinesController", () => {
       UnauthorizedException,
     );
   });
+
+  it("usa o cookie de sessão quando não há header Authorization", async () => {
+    const { controller, finesService } = createController();
+    const reqComCookie = {
+      headers: {},
+      cookies: { nave_access_token: "cookie-token" },
+    } as unknown as Request;
+
+    await controller.findOne(reqComCookie, "u1", "f1");
+
+    expect(finesService.findOne).toHaveBeenCalledWith("cookie-token", "u1", "f1");
+  });
 });

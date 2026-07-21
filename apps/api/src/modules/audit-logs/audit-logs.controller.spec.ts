@@ -34,4 +34,16 @@ describe("AuditLogsController", () => {
       UnauthorizedException,
     );
   });
+
+  it("usa o cookie de sessão quando não há header Authorization", async () => {
+    const { controller, auditLogsService } = createController();
+    const reqComCookie = {
+      headers: {},
+      cookies: { nave_access_token: "cookie-token" },
+    } as unknown as Request;
+
+    await controller.findRecent(reqComCookie, "u1");
+
+    expect(auditLogsService.findRecent).toHaveBeenCalledWith("cookie-token", "u1");
+  });
 });

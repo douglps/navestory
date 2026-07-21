@@ -41,6 +41,9 @@ describe("MaintenancesService", () => {
   function mockClient(resultsByTable: Record<string, unknown>) {
     const results = new Map(Object.entries(resultsByTable));
     const builders = new Map<string, Record<string, unknown>>();
+    for (const [table, result] of results) {
+      builders.set(table, buildTerminalBuilder(result));
+    }
     const client = {
       from: jest.fn((table: string) => {
         if (!builders.has(table)) {
@@ -127,6 +130,110 @@ describe("MaintenancesService", () => {
     );
 
     expect(maintenance).toMatchObject({ odometer_warning: true, odometer_previous_max_km: 80000 });
+  });
+
+  it("create lança 404 quando o insert falha", async () => {
+    mockClient({
+      vehicles: { data: { id: "veh1" }, error: null },
+      maintenances: { data: null, error: { message: "boom" } },
+    });
+    const { service } = createService();
+
+    await expect(service.create("token", "u1", createDto as never)).rejects.toBeInstanceOf(
+      NotFoundException,
+    );
+  });
+
+  it("create com odometer_km sem manutenção anterior registrada não gera warning (RF-09)", async () => {
+    mockClient({
+      vehicles: { data: { id: "veh1" }, error: null },
+      maintenances: [
+        { data: { id: "m1", vehicle_id: "veh1", status: "scheduled", odometer_km: 50000 }, error: null },
+        { data: null, error: null },
+      ],
+    });
+    const { service } = createService();
+
+    const maintenance = await service.create(
+      "token",
+      "u1",
+      { ...createDto, odometer_km: 50000 } as never,
+    );
+
+    expect(maintenance.odometer_warning).toBeUndefined();
+  });
+
+  it("create com odometer_km maior ou igual ao máximo não gera warning (RF-09)", async () => {
+    mockClient({
+      vehicles: { data: { id: "veh1" }, error: null },
+      maintenances: [
+        { data: { id: "m1", vehicle_id: "veh1", status: "scheduled", odometer_km: 90000 }, error: null },
+        { data: { odometer_km: 80000 }, error: null },
+      ],
+    });
+    const { service } = createService();
+
+    const maintenance = await service.create(
+      "token",
+      "u1",
+      { ...createDto, odometer_km: 90000 } as never,
+    );
+
+    expect(maintenance.odometer_warning).toBeUndefined();
+  });
+
+  it("create tolera falha inesperada ao verificar sequência de odômetro (RF-09)", async () => {
+    const { builders } = mockClient({
+      vehicles: { data: { id: "veh1" }, error: null },
+      maintenances: [
+        { data: { id: "m1", vehicle_id: "veh1", status: "scheduled", odometer_km: 50000 }, error: null },
+      ],
+    });
+    const { service } = createService();
+    const maintenancesBuilder = builders.get("maintenances")!;
+    (maintenancesBuilder.maybeSingle as jest.Mock).mockImplementationOnce(() => {
+      throw new Error("falha inesperada");
+    });
+
+    const maintenance = await service.create(
+      "token",
+      "u1",
+      { ...createDto, odometer_km: 50000 } as never,
+    );
+
+    expect(maintenance.odometer_warning).toBeUndefined();
+  });
+
+  describe("findAll (RF-04)", () => {
+    it("lista manutenções paginadas com filtros de veículo e status", async () => {
+      const { builders } = mockClient({
+        maintenances: { data: [{ id: "m1" }], error: null, count: 1 },
+      });
+      const { service } = createService();
+
+      const result = await service.findAll("token", "u1", {
+        page: 1,
+        limit: 20,
+        vehicle_id: "veh1",
+        status: "scheduled",
+      } as never);
+
+      expect(builders.get("maintenances")!.eq).toHaveBeenCalledWith("vehicle_id", "veh1");
+      expect(builders.get("maintenances")!.eq).toHaveBeenCalledWith("status", "scheduled");
+      expect(result).toEqual({
+        data: [{ id: "m1" }],
+        meta: { total: 1, page: 1, limit: 20, has_next: false },
+      });
+    });
+
+    it("lança 404 quando a query falha", async () => {
+      mockClient({ maintenances: { data: null, error: { message: "boom" }, count: 0 } });
+      const { service } = createService();
+
+      await expect(
+        service.findAll("token", "u1", { page: 1, limit: 20 } as never),
+      ).rejects.toBeInstanceOf(NotFoundException);
+    });
   });
 
   it("findOne lança 404 quando a manutenção não existe ou não pertence ao usuário (RF-05)", async () => {
@@ -320,5 +427,34 @@ describe("MaintenancesService", () => {
     await service.remove("token", "u1", "m1");
 
     expect(expensesService.softDeleteBySource).toHaveBeenCalledWith("token", "u1", "maintenance", "m1");
+  });
+
+  it("update lança 404 quando o update falha", async () => {
+    mockClient({
+      maintenances: [
+        {
+          data: { id: "m1", vehicle_id: "veh1", status: "scheduled", odometer_km: null, cost: null },
+          error: null,
+        },
+        { data: null, error: { message: "boom" } },
+      ],
+    });
+    const { service } = createService();
+
+    await expect(
+      service.update("token", "u1", "m1", { description: "Nova descrição" } as never),
+    ).rejects.toBeInstanceOf(NotFoundException);
+  });
+
+  it("remove lança 404 quando o soft-delete falha", async () => {
+    mockClient({
+      maintenances: [
+        { data: { id: "m1", vehicle_id: "veh1", status: "scheduled" }, error: null },
+        { error: { message: "boom" } },
+      ],
+    });
+    const { service } = createService();
+
+    await expect(service.remove("token", "u1", "m1")).rejects.toBeInstanceOf(NotFoundException);
   });
 });

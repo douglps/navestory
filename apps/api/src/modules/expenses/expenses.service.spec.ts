@@ -44,6 +44,9 @@ describe("ExpensesService", () => {
   function mockClient(resultsByTable: Record<string, unknown>) {
     const results = new Map(Object.entries(resultsByTable));
     const builders = new Map<string, Record<string, unknown>>();
+    for (const [table, result] of results) {
+      builders.set(table, buildTerminalBuilder(result));
+    }
     const client = {
       from: jest.fn((table: string) => {
         if (!builders.has(table)) {
@@ -104,6 +107,48 @@ describe("ExpensesService", () => {
     expect(result.meta).toEqual({ total: 2, page: 1, limit: 20, has_next: false });
   });
 
+  it("create lança 404 quando o insert falha", async () => {
+    mockClient({
+      vehicles: { data: { id: "veh1" }, error: null },
+      expenses: { data: null, error: { message: "boom" } },
+    });
+    const service = createService();
+
+    await expect(service.create("token", "u1", createDto as never)).rejects.toBeInstanceOf(
+      NotFoundException,
+    );
+  });
+
+  it("findAll aplica filtros de vehicle_id, category, date_from e date_to", async () => {
+    const { builders } = mockClient({
+      expenses: { data: [], error: null, count: 0 },
+    });
+    const service = createService();
+
+    await service.findAll("token", "u1", {
+      page: 1,
+      limit: 20,
+      vehicle_id: "veh1",
+      category: "fuel",
+      date_from: "2026-01-01",
+      date_to: "2026-01-31",
+    } as never);
+
+    expect(builders.get("expenses")!.eq).toHaveBeenCalledWith("vehicle_id", "veh1");
+    expect(builders.get("expenses")!.eq).toHaveBeenCalledWith("category", "fuel");
+    expect(builders.get("expenses")!.gte).toHaveBeenCalledWith("date", "2026-01-01");
+    expect(builders.get("expenses")!.lte).toHaveBeenCalledWith("date", "2026-01-31");
+  });
+
+  it("findAll lança 404 quando a query falha", async () => {
+    mockClient({ expenses: { data: null, error: { message: "boom" }, count: 0 } });
+    const service = createService();
+
+    await expect(
+      service.findAll("token", "u1", { page: 1, limit: 20 } as never),
+    ).rejects.toBeInstanceOf(NotFoundException);
+  });
+
   it("findOne lança 404 quando a despesa não existe ou não pertence ao usuário (CA-08)", async () => {
     mockClient({ expenses: { data: null, error: null } });
     const service = createService();
@@ -134,6 +179,20 @@ describe("ExpensesService", () => {
     ).rejects.toBeInstanceOf(ForbiddenException);
   });
 
+  it("update lança 404 quando o update falha", async () => {
+    mockClient({
+      expenses: [
+        { data: { id: "e1", is_readonly: false, amount: 100 }, error: null },
+        { data: null, error: { message: "boom" } },
+      ],
+    });
+    const service = createService();
+
+    await expect(
+      service.update("token", "u1", "e1", { amount: 200 } as never),
+    ).rejects.toBeInstanceOf(NotFoundException);
+  });
+
   it("remove lança 403 quando a despesa é readonly (RF-07, CA-10, R-LED-01)", async () => {
     mockClient({
       expenses: { data: { id: "e1", is_readonly: true }, error: null },
@@ -141,6 +200,18 @@ describe("ExpensesService", () => {
     const service = createService();
 
     await expect(service.remove("token", "u1", "e1")).rejects.toBeInstanceOf(ForbiddenException);
+  });
+
+  it("remove lança 404 quando o soft-delete falha", async () => {
+    mockClient({
+      expenses: [
+        { data: { id: "e1", is_readonly: false }, error: null },
+        { error: { message: "boom" } },
+      ],
+    });
+    const service = createService();
+
+    await expect(service.remove("token", "u1", "e1")).rejects.toBeInstanceOf(NotFoundException);
   });
 
   it("remove aplica soft-delete quando a despesa é editável (RF-06, CA-11)", async () => {
@@ -259,6 +330,25 @@ describe("ExpensesService", () => {
         ],
       });
       const service = createService();
+
+      const expense = await service.create(
+        "token",
+        "u1",
+        { ...createDto, odometer_km: 50000 } as never,
+      );
+
+      expect(expense).not.toHaveProperty("odometer_warning");
+    });
+
+    it("create tolera falha inesperada ao verificar sequência de odômetro", async () => {
+      const { builders } = mockClient({
+        vehicles: { data: { id: "veh1" }, error: null },
+        expenses: [{ data: { id: "e1", vehicle_id: "veh1", odometer_km: 50000 }, error: null }],
+      });
+      const service = createService();
+      (builders.get("expenses")!.maybeSingle as jest.Mock).mockImplementationOnce(() => {
+        throw new Error("falha inesperada");
+      });
 
       const expense = await service.create(
         "token",
@@ -434,6 +524,23 @@ describe("ExpensesService", () => {
         ],
       });
       const service = createService();
+
+      const expense = await service.create("token", "u1", createDto as never);
+
+      expect(expense).not.toHaveProperty("duplicate_warning");
+    });
+
+    it("create tolera falha inesperada ao verificar duplicata", async () => {
+      const { builders } = mockClient({
+        vehicles: { data: { id: "veh1" }, error: null },
+        expenses: [
+          { data: { id: "e-novo", vehicle_id: "veh1", category: "fuel", amount: 150, date: "2026-07-14" }, error: null },
+        ],
+      });
+      const service = createService();
+      (builders.get("expenses")!.maybeSingle as jest.Mock).mockImplementationOnce(() => {
+        throw new Error("falha inesperada");
+      });
 
       const expense = await service.create("token", "u1", createDto as never);
 
@@ -622,6 +729,13 @@ describe("ExpensesService", () => {
 
       expect(suppliers).toEqual(["Shell Av. Paulista", "Ipiranga Centro"]);
     });
+
+    it("lança 404 quando a query falha", async () => {
+      mockClient({ expenses: { data: null, error: { message: "boom" } } });
+      const service = createService();
+
+      await expect(service.listSuppliers("token", "u1")).rejects.toBeInstanceOf(NotFoundException);
+    });
   });
 
   describe("SPEC-20260608-001: getUpcomingCosts", () => {
@@ -723,6 +837,33 @@ describe("ExpensesService", () => {
 
       expect(kpis.delta_percent).toBe(-50);
     });
+
+    it("filtra por vehicle_id quando informado", async () => {
+      const { builder } = mockKpisClient([100, 50, 500], { data: [], error: null });
+      const service = createService();
+
+      await service.getKpis("token", "u1", { vehicle_id: "veh1" } as never);
+
+      expect(builder.eq).toHaveBeenCalledWith("vehicle_id", "veh1");
+    });
+
+    it("lança 404 quando o cálculo de um dos totais falha", async () => {
+      const builder: Record<string, unknown> = {};
+      builder.select = jest.fn().mockReturnValue(builder);
+      builder.eq = jest.fn().mockReturnValue(builder);
+      builder.is = jest.fn().mockReturnValue(builder);
+      builder.gte = jest.fn().mockReturnValue(builder);
+      builder.lt = jest.fn().mockReturnValue(builder);
+      builder.then = ((resolve: (value: unknown) => unknown, reject: (reason: unknown) => unknown) =>
+        Promise.resolve({ data: null, error: { message: "boom" } }).then(resolve, reject)) as unknown;
+      const client = { from: jest.fn().mockReturnValue(builder), rpc: jest.fn().mockResolvedValue({ data: [], error: null }) };
+      (createUserScopedClient as jest.Mock).mockReturnValue(client);
+      const service = createService();
+
+      await expect(service.getKpis("token", "u1", {} as never)).rejects.toBeInstanceOf(
+        NotFoundException,
+      );
+    });
   });
 
   describe("EPIC-FIN-001: createFromSource / softDeleteBySource", () => {
@@ -779,6 +920,36 @@ describe("ExpensesService", () => {
 
       expect(expense).toEqual({ id: "e1", source_type: "fine", source_id: "f1" });
       expect(builders.get("expenses")!.insert).not.toHaveBeenCalled();
+    });
+
+    it("lança 404 quando o insert do vínculo com o ledger falha", async () => {
+      mockClient({
+        expenses: [
+          { data: null, error: null },
+          { data: null, error: { message: "boom" } },
+        ],
+      });
+      const service = createService();
+
+      await expect(
+        service.createFromSource("token", "u1", {
+          source_type: "fine",
+          source_id: "f1",
+          vehicle_id: "v1",
+          category: "fine",
+          amount: 195.23,
+          date: "2026-07-01",
+        }),
+      ).rejects.toBeInstanceOf(NotFoundException);
+    });
+
+    it("softDeleteBySource lança 404 quando o soft-delete falha", async () => {
+      mockClient({ expenses: { error: { message: "boom" } } });
+      const service = createService();
+
+      await expect(
+        service.softDeleteBySource("token", "u1", "recurring_cost", "rc1"),
+      ).rejects.toBeInstanceOf(NotFoundException);
     });
 
     it("R-HUB-01: softDeleteBySource aplica soft-delete filtrando por source_type/source_id", async () => {
@@ -866,6 +1037,15 @@ describe("ExpensesService", () => {
       const csv = await service.exportConsolidatedCsv("token", "u1", {} as never);
 
       expect(csv).toBe("Data,Veiculo,Placa,Categoria,Valor,Origem,Descricao\n");
+    });
+
+    it("filtra por vehicle_id quando informado", async () => {
+      const { builders } = mockClient({ expenses: { data: [], error: null } });
+      const service = createService();
+
+      await service.exportConsolidatedCsv("token", "u1", { vehicle_id: "veh1" } as never);
+
+      expect(builders.get("expenses")!.eq).toHaveBeenCalledWith("vehicle_id", "veh1");
     });
   });
 });

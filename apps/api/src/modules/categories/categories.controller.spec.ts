@@ -53,4 +53,16 @@ describe("CategoriesController", () => {
       UnauthorizedException,
     );
   });
+
+  it("usa o cookie de sessão quando não há header Authorization", async () => {
+    const { controller, categoriesService } = createController();
+    const reqComCookie = {
+      headers: {},
+      cookies: { nave_access_token: "cookie-token" },
+    } as unknown as Request;
+
+    await controller.findAll(reqComCookie, "u1");
+
+    expect(categoriesService.findAll).toHaveBeenCalledWith("cookie-token", "u1");
+  });
 });

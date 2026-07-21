@@ -195,6 +195,155 @@ describe("VehicleGroupsService", () => {
     expect(membersBuilder.insert).toHaveBeenCalledWith([{ group_id: "g1", vehicle_id: "v1" }]);
   });
 
+  it("create lança 404 quando o insert falha", async () => {
+    const builder: Record<string, unknown> = {};
+    builder.insert = jest.fn().mockReturnValue(builder);
+    builder.select = jest.fn().mockReturnValue(builder);
+    builder.single = jest.fn().mockResolvedValue({ data: null, error: { message: "boom" } });
+    mockClient({ vehicle_groups: builder as never });
+    const service = createService();
+
+    await expect(
+      service.create("token", "u1", { name: "Motos", color: "#ef4444" }),
+    ).rejects.toBeInstanceOf(NotFoundException);
+  });
+
+  it("findAll lança 404 quando a query de grupos falha", async () => {
+    const groupsBuilder: Record<string, unknown> = {};
+    groupsBuilder.select = jest.fn().mockReturnValue(groupsBuilder);
+    groupsBuilder.eq = jest.fn().mockReturnValue(groupsBuilder);
+    groupsBuilder.order = jest.fn().mockReturnValue(groupsBuilder);
+    groupsBuilder.limit = jest.fn().mockResolvedValue({ data: null, error: { message: "boom" } });
+
+    const vehiclesBuilder: Record<string, unknown> = {};
+    vehiclesBuilder.select = jest.fn().mockReturnValue(vehiclesBuilder);
+    vehiclesBuilder.eq = jest.fn().mockReturnValue(vehiclesBuilder);
+    vehiclesBuilder.is = jest.fn().mockResolvedValue({ data: [], error: null });
+
+    mockClient({ vehicle_groups: groupsBuilder as never, vehicles: vehiclesBuilder as never });
+    const service = createService();
+
+    await expect(service.findAll("token", "u1")).rejects.toBeInstanceOf(NotFoundException);
+  });
+
+  it("findAll lança 404 quando a validação de veículos ativos falha", async () => {
+    const groupsBuilder: Record<string, unknown> = {};
+    groupsBuilder.select = jest.fn().mockReturnValue(groupsBuilder);
+    groupsBuilder.eq = jest.fn().mockReturnValue(groupsBuilder);
+    groupsBuilder.order = jest.fn().mockReturnValue(groupsBuilder);
+    groupsBuilder.limit = jest.fn().mockResolvedValue({ data: [], error: null });
+
+    const vehiclesBuilder: Record<string, unknown> = {};
+    vehiclesBuilder.select = jest.fn().mockReturnValue(vehiclesBuilder);
+    vehiclesBuilder.eq = jest.fn().mockReturnValue(vehiclesBuilder);
+    vehiclesBuilder.is = jest.fn().mockResolvedValue({ data: null, error: { message: "boom" } });
+
+    mockClient({ vehicle_groups: groupsBuilder as never, vehicles: vehiclesBuilder as never });
+    const service = createService();
+
+    await expect(service.findAll("token", "u1")).rejects.toBeInstanceOf(NotFoundException);
+  });
+
+  it("update lança 404 quando a query de update falha", async () => {
+    const builder: Record<string, unknown> = {};
+    builder.update = jest.fn().mockReturnValue(builder);
+    builder.eq = jest.fn().mockReturnValue(builder);
+    builder.select = jest.fn().mockReturnValue(builder);
+    builder.maybeSingle = jest.fn().mockResolvedValue({ data: null, error: { message: "boom" } });
+    mockClient({ vehicle_groups: builder as never });
+    const service = createService();
+
+    await expect(
+      service.update("token", "u1", "g1", { name: "Frota SP" }),
+    ).rejects.toBeInstanceOf(NotFoundException);
+  });
+
+  it("remove lança 404 quando o hard-delete falha", async () => {
+    const groupBuilder: Record<string, unknown> = {};
+    groupBuilder.select = jest.fn().mockReturnValue(groupBuilder);
+    groupBuilder.maybeSingle = jest.fn().mockResolvedValue({ data: { id: "g1" }, error: null });
+    groupBuilder.delete = jest.fn().mockReturnValue(groupBuilder);
+    let eqCalls = 0;
+    groupBuilder.eq = jest.fn().mockImplementation(() => {
+      eqCalls += 1;
+      // 1ª e 2ª chamadas: select().eq().eq() (busca do grupo existente).
+      // 3ª e 4ª chamadas: delete().eq().eq() — a 4ª (última) resolve o await final.
+      return eqCalls === 4 ? { error: { message: "boom" } } : groupBuilder;
+    });
+    mockClient({ vehicle_groups: groupBuilder as never });
+    const service = createService();
+
+    await expect(service.remove("token", "u1", "g1")).rejects.toBeInstanceOf(NotFoundException);
+  });
+
+  it("setMembers lança 404 quando a validação de veículos informados falha", async () => {
+    const groupBuilder: Record<string, unknown> = {};
+    groupBuilder.select = jest.fn().mockReturnValue(groupBuilder);
+    groupBuilder.eq = jest.fn().mockReturnValue(groupBuilder);
+    groupBuilder.maybeSingle = jest.fn().mockResolvedValue({ data: { id: "g1" }, error: null });
+
+    const vehiclesBuilder: Record<string, unknown> = {};
+    vehiclesBuilder.select = jest.fn().mockReturnValue(vehiclesBuilder);
+    vehiclesBuilder.in = jest.fn().mockReturnValue(vehiclesBuilder);
+    vehiclesBuilder.eq = jest.fn().mockReturnValue(vehiclesBuilder);
+    vehiclesBuilder.is = jest.fn().mockResolvedValue({ data: null, error: { message: "boom" } });
+
+    mockClient({ vehicle_groups: groupBuilder as never, vehicles: vehiclesBuilder as never });
+    const service = createService();
+
+    await expect(
+      service.setMembers("token", "u1", "g1", { vehicleIds: ["v1"] }),
+    ).rejects.toBeInstanceOf(NotFoundException);
+  });
+
+  it("setMembers lança 404 quando a limpeza dos membros atuais falha", async () => {
+    const groupBuilder: Record<string, unknown> = {};
+    groupBuilder.select = jest.fn().mockReturnValue(groupBuilder);
+    groupBuilder.eq = jest.fn().mockReturnValue(groupBuilder);
+    groupBuilder.maybeSingle = jest.fn().mockResolvedValue({ data: { id: "g1" }, error: null });
+
+    const membersBuilder: Record<string, unknown> = {};
+    membersBuilder.delete = jest.fn().mockReturnValue(membersBuilder);
+    membersBuilder.eq = jest.fn().mockResolvedValue({ error: { message: "boom" } });
+    membersBuilder.insert = jest.fn();
+
+    mockClient({ vehicle_groups: groupBuilder as never, vehicle_group_members: membersBuilder as never });
+    const service = createService();
+
+    await expect(
+      service.setMembers("token", "u1", "g1", { vehicleIds: [] }),
+    ).rejects.toBeInstanceOf(NotFoundException);
+  });
+
+  it("setMembers lança 404 quando a inserção dos novos membros falha", async () => {
+    const groupBuilder: Record<string, unknown> = {};
+    groupBuilder.select = jest.fn().mockReturnValue(groupBuilder);
+    groupBuilder.eq = jest.fn().mockReturnValue(groupBuilder);
+    groupBuilder.maybeSingle = jest.fn().mockResolvedValue({ data: { id: "g1" }, error: null });
+
+    const vehiclesBuilder: Record<string, unknown> = {};
+    vehiclesBuilder.select = jest.fn().mockReturnValue(vehiclesBuilder);
+    vehiclesBuilder.in = jest.fn().mockReturnValue(vehiclesBuilder);
+    vehiclesBuilder.eq = jest.fn().mockReturnValue(vehiclesBuilder);
+    vehiclesBuilder.is = jest.fn().mockResolvedValue({ data: [{ id: "v1" }], error: null });
+
+    const membersBuilder: Record<string, unknown> = {};
+    membersBuilder.delete = jest.fn().mockReturnValue(membersBuilder);
+    membersBuilder.eq = jest.fn().mockResolvedValue({ error: null });
+    membersBuilder.insert = jest.fn().mockResolvedValue({ error: { message: "boom" } });
+
+    mockClient({
+      vehicle_groups: groupBuilder as never,
+      vehicles: vehiclesBuilder as never,
+      vehicle_group_members: membersBuilder as never,
+    });
+    const service = createService();
+
+    await expect(
+      service.setMembers("token", "u1", "g1", { vehicleIds: ["v1"] }),
+    ).rejects.toBeInstanceOf(NotFoundException);
+  });
+
   it("setMembers com lista vazia limpa os membros sem inserir (R-GRP-02)", async () => {
     const groupBuilder: Record<string, unknown> = {};
     groupBuilder.select = jest.fn().mockReturnValue(groupBuilder);

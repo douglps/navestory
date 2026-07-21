@@ -102,4 +102,16 @@ describe("DashboardController", () => {
 
     expect(dashboardService.getVehicleCards).toHaveBeenCalledWith("token-123", "u1");
   });
+
+  it("usa o cookie de sessão quando não há header Authorization", async () => {
+    const { controller, dashboardService } = createController();
+    const reqComCookie = {
+      headers: {},
+      cookies: { nave_access_token: "cookie-token" },
+    } as unknown as Request;
+
+    await controller.getAlerts(reqComCookie, "u1");
+
+    expect(dashboardService.getAlerts).toHaveBeenCalledWith("cookie-token", "u1");
+  });
 });

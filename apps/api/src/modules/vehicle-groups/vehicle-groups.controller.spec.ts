@@ -80,4 +80,16 @@ describe("VehicleGroupsController", () => {
       UnauthorizedException,
     );
   });
+
+  it("usa o cookie de sessão quando não há header Authorization", async () => {
+    const { controller, vehicleGroupsService } = createController();
+    const reqComCookie = {
+      headers: {},
+      cookies: { nave_access_token: "cookie-token" },
+    } as unknown as Request;
+
+    await controller.findAll(reqComCookie, "u1");
+
+    expect(vehicleGroupsService.findAll).toHaveBeenCalledWith("cookie-token", "u1");
+  });
 });

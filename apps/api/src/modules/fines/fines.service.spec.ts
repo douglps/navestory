@@ -214,6 +214,50 @@ describe("FinesService", () => {
     ).rejects.toBeInstanceOf(ConflictException);
   });
 
+  it("create lança 404 quando o insert falha", async () => {
+    mockClient({
+      vehicles: { data: { id: "veh1" }, error: null },
+      fines: { data: null, error: { message: "boom" } },
+    });
+    const { service } = createService();
+
+    await expect(service.create("token", "u1", createDto as never)).rejects.toBeInstanceOf(
+      NotFoundException,
+    );
+  });
+
+  it("findAll lança 404 quando a query falha", async () => {
+    mockClient({ fines: { data: null, error: { message: "boom" } } });
+    const { service } = createService();
+
+    await expect(service.findAll("token", "u1")).rejects.toBeInstanceOf(NotFoundException);
+  });
+
+  it("findByVehicle lista multas do veículo ordenadas por occurred_at desc (RF-02)", async () => {
+    const { builders } = mockClient({
+      vehicles: { data: { id: "veh1" }, error: null },
+      fines: { data: [{ id: "f1" }], error: null },
+    });
+    const { service } = createService();
+
+    const result = await service.findByVehicle("token", "u1", "veh1");
+
+    expect(builders.get("fines")!.eq).toHaveBeenCalledWith("vehicle_id", "veh1");
+    expect(result).toEqual([{ id: "f1" }]);
+  });
+
+  it("findByVehicle lança 404 quando a query de multas falha", async () => {
+    mockClient({
+      vehicles: { data: { id: "veh1" }, error: null },
+      fines: { data: null, error: { message: "boom" } },
+    });
+    const { service } = createService();
+
+    await expect(service.findByVehicle("token", "u1", "veh1")).rejects.toBeInstanceOf(
+      NotFoundException,
+    );
+  });
+
   it("update lança 409 quando amount_with_discount resultante é maior que amount (Regra de Negócio)", async () => {
     mockClient({
       fines: { data: { id: "f1", status: "pending", amount: 100, amount_with_discount: null }, error: null },
@@ -246,5 +290,59 @@ describe("FinesService", () => {
     await service.remove("token", "u1", "f1");
 
     expect(expensesService.softDeleteBySource).toHaveBeenCalledWith("token", "u1", "fine", "f1");
+  });
+
+  it("update lança 404 quando o update falha", async () => {
+    mockClient({
+      fines: [
+        { data: { id: "f1", status: "pending", amount: 195.23, amount_with_discount: null }, error: null },
+        { data: null, error: { message: "boom" } },
+      ],
+    });
+    const { service } = createService();
+
+    await expect(
+      service.update("token", "u1", "f1", { status: "paid" } as never),
+    ).rejects.toBeInstanceOf(NotFoundException);
+  });
+
+  it("remove lança 404 quando o soft-delete falha", async () => {
+    mockClient({
+      fines: [
+        { data: { id: "f1", status: "pending" }, error: null },
+        { error: { message: "boom" } },
+      ],
+    });
+    const { service } = createService();
+
+    await expect(service.remove("token", "u1", "f1")).rejects.toBeInstanceOf(NotFoundException);
+  });
+
+  describe("countPending (RF-07)", () => {
+    it("conta multas pendentes do usuário", async () => {
+      const { builders } = mockClient({ fines: { count: 3, error: null } });
+      const { service } = createService();
+
+      const count = await service.countPending("token", "u1");
+
+      expect(count).toBe(3);
+      expect(builders.get("fines")!.eq).toHaveBeenCalledWith("status", "pending");
+    });
+
+    it("filtra por vehicle_id quando informado", async () => {
+      const { builders } = mockClient({ fines: { count: 1, error: null } });
+      const { service } = createService();
+
+      await service.countPending("token", "u1", "veh1");
+
+      expect(builders.get("fines")!.eq).toHaveBeenCalledWith("vehicle_id", "veh1");
+    });
+
+    it("lança 404 quando a contagem falha", async () => {
+      mockClient({ fines: { count: null, error: { message: "boom" } } });
+      const { service } = createService();
+
+      await expect(service.countPending("token", "u1")).rejects.toBeInstanceOf(NotFoundException);
+    });
   });
 });

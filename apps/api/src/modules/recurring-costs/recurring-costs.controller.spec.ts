@@ -77,4 +77,16 @@ describe("RecurringCostsController", () => {
       UnauthorizedException,
     );
   });
+
+  it("usa o cookie de sessão quando não há header Authorization", async () => {
+    const { controller, recurringCostsService } = createController();
+    const reqComCookie = {
+      headers: {},
+      cookies: { nave_access_token: "cookie-token" },
+    } as unknown as Request;
+
+    await controller.findOne(reqComCookie, "u1", "rc1");
+
+    expect(recurringCostsService.findOne).toHaveBeenCalledWith("cookie-token", "u1", "rc1");
+  });
 });

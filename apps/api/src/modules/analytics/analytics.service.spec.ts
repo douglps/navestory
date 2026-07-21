@@ -275,11 +275,18 @@ describe("AnalyticsService", () => {
           return Promise.resolve({ data: config.forecast ?? [], error: null });
         return Promise.resolve({ data: [], error: null });
       });
+      const builders = new Map<string, ReturnType<typeof createChainableBuilder>>();
       const from = jest.fn((table: string) => {
-        if (table === "fines") return createChainableBuilder({ data: config.fines ?? [], error: null });
-        if (table === "expenses")
-          return createChainableBuilder({ data: config.fuelExpenses ?? [], error: null });
-        return createChainableBuilder({ data: [], error: null });
+        if (!builders.has(table)) {
+          const result =
+            table === "fines"
+              ? { data: config.fines ?? [], error: null }
+              : table === "expenses"
+                ? { data: config.fuelExpenses ?? [], error: null }
+                : { data: [], error: null };
+          builders.set(table, createChainableBuilder(result));
+        }
+        return builders.get(table);
       });
       return { rpc, from };
     }
@@ -383,6 +390,25 @@ describe("AnalyticsService", () => {
 
       expect(result).toEqual([]);
     });
+
+    it("escopa o benchmark, as multas e os abastecimentos por vehicleId quando informado", async () => {
+      const client = createClient({
+        benchmark: [BENCHMARK_ENTRY, BENCHMARK_ENTRY_AVG],
+        fines: [{ amount: 200, amount_with_discount: 150, due_date: "2026-07-20" }],
+      });
+      (createUserScopedClient as jest.Mock).mockReturnValue(client);
+      const service = createService();
+
+      const result = await service.getInsights("token", "user-1", "v1");
+
+      expect(result).toContainEqual(
+        expect.objectContaining({ type: "efficiency", vehicle_id: "v1" }),
+      );
+      const finesBuilder = client.from("fines") as unknown as Record<string, jest.Mock>;
+      expect(finesBuilder.eq).toHaveBeenCalledWith("vehicle_id", "v1");
+      const expensesBuilder = client.from("expenses") as unknown as Record<string, jest.Mock>;
+      expect(expensesBuilder.eq).toHaveBeenCalledWith("vehicle_id", "v1");
+    });
   });
 
   describe("exportCsv (RF-16)", () => {
@@ -441,6 +467,43 @@ describe("AnalyticsService", () => {
 
       expect(csv).toContain("Veiculo,Total,Custo/km");
       expect(csv).toContain("Onix,1000.00,0.50");
+    });
+
+    it("marca cada linha do forecast como Projetado ou Historico conforme is_forecast", async () => {
+      const rpc = jest.fn((fn: string) => {
+        if (fn === "fleet_benchmark") return Promise.resolve({ data: [], error: null });
+        if (fn === "forecast_monthly_costs")
+          return Promise.resolve({
+            data: [
+              { month: "2026-06-01", projected_amount: 1000, projected_low: 1000, projected_high: 1000, is_forecast: false },
+              { month: "2026-07-01", projected_amount: 1200, projected_low: 1100, projected_high: 1300, is_forecast: true },
+            ],
+            error: null,
+          });
+        return Promise.resolve({ data: [], error: null });
+      });
+      (createUserScopedClient as jest.Mock).mockReturnValue({ rpc });
+      const service = createService();
+
+      const csv = await service.exportCsv("token");
+
+      expect(csv).toContain("2026-06-01,1000.00,1000.00,1000.00,Historico");
+      expect(csv).toContain("2026-07-01,1200.00,1100.00,1300.00,Projetado");
+    });
+
+    it("degrada com cabeçalho vazio quando o benchmark da frota falha", async () => {
+      const rpc = jest.fn((fn: string) => {
+        if (fn === "fleet_benchmark") return Promise.resolve({ data: null, error: { message: "boom" } });
+        if (fn === "forecast_monthly_costs") return Promise.resolve({ data: [], error: null });
+        return Promise.resolve({ data: [], error: null });
+      });
+      (createUserScopedClient as jest.Mock).mockReturnValue({ rpc });
+      const service = createService();
+
+      const csv = await service.exportCsv("token");
+
+      expect(csv).toContain("Veiculo,Total,Custo/km");
+      expect(csv).not.toContain("Onix");
     });
   });
 });

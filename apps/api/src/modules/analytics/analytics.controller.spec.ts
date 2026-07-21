@@ -135,6 +135,18 @@ describe("AnalyticsController", () => {
     });
   });
 
+  it("usa o cookie de sessão quando não há header Authorization", async () => {
+    const { controller, analyticsService } = createController();
+    const reqComCookie = {
+      headers: {},
+      cookies: { nave_access_token: "cookie-token" },
+    } as unknown as Request;
+
+    await controller.getTco(reqComCookie, "v1");
+
+    expect(analyticsService.getTco).toHaveBeenCalledWith("cookie-token", "v1");
+  });
+
   describe("exportCsv (RF-16)", () => {
     it("extrai o token, delega para o service e envia o CSV com headers corretos", async () => {
       const { controller, analyticsService } = createController();

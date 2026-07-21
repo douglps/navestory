@@ -9,7 +9,9 @@
     "lint": "eslint . --max-warnings 0",
     "type-check": "tsc --noEmit",
     "test": "vitest run",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "e2e": "playwright test",
+    "e2e:ui": "playwright test --ui"
   },
   "dependencies": {
     "@nave/ui": "workspace:*",
@@ -28,6 +30,7 @@
     "zustand": "^5.0.2"
   },
   "devDependencies": {
+    "@playwright/test": "^1.61.1",
     "@serwist/turbopack": "^9.5.11",
     "@tailwindcss/typography": "^0.5.20",
     "@testing-library/jest-dom": "^6.6.3",

@@ -33,8 +33,11 @@ interface CategoriesResponse {
   custom: { value: string; label: string }[];
 }
 
+// @spec SPEC-20260720-002 RF-01
 interface ExpenseResponse {
   id: string;
+  duplicate_warning?: boolean;
+  duplicate_id?: string;
 }
 
 function vehicleLabel(vehicle: Vehicle): string {
@@ -246,6 +249,7 @@ function NewExpensePageContent(): ReactNode {
   const [supplier, setSupplier] = useState("");
   const [fieldError, setFieldError] = useState<string | null>(null);
   const [templateNotice, setTemplateNotice] = useState<string | null>(null);
+  const [duplicateId, setDuplicateId] = useState<string | null>(null);
   const fuelCalc = useFuelCrossCalc();
 
   const isFuel = category === "fuel";
@@ -261,10 +265,19 @@ function NewExpensePageContent(): ReactNode {
     retry: false,
   });
 
+  /**
+   * @spec SPEC-20260720-002 RF-02 RF-05
+   */
   const mutation = useMutation({
     mutationFn: (input: CreateExpenseInput) =>
       apiClient<ExpenseResponse>("/expenses?strict=true", { method: "POST", body: input }),
-    onSuccess: () => router.push("/expenses"),
+    onSuccess: (data) => {
+      if (data.duplicate_warning && data.duplicate_id) {
+        setDuplicateId(data.duplicate_id);
+        return;
+      }
+      router.push("/expenses");
+    },
     onError: (error) => {
       if (error instanceof ApiError) setFieldError(error.message);
     },
@@ -573,11 +586,32 @@ function NewExpensePageContent(): ReactNode {
           </section>
         )}
 
-        {fieldError && <p role="alert">{fieldError}</p>}
-        {mutation.isError && !fieldError && <p role="alert">Não foi possível registrar a despesa.</p>}
+        {duplicateId ? (
+          /**
+           * @spec SPEC-20260720-002 RF-03 RF-04 RF-06
+           */
+          <div role="alert" className="flex flex-col gap-2 rounded border border-amber-300 bg-amber-50 p-3 text-sm">
+            <p>Uma despesa com os mesmos dados já existe. Verifique se este não é um lançamento duplicado.</p>
+            <div className="flex gap-3">
+              <Link href={`/expenses/${duplicateId}`} className="underline">
+                Ver despesa duplicada
+              </Link>
+              <button type="button" onClick={() => router.push("/expenses")} className="underline">
+                Entendido
+              </button>
+            </div>
+          </div>
+        ) : (
+          <>
+            {fieldError && <p role="alert">{fieldError}</p>}
+            {mutation.isError && !fieldError && (
+              <p role="alert">Não foi possível registrar a despesa.</p>
+            )}
+          </>
+        )}
 
         <div className="flex gap-2">
-          <button type="submit" disabled={mutation.isPending}>
+          <button type="submit" disabled={mutation.isPending || duplicateId !== null}>
             {mutation.isPending ? "Salvando..." : "Registrar"}
           </button>
           <button type="button" onClick={handleCancel}>

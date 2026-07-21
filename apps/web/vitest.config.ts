@@ -12,6 +12,9 @@ export default defineConfig({
   test: {
     environment: "jsdom",
     setupFiles: ["./vitest.setup.ts"],
+    // Exclui testes E2E do Playwright — usam @playwright/test, não Vitest
+    // @spec SPEC-20260716-003 RF-CFG-05
+    exclude: ["e2e/**", "**/node_modules/**"],
     coverage: {
       reporter: ["text", "lcov"],
       exclude: [

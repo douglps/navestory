@@ -4,7 +4,7 @@ title: "Testes E2E com Playwright"
 status: draft
 date: 2026-07-16
 author: Douglas Lopes (lps.doug@protonmail.com)
-rules: [R1, R2, R-CTX-07]
+rules: [R1, R2, R-CTX-07, R-ODO-01]
 security: [S1]
 camadas: [frontend, qa]
 ---
@@ -47,7 +47,7 @@ mocks não são suficientes.
 | ID | Requisito | Prioridade |
 |----|-----------|------------|
 | RF-CFG-01 | `@playwright/test` adicionado como `devDependency` em `apps/web/package.json`; versão mínima 1.45 | Alta |
-| RF-CFG-02 | Arquivo `apps/web/playwright.config.ts` com: `testDir: './e2e'`, `baseURL` lida de variável de ambiente `E2E_BASE_URL` (default `http://localhost:3000`), timeout de 30s por teste, 3 tentativas em CI (`retries: process.env.CI ? 3 : 0`), relatório `html` em `e2e/reports/` | Alta |
+| RF-CFG-02 | Arquivo `apps/web/playwright.config.ts` com: `testDir: './e2e'`, `baseURL` lida de variável de ambiente `E2E_BASE_URL` (default `http://localhost:3000`), timeout de 30s por teste, 1 tentativa em CI (`retries: process.env.CI ? 1 : 0` — reduzido de 3 para distinguir falha real de ruído de infra sem mascarar flakiness, ver RNF-02), relatório `html` em `e2e/reports/` | Alta |
 | RF-CFG-03 | Browsers configurados: `chromium` (obrigatório), `firefox` e `webkit` opcionais para CI (podem ser omitidos no job inicial para reduzir tempo de pipeline) | Alta |
 | RF-CFG-04 | Script `"e2e": "playwright test"` e `"e2e:ui": "playwright test --ui"` adicionados em `apps/web/package.json` | Alta |
 | RF-CFG-05 | Pasta `apps/web/e2e/` criada com `fixtures/` (helpers e `test` extendido), `pages/` (Page Objects), `tests/` (specs de teste) | Alta |
@@ -62,7 +62,7 @@ mocks não são suficientes.
 | RF-E2E-01 | **Autenticação — acesso sem sessão:** navegar para rota privada (ex: `/dashboard`) sem sessão ativa → verificar redirect automático para `/login` | S1, CT-006 | Alta |
 | RF-E2E-02 | **Autenticação — login com credenciais válidas:** preencher email/senha de usuário de teste → submeter → verificar que o usuário chega ao `/dashboard` com o header e sidebar renderizados | S1, CT-006 | Alta |
 | RF-E2E-03 | **Autenticação — logout:** clicar em logout → verificar redirect para `/login` e que `/dashboard` não é mais acessível sem novo login | S1 | Alta |
-| RF-E2E-04 | **Criação de despesa — aviso de odômetro:** criar despesa de combustível com `odometer_km` menor que o último registrado para o veículo de teste → verificar que o banner/toast de aviso `odometer_warning` é exibido na tela sem bloquear o salvamento (R1 — soft warning, não hard block no frontend) | R1, CT-001 | Alta |
+| RF-E2E-04 | **Criação de despesa — hard block de odômetro:** criar despesa de combustível com `odometer_km` fora de sequência (menor que o máximo registrado em data anterior/igual) para o veículo de teste → verificar que a operação é rejeitada com erro visível (`role="alert"`) e a despesa não é salva (R-ODO-01 — hard block no fluxo web via `?strict=true`; R1 permanece soft warning apenas fora do fluxo web, ver `specs/RULES.md`) | R-ODO-01, CT-001 | Alta |
 | RF-E2E-05 | **Criação de despesa — aviso de duplicata:** criar duas despesas com `vehicle_id`, `category`, `amount` e data idênticos → verificar que na segunda criação o aviso de duplicata é exibido (R2) | R2, CT-002 | Alta |
 | RF-E2E-06 | **Troca de contexto de veículo — via chip:** clicar no `VehicleContextChip` no subheader → verificar abertura do Dialog/Sheet de seleção → selecionar veículo diferente → verificar que o chip atualiza para exibir o novo veículo e que o contexto persiste ao navegar entre páginas (R-CTX-07) | R-CTX-07 | Alta |
 | RF-E2E-07 | **Troca de contexto de veículo — propagação para formulário:** com veículo A em contexto, abrir `/expenses/new` → verificar que o campo `vehicle_id` está pré-selecionado com veículo A; trocar para veículo B via chip enquanto o formulário está aberto (campo ainda `isInherited`) → verificar que o campo atualiza para veículo B | R-CTX-06, R-CTX-07 | Média |
@@ -72,7 +72,7 @@ mocks não são suficientes.
 | ID | Requisito | Prioridade |
 |----|-----------|------------|
 | RF-DATA-01 | Usuário de teste E2E configurado via variáveis de ambiente `E2E_USER_EMAIL` e `E2E_USER_PASSWORD`; credenciais nunca hardcodadas nos arquivos de teste | Alta |
-| RF-DATA-02 | Veículo de teste pré-existente no ambiente E2E com pelo menos um registro de odômetro, para viabilizar RF-E2E-04 e RF-E2E-06; criado via seed ou fixture de setup | Alta |
+| RF-DATA-02 | Veículo(s) de teste pré-existente(s) no ambiente E2E com pelo menos um registro de odômetro, para viabilizar RF-E2E-04 a RF-E2E-07; identificados via variáveis de ambiente `E2E_TEST_VEHICLE_PLATE` (RF-E2E-04/05), `E2E_VEHICLE_A_PLATE` e `E2E_VEHICLE_B_PLATE` (RF-E2E-06/07); criados via seed ou fixture de setup | Alta |
 | RF-DATA-03 | Cada suite isola seu estado: testes que criam despesas (RF-E2E-04, RF-E2E-05) devem usar `afterEach` para remover os registros criados, ou rodar em transação revertida | Alta |
 
 ### Integração com CI (RF-CI)
@@ -82,8 +82,8 @@ mocks não são suficientes.
 | RF-CI-01 | Novo job `e2e` em `.github/workflows/ci.yml` depende do job `build`; só executa em `push` para `main`/`master` e em PRs com label `e2e` (ou equivalente) | Alta |
 | RF-CI-02 | O job instala as dependências com `pnpm --filter @nave/web exec playwright install --with-deps chromium` antes de executar os testes | Alta |
 | RF-CI-03 | O job precisa da API NestJS rodando (`apps/api`), do Supabase local (`supabase start`) e do servidor Next.js em modo produção (`pnpm build && pnpm start`) ou preview antes de executar o Playwright | Alta |
-| RF-CI-04 | Variáveis de ambiente `E2E_BASE_URL`, `E2E_USER_EMAIL` e `E2E_USER_PASSWORD` provisionadas como GitHub Secrets e passadas ao job de E2E | Alta |
-| RF-CI-05 | Artefato de relatório HTML (`playwright-report/`) publicado como artifact do GitHub Actions em caso de falha para facilitar diagnóstico | Alta |
+| RF-CI-04 | Variáveis de ambiente `E2E_BASE_URL`, `E2E_USER_EMAIL`, `E2E_USER_PASSWORD`, `E2E_TEST_VEHICLE_PLATE`, `E2E_VEHICLE_A_PLATE` e `E2E_VEHICLE_B_PLATE` provisionadas como GitHub Secrets e passadas ao job de E2E | Alta |
+| RF-CI-05 | Artefato de relatório HTML (`e2e/reports/`, conforme `outputFolder` do reporter em RF-CFG-02) publicado como artifact do GitHub Actions em caso de falha para facilitar diagnóstico | Alta |
 | RF-CI-06 | Falha em qualquer teste E2E bloqueia o deploy (job `build` não é pré-requisito de deploy enquanto E2E está pendente; na configuração final, o job de deploy deve depender de `e2e`) | Média |
 
 ---
@@ -104,7 +104,7 @@ mocks não são suficientes.
 - [ ] CA-01: Pasta `apps/web/e2e/` existe com estrutura `fixtures/`, `pages/`, `tests/`
 - [ ] CA-02: `playwright.config.ts` presente; `pnpm e2e` executa sem erro de configuração em ambiente local com variáveis de ambiente definidas
 - [ ] CA-03: RF-E2E-01, RF-E2E-02 e RF-E2E-03 (fluxos de autenticação) passam de forma estável em chromium
-- [ ] CA-04: RF-E2E-04 (aviso de odômetro) exibe o elemento de alerta esperado na tela após submissão
+- [ ] CA-04: RF-E2E-04 (hard block de odômetro, R-ODO-01) exibe o elemento de alerta esperado na tela e a despesa não é salva
 - [ ] CA-05: RF-E2E-05 (aviso de duplicata) exibe o elemento de aviso esperado na tela após submissão da segunda despesa
 - [ ] CA-06: RF-E2E-06 (troca de contexto via chip) valida abertura do dialog, seleção e atualização do chip
 - [ ] CA-07: Nenhuma credencial ou token aparecem nos arquivos `.ts` dos testes; apenas variáveis de ambiente são usadas
@@ -129,7 +129,7 @@ O objetivo é evitar duplicação de esforço e manter a pirâmide correta (5% E
 - A UI é cosmética (cores, espaçamentos, animações) — conforme `specs/TESTS_SPEC.md` seção "O que NÃO Testar"
 
 **Relação com os CTs existentes:**
-- CT-001 e CT-002 têm testes unitários em `expenses.service.spec.ts` validando a lógica de backend. Os testes E2E (RF-E2E-04, RF-E2E-05) validam que o aviso chega ao usuário no browser — camadas diferentes, não duplicação.
+- CT-001 e CT-002 têm testes unitários em `expenses.service.spec.ts` validando a lógica de backend. O E2E RF-E2E-04 valida que o hard block de R-ODO-01 (opt-in via `?strict=true`, exclusivo do fluxo web) chega ao usuário no browser como erro visível; RF-E2E-05 valida que o aviso de duplicata (R2) chega ao usuário — camadas diferentes, não duplicação.
 - CT-006 tem teste de integração em `auth.int-spec.ts` validando que a API retorna 401. O E2E (RF-E2E-01 a RF-E2E-03) valida o redirect no browser e a sessão gerenciada pelo middleware SSR — complementar, não duplicado.
 - CT-007 (RLS) permanece exclusivamente em `rls.int-spec.ts`; o acesso a dado de outro usuário não merece E2E (impossível simular dois usuários de forma não-flaky em browser sem setup complexo).
 
@@ -151,8 +151,10 @@ O objetivo é evitar duplicação de esforço e manter a pirâmide correta (5% E
 |------|-----------|-----------|
 | Spec | SPEC-20260524-001 | Autenticação — fluxo de login que RF-E2E-02 replica no browser |
 | Spec | SPEC-20260603-001 | Context Chip / Subheader — `VehicleContextChip` referenciado em RF-E2E-06 |
-| Spec | SPEC-20260601-001 | Validação de odômetro — lógica de R1 verificada em RF-E2E-04 |
+| Spec | SPEC-20260612-001 | Hard block de odômetro no fluxo web (R-ODO-01) — comportamento verificado em RF-E2E-04 |
+| Spec | SPEC-20260601-001 | Soft warning de odômetro (R1) — regra de base, superada por R-ODO-01 apenas no fluxo web (ver `specs/RULES.md`) |
 | Spec | SPEC-20260601-002 | Detecção de duplicata — lógica de R2 verificada em RF-E2E-05 |
+| Spec | SPEC-20260720-002 | Aviso de duplicata na UI — implementa o elemento consumido por RF-E2E-05 |
 | Spec | specs/TESTS_SPEC.md | Pirâmide de testes, casos críticos CT-001 a CT-007, convenção de nomenclatura |
 | Biblioteca | `@playwright/test` ≥ 1.45 | Framework E2E; instalado em `apps/web` como `devDependency` |
 | Infraestrutura | Supabase local (`supabase start`) | Backend de banco de dados para o job de E2E em CI |
@@ -184,6 +186,15 @@ A ordem de startup e a verificação de health check de cada processo devem ser 
 `wait-on` (ferramenta CLI) antes de executar `playwright test`. O `playwright.config.ts`
 pode configurar `webServer` para automatizar isso.
 
+**Decisão de estratégia (2026-07-20):** o job `e2e` sobe a stack completa (Supabase local +
+build + start das apps) a cada execução, em vez de apontar `E2E_BASE_URL` para um ambiente de
+staging persistente. Escolha deliberada, não omissão: hoje não existe staging provisionado
+para o Nave (ver `important/PENDENCIAS-E-PROCESSOS.md`), e a stack local garante ambiente
+hermético (sem dados de execuções concorrentes se cruzando) ao custo de ~10-15 min a mais por
+execução do job. Revisitar quando um ambiente de staging existir por outro motivo, ou quando o
+tempo do job `e2e` se tornar um problema prático — nesse caso, RNF-01 (máximo 5 min) já não
+seria mais atendido pela stack local mesmo sem staging.
+
 ### Nomenclatura de Testes
 Seguir a convenção de `specs/TESTS_SPEC.md`:
 ```ts
@@ -209,3 +220,6 @@ real. Não remover nem modificar os testes de integração existentes ao adicion
 | Data | Versão | Mudança | Autor |
 |------|--------|---------|-------|
 | 2026-07-16 | 1.0 | Criação inicial | Douglas Lopes (lps.doug@protonmail.com) |
+| 2026-07-20 | 1.1 | RF-E2E-04 corrigido: descrevia o comportamento de R1 (soft warning) para o fluxo web, mas `R-ODO-01` (SPEC-20260612-001) já supersede R1 nesse fluxo com hard block via `?strict=true`. Ajustado texto, regra citada e critério de aceite CA-04 para refletir o comportamento real e testado. Correção pequena — sem mudança de status | Douglas Lopes (lps.doug@protonmail.com) |
+| 2026-07-20 | 1.2 | Divergências entre implementação e texto corrigidas: RF-DATA-02 e RF-CI-04 passam a citar `E2E_TEST_VEHICLE_PLATE`, `E2E_VEHICLE_A_PLATE` e `E2E_VEHICLE_B_PLATE` (já usados pelo código e pelo CI, mas ausentes do texto); RF-CI-05 corrigido de `playwright-report/` para `e2e/reports/`, refletindo o `outputFolder` real do reporter (RF-CFG-02) — bug de caminho no artifact do CI também corrigido em `.github/workflows/ci.yml`. Correção pequena — sem mudança de status | Douglas Lopes (lps.doug@protonmail.com) |
+| 2026-07-20 | 1.3 | Revisão de auditoria: RF-CFG-02 corrigido para `retries: 1` (era `3`), alinhado ao código após correção de B-03 (sleep fixo removido em `vehicle-context-chip.page.ts`) e à política de zero-flakiness (RNF-02); adicionada nota de "Decisão de estratégia" em Ambiente E2E em CI explicitando a escolha consciente por stack local em vez de staging externo. Correção pequena — sem mudança de status | Douglas Lopes (lps.doug@protonmail.com) |

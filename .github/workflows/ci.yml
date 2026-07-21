@@ -95,6 +95,107 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+  # @spec SPEC-20260716-003 RF-CI-01 a RF-CI-06
+  # Job E2E: executa somente em push para main/master e em PRs com label 'e2e'.
+  # Depende do job 'build'. Falha bloqueia o pipeline (RF-CI-06).
+  e2e:
+    name: E2E (Playwright — fluxos críticos)
+    runs-on: ubuntu-latest
+    # RF-CI-01: depende do build; executa em push para main/master OU em PR com label 'e2e'
+    needs: [build]
+    if: >
+      github.event_name == 'push' ||
+      (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'e2e'))
+    env:
+      # RF-CI-04: secrets provisionados como variáveis de ambiente
+      E2E_BASE_URL: ${{ secrets.E2E_BASE_URL }}
+      E2E_USER_EMAIL: ${{ secrets.E2E_USER_EMAIL }}
+      E2E_USER_PASSWORD: ${{ secrets.E2E_USER_PASSWORD }}
+      E2E_TEST_VEHICLE_PLATE: ${{ secrets.E2E_TEST_VEHICLE_PLATE }}
+      E2E_VEHICLE_A_PLATE: ${{ secrets.E2E_VEHICLE_A_PLATE }}
+      E2E_VEHICLE_B_PLATE: ${{ secrets.E2E_VEHICLE_B_PLATE }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+
+      # RF-CI-03: inicializa Supabase local (banco + auth)
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - run: supabase start
+
+      # Popula o Supabase local com os dados de teste referenciados pelos secrets
+      # E2E_TEST_VEHICLE_PLATE, E2E_VEHICLE_A_PLATE, E2E_VEHICLE_B_PLATE
+      - name: Popular dados de teste E2E
+        working-directory: apps/api
+        run: |
+          eval "$(supabase status -o env | sed 's/^/export /')"
+          export SUPABASE_URL="${API_URL}"
+          export SUPABASE_SERVICE_ROLE_KEY="${SERVICE_ROLE_KEY}"
+          pnpm seed:e2e
+
+      # Exporta credenciais do Supabase local para .env.e2e (API)
+      - name: Exportar credenciais do Supabase local para API
+        working-directory: apps/api
+        run: |
+          eval "$(supabase status -o env | sed 's/^/export /')"
+          cat > .env <<EOF
+          NODE_ENV=production
+          PORT=3001
+          SUPABASE_URL=${API_URL}
+          SUPABASE_ANON_KEY=${ANON_KEY}
+          SUPABASE_SERVICE_ROLE_KEY=${SERVICE_ROLE_KEY}
+          SWAGGER_ENABLED=false
+          API_INTERNAL_URL=http://localhost:3001
+          EOF
+
+      # Exporta variáveis para o Next.js
+      - name: Exportar variáveis para o Next.js
+        working-directory: apps/web
+        run: |
+          eval "$(supabase status -o env | sed 's/^/export /')"
+          cat > .env.local <<EOF
+          API_INTERNAL_URL=http://localhost:3001
+          EOF
+
+      # RF-CI-03: builda dependências na ordem correta
+      - run: pnpm --filter @nave/validators build
+      - run: pnpm --filter @nave/api build
+      - run: pnpm --filter @nave/web build
+
+      # RF-CI-03: inicia a API NestJS em background (script "start" = node dist/main.js)
+      - name: Iniciar API NestJS (porta 3001)
+        working-directory: apps/api
+        run: pnpm start &
+
+      # RF-CI-03: inicia o Next.js em modo produção em background
+      - name: Iniciar Next.js (porta 3000)
+        working-directory: apps/web
+        run: pnpm start &
+
+      # RF-CI-03: aguarda os serviços subirem antes de executar os testes
+      # /health retorna 200 mesmo em estado "degraded" — adequado para wait-on
+      - name: Aguardar serviços (API + Next.js)
+        run: |
+          npx --yes wait-on http://localhost:3001/health http://localhost:3000 --timeout 90000
+
+      # RF-CI-02: instala browsers do Playwright (apenas chromium para reduzir tempo de pipeline)
+      - name: Instalar Playwright (chromium)
+        run: pnpm --filter @nave/web exec playwright install --with-deps chromium
+
+      # Executa a suíte E2E
+      - name: Executar testes E2E
+        run: pnpm --filter @nave/web e2e
+
+      # RF-CI-05: publica relatório HTML como artefato em caso de falha
+      - name: Publicar relatório Playwright
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report-${{ github.run_id }}
+          path: apps/web/e2e/reports/
+          retention-days: 14
+
   dependency-scan:
     name: Dependency scanning (pnpm audit)
     runs-on: ubuntu-latest

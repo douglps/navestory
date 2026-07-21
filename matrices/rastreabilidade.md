@@ -86,6 +86,16 @@
 > Nenhum código existe ainda. `specs/TESTS_SPEC.md` atualizado para referenciar a nova spec como
 > fonte formal da estratégia E2E. Entrada adicionada nesta matriz.
 >
+> **ATUALIZAÇÃO — 2026-07-20 (rev. 48)**
+> Implementação inicial de SPEC-20260716-003 (Testes E2E com Playwright): `@playwright/test` instalado
+> em `apps/web`, estrutura `apps/web/e2e/` criada (fixtures, pages, tests), `playwright.config.ts`
+> adicionado, `global-setup.ts` com login via browser, Page Objects para login/dashboard/expenses/chip,
+> 7 fluxos E2E implementados (RF-E2E-01 a RF-E2E-07), job `e2e` adicionado em `.github/workflows/ci.yml`.
+> Dois fluxos com restrições documentadas: RF-E2E-04 usa hard block real (discrepância com spec que
+> descreve soft warning); RF-E2E-05 bloqueado por ausência de UI de `duplicate_warning` no frontend.
+> Suíte não pôde ser executada localmente por falta de stack rodando. Novos secrets necessários em
+> CI: `E2E_TEST_VEHICLE_PLATE`, `E2E_VEHICLE_A_PLATE`, `E2E_VEHICLE_B_PLATE`.
+
 > **ATUALIZAÇÃO — 2026-07-18**
 > Corrigida colisão de ID: a spec de Testes E2E (`specs/qa/`) e a spec de Deploy Automatizado/CD
 > (`specs/devops/`) foram criadas na mesma rodada (2026-07-16) e ambas receberam o ID
@@ -2001,37 +2011,90 @@ que o artefato ainda não existe no repositório.
 
 ---
 
+## SPEC-20260720-002 — Aviso de Duplicata no Formulário de Criação de Despesa (approved)
+
+> Extensão de UI de R2/SPEC-20260601-002: o backend já retornava `duplicate_warning` e
+> `duplicate_id` na resposta 201, mas o frontend ignorava o campo (gap deliberado, NG-06 da
+> spec original). Implementado em 2026-07-20 durante a construção da suíte E2E
+> (SPEC-20260716-003 RF-E2E-05), que precisava validar o aviso no browser.
+
+| Req | Descrição | Código | Teste | Status |
+|-----|-----------|--------|-------|--------|
+| RF-01 | `ExpenseResponse` estendido com `duplicate_warning?`, `duplicate_id?` | `apps/web/src/app/(app)/expenses/new/page.tsx` | `apps/web/src/app/(app)/expenses/new/page.spec.tsx` | ✅ |
+| RF-02 | `onSuccess` do mutation adia navegação quando `duplicate_warning === true`, guardando `duplicate_id` em estado | `apps/web/src/app/(app)/expenses/new/page.tsx` | `apps/web/src/app/(app)/expenses/new/page.spec.tsx` | ✅ |
+| RF-03 | Banner `role="alert"` com texto informativo, botão "Entendido" e link "Ver despesa duplicada" | `apps/web/src/app/(app)/expenses/new/page.tsx` | `apps/web/src/app/(app)/expenses/new/page.spec.tsx`, `apps/web/e2e/tests/expense-warnings.spec.ts` | ✅ |
+| RF-04 | Banner posicionado no padrão visual existente de alertas do formulário | `apps/web/src/app/(app)/expenses/new/page.tsx` | — (visual, não testado automaticamente) | ✅ |
+| RF-05 | Sem `duplicate_warning`, navegação direta para `/expenses` (comportamento preexistente preservado) | `apps/web/src/app/(app)/expenses/new/page.tsx` | `apps/web/src/app/(app)/expenses/new/page.spec.tsx` (demais testes do arquivo) | ✅ |
+| RF-06 | Banner de duplicata e alertas de erro (`fieldError`, `mutation.isError`) mutuamente exclusivos | `apps/web/src/app/(app)/expenses/new/page.tsx` | `apps/web/src/app/(app)/expenses/new/page.spec.tsx` | ✅ |
+
+---
+
 ## SPEC-20260716-003 — Testes E2E com Playwright (draft)
 
 > Define configuração do Playwright em `apps/web/e2e/`, suíte mínima de testes E2E para fluxos
 > críticos (autenticação, avisos de odômetro/duplicata, troca de contexto de veículo) e integração
 > com CI. Regras: R1, R2, R-CTX-07. Segurança: S1. Camadas: frontend, qa.
-> **Status: draft — nenhum código ou teste existe.** Entrada incompleta por design: será
-> preenchida quando a spec avançar para `approved` e a implementação iniciar.
+> **Implementação iniciada em 2026-07-20:** configuração completa (RF-CFG-01 a RF-CFG-08),
+> Page Objects (LoginPage, DashboardPage, ExpenseFormPage, VehicleContextChipPage),
+> fluxos RF-E2E-01 a RF-E2E-07 e job `e2e` no CI implementados. RF-E2E-04 corrigida no
+> texto da spec (changelog v1.1) para refletir R-ODO-01 (hard block real) em vez de R1;
+> RF-E2E-05 destravada após implementação de SPEC-20260720-002 (banner de duplicata).
+> Suíte NÃO pôde ser executada localmente (stack Supabase local não está rodando no
+> ambiente de desenvolvimento atual) — validada apenas via `playwright test --list` e
+> `tsc --noEmit` (sem erros).
+> **Auditoria de 2026-07-20 (pós-implementação):** encontrado e corrigido bug de caminho —
+> o step de upload de artefato do CI apontava para `apps/web/playwright-report/`, mas o
+> reporter HTML do `playwright.config.ts` grava em `e2e/reports/` (RF-CFG-02); corrigido em
+> `.github/workflows/ci.yml`. Spec atualizada (changelog v1.2) para citar as env vars
+> `E2E_TEST_VEHICLE_PLATE`, `E2E_VEHICLE_A_PLATE`, `E2E_VEHICLE_B_PLATE` em RF-DATA-02 e
+> RF-CI-04 — já usadas pelo código mas ausentes do texto original. Pendência de
+> provisionamento dos 6 GitHub Secrets registrada em `important/PENDENCIAS-E-PROCESSOS.md`.
+> Execução real da suíte em CI e os critérios de aceite CA-01 a CA-09 continuam em aberto.
 
 ### Configuração do Playwright (RF-CFG)
 
 | Req | Descrição | Código | Teste | Status |
 |-----|-----------|--------|-------|--------|
-| RF-CFG-01 a RF-CFG-08 | Instalação de `@playwright/test`, `playwright.config.ts`, estrutura `e2e/fixtures/`/`pages/`/`tests/`, scripts `e2e` e `e2e:ui`, setup global de autenticação reutilizável via `storageState`, `.gitignore` local | — | — | ⏳ |
+| RF-CFG-01 | `@playwright/test` adicionado como devDependency (`^1.61.1` ≥ 1.45) | `apps/web/package.json` | — | 🔶 |
+| RF-CFG-02 | `playwright.config.ts` com `testDir`, `baseURL`, `timeout 30s`, `retries CI?3:0`, relatório HTML | `apps/web/playwright.config.ts` | — | 🔶 |
+| RF-CFG-03 | Somente chromium configurado (firefox e webkit opcionais comentados) | `apps/web/playwright.config.ts` | — | 🔶 |
+| RF-CFG-04 | Scripts `e2e` e `e2e:ui` em `apps/web/package.json` | `apps/web/package.json` | — | 🔶 |
+| RF-CFG-05 | Estrutura `e2e/fixtures/`, `e2e/pages/`, `e2e/tests/` criada | `apps/web/e2e/` | — | 🔶 |
+| RF-CFG-06 | `e2e/fixtures/base.ts` exporta `test` e `expect` configurados com `storageState` | `apps/web/e2e/fixtures/base.ts` | — | 🔶 |
+| RF-CFG-07 | `e2e/.gitignore` ignorando `reports/`, `test-results/`, `playwright-report/`, `auth-state.json` | `apps/web/e2e/.gitignore` | — | 🔶 |
+| RF-CFG-08 | `e2e/global-setup.ts`: login via browser, salva cookies em `e2e/auth-state.json` | `apps/web/e2e/global-setup.ts` | — | 🔶 |
+
+### Page Objects
+
+| Classe | Arquivo | RFs cobertos |
+|--------|---------|-------------|
+| `LoginPage` | `apps/web/e2e/pages/login.page.ts` | RF-E2E-01, RF-E2E-02, RF-E2E-03 |
+| `DashboardPage` | `apps/web/e2e/pages/dashboard.page.ts` | RF-E2E-02, RF-E2E-03 |
+| `ExpenseFormPage` | `apps/web/e2e/pages/expense-form.page.ts` | RF-E2E-04, RF-E2E-05, RF-E2E-07 |
+| `VehicleContextChipPage` | `apps/web/e2e/pages/vehicle-context-chip.page.ts` | RF-E2E-06, RF-E2E-07 |
 
 ### Fluxos E2E Obrigatórios (RF-E2E)
 
 | Req | Descrição | Código | Teste | Status |
 |-----|-----------|--------|-------|--------|
-| RF-E2E-01 | Acesso a rota privada sem sessão → redirect para `/login` (S1, CT-006) | — | `apps/web/e2e/tests/auth.e2e.ts` | ⏳ |
-| RF-E2E-02 | Login com credenciais válidas → acesso ao dashboard (S1, CT-006) | — | `apps/web/e2e/tests/auth.e2e.ts` | ⏳ |
-| RF-E2E-03 | Logout → redirect para `/login` e bloqueio de acesso (S1) | — | `apps/web/e2e/tests/auth.e2e.ts` | ⏳ |
-| RF-E2E-04 | Criação de despesa com odômetro retroativo → exibe aviso `odometer_warning` na tela (R1, CT-001) | — | `apps/web/e2e/tests/expenses.e2e.ts` | ⏳ |
-| RF-E2E-05 | Criação de despesa duplicada → exibe aviso de duplicata (R2, CT-002) | — | `apps/web/e2e/tests/expenses.e2e.ts` | ⏳ |
-| RF-E2E-06 | Clicar no VehicleContextChip → abre dialog → seleciona veículo → chip atualiza (R-CTX-07) | — | `apps/web/e2e/tests/vehicle-context.e2e.ts` | ⏳ |
-| RF-E2E-07 | Troca de contexto propaga para campo `vehicle_id` do formulário de despesa (R-CTX-06, R-CTX-07) | — | `apps/web/e2e/tests/vehicle-context.e2e.ts` | ⏳ |
+| RF-E2E-01 | Acesso a rota privada sem sessão → redirect para `/login` (S1, CT-006) | `apps/web/middleware.ts` | `apps/web/e2e/tests/auth.spec.ts` | 🔶 implementado, não executado localmente |
+| RF-E2E-02 | Login com credenciais válidas → acesso ao dashboard (S1, CT-006) | `apps/web/src/app/(auth)/login/page.tsx` | `apps/web/e2e/tests/auth.spec.ts` | 🔶 implementado, não executado localmente |
+| RF-E2E-03 | Logout → redirect para `/login` e bloqueio de acesso (S1) | `apps/web/src/lib/auth/logout.ts` | `apps/web/e2e/tests/auth.spec.ts` | 🔶 implementado, não executado localmente |
+| RF-E2E-04 | Odômetro fora de sequência → hard block com alerta na tela, sem salvar (R-ODO-01, CT-001) — spec corrigida em 2026-07-20 (changelog v1.1): descrevia soft warning (R1), comportamento real e testado é hard block via `strict=true`, exclusivo do fluxo web | `apps/web/src/app/(app)/expenses/new/page.tsx`, `apps/api/src/modules/expenses/expenses.service.ts` | `apps/web/e2e/tests/expense-warnings.spec.ts` | 🔶 implementado; requer `E2E_TEST_VEHICLE_PLATE` e odômetro pré-existente |
+| RF-E2E-05 | Duplicata → exibe banner de aviso (R2, CT-002) — banner implementado via SPEC-20260720-002 (RF-02, RF-03); teste destravado | `apps/web/src/app/(app)/expenses/new/page.tsx`, `apps/api/src/modules/expenses/expenses.service.ts` | `apps/web/e2e/tests/expense-warnings.spec.ts` | 🔶 implementado; requer `E2E_TEST_VEHICLE_PLATE` |
+| RF-E2E-06 | Clica no VehicleContextChip → abre dialog → seleciona veículo → chip atualiza (R-CTX-07) | `apps/web/src/components/layout/vehicle-context-chip.tsx` | `apps/web/e2e/tests/vehicle-context.spec.ts` | 🔶 implementado; requer `E2E_VEHICLE_B_PLATE` |
+| RF-E2E-07 | Troca de contexto propaga para `vehicle_id` do formulário de despesa (R-CTX-06, R-CTX-07) | `apps/web/src/lib/hooks/use-vehicle-context-field.ts` | `apps/web/e2e/tests/vehicle-context.spec.ts` | 🔶 implementado; requer `E2E_VEHICLE_A_PLATE` e `E2E_VEHICLE_B_PLATE` |
 
 ### Integração com CI (RF-CI)
 
 | Req | Descrição | Código | Teste | Status |
 |-----|-----------|--------|-------|--------|
-| RF-CI-01 a RF-CI-06 | Job `e2e` em `.github/workflows/ci.yml`: depende de `build`, executa em `main`/`master`, instala chromium, provisiona Supabase local + API + Next.js, publica relatório HTML como artifact em falha | — | — | ⏳ |
+| RF-CI-01 | Job `e2e` em `.github/workflows/ci.yml`, depende de `build`, executa em push para `main`/`master` OU PR com label `e2e` | `.github/workflows/ci.yml` | — | 🔶 |
+| RF-CI-02 | Instala chromium com `pnpm --filter @nave/web exec playwright install --with-deps chromium` | `.github/workflows/ci.yml` | — | 🔶 |
+| RF-CI-03 | Supabase local + API NestJS + Next.js iniciados antes dos testes; `wait-on` para health check | `.github/workflows/ci.yml` | — | 🔶 |
+| RF-CI-04 | Secrets `E2E_BASE_URL`, `E2E_USER_EMAIL`, `E2E_USER_PASSWORD` passados ao job via `env:` | `.github/workflows/ci.yml` | — | 🔶 |
+| RF-CI-05 | Relatório HTML publicado como artefato GitHub Actions em falha | `.github/workflows/ci.yml` | — | 🔶 |
+| RF-CI-06 | Falha nos testes E2E bloqueia o pipeline (job `e2e` no CI sem `continue-on-error`) | `.github/workflows/ci.yml` | — | 🔶 |
 
 ---
 

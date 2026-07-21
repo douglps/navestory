@@ -1,0 +1,8 @@
+# @spec SPEC-20260716-003 RF-CFG-07, RNF-04
+# Sessão de autenticação capturada pelo globalSetup — nunca versionar
+auth-state.json
+
+# Relatórios e artefatos de teste gerados localmente
+reports/
+test-results/
+playwright-report/

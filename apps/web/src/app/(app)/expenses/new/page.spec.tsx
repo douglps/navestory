@@ -139,6 +139,35 @@ describe("NewExpensePage", () => {
   });
 
   /**
+   * @spec SPEC-20260720-002 RF-02 RF-03 RF-06
+   */
+  it("exibe aviso de duplicata e adia a navegação até 'Entendido' (RF-02, RF-03)", async () => {
+    const DUPLICATE_ID = "33333333-3333-4333-8333-333333333333";
+    vi.mocked(apiClient).mockImplementation((path: string) => {
+      if (path === "/vehicles") return Promise.resolve(vehicles) as never;
+      if (path === "/categories") return Promise.resolve(categories) as never;
+      if (path === "/expense-templates") return Promise.resolve({ data: [] }) as never;
+      if (path === "/expenses/suppliers") return Promise.resolve({ data: [] }) as never;
+      return Promise.resolve({ id: "e1", duplicate_warning: true, duplicate_id: DUPLICATE_ID }) as never;
+    });
+    renderPage();
+
+    await fillValidForm();
+    fireEvent.click(screen.getByRole("button", { name: "Registrar" }));
+
+    const alert = await screen.findByRole("alert");
+    expect(alert).toHaveTextContent("já existe");
+    expect(pushMock).not.toHaveBeenCalled();
+    expect(screen.getByRole("link", { name: "Ver despesa duplicada" })).toHaveAttribute(
+      "href",
+      `/expenses/${DUPLICATE_ID}`,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Entendido" }));
+    expect(pushMock).toHaveBeenCalledWith("/expenses");
+  });
+
+  /**
    * @spec SPEC-20260612-002 RF-02
    */
   it("altera o ano mantendo mês e dia (RF-02)", async () => {

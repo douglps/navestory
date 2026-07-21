@@ -176,6 +176,7 @@ Ao subir a versão de uma regra (`vN → vN+1`): registrar a linha de histórico
 | `impact-analyzer` | Analisar impacto antes de mudanças significativas                |
 | `reviewer`        | Revisar código e specs antes de commitar                        |
 | `tester`          | Criar planos de teste e verificar cobertura                     |
+| `e2e-tester`      | Implementar e manter testes E2E com Playwright (Page Object Model, fixtures de auth) conforme `specs/qa/SPEC-20260716-003-e2e-playwright.md` |
 | `doc-keeper`      | Manter documentação, matrizes e RULES.md atualizados            |
 | `design-system`   | Pesquisar tendências, criar/evoluir componentes UI, auditar consistência visual, propor paletas e identidade |
 | `clinical-reviewer` | Revisar specs/telas de sistemas de saúde sob perspectiva de médico/enfermeiro: segurança do paciente, completude clínica e simplicidade de uso |

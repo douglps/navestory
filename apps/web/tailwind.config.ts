@@ -6,6 +6,9 @@ import type { Config } from "tailwindcss";
 // referencia as variáveis CSS geradas em `globals.css` a partir dela (`oklch(var(--x) /
 // <alpha-value>)` permite modificador de opacidade do Tailwind, ex: `bg-primary/50`).
 const config: Config = {
+  // @spec SPEC-20260721-001 RF-03 — next-themes aplica/remove a classe `.dark` no <html>;
+  // `darkMode: "class"` faz o Tailwind gerar variantes `dark:` a partir dela.
+  darkMode: "class",
   content: ["./src/**/*.{js,ts,jsx,tsx,mdx}", "../../packages/ui/src/**/*.{js,ts,jsx,tsx}"],
   theme: {
     extend: {
@@ -33,6 +36,11 @@ const config: Config = {
           DEFAULT: "oklch(var(--accent) / <alpha-value>)",
           foreground: "oklch(var(--accent-foreground) / <alpha-value>)",
         },
+        // @spec SPEC-20260721-001 RF-01
+        gold: {
+          DEFAULT: "oklch(var(--gold) / <alpha-value>)",
+          foreground: "oklch(var(--gold-foreground) / <alpha-value>)",
+        },
         success: {
           DEFAULT: "oklch(var(--success) / <alpha-value>)",
           foreground: "oklch(var(--success-foreground) / <alpha-value>)",
@@ -52,6 +60,27 @@ const config: Config = {
           DEFAULT: "oklch(var(--info) / <alpha-value>)",
           foreground: "oklch(var(--info-foreground) / <alpha-value>)",
           pastel: "oklch(var(--info-pastel) / <alpha-value>)",
+        },
+        // @spec SPEC-20260721-002 RF-04
+        surface: {
+          DEFAULT: "oklch(var(--surface) / <alpha-value>)",
+          elevated: "oklch(var(--surface-elevated) / <alpha-value>)",
+        },
+        "on-surface": {
+          DEFAULT: "oklch(var(--on-surface) / <alpha-value>)",
+          muted: "oklch(var(--on-surface-muted) / <alpha-value>)",
+          subtle: "oklch(var(--on-surface-subtle) / <alpha-value>)",
+        },
+        chart: {
+          1: "oklch(var(--chart-1) / <alpha-value>)",
+          2: "oklch(var(--chart-2) / <alpha-value>)",
+          3: "oklch(var(--chart-3) / <alpha-value>)",
+          4: "oklch(var(--chart-4) / <alpha-value>)",
+          5: "oklch(var(--chart-5) / <alpha-value>)",
+          grid: "oklch(var(--chart-grid) / <alpha-value>)",
+        },
+        finance: {
+          outgoing: "oklch(var(--finance-outgoing) / <alpha-value>)",
         },
       },
       borderRadius: {

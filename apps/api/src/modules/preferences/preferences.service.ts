@@ -1,13 +1,24 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
-import { DEFAULT_AUTO_DRAFT_ENABLED, DEFAULT_CHIP_FIELDS, type ChipField } from "@nave/validators";
+import {
+  DEFAULT_AUTO_DRAFT_ENABLED,
+  DEFAULT_CHIP_FIELDS,
+  DEFAULT_DASHBOARD_KPI_IDS,
+  type ChipField,
+  type KpiCatalogId,
+} from "@nave/validators";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createUserScopedClient } from "../../shared/supabase/create-user-scoped-client";
 import type { UpdatePreferencesDto } from "./dto/update-preferences.dto";
 
-type PreferencesResponse = { auto_draft_enabled: boolean; vehicle_chip_fields: ChipField[] };
+type PreferencesResponse = {
+  auto_draft_enabled: boolean;
+  vehicle_chip_fields: ChipField[];
+  dashboard_kpi_ids: KpiCatalogId[];
+  timezone: string | null;
+};
 
-const PREFERENCES_COLUMNS = "auto_draft_enabled, vehicle_chip_fields";
+const PREFERENCES_COLUMNS = "auto_draft_enabled, vehicle_chip_fields, dashboard_kpi_ids, timezone";
 
 /**
  * @spec SPEC-20260612-003
@@ -44,6 +55,10 @@ export class PreferencesService {
     return {
       auto_draft_enabled: row?.auto_draft_enabled ?? DEFAULT_AUTO_DRAFT_ENABLED,
       vehicle_chip_fields: row?.vehicle_chip_fields ?? DEFAULT_CHIP_FIELDS,
+      dashboard_kpi_ids: row?.dashboard_kpi_ids ?? DEFAULT_DASHBOARD_KPI_IDS,
+      // R-TZ-01, RF-BK-01: `null` cru, sem substituir por 'UTC' aqui — fallback é responsabilidade
+      // de cada consumidor (DashboardService, ExpensesService, MaintenancesService).
+      timezone: row?.timezone ?? null,
     };
   }
 

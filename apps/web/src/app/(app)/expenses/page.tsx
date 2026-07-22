@@ -6,13 +6,16 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState, type ReactNode } from "react";
 import { Tabs } from "@nave/ui";
 import { apiClient } from "@/lib/http/api-client";
+import { useVehicleContext } from "@/lib/context/use-vehicle-context";
+import { formatDateInTz } from "@/lib/datetime-tz";
+import { usePreferences } from "@/lib/hooks/use-preferences";
 
 interface Expense {
   id: string;
   vehicle_id: string;
   category: string;
   amount: number;
-  date: string;
+  occurred_at: string;
   description: string | null;
 }
 
@@ -212,9 +215,11 @@ function groupByVehicle(expenses: Expense[], vehicleById: Map<string, Vehicle>):
 function ByVehicleTab({
   expenses,
   vehicleById,
+  tz,
 }: {
   expenses: Expense[] | undefined;
   vehicleById: Map<string, Vehicle>;
+  tz: string | null | undefined;
 }): ReactNode {
   if (!expenses || expenses.length === 0) {
     return <p>Nenhuma despesa no período.</p>;
@@ -246,7 +251,7 @@ function ByVehicleTab({
               <li key={expense.id}>
                 <Link href={`/expenses/${expense.id}`} className="flex justify-between gap-4">
                   <span>
-                    {expense.date} — {expense.category}
+                    {formatDateInTz(expense.occurred_at, tz)} — {expense.category}
                   </span>
                   <span>{currency(expense.amount)}</span>
                 </Link>
@@ -314,6 +319,9 @@ function ExpensesPageContent(): ReactNode {
     retry: false,
   });
 
+  const { data: preferences } = usePreferences();
+  const tz = preferences?.timezone;
+
   const { data: kpis } = useQuery({
     queryKey: ["expenses", "kpis"],
     queryFn: () => apiClient<ExpenseKpis>("/expenses/kpis"),
@@ -334,6 +342,21 @@ function ExpensesPageContent(): ReactNode {
   });
 
   const vehicleById = new Map((vehicles ?? []).map((vehicle) => [vehicle.id, vehicle]));
+
+  // @spec SPEC-20260721-001 RF-05 — quando o contexto global tem um único veículo em foco,
+  // as listagens filtram automaticamente por ele. Nos demais modos (grupo/multi/atributo/nenhum)
+  // a listagem não é restringida aqui — esses modos já têm resolução própria fora do escopo desta spec.
+  const { selectionMode, activeVehicleId } = useVehicleContext();
+  const filterByActiveVehicle = selectionMode === "single" && activeVehicleId != null;
+  const visibleExpenses = filterByActiveVehicle
+    ? expenses?.filter((expense) => expense.vehicle_id === activeVehicleId)
+    : expenses;
+  const visibleUpcoming = filterByActiveVehicle
+    ? upcoming?.filter((item) => item.vehicle_id === activeVehicleId)
+    : upcoming;
+  const visibleAllExpenses = filterByActiveVehicle
+    ? allExpenses?.filter((expense) => expense.vehicle_id === activeVehicleId)
+    : allExpenses;
 
   return (
     <main className="mx-auto flex max-w-2xl flex-col gap-4 p-8">
@@ -369,16 +392,16 @@ function ExpensesPageContent(): ReactNode {
         <>
           {isLoading && <p>Carregando...</p>}
           {isError && <p role="alert">Não foi possível carregar as despesas.</p>}
-          {!isLoading && !isError && expenses?.length === 0 && (
+          {!isLoading && !isError && visibleExpenses?.length === 0 && (
             <p>Nenhuma despesa registrada ainda.</p>
           )}
 
           <ul className="flex flex-col gap-2">
-            {expenses?.map((expense) => (
+            {visibleExpenses?.map((expense) => (
               <li key={expense.id}>
                 <Link href={`/expenses/${expense.id}`} className="flex justify-between gap-4">
                   <span>
-                    {expense.date} — {expense.category} — {vehicleLabel(vehicleById.get(expense.vehicle_id))}
+                    {formatDateInTz(expense.occurred_at, tz)} — {expense.category} — {vehicleLabel(vehicleById.get(expense.vehicle_id))}
                   </span>
                   <span>{currency(expense.amount)}</span>
                 </Link>
@@ -388,10 +411,10 @@ function ExpensesPageContent(): ReactNode {
         </>
       )}
 
-      {activeTab === "proximas" && <UpcomingCostsTab items={upcoming} />}
+      {activeTab === "proximas" && <UpcomingCostsTab items={visibleUpcoming} />}
 
       {activeTab === "por-veiculo" && (
-        <ByVehicleTab expenses={allExpenses} vehicleById={vehicleById} />
+        <ByVehicleTab expenses={visibleAllExpenses} vehicleById={vehicleById} tz={tz} />
       )}
     </main>
   );

@@ -1063,6 +1063,58 @@ Achados identificados durante sessão de testes manuais end-to-end. Relatório c
 
 ---
 
+### IMPACTO-040 — Análise Pré-Implementação: Dashboard v2 (SPEC-20260721-002) (2026-07-21)
+
+| Campo | Valor |
+|-------|-------|
+| **Spec** | SPEC-20260721-002 (draft) |
+| **Status** | Avaliação pré-implementação — nenhum código desta spec existe ainda |
+| **Risco geral** | Alto (RF-01 e RF-07 têm dependências não documentadas na spec) |
+
+Análise realizada pelo agente `impact-analyzer` em 2026-07-21, antes da implementação dos 9
+RFs do Dashboard v2. RF-08 e RF-09 excluídos da análise profunda — ambos bloqueados por
+confirmação de backend/banco (ver spec).
+
+| # | Mudança | Módulos afetados | Risco | Mitigação |
+|---|---------|-----------------|-------|-----------|
+| 1 | **RF-04** — Novos tokens CSS em `globals.css` (`--surface`, `--surface-elevated`, `--on-surface`, `--on-surface-muted`, `--on-surface-subtle`, `--chart-1..5`, `--chart-grid`, `--finance-outgoing`) + classes `.glass-card` e `.kicker` | `apps/web/src/app/globals.css` (arquivo global de todo o app); `apps/web/tailwind.config.ts` (se tokens de superfície precisarem de classes Tailwind) | Médio | Mudança aditiva — verificar que nenhum token novo colide com token existente; garantir par light/dark para cada token (RNF-03); atualizar `tailwind.config.ts` para mapeamento das variáveis CSS aos tokens Tailwind se os componentes consumidores usarem classes (`bg-surface`, etc.) |
+| 2 | **RF-03** — Substituição de cores hardcoded (`bg-red-50`, `text-red-800`, `bg-amber-500`, `bg-green-500` etc.) por tokens semânticos em `FleetAlertBar.tsx` e `VehicleHealthCard.tsx` | `apps/web/src/components/dashboard/FleetAlertBar.tsx`, `apps/web/src/components/dashboard/VehicleHealthCard.tsx`, `apps/web/src/components/dashboard/VehicleHealthCard.spec.tsx` | Médio | 3 testes de `VehicleHealthCard.spec.tsx` verificam as classes literais que serão removidas (`bg-green-500`/`bg-amber-500`/`bg-red-500`) — devem ser atualizados para as novas classes de token junto do PR |
+| 3 | **RF-02** — Novo componente `VehicleHealthScore` (SVG circular progress ring) em `packages/ui`; substituição do "dot" em `VehicleHealthCard.tsx` | `packages/ui/src/components/vehicle-health-score.tsx` (novo), `packages/ui/src/index.ts`, `apps/web/src/components/dashboard/VehicleHealthCard.tsx`, `apps/web/src/components/dashboard/VehicleHealthCard.spec.tsx` | Baixo | Mudança aditiva em `packages/ui` — nenhum dos 16 consumidores atuais de `@nave/ui` quebra; novo teste `vehicle-health-score.test.tsx` obrigatório; prop `size` recomendada para suportar cards estreitos pós-RF-06 |
+| 4 | **RF-06** — Mudança de grid de veículos de 3 colunas para 4 colunas (mobile: 1→2, sm: 2→3, lg: 3→4) | `apps/web/src/app/(app)/dashboard/page.tsx` | Médio | Cards em viewport 360px ficarão com ≈142px de largura — validação visual obrigatória antes do merge; depende de RF-02 (VehicleHealthScore com prop de tamanho flexível) |
+| 5 | **RF-07** — Substituição do H1 "Dashboard" por saudação personalizada com nome do usuário, período do dia e data | `apps/web/src/app/(app)/dashboard/page.tsx` | Alto | **Gap identificado:** o nome do usuário NÃO está disponível client-side sem API call — o projeto usa cookie httpOnly, sem `createBrowserClient` nem hook de sessão no frontend. Resolver via React Query cacheando `GET /profile` (ou equivalente) antes de implementar; a premissa da spec ("sem novo fetch") precisa ser revisada ou esclarecida |
+| 6 | **RF-01** — Migração de `FleetKpis`/`KpiTile` (local) para `KpiCard` de `packages/ui`, com sparkline de 6 pontos e delta de tendência | `apps/web/src/components/dashboard/FleetKpis.tsx` (a ser deletado), `apps/web/src/app/(app)/dashboard/page.tsx`, `apps/api/src/modules/dashboard/dashboard.service.ts`, `apps/api/src/modules/dashboard/dashboard.controller.ts`, `packages/validators/src/dashboard.schemas.ts`, `apps/api/src/modules/dashboard/dashboard.service.spec.ts` | Alto | **Gap identificado 1:** `GET /dashboard/fleet-kpis` não retorna dados históricos para sparkline nem delta percentual para trend — extensão do endpoint de backend é pré-requisito obrigatório. **Gap identificado 2:** `KpiCardProps` não tem `onClick` — adicionar como prop opcional (aditivo, sem breaking change) ou envolver em Link no nível do dashboard. Confirmar estratégia de navegação antes de implementar |
+| 7 | **RF-05** — Reposicionamento de `ExportControls` para o final da página + estados de loading/erro/disabled | `apps/web/src/app/(app)/dashboard/page.tsx` | Baixo | Troca de `<a download>` por `fetch + Blob` para loading state real; verificar disponibilidade do plano do usuário client-side para o estado "desabilitado para plano Grátis" (R-BIZ-12) |
+
+**Ordem de implementação recomendada (confirmada):** RF-04 → RF-03 (pode ser fundido com RF-02 numa PR) → RF-02 → RF-06 → RF-07 (após decisão sobre fonte do nome) → RF-01 (após extensão do backend) → RF-05.
+
+**RF-08 e RF-09:** bloqueados — não iniciar sem confirmação de backend/banco (ver spec RF-08/RF-09). RF-09 requer verificação da RPC `get_upcoming_costs` via `SELECT * FROM pg_proc WHERE proname = 'get_upcoming_costs'` no Supabase antes de qualquer implementação.
+
+**Riscos a observar na implementação:**
+- RF-07 e RF-05 (plano do usuário) podem exigir a mesma fonte de dados de perfil — avaliar se uma query React Query compartilhada pode atender os dois ao invés de duas chamadas separadas.
+- Ao deletar `FleetKpis.tsx`, confirmar que nenhuma outra rota o importa além de `dashboard/page.tsx` (busca por `FleetKpis` no monorepo antes do delete).
+- A nota histórica em `FleetKpis.tsx` referencia IMPACTO-033 — ao concluir RF-01, sinalizar em IMPACTO-033 que a migração foi executada e o arquivo removido.
+
+### IMPACTO-041 — Execução: Shell Mobile-First e Migração Tailwind v3 → v4 (SPEC-20260722-003) (2026-07-22)
+
+| Campo | Valor |
+|-------|-------|
+| **Spec** | SPEC-20260722-003 (approved) |
+| **Status** | Implementado — código, testes unitários e build validados; E2E e auditoria axe-core ficam para SPEC-20260716-003 |
+| **Risco geral** | Médio (migração de engine CSS é global, mas sem `@theme`/reescrita de tokens) |
+
+| # | Mudança | Módulos afetados | Risco | Mitigação |
+|---|---------|-----------------|-------|-----------|
+| 1 | **Bloco A** — `tailwindcss` v3→v4, `@tailwindcss/postcss` novo, `autoprefixer` removido, `postcss.config.js` e `globals.css` (`@import "tailwindcss"` + `@config "../../tailwind.config.ts"`) | `apps/web/package.json`, `apps/web/postcss.config.js`, `apps/web/src/app/globals.css` | Médio | `tailwind.config.ts` mantido sem alteração (estratégia `@config` compat layer); `pnpm build` e `pnpm lint` validados sem erros após a migração |
+| 2 | **RF-06 a RF-09** — Sidebar vira drawer/overlay em `< 768px`, com trap focus nativo, fechamento por Esc/backdrop/navegação | `apps/web/src/components/layout/sidebar.tsx`, `apps/web/src/components/layout/sidebar.spec.tsx` | Médio | z-index ajustado para a escala local (`z-[250]`/`z-[240]`, não `z-[4000]`/`z-[3999]` da spec) — ver nota de desvio em `matrices/rastreabilidade.md`; label/truncamento de texto do menu desacoplado do "collapsed" de desktop via `useMediaQuery` (evita drawer mobile herdar estado colapsado do desktop) |
+| 3 | **RF-10, RF-11, RF-14** — Hamburger no header (SVG inline, sem nova dependência de ícones), chip/palette ocultos em `< 768px` | `apps/web/src/components/layout/header.tsx`, `apps/web/src/components/layout/header.spec.tsx` | Baixo | Elementos ocultos via `hidden md:flex` (permanecem no DOM), sem quebrar `header.spec.tsx` pré-existente que buscava o chip por texto |
+| 4 | **RF-12** — `pl-16`/`pl-64` fixo → `md:pl-16`/`md:pl-64` no layout do app shell | `apps/web/src/app/(app)/layout.tsx` | Baixo | Mudança puramente responsiva; sem padding em mobile já que a sidebar deixa de ocupar espaço fixo |
+
+**Riscos a observar:**
+- RNF-01 (sem regressão visual em desktop ≥ 768px) validado apenas por leitura de código e testes unitários — revisão visual manual/screenshot ainda pendente antes do merge.
+- RF-09, RF-12, RF-13 têm cobertura de código mas teste automatizado (E2E/axe-core) fica para `SPEC-20260716-003`, conforme já previsto no "Fora de Escopo" da spec.
+
+---
+
 ## Legenda de Risco
 
 | Nível | Critério |

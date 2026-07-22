@@ -4,6 +4,7 @@ import {
   CHIP_FIELDS,
   DEFAULT_CHIP_FIELDS,
   chipFieldsSchema,
+  timezoneSchema,
   updatePreferencesInputSchema,
   type ChipField,
   type UpdatePreferencesInput,
@@ -16,7 +17,21 @@ import { formatChipPreview } from "@/lib/vehicle-chip";
 interface UserPreferencesResponse {
   auto_draft_enabled: boolean;
   vehicle_chip_fields?: ChipField[];
+  timezone?: string | null;
 }
+
+/** @spec SPEC-20260715-002 RF-FE-06 — fusos IANA do Brasil obrigatórios no seletor */
+const BRAZIL_TIMEZONES = [
+  "America/Sao_Paulo",
+  "America/Manaus",
+  "America/Belem",
+  "America/Fortaleza",
+  "America/Recife",
+  "America/Porto_Velho",
+  "America/Boa_Vista",
+  "America/Rio_Branco",
+  "America/Noronha",
+] as const;
 
 const CHIP_FIELD_LABELS: Record<ChipField, string> = {
   plate: "Placa",
@@ -79,12 +94,19 @@ export default function PreferencesPage(): ReactNode {
   const [chipSaveState, setChipSaveState] = useState<"idle" | "saved">("idle");
   const [chipError, setChipError] = useState<string | null>(null);
 
+  const [timezone, setTimezone] = useState<string>("");
+  const [isTzDirty, setIsTzDirty] = useState(false);
+  const [tzSaveState, setTzSaveState] = useState<"idle" | "saved">("idle");
+  const [tzError, setTzError] = useState<string | null>(null);
+
   useEffect(() => {
     if (preferences) {
       setAutoDraftEnabled(preferences.auto_draft_enabled);
       setIsDraftDirty(false);
       setChipFields(preferences.vehicle_chip_fields ?? DEFAULT_CHIP_FIELDS);
       setIsChipDirty(false);
+      setTimezone(preferences.timezone ?? "");
+      setIsTzDirty(false);
     }
   }, [preferences]);
 
@@ -160,6 +182,39 @@ export default function PreferencesPage(): ReactNode {
     setIsChipDirty(false);
     setChipSaveState("idle");
     setChipError(null);
+  }
+
+  function handleTimezoneChange(value: string): void {
+    setTimezone(value);
+    setIsTzDirty(true);
+    setTzSaveState("idle");
+    setTzError(null);
+  }
+
+  /** @spec SPEC-20260715-002 RF-FE-02 */
+  function handleSaveTimezone(): void {
+    const result = timezoneSchema.safeParse(timezone);
+    if (!result.success) {
+      setTzError(result.error.issues[0]?.message ?? "Fuso horário inválido");
+      return;
+    }
+    setTzError(null);
+    mutation.mutate(
+      { timezone: result.data },
+      {
+        onSuccess: () => {
+          setIsTzDirty(false);
+          setTzSaveState("saved");
+        },
+      },
+    );
+  }
+
+  function handleCancelTimezone(): void {
+    setTimezone(preferences?.timezone ?? "");
+    setIsTzDirty(false);
+    setTzSaveState("idle");
+    setTzError(null);
   }
 
   if (isLoading) return <main className="p-8">Carregando...</main>;
@@ -265,6 +320,45 @@ export default function PreferencesPage(): ReactNode {
             Cancelar
           </button>
           {chipSaveState === "saved" && !isChipDirty && <span>✓ Salvo</span>}
+        </div>
+      </section>
+
+      {/* @spec SPEC-20260715-002 RF-FE-02, RF-FE-06 */}
+      <section className="flex flex-col gap-3">
+        <h2 className="text-lg font-medium">Fuso horário</h2>
+        <p className="text-sm text-muted-foreground">
+          Usado para calcular &quot;hoje&quot; em alertas e KPIs, e para preencher a hora atual em
+          novos lançamentos.
+        </p>
+
+        <span className="text-sm">
+          Atual: <strong>{preferences?.timezone ?? "Não detectado ainda"}</strong>
+        </span>
+
+        <label htmlFor="timezone">Selecionar fuso</label>
+        <input
+          id="timezone"
+          list="timezone-options"
+          value={timezone}
+          onChange={(event) => handleTimezoneChange(event.target.value)}
+          placeholder="America/Sao_Paulo"
+        />
+        <datalist id="timezone-options">
+          {BRAZIL_TIMEZONES.map((tz) => (
+            <option key={tz} value={tz} />
+          ))}
+        </datalist>
+
+        {tzError && <p role="alert">{tzError}</p>}
+
+        <div className="flex items-center gap-2">
+          <button type="button" onClick={handleSaveTimezone} disabled={!isTzDirty || mutation.isPending}>
+            {mutation.isPending ? "Salvando..." : "Salvar"}
+          </button>
+          <button type="button" onClick={handleCancelTimezone} disabled={!isTzDirty}>
+            Cancelar
+          </button>
+          {tzSaveState === "saved" && !isTzDirty && <span>✓ Salvo</span>}
         </div>
       </section>
     </main>

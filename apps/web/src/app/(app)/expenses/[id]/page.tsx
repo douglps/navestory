@@ -13,15 +13,17 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { ApiError, apiClient } from "@/lib/http/api-client";
 import { changeDateYear } from "@/lib/date-year";
+import { datetimeLocalToIso, isoToDatetimeLocal } from "@/lib/datetime-tz";
 import { FUEL_TYPE_OPTIONS } from "@/lib/fuel-types";
 import { useFuelCrossCalc } from "@/lib/hooks/use-fuel-cross-calc";
+import { usePreferences } from "@/lib/hooks/use-preferences";
 
 interface Expense {
   id: string;
   vehicle_id: string;
   category: string;
   amount: number;
-  date: string;
+  occurred_at: string;
   description: string | null;
   odometer_km: number | null;
   liters: number | null;
@@ -64,8 +66,11 @@ export default function ExpenseDetailPage({
     retry: false,
   });
 
+  const { data: preferences } = usePreferences();
+  const tz = preferences?.timezone ?? "UTC";
+
   const [category, setCategory] = useState("");
-  const [date, setDate] = useState("");
+  const [occurredAt, setOccurredAt] = useState("");
   const [description, setDescription] = useState("");
   const [odometerKm, setOdometerKm] = useState<number | undefined>(undefined);
   const [fuelType, setFuelType] = useState("");
@@ -79,7 +84,7 @@ export default function ExpenseDetailPage({
   const fuelCalc = useFuelCrossCalc();
 
   const isFuel = category === "fuel";
-  const year = date ? Number(date.slice(0, 4)) : undefined;
+  const year = occurredAt ? Number(occurredAt.slice(0, 4)) : undefined;
 
   /**
    * @spec SPEC-20260606-002 RF-02
@@ -94,7 +99,7 @@ export default function ExpenseDetailPage({
   useEffect(() => {
     if (expense) {
       setCategory(expense.category);
-      setDate(expense.date);
+      setOccurredAt(isoToDatetimeLocal(expense.occurred_at, tz));
       setDescription(expense.description ?? "");
       setOdometerKm(expense.odometer_km ?? undefined);
       fuelCalc.reset({ amount: expense.amount, liters: expense.liters ?? undefined });
@@ -103,7 +108,7 @@ export default function ExpenseDetailPage({
       setSupplier(expense.supplier ?? "");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [expense]);
+  }, [expense, tz]);
 
   const updateMutation = useMutation({
     mutationFn: (input: UpdateExpenseInput) =>
@@ -127,7 +132,10 @@ export default function ExpenseDetailPage({
 
   function handleYearChange(value: number | undefined): void {
     if (value == null || String(value).length !== 4) return;
-    setDate((current) => changeDateYear(current, value));
+    setOccurredAt((current) => {
+      const [datePart, timePart] = current.split("T");
+      return `${changeDateYear(datePart ?? "", value)}T${timePart ?? "00:00"}`;
+    });
   }
 
   function handleSubmit(event: FormEvent): void {
@@ -137,7 +145,7 @@ export default function ExpenseDetailPage({
     const result = updateExpenseInputSchema.safeParse({
       category,
       amount: fuelCalc.amount,
-      date,
+      occurred_at: occurredAt ? datetimeLocalToIso(occurredAt, tz) : "",
       description: description || null,
       odometer_km: isFuel ? (odometerKm ?? null) : null,
       fuel_type: isFuel && fuelType ? fuelType : null,
@@ -166,7 +174,7 @@ export default function ExpenseDetailPage({
     !!expense &&
     (category !== expense.category ||
       fuelCalc.amount !== expense.amount ||
-      date !== expense.date ||
+      occurredAt !== isoToDatetimeLocal(expense.occurred_at, tz) ||
       description !== (expense.description ?? "") ||
       (odometerKm ?? null) !== expense.odometer_km ||
       fuelType !== (expense.fuel_type ?? "") ||
@@ -233,7 +241,7 @@ export default function ExpenseDetailPage({
   return (
     <main className="mx-auto flex max-w-sm flex-col gap-4 p-8">
       <h1 className="text-xl font-semibold">
-        {expense.category} — {expense.date}
+        {expense.category} — {expense.occurred_at.slice(0, 10)}
       </h1>
 
       {expense.is_readonly && (
@@ -264,12 +272,12 @@ export default function ExpenseDetailPage({
 
         <div className="flex gap-3">
           <div className="flex flex-1 flex-col gap-1">
-            <label htmlFor="date">Data *</label>
+            <label htmlFor="occurred_at">Data e hora *</label>
             <input
-              id="date"
-              type="date"
-              value={date}
-              onChange={(event) => setDate(event.target.value)}
+              id="occurred_at"
+              type="datetime-local"
+              value={occurredAt}
+              onChange={(event) => setOccurredAt(event.target.value)}
               disabled={expense.is_readonly}
               required
             />

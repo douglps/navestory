@@ -11,16 +11,23 @@ import { Card } from "./card";
 
 export type KpiCardVariant = "success" | "danger" | "warning" | "info" | "neutral";
 
-function variantTextClass(variant: KpiCardVariant): string {
+/**
+ * @spec SPEC-20260721-001 RF-02, RNF-02 — os tons "solid" (success/danger/warning/info) são
+ * calibrados para contraste AA sobre o `-pastel` da própria família (ver comentário em
+ * `tokens/colors.ts`), não sobre `--card`/`--background`. Usá-los como `text-{variant}` direto
+ * no texto da tendência falha AA (ex: warning ~2.1:1, info ~4.2:1 sobre `--card`). Por isso o
+ * chip usa `bg-{variant}-pastel` + `text-foreground` — mesmo padrão de `Alert`/`Toast`.
+ */
+function variantChipClass(variant: KpiCardVariant): string {
   switch (variant) {
     case "success":
-      return "text-success";
+      return "bg-success-pastel text-foreground";
     case "danger":
-      return "text-danger";
+      return "bg-danger-pastel text-foreground";
     case "warning":
-      return "text-warning";
+      return "bg-warning-pastel text-foreground";
     case "info":
-      return "text-info";
+      return "bg-info-pastel text-foreground";
     case "neutral":
     default:
       return "text-muted-foreground";
@@ -143,15 +150,24 @@ export function KpiCard({
         )}
       </div>
 
-      <p className="mt-1 text-lg font-semibold">
+      {/* @spec SPEC-20260722-001 RF-03 — tabular-nums garante alinhamento vertical de dígitos entre KpiCards */}
+      <p className="mt-1 text-lg font-semibold tabular-nums">
         {value}
         {unit && <span className="ml-1 text-sm font-normal text-muted-foreground">{unit}</span>}
       </p>
 
       {trend && (
-        <p className={cn("mt-1 text-sm", variantTextClass(trendVariant))}>
-          {trend.value > 0 ? "↑" : trend.value < 0 ? "↓" : "→"} {Math.abs(trend.value)}%
-          {trend.label && <span className="text-muted-foreground"> {trend.label}</span>}
+        <p className="mt-1 flex flex-wrap items-center gap-1 text-sm">
+          <span
+            className={cn(
+              "rounded px-1 font-medium",
+              resolvedVariant === "neutral" ? "" : "py-0.5",
+              variantChipClass(resolvedVariant),
+            )}
+          >
+            {trend.value > 0 ? "↑" : trend.value < 0 ? "↓" : "→"} {Math.abs(trend.value)}%
+          </span>
+          {trend.label && <span className="text-muted-foreground">{trend.label}</span>}
         </p>
       )}
 

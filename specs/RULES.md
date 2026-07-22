@@ -68,6 +68,11 @@
 | R-FORM-05 | Todo formulário transacional implementa dirty check: ao cancelar com `isDirty === true`, exibe `AlertDialog` de confirmação "Descartar alterações?" | [SPEC-20260619-001](forms/SPEC-20260619-001-form-standard.md) |
 | R-FORM-06 | Server Actions de formulários retornam `ActionResult` padrão: `{ success: true; message: string } \| { success: false; error: string; fieldErrors?: Record<string, string[]> }` | [SPEC-20260619-001](forms/SPEC-20260619-001-form-standard.md) |
 | R-FORM-07 | Todo formulário transacional sem veículos cadastrados exibe empty state com CTA para cadastrar veículo em vez do formulário | [SPEC-20260619-001](forms/SPEC-20260619-001-form-standard.md) |
+| R-DS-01 | `NavBadge` de contagem nunca renderiza mais de dois caracteres visuais: valores ≤ 9 exibem o número real; valores > 9 exibem a string literal "9+"; valor 0 oculta o badge completamente — regra de UX para preservar integridade do layout da sidebar em qualquer volume de notificações | [SPEC-20260721-001](design-system/SPEC-20260721-001-design-system-fundamentos.md) |
+| R-DS-02 | Toda documentação de design system do projeto (`Design.md`, `docs/ui-design/design-system.md`, specs futuras da feature `design-system`) segue estrutura obrigatória de seções, nesta ordem: Foundations, Tokens, Componentes, Padrões, Acessibilidade, Content/Voice, Governança. Seção sem conteúdo nesta fase declara "não aplicável", nunca é omitida silenciosamente | [SPEC-20260722-001](design-system/SPEC-20260722-001-design-system-v2-direcao-criativa.md) |
+| R-DS-03 | Cor semântica (`success`/`warning`/`danger`/`info`) é reservada exclusivamente a comunicar status real de dado (saúde de veículo, urgência, custo); o token `gold` é o único elemento decorativo/destaque de marca permitido. Nenhuma paleta decorativa multicolor sem significado de status é introduzida no sistema | [SPEC-20260722-001](design-system/SPEC-20260722-001-design-system-v2-direcao-criativa.md) |
+| R-DS-04 | `rounded-full` é reservado a badge, tag e preset de filtro; todo botão de ação de interface (formulário, tabela, header) usa raio máximo `rounded-md` | [SPEC-20260722-001](design-system/SPEC-20260722-001-design-system-v2-direcao-criativa.md) |
+| R-DS-05 | Proporção cromática de referência para auditoria visual de telas novas: ~70% neutro / ~15% primary (ação) / ~10% semântico (status) / ~5% gold (destaque de marca) — desvio relevante é sinalizado em revisão, não é lint automatizado | [SPEC-20260722-001](design-system/SPEC-20260722-001-design-system-v2-direcao-criativa.md) |
 
 ### Regras de Fuso Horário (R-TZ)
 
@@ -131,6 +136,22 @@
 | R-ODO-05 | Apenas o dono do veículo (`vehicles.user_id`) pode criar um novo ciclo em `vehicle_odometer_cycles`; a ação exige `reason` obrigatório e é auditada via `AuditService` (aplica R-MON-01, R-MON-02) | [SPEC-20260711-001](vehicles/SPEC-20260711-001-odometer-cycles.md) |
 | R-ODO-06 | O "ciclo 1" é implícito — nenhuma linha é criada em `vehicle_odometer_cycles` para ele; a primeira linha inserida nasce com `cycle_number = 2`; a UI exibe badge de ciclo somente a partir do 2º em diante | [SPEC-20260711-001](vehicles/SPEC-20260711-001-odometer-cycles.md) |
 
+### Regras de KPIs do Dashboard (R-KPI)
+
+| ID | Regra | Spec |
+|----|-------|------|
+| R-KPI-01 | KPIs do dashboard vêm de um catálogo fixo (`KPI_CATALOG_IDS`), nunca de métricas livres definidas pelo usuário; cada usuário ativa entre 1 e 6 simultaneamente (`dashboard_kpi_ids`), com 4 ativos por padrão — teto justificado por carga cognitiva (Miller's Law/Hick's Law), não por limitação técnica | [SPEC-20260721-002](dashboard/SPEC-20260721-002-dashboard-v2.md) |
+| R-KPI-02 | O delta percentual mês a mês de um KPI (`delta_pct`) é `null` — nunca colorido nem exibido com seta — quando a contagem de registros do período anterior é menor que 3; evita ler ruído estatístico de amostra pequena como tendência | [SPEC-20260721-002](dashboard/SPEC-20260721-002-dashboard-v2.md) |
+
+### Regras do Subheader Financeiro (R-SUB)
+
+| ID | Regra | Spec |
+|----|-------|------|
+| R-SUB-01 | O subheader financeiro exibe no máximo 3 chips de categoria, correspondendo às 3 categorias de despesa com maior `SUM(amount)` no mês corrente para o escopo de usuário/contexto ativo; o `LIMIT 3` é aplicado na query SQL (backend), nunca por corte em memória no JavaScript do service ou no frontend | [SPEC-20260722-004](dashboard/SPEC-20260722-004-financial-subheader.md) |
+| R-SUB-02 | Os links dos chips de categoria no subheader incluem o parâmetro de contexto ativo: `vehicleId=<id>` para contexto `single`, `group=<ids>` para contexto `group`; contextos coletivos `multi` e `attribute` não propagam parâmetro de filtro (consistente com R-CTX-03) | [SPEC-20260722-004](dashboard/SPEC-20260722-004-financial-subheader.md) |
+| R-SUB-03 | O status agregado de multas no subheader considera apenas multas com `status IN ('pending', 'appealing')` e `deleted_at IS NULL`; multas pagas (`paid`) ou canceladas (`cancelled`) são sempre ignoradas neste indicador | [SPEC-20260722-004](dashboard/SPEC-20260722-004-financial-subheader.md) |
+| R-SUB-04 | A classificação de multa vencida para o indicador do subheader é: `status = 'pending'` AND `due_date < hoje` (data no fuso do usuário, aplica R-TZ-01); multas em recurso (`appealing`) com `due_date` vencida não são classificadas como vencidas neste indicador — recurso suspende o prazo de pagamento | [SPEC-20260722-004](dashboard/SPEC-20260722-004-financial-subheader.md) |
+
 ### Regras de PWA / Offline (R-PWA)
 
 | ID | Regra | Spec |
@@ -143,6 +164,17 @@
 | R-PWA-06 | O cache de dados de API (`StaleWhileRevalidate`) tem teto de retenção em disco de 30 dias (decisão de produto, não decorre do ADR-003 — ver Decision Log D9 da spec) — teto de armazenamento, não de exibição: dado offline continua exibível além desse prazo enquanto não houver conexão para revalidar/remover; todas as entradas de dados de usuário são removidas no evento `SIGNED_OUT` do Supabase Auth | [SPEC-20260712-001](pwa/SPEC-20260712-001-pwa-offline.md) |
 | R-PWA-07 | O indicador fixo de status de conectividade (ver R-PWA-01/03) exibe, quando offline, a idade do dado em cache no formato "Hoje HH:mm" / "Ontem HH:mm" / "DD/MM/AA HH:mm" — nunca um aviso genérico de "dados desatualizados" sem timestamp | [SPEC-20260712-001](pwa/SPEC-20260712-001-pwa-offline.md) |
 | R-PWA-08 | `navigator.onLine` é usado apenas como sinal rápido inicial de conectividade, nunca como fonte única de verdade; uma falha de rede (erro de conexão, não resposta HTTP) mesmo com `navigator.onLine === true` é tratada como offline retroativo, atualizando o indicador (R-PWA-07) e bloqueando a submissão (R-PWA-02) com a mesma mensagem | [SPEC-20260712-001](pwa/SPEC-20260712-001-pwa-offline.md) |
+
+---
+
+## Regras de Navegação / Shell (R-NAV)
+
+| ID | Regra | Spec |
+|----|-------|------|
+| R-NAV-01 | Abaixo do breakpoint `md` (768 px), a sidebar opera exclusivamente como drawer/overlay (`fixed inset-y-0 left-0 z-[4000]`, alternado entre `translate-x-0` e `-translate-x-full`); acima de `md` retorna ao comportamento inline atual. Nunca exibir a sidebar inline em telas menores que `md`. | [SPEC-20260722-003](layout-responsivo/SPEC-20260722-003-shell-mobile-first.md) |
+| R-NAV-02 | Toda área de toque de elemento interativo do shell (botão hamburger, item de sidebar, item de nav) deve ter área mínima de 44 × 44 px em mobile — alinhado a WCAG 2.5.8 (AAA) e Apple HIG; o valor `min-h-[44px]` é o teto mínimo, não o default | [SPEC-20260722-003](layout-responsivo/SPEC-20260722-003-shell-mobile-first.md) |
+| R-NAV-03 | O padding horizontal do shell é mobile-first (`px-4 md:px-6 lg:px-8`); nenhum componente do shell aplica `pl-16` ou `pl-64` fixo sem breakpoint condicional — o offset da sidebar é zerado em mobile pois ela vira overlay | [SPEC-20260722-003](layout-responsivo/SPEC-20260722-003-shell-mobile-first.md) |
+| R-NAV-04 | O drawer mobile fecha automaticamente ao: (a) clicar no backdrop, (b) pressionar `Esc`, (c) navegar para qualquer rota diferente da atual. A ação de fechar usa `toggleMobileNav()` do `useUIStore` — nenhum outro mecanismo de fechamento é criado em paralelo | [SPEC-20260722-003](layout-responsivo/SPEC-20260722-003-shell-mobile-first.md) |
 
 ---
 
@@ -172,6 +204,8 @@
 | P3 | Sem `console.log`, `console.warn` ou `debugger` em codigo de producao; backend usa `Logger` do NestJS; frontend usa condicionais de `NODE_ENV` para logs de desenvolvimento. **Nota 2026-06-22:** 11 ocorrencias residuais identificadas em IMPACTO-021 #6 |
 | P4 | Policies RLS usam `(SELECT auth.uid())` em vez de `auth.uid()` direto — permite ao planner do Postgres cachear o resultado como InitPlan (avaliado uma vez por query) em vez de reavaliar por linha. **Achado real 2026-07-12:** 35 policies em 15 tabelas do banco de produção usam a forma não otimizada — achado [IMPACTO-026](../matrices/impacto.md#impacto-026-diagnóstico-dba-do-banco-real-navesaas-supabase--achados-críticos-de-segurança-e-integridade) |
 | P5 | O endpoint `GET /health` deve concluir em no máximo 5 segundos, incluindo a verificação de dependências externas; cada dependência individual tem timeout de 3 segundos. Falha de dependência não-crítica retorna `status: "degraded"` (HTTP 200) em vez de interromper o processo — monitores externos não confundem disponibilidade da API com disponibilidade da dependência | [SPEC-20260716-002](devops/SPEC-20260716-002-observabilidade.md) |
+| P6 | Widget "Próximos 7 dias" exibe e carrega no máximo 10 eventos por consulta; itens além desse limite não são buscados nem renderizados — o `LIMIT 10` deve ser aplicado na RPC ou endpoint, nunca filtrado no frontend após receber uma lista maior | [SPEC-20260721-002](dashboard/SPEC-20260721-002-dashboard-v2.md) |
+| P7 | O endpoint `GET /dashboard/spending-highlights` aplica `GROUP BY category ORDER BY SUM(amount) DESC LIMIT 3` na query SQL; a agregação e o corte das top-3 categorias nunca são feitos em memória no service ou no frontend | [SPEC-20260722-004](dashboard/SPEC-20260722-004-financial-subheader.md) |
 
 ---
 
@@ -179,6 +213,7 @@
 
 | ID | Regra | Referência |
 |----|-------|------------|
+| C-DS-01 | Todo texto visível ao usuário (primário, secundário, placeholder) deve atingir contraste mínimo WCAG AA (4.5:1 para texto de tamanho normal, 3:1 para texto grande ≥ 18px/14px bold) em ambos os temas (light e dark); `--muted-foreground` usa valor máximo de L=42% em OKLCH para garantir AA inclusive em texto secundário — nenhuma exceção por nível de hierarquia visual | [SPEC-20260721-001](design-system/SPEC-20260721-001-design-system-fundamentos.md) |
 | C1 | Dados pessoais processados sob LGPD; exclusão completa acionada via `DELETE /users/me`. Fluxo: (1) soft-delete imediato — `profiles.deleted_at` preenchido, `name`/`preferences` permanecem intactos durante a janela (sem anonimização imediata — estratégia definitiva de anonimização de PII fica para spec dedicada futura), acesso bloqueado pelo `SupabaseAuthGuard` em toda rota autenticada; (2) restauração possível via `POST /users/me/restore` dentro da janela (R-BIZ-05); (3) hard delete via job agendado (`pg_cron`) após 30 dias de período de graça, caso não haja restore. Cascata `ON DELETE CASCADE` a partir de `auth.users` remove todos os dados transacionais do usuário no hard delete. Admin pode executar hard delete imediato via `DELETE /admin/users/:id` (sem período de graça) para atender pedidos urgentes de compliance | [SPEC-20260521-004](admin/SPEC-20260521-004.md), [SPEC-20260719-002](admin/SPEC-20260719-002-soft-delete-retencao-conta.md) |
 | C2 | Audit log registrado em toda Server Action mutante e em toda operação REST que altera dados; campos obrigatórios: `action`, `table_name`, `record_id`, `changes` | [SPEC-20260521-001](security/SPEC-20260521-001.md) |
 

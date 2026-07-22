@@ -1,4 +1,4 @@
-import { ForbiddenException, NotFoundException } from "@nestjs/common";
+import { BadRequestException, ForbiddenException, NotFoundException } from "@nestjs/common";
 import type { ConfigService } from "@nestjs/config";
 import type { AuditService } from "../../shared/audit/audit.service";
 import { ExpensesService } from "./expenses.service";
@@ -28,6 +28,7 @@ describe("ExpensesService", () => {
     builder.not = jest.fn().mockReturnValue(builder);
     builder.gte = jest.fn().mockReturnValue(builder);
     builder.lte = jest.fn().mockReturnValue(builder);
+    builder.lt = jest.fn().mockReturnValue(builder);
     builder.gt = jest.fn().mockReturnValue(builder);
     builder.is = jest.fn().mockReturnValue(builder);
     builder.order = jest.fn().mockReturnValue(builder);
@@ -61,10 +62,17 @@ describe("ExpensesService", () => {
 
   function createService(auditLog = jest.fn()) {
     const auditService = { log: auditLog } as unknown as AuditService;
-    return new ExpensesService(supabaseAdmin, configService, auditService);
+    const preferencesService = { findOne: jest.fn().mockResolvedValue({ timezone: null }) };
+    return new ExpensesService(supabaseAdmin, configService, auditService, preferencesService as never);
   }
 
-  const createDto = { vehicle_id: "veh1", category: "fuel", amount: 150, date: "2026-07-14" };
+  const createDto = {
+    vehicle_id: "veh1",
+    category: "fuel",
+    amount: 150,
+    occurred_at: "2026-07-14",
+    odometer_km: 50000,
+  };
 
   it("create persiste a despesa quando o veículo pertence ao usuário (RF-01, CA-01)", async () => {
     const { builders } = mockClient({
@@ -90,6 +98,16 @@ describe("ExpensesService", () => {
     await expect(service.create("token", "u1", createDto as never)).rejects.toBeInstanceOf(
       NotFoundException,
     );
+  });
+
+  it("CT-004b: create com category=fuel e sem odometer_km lança BadRequestException (R4)", async () => {
+    mockClient({ vehicles: { data: { id: "veh1" }, error: null } });
+    const service = createService();
+    const { odometer_km: _unused, ...dtoSemOdometro } = createDto;
+
+    await expect(
+      service.create("token", "u1", dtoSemOdometro as never),
+    ).rejects.toBeInstanceOf(BadRequestException);
   });
 
   it("findAll retorna envelope paginado com meta (RF-03, P1)", async () => {
@@ -136,8 +154,8 @@ describe("ExpensesService", () => {
 
     expect(builders.get("expenses")!.eq).toHaveBeenCalledWith("vehicle_id", "veh1");
     expect(builders.get("expenses")!.eq).toHaveBeenCalledWith("category", "fuel");
-    expect(builders.get("expenses")!.gte).toHaveBeenCalledWith("date", "2026-01-01");
-    expect(builders.get("expenses")!.lte).toHaveBeenCalledWith("date", "2026-01-31");
+    expect(builders.get("expenses")!.gte).toHaveBeenCalledWith("occurred_at", "2026-01-01");
+    expect(builders.get("expenses")!.lt).toHaveBeenCalledWith("occurred_at", "2026-02-01T00:00:00.000Z");
   });
 
   it("findAll lança 404 quando a query falha", async () => {
@@ -295,8 +313,15 @@ describe("ExpensesService", () => {
         ],
       });
       const service = createService();
+      // categoria não-fuel: R4 só exige odometer_km para fuel — mantém o teste focado
+      // na lógica de warning, não na validação de obrigatoriedade (coberta por CT-004b)
+      const { odometer_km: _unused, ...dtoSemOdometro } = createDto;
 
-      const expense = await service.create("token", "u1", createDto as never);
+      const expense = await service.create(
+        "token",
+        "u1",
+        { ...dtoSemOdometro, category: "maintenance" } as never,
+      );
 
       expect(expense).not.toHaveProperty("odometer_warning");
       expect((builders.get("expenses")!.not as jest.Mock).mock.calls).toHaveLength(0);
@@ -407,7 +432,7 @@ describe("ExpensesService", () => {
     it("create com strict=true rejeita quando odometer_km é menor que o máximo anterior", async () => {
       mockClient({
         vehicles: { data: { id: "veh1" }, error: null },
-        expenses: [{ data: { odometer_km: 500, date: "2026-07-01" }, error: null }],
+        expenses: [{ data: { odometer_km: 500, occurred_at: "2026-07-01" }, error: null }],
       });
       const service = createService();
 
@@ -428,7 +453,7 @@ describe("ExpensesService", () => {
         vehicles: { data: { id: "veh1" }, error: null },
         expenses: [
           { data: null, error: null },
-          { data: { odometer_km: 200, date: "2026-07-20" }, error: null },
+          { data: { odometer_km: 200, occurred_at: "2026-07-20" }, error: null },
         ],
       });
       const service = createService();
@@ -504,7 +529,7 @@ describe("ExpensesService", () => {
       mockClient({
         vehicles: { data: { id: "veh1" }, error: null },
         expenses: [
-          { data: { id: "e-novo", vehicle_id: "veh1", category: "fuel", amount: 150, date: "2026-07-14" }, error: null },
+          { data: { id: "e-novo", vehicle_id: "veh1", category: "fuel", amount: 150, occurred_at: "2026-07-14T00:00:00.000Z" }, error: null },
           { data: { id: "e-existente" }, error: null },
         ],
       });
@@ -519,7 +544,7 @@ describe("ExpensesService", () => {
       mockClient({
         vehicles: { data: { id: "veh1" }, error: null },
         expenses: [
-          { data: { id: "e-novo", vehicle_id: "veh1", category: "fuel", amount: 150, date: "2026-07-14" }, error: null },
+          { data: { id: "e-novo", vehicle_id: "veh1", category: "fuel", amount: 150, occurred_at: "2026-07-14T00:00:00.000Z" }, error: null },
           { data: null, error: null },
         ],
       });
@@ -534,15 +559,22 @@ describe("ExpensesService", () => {
       const { builders } = mockClient({
         vehicles: { data: { id: "veh1" }, error: null },
         expenses: [
-          { data: { id: "e-novo", vehicle_id: "veh1", category: "fuel", amount: 150, date: "2026-07-14" }, error: null },
+          { data: { id: "e-novo", vehicle_id: "veh1", category: "toll", amount: 150, occurred_at: "2026-07-14T00:00:00.000Z" }, error: null },
         ],
       });
       const service = createService();
       (builders.get("expenses")!.maybeSingle as jest.Mock).mockImplementationOnce(() => {
         throw new Error("falha inesperada");
       });
+      // categoria não-fuel e sem odometer_km: isola a chamada de maybeSingle mockada
+      // para a verificação de duplicata, sem interferência de buildOdometerWarning
+      const { odometer_km: _unused, ...dtoSemOdometro } = createDto;
 
-      const expense = await service.create("token", "u1", createDto as never);
+      const expense = await service.create(
+        "token",
+        "u1",
+        { ...dtoSemOdometro, category: "toll" } as never,
+      );
 
       expect(expense).not.toHaveProperty("duplicate_warning");
     });
@@ -551,7 +583,7 @@ describe("ExpensesService", () => {
       const { builders } = mockClient({
         vehicles: { data: { id: "veh1" }, error: null },
         expenses: [
-          { data: { id: "e-novo", vehicle_id: "veh1", category: "fuel", amount: 150, date: "2026-07-14" }, error: null },
+          { data: { id: "e-novo", vehicle_id: "veh1", category: "fuel", amount: 150, occurred_at: "2026-07-14T00:00:00.000Z" }, error: null },
           { data: null, error: null },
         ],
       });
@@ -580,7 +612,7 @@ describe("ExpensesService", () => {
       mockClient({
         vehicles: { data: { id: "veh1" }, error: null },
         expenses: [
-          { data: { id: "e-novo", vehicle_id: "veh1", category: "fuel", amount: 150, date: "2026-07-14" }, error: null },
+          { data: { id: "e-novo", vehicle_id: "veh1", category: "fuel", amount: 150, occurred_at: "2026-07-14T00:00:00.000Z" }, error: null },
           { data: null, error: { message: "timeout" } },
         ],
       });
@@ -597,7 +629,7 @@ describe("ExpensesService", () => {
       vehicle_id: "veh1",
       category: "fuel",
       amount: 261.45,
-      date: "2026-07-14",
+      occurred_at: "2026-07-14",
       liters: 45,
       full_tank: true,
       odometer_km: 52840,
@@ -616,6 +648,7 @@ describe("ExpensesService", () => {
               liters: 45,
               full_tank: true,
               odometer_km: 52840,
+              occurred_at: "2026-07-14T00:00:00.000Z",
             },
             error: null,
           },
@@ -783,6 +816,39 @@ describe("ExpensesService", () => {
       await expect(
         service.getUpcomingCosts("token", { horizon_days: 30 } as never),
       ).rejects.toBeInstanceOf(NotFoundException);
+    });
+
+    it("SPEC-20260721-002 RF-09, P6: aplica .limit() no builder do RPC quando informado", async () => {
+      const limit = jest.fn().mockResolvedValue({ data: [{ source_type: "maintenance" }], error: null });
+      const client = { rpc: jest.fn().mockReturnValue({ limit }) };
+      (createUserScopedClient as jest.Mock).mockReturnValue(client);
+      const service = createService();
+
+      const result = await service.getUpcomingCosts("token", {
+        horizon_days: 7,
+        limit: 10,
+      } as never);
+
+      expect(client.rpc).toHaveBeenCalledWith("get_upcoming_costs", {
+        p_vehicle_id: null,
+        p_horizon_days: 7,
+      });
+      expect(limit).toHaveBeenCalledWith(10);
+      expect(result).toEqual([{ source_type: "maintenance" }]);
+    });
+
+    it("não chama .limit() quando o parâmetro não é informado", async () => {
+      const rpcResult = { data: [], error: null };
+      const client = { rpc: jest.fn().mockResolvedValue(rpcResult) };
+      (createUserScopedClient as jest.Mock).mockReturnValue(client);
+      const service = createService();
+
+      await service.getUpcomingCosts("token", { horizon_days: 30 } as never);
+
+      expect(client.rpc).toHaveBeenCalledWith("get_upcoming_costs", {
+        p_vehicle_id: null,
+        p_horizon_days: 30,
+      });
     });
   });
 
@@ -971,7 +1037,7 @@ describe("ExpensesService", () => {
         expenses: {
           data: [
             {
-              date: "2026-07-01",
+              occurred_at: "2026-07-01",
               amount: 150.5,
               category: "fuel",
               description: "Abastecimento",
@@ -979,7 +1045,7 @@ describe("ExpensesService", () => {
               vehicles: { plate: "ABC1234", make: "Fiat", model: "Uno" },
             },
             {
-              date: "2026-06-15",
+              occurred_at: "2026-06-15",
               amount: 950,
               category: "maintenance",
               description: null,
@@ -987,7 +1053,7 @@ describe("ExpensesService", () => {
               vehicles: { plate: "ABC1234", make: "Fiat", model: "Uno" },
             },
             {
-              date: "2026-06-01",
+              occurred_at: "2026-06-01",
               amount: 195.23,
               category: "fine",
               description: null,
@@ -995,7 +1061,7 @@ describe("ExpensesService", () => {
               vehicles: { plate: "ABC1234", make: "Fiat", model: "Uno" },
             },
             {
-              date: "2026-03-31",
+              occurred_at: "2026-03-31",
               amount: 1250,
               category: "tax",
               description: null,
@@ -1026,8 +1092,8 @@ describe("ExpensesService", () => {
         to: "2026-01-31",
       } as never);
 
-      expect(builders.get("expenses")!.gte).toHaveBeenCalledWith("date", "2026-01-01");
-      expect(builders.get("expenses")!.lte).toHaveBeenCalledWith("date", "2026-01-31");
+      expect(builders.get("expenses")!.gte).toHaveBeenCalledWith("occurred_at", "2026-01-01");
+      expect(builders.get("expenses")!.lt).toHaveBeenCalledWith("occurred_at", "2026-02-01T00:00:00.000Z");
     });
 
     it("retorna apenas o header quando a query falha", async () => {
@@ -1048,4 +1114,5 @@ describe("ExpensesService", () => {
       expect(builders.get("expenses")!.eq).toHaveBeenCalledWith("vehicle_id", "veh1");
     });
   });
+
 });

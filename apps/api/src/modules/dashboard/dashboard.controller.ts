@@ -6,6 +6,7 @@ import { UserId } from "../../common/decorators/user-id.decorator";
 import { SupabaseAuthGuard } from "../../common/guards/supabase-auth.guard";
 import { ZodValidationPipe } from "../../common/pipes/zod-validation.pipe";
 import { DashboardService } from "./dashboard.service";
+import { categorySummaryDtoSchema, type CategorySummaryDto } from "./dto/category-summary.dto";
 import { exportExpensesDtoSchema, type ExportExpensesDto } from "./dto/export-expenses.dto";
 import { fleetKpisDtoSchema, type FleetKpisDto } from "./dto/fleet-kpis.dto";
 import { vehicleHistoryDtoSchema, type VehicleHistoryDto } from "./dto/vehicle-history.dto";
@@ -80,6 +81,22 @@ export class DashboardController {
     return { data };
   }
 
+  @Get("kpi-catalog")
+  @ApiOperation({
+    summary:
+      "Catálogo completo de KPIs configuráveis do dashboard (RF-01) — o frontend filtra pelos ids ativos em user_preferences.dashboard_kpi_ids",
+  })
+  @ApiResponse({ status: 200, description: "Cada KPI do catálogo com { ok: true, value } ou { ok: false } isoladamente" })
+  async getFleetKpiCatalog(
+    @Req() req: Request,
+    @UserId() userId: string,
+    @Query(new ZodValidationPipe(fleetKpisDtoSchema)) query: FleetKpisDto,
+  ) {
+    const accessToken = this.extractAccessToken(req);
+    const data = await this.dashboardService.getFleetKpiCatalog(accessToken, userId, query.vehicle_id);
+    return { data };
+  }
+
   @Get("vehicle-cards")
   @ApiOperation({ summary: "Cards de veículo da Zona A: odômetro, último abastecimento, status de documentos (RF-DA-04)" })
   @ApiResponse({ status: 200, description: "Lista de VehicleCard" })
@@ -99,6 +116,31 @@ export class DashboardController {
   ) {
     const accessToken = this.extractAccessToken(req);
     const data = await this.dashboardService.getVehicleHistory(accessToken, userId, query.vehicle_id);
+    return { data };
+  }
+
+  @Get("spending-highlights")
+  @ApiOperation({ summary: "Top-3 categorias de gasto do mês corrente, com respeito ao contexto ativo (RF-01)" })
+  @ApiResponse({ status: 200, description: "Lista de até 3 CategorySummaryItem, ordenados por total decrescente" })
+  async getSpendingHighlights(
+    @Req() req: Request,
+    @Query(new ZodValidationPipe(categorySummaryDtoSchema)) query: CategorySummaryDto,
+  ) {
+    const accessToken = this.extractAccessToken(req);
+    const data = await this.dashboardService.getSpendingHighlights(
+      accessToken,
+      query.vehicleId,
+      query.groupIds,
+    );
+    return { data };
+  }
+
+  @Get("fines-status")
+  @ApiOperation({ summary: "Status agregado das multas ativas do usuário (RF-02)" })
+  @ApiResponse({ status: 200, description: "{ status: 'none' | 'open' | 'overdue', count }" })
+  async getFinesStatus(@Req() req: Request, @UserId() userId: string) {
+    const accessToken = this.extractAccessToken(req);
+    const data = await this.dashboardService.getFinesStatus(accessToken, userId);
     return { data };
   }
 

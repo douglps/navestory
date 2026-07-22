@@ -54,6 +54,68 @@ export interface FleetKpis {
   next_maintenance: KpiResult<{ date: string; vehicle_plate: string } | null>;
 }
 
+/**
+ * @spec SPEC-20260721-002 RF-01 (revisão: catálogo de KPIs configurável)
+ * Catálogo fixo de KPIs disponíveis para o dashboard — cada id mapeia para uma fonte de dado
+ * real já existente (RPCs de analytics de SPEC-20260622-001 ou queries do próprio dashboard).
+ * Não é um "query builder" livre — decisão de UX registrada em R-KPI-01: mais opções que isso
+ * aumenta carga cognitiva sem ganho proporcional (Miller's Law / Hick's Law).
+ */
+export const KPI_CATALOG_IDS = [
+  "expenses_month",
+  "cost_per_km",
+  "fleet_health",
+  "urgent_maintenance",
+  "total_vehicles",
+  "next_maintenance",
+  "upcoming_costs_7d",
+  "expense_anomalies",
+] as const;
+export type KpiCatalogId = (typeof KPI_CATALOG_IDS)[number];
+
+/** @spec SPEC-20260721-002 RF-01 — mesmo conjunto de 4 KPIs já exibidos antes desta feature, preservado como default para não mudar a experiência sem ação do usuário. */
+export const DEFAULT_DASHBOARD_KPI_IDS: KpiCatalogId[] = [
+  "expenses_month",
+  "urgent_maintenance",
+  "cost_per_km",
+  "next_maintenance",
+];
+
+/** @spec SPEC-20260721-002 R-KPI-01 — teto de KPIs simultâneos no dashboard */
+export const MAX_ACTIVE_DASHBOARD_KPIS = 6;
+
+/** @spec SPEC-20260721-002 R-KPI-01 */
+export const dashboardKpiIdsSchema = z
+  .array(z.enum(KPI_CATALOG_IDS))
+  .min(1, { message: "Selecione ao menos 1 KPI" })
+  .max(MAX_ACTIVE_DASHBOARD_KPIS, { message: `Selecione no máximo ${MAX_ACTIVE_DASHBOARD_KPIS} KPIs` })
+  .refine((ids) => new Set(ids).size === ids.length, { message: "KPIs não podem repetir" });
+export type DashboardKpiIds = z.infer<typeof dashboardKpiIdsSchema>;
+
+/**
+ * @spec SPEC-20260721-002 RF-01, R-KPI-02
+ * `delta_pct` é `null` (não zero) quando a amostra do período anterior é pequena demais para um
+ * percentual ser informativo (R-KPI-02) ou quando não há histórico suficiente — o frontend deve
+ * tratar `null` como "sem seta de tendência", nunca como "0%".
+ */
+export interface KpiSeriesValue {
+  value: number;
+  delta_pct: number | null;
+  history_6mo: number[] | null;
+}
+
+/** @spec SPEC-20260721-002 RF-01 */
+export interface FleetKpiCatalog {
+  expenses_month: KpiResult<KpiSeriesValue>;
+  cost_per_km: KpiResult<KpiSeriesValue>;
+  fleet_health: KpiResult<number | null>;
+  urgent_maintenance: KpiResult<number>;
+  total_vehicles: KpiResult<number>;
+  next_maintenance: KpiResult<{ date: string; vehicle_plate: string } | null>;
+  upcoming_costs_7d: KpiResult<{ total: number; count: number }>;
+  expense_anomalies: KpiResult<number>;
+}
+
 /** @spec SPEC-20260531-001 RF-DA-04 */
 export type DocumentStatus = "ok" | "attention" | "overdue" | "unknown";
 
@@ -92,3 +154,32 @@ export interface VehicleHistoryItem {
   description: string;
   amount: number | null;
 }
+
+/**
+ * @spec SPEC-20260722-004 RF-01, RF-08
+ * `groupIds` chega como string única ou array na querystring (Express/qs) — normaliza para
+ * array antes de validar cada item como UUID.
+ */
+export const categorySummaryQuerySchema = z.object({
+  vehicleId: z.string().uuid().optional(),
+  groupIds: z.preprocess(
+    (value) => (value === undefined ? undefined : Array.isArray(value) ? value : [value]),
+    z.array(z.string().uuid()).optional(),
+  ),
+});
+export type CategorySummaryQuery = z.infer<typeof categorySummaryQuerySchema>;
+
+/** @spec SPEC-20260722-004 RF-01, R-SUB-01 */
+export interface CategorySummaryItem {
+  category: string;
+  label: string;
+  total_amount: number;
+  count: number;
+}
+
+/** @spec SPEC-20260722-004 RF-02, R-SUB-03, R-SUB-04 */
+export const finesStatusResponseSchema = z.object({
+  status: z.enum(["none", "open", "overdue"]),
+  count: z.number().int().min(0),
+});
+export type FinesStatusResponse = z.infer<typeof finesStatusResponseSchema>;

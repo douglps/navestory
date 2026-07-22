@@ -4,6 +4,9 @@ import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { apiClient } from "@/lib/http/api-client";
+import { useVehicleContext } from "@/lib/context/use-vehicle-context";
+import { formatDateInTz } from "@/lib/datetime-tz";
+import { usePreferences } from "@/lib/hooks/use-preferences";
 
 interface Maintenance {
   id: string;
@@ -65,7 +68,17 @@ export default function MaintenancePage(): ReactNode {
     retry: false,
   });
 
+  const { data: preferences } = usePreferences();
+  const tz = preferences?.timezone;
+
   const vehicleById = new Map((vehicles ?? []).map((vehicle) => [vehicle.id, vehicle]));
+
+  // @spec SPEC-20260721-001 RF-05 — filtra pela seleção global de veículo em foco (modo "single").
+  const { selectionMode, activeVehicleId } = useVehicleContext();
+  const visibleMaintenances =
+    selectionMode === "single" && activeVehicleId != null
+      ? maintenances?.filter((maintenance) => maintenance.vehicle_id === activeVehicleId)
+      : maintenances;
 
   return (
     <main className="mx-auto flex max-w-2xl flex-col gap-4 p-8">
@@ -76,17 +89,17 @@ export default function MaintenancePage(): ReactNode {
 
       {isLoading && <p>Carregando...</p>}
       {isError && <p role="alert">Não foi possível carregar as manutenções.</p>}
-      {!isLoading && !isError && maintenances?.length === 0 && (
+      {!isLoading && !isError && visibleMaintenances?.length === 0 && (
         <p>Nenhuma manutenção agendada ainda.</p>
       )}
 
       <ul className="flex flex-col gap-2">
-        {maintenances?.map((maintenance) => (
+        {visibleMaintenances?.map((maintenance) => (
           <li key={maintenance.id}>
             <Link href={`/maintenance/${maintenance.id}`} className="flex items-center justify-between gap-4">
               <div>
                 <p>
-                  {maintenance.scheduled_date} — {maintenance.description}
+                  {formatDateInTz(maintenance.scheduled_date, tz)} — {maintenance.description}
                 </p>
                 <p className="text-xs text-muted-foreground">
                   {vehicleLabel(vehicleById.get(maintenance.vehicle_id))}

@@ -55,4 +55,16 @@ export {
   DialogDescription,
 } from "./components/dialog";
 
+export { NavBadge, type NavBadgeProps } from "./components/nav-badge";
+export {
+  VehicleHealthScore,
+  type VehicleHealthScoreProps,
+} from "./components/vehicle-health-score";
+export { ThemeToggle, type ThemeToggleProps } from "./components/theme-toggle";
+export {
+  CommandPalette,
+  type CommandPaletteProps,
+  type CommandPaletteItem,
+} from "./components/command-palette";
+
 export { cn } from "./lib/cn";

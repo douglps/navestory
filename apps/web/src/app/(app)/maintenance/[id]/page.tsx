@@ -11,6 +11,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { ApiError, apiClient } from "@/lib/http/api-client";
+import { datetimeLocalToIso, isoToDatetimeLocal } from "@/lib/datetime-tz";
+import { usePreferences } from "@/lib/hooks/use-preferences";
 
 interface Maintenance {
   id: string;
@@ -60,8 +62,12 @@ export default function MaintenanceDetailPage({
     retry: false,
   });
 
+  const { data: preferences } = usePreferences();
+  const tz = preferences?.timezone ?? "UTC";
+
   const [description, setDescription] = useState("");
   const [scheduledDate, setScheduledDate] = useState("");
+  const [completionDate, setCompletionDate] = useState("");
   const [cost, setCost] = useState<number | undefined>(undefined);
   const [odometerKm, setOdometerKm] = useState<number | undefined>(undefined);
   const [nextStatus, setNextStatus] = useState<MaintenanceStatus | "">("");
@@ -70,10 +76,14 @@ export default function MaintenanceDetailPage({
   useEffect(() => {
     if (!maintenance) return;
     setDescription(maintenance.description);
-    setScheduledDate(maintenance.scheduled_date);
+    setScheduledDate(isoToDatetimeLocal(maintenance.scheduled_date, tz));
+    setCompletionDate(
+      maintenance.completion_date ? isoToDatetimeLocal(maintenance.completion_date, tz) : "",
+    );
     setCost(maintenance.cost ?? undefined);
     setOdometerKm(maintenance.odometer_km ?? undefined);
-  }, [maintenance]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [maintenance, tz]);
 
   const mutation = useMutation({
     mutationFn: (input: UpdateMaintenanceInput) =>
@@ -93,7 +103,8 @@ export default function MaintenanceDetailPage({
 
     const result = updateMaintenanceInputSchema.safeParse({
       description,
-      scheduled_date: scheduledDate,
+      scheduled_date: scheduledDate ? datetimeLocalToIso(scheduledDate, tz) : "",
+      completion_date: completionDate ? datetimeLocalToIso(completionDate, tz) : null,
       cost: cost ?? null,
       odometer_km: odometerKm ?? null,
       ...(nextStatus ? { status: nextStatus } : {}),
@@ -133,13 +144,21 @@ export default function MaintenanceDetailPage({
           required
         />
 
-        <label htmlFor="scheduled_date">Data agendada *</label>
+        <label htmlFor="scheduled_date">Data e hora agendada *</label>
         <input
           id="scheduled_date"
-          type="date"
+          type="datetime-local"
           value={scheduledDate}
           onChange={(event) => setScheduledDate(event.target.value)}
           required
+        />
+
+        <label htmlFor="completion_date">Data e hora de conclusão</label>
+        <input
+          id="completion_date"
+          type="datetime-local"
+          value={completionDate}
+          onChange={(event) => setCompletionDate(event.target.value)}
         />
 
         <label htmlFor="cost">Custo (R$)</label>

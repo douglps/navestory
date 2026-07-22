@@ -66,6 +66,10 @@ mocks não são suficientes.
 | RF-E2E-05 | **Criação de despesa — aviso de duplicata:** criar duas despesas com `vehicle_id`, `category`, `amount` e data idênticos → verificar que na segunda criação o aviso de duplicata é exibido (R2) | R2, CT-002 | Alta |
 | RF-E2E-06 | **Troca de contexto de veículo — via chip:** clicar no `VehicleContextChip` no subheader → verificar abertura do Dialog/Sheet de seleção → selecionar veículo diferente → verificar que o chip atualiza para exibir o novo veículo e que o contexto persiste ao navegar entre páginas (R-CTX-07) | R-CTX-07 | Alta |
 | RF-E2E-07 | **Troca de contexto de veículo — propagação para formulário:** com veículo A em contexto, abrir `/expenses/new` → verificar que o campo `vehicle_id` está pré-selecionado com veículo A; trocar para veículo B via chip enquanto o formulário está aberto (campo ainda `isInherited`) → verificar que o campo atualiza para veículo B | R-CTX-06, R-CTX-07 | Média |
+| RF-E2E-08 | **Autenticação — login com credenciais inválidas:** preencher email/senha incorretos → submeter → verificar que o alerta de erro (`role="alert"`) é exibido e a URL permanece em `/login` | S1 | Alta |
+| RF-E2E-09 | **Autenticação — cookie de sessão inválido/corrompido:** navegar para rota privada com um cookie `nave_access_token` presente mas inválido (não apenas ausente, diferente de RF-E2E-01) → verificar redirect para `/login` | S1, CT-006 | Média |
+| RF-E2E-10 | **Contexto de veículo — usuário sem veículos cadastrados:** com um usuário de teste sem nenhum veículo, abrir o Dialog/Sheet de seleção via chip → verificar que é exibido um estado vazio apropriado (não erro JS/tela em branco) | R-CTX-07 | Média |
+| RF-E2E-11 | **Contexto de veículo — busca sem resultado no dialog:** com o Dialog aberto, buscar por uma placa/nome inexistente → verificar que é exibido um estado de "nenhum resultado" (não erro JS, não trava a UI) | R-CTX-07 | Baixa |
 
 ### Dados de Teste E2E (RF-DATA)
 
@@ -110,6 +114,9 @@ mocks não são suficientes.
 - [ ] CA-07: Nenhuma credencial ou token aparecem nos arquivos `.ts` dos testes; apenas variáveis de ambiente são usadas
 - [ ] CA-08: Job `e2e` aparece em `.github/workflows/ci.yml` sem erros de YAML; o job executa no push para `main`/`master`
 - [ ] CA-09: Falha em qualquer teste E2E marca o job como falho no GitHub Actions
+- [ ] CA-10: RF-E2E-08 (login inválido) exibe alerta de erro e mantém a URL em `/login`
+- [ ] CA-11: RF-E2E-09 (cookie inválido) redireciona para `/login` a partir de rota privada
+- [ ] CA-12: RF-E2E-10 e RF-E2E-11 (estados vazios do dialog de contexto) não geram erro JS nem tela em branco
 
 ---
 
@@ -223,3 +230,4 @@ real. Não remover nem modificar os testes de integração existentes ao adicion
 | 2026-07-20 | 1.1 | RF-E2E-04 corrigido: descrevia o comportamento de R1 (soft warning) para o fluxo web, mas `R-ODO-01` (SPEC-20260612-001) já supersede R1 nesse fluxo com hard block via `?strict=true`. Ajustado texto, regra citada e critério de aceite CA-04 para refletir o comportamento real e testado. Correção pequena — sem mudança de status | Douglas Lopes (lps.doug@protonmail.com) |
 | 2026-07-20 | 1.2 | Divergências entre implementação e texto corrigidas: RF-DATA-02 e RF-CI-04 passam a citar `E2E_TEST_VEHICLE_PLATE`, `E2E_VEHICLE_A_PLATE` e `E2E_VEHICLE_B_PLATE` (já usados pelo código e pelo CI, mas ausentes do texto); RF-CI-05 corrigido de `playwright-report/` para `e2e/reports/`, refletindo o `outputFolder` real do reporter (RF-CFG-02) — bug de caminho no artifact do CI também corrigido em `.github/workflows/ci.yml`. Correção pequena — sem mudança de status | Douglas Lopes (lps.doug@protonmail.com) |
 | 2026-07-20 | 1.3 | Revisão de auditoria: RF-CFG-02 corrigido para `retries: 1` (era `3`), alinhado ao código após correção de B-03 (sleep fixo removido em `vehicle-context-chip.page.ts`) e à política de zero-flakiness (RNF-02); adicionada nota de "Decisão de estratégia" em Ambiente E2E em CI explicitando a escolha consciente por stack local em vez de staging externo. Correção pequena — sem mudança de status | Douglas Lopes (lps.doug@protonmail.com) |
+| 2026-07-20 | 1.4 | Adicionados RF-E2E-08 a RF-E2E-11 e CA-10 a CA-12: suíte E2E cobria só caminho feliz (login válido, troca de contexto bem-sucedida); nova rodada fecha os casos de erro simétricos (login inválido, cookie corrompido, sem veículos, busca sem resultado), identificados em auditoria de cobertura de caminho infeliz. Ainda `draft` | Douglas Lopes (lps.doug@protonmail.com) |

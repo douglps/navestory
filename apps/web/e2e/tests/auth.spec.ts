@@ -1,4 +1,4 @@
-// @spec SPEC-20260716-003 RF-E2E-01, RF-E2E-02, RF-E2E-03
+// @spec SPEC-20260716-003 RF-E2E-01, RF-E2E-02, RF-E2E-03, RF-E2E-08, RF-E2E-09
 // @spec SPEC-20260524-001 STORY-01, STORY-02, STORY-03
 // @spec RULES.md S1
 import { test, expect } from "../fixtures/base";
@@ -80,6 +80,94 @@ test.describe("Autenticação", () => {
         await expect(page).toHaveURL(/\/dashboard/);
         await expect(dashboardPage.header).toBeVisible();
         await expect(dashboardPage.sidebar).toBeVisible();
+      } finally {
+        await context.close();
+      }
+    },
+  );
+
+  /**
+   * RF-E2E-08: login com credenciais inválidas → alerta de erro visível, URL permanece /login.
+   *
+   * Valida que a tela de login exibe `role="alert"` quando as credenciais enviadas
+   * são rejeitadas pela API, e que o middleware SSR NÃO redireciona o usuário para
+   * o dashboard (nenhum token emitido).
+   *
+   * Diferente de RF-E2E-02 (caminho feliz), este testa a branch de erro.
+   * Não pode ser coberto por teste unitário puro (exige browser + fluxo de form + alert DOM).
+   *
+   * @spec SPEC-20260716-003 RF-E2E-08
+   * @spec RULES.md S1
+   */
+  test(
+    "RF-E2E-08: login com credenciais inválidas exibe alerta de erro e mantém /login (S1)",
+    async ({ browser }) => {
+      // Contexto SEM storageState — testa o próprio fluxo de login
+      const context = await browser.newContext({ storageState: undefined });
+      const page = await context.newPage();
+
+      const loginPage = new LoginPage(page);
+
+      try {
+        await loginPage.goto();
+
+        // Credenciais deliberadamente erradas — nunca hardcoded via variável real
+        await loginPage.login(
+          "usuario-invalido-e2e@nave-nonexistent.invalid",
+          "senha-errada-12345",
+        );
+
+        // Alerta de erro deve aparecer (role="alert" é o seletor em LoginPage.errorAlert)
+        await expect(loginPage.errorAlert).toBeVisible({ timeout: 10_000 });
+
+        // URL deve permanecer em /login — nenhum redirect para /dashboard
+        await expect(page).toHaveURL(/\/login/);
+      } finally {
+        await context.close();
+      }
+    },
+  );
+
+  /**
+   * RF-E2E-09: cookie `nave_access_token` presente mas inválido → redirect para /login.
+   *
+   * Diferente de RF-E2E-01 (ausência total de cookie), este testa um cookie PRESENTE
+   * com valor corrompido (string aleatória, não um JWT decodificável). O middleware
+   * `apps/web/middleware.ts` chama `isTokenValid()` → `decodeJwtExp()`, que retorna
+   * `null` para valor não-JWT, tornando o token inválido. Sem `nave_refresh_token`,
+   * o middleware redireciona para /login.
+   *
+   * Valida especificamente a branch `accessTokenValid = false` do middleware quando
+   * o cookie EXISTE mas não é um JWT válido.
+   *
+   * @spec SPEC-20260716-003 RF-E2E-09
+   * @spec RULES.md S1
+   */
+  test(
+    "RF-E2E-09: cookie nave_access_token inválido/corrompido em rota privada redireciona para /login (S1)",
+    async ({ browser }) => {
+      // Contexto limpo (sem storageState legítimo) para injetar cookie corrompido manualmente
+      const context = await browser.newContext({ storageState: undefined });
+      const page = await context.newPage();
+
+      try {
+        // Injeta cookie com nome correto (`nave_access_token`, conforme middleware.ts linha 22)
+        // mas valor inválido — não é um JWT, portanto decodeJwtExp() retornará null
+        await context.addCookies([
+          {
+            name: "nave_access_token",
+            value: "token-corrompido-nao-e-um-jwt-valido-xXxXxXxX",
+            domain: "localhost",
+            path: "/",
+            httpOnly: false,
+            secure: false,
+            sameSite: "Lax",
+          },
+        ]);
+
+        // Navega para rota privada — middleware deve detectar token inválido e redirecionar
+        await page.goto("/dashboard");
+        await expect(page).toHaveURL(/\/login/, { timeout: 10_000 });
       } finally {
         await context.close();
       }

@@ -1,7 +1,7 @@
 ---
 id: SPEC-20260715-002
 title: "Suporte a Fuso Horário por Usuário (Timezone-Aware)"
-status: draft
+status: approved
 date: 2026-07-15
 author: Douglas Lopes (lps.doug@protonmail.com)
 rules: [R2, R-TZ-01, R-TZ-02, R-TZ-03, R-TZ-04, R-PREF-01]
@@ -11,7 +11,7 @@ camadas: [frontend, backend, database]
 
 # SPEC-20260715-002: Suporte a Fuso Horário por Usuário (Timezone-Aware)
 
-**Status:** Draft
+**Status:** Approved
 **Criada em:** 2026-07-15
 **Autor:** Douglas Lopes (lps.doug@protonmail.com)
 
@@ -305,3 +305,4 @@ via custom claim (evolução futura). Para esta spec, a abordagem simples (servi
 |------|--------|---------|-------|
 | 2026-07-15 | 1.0 | Criação inicial — corrige limitação residual do bug T5.1 (IMPACTO-033); formaliza suporte multi-fuso, migração de `DATE → TIMESTAMPTZ` e captura de hora em lançamentos | Douglas Lopes (lps.doug@protonmail.com) |
 | 2026-07-15 | 1.1 | 4 decisões em aberto (D-01 a D-04) fechadas com o usuário: `expenses.date` renomeada para `occurred_at` (RF-BD-02, Nota N-01); migração de dados existentes via JOIN com `user_preferences` (RF-BD-04); despesa futura gera aviso não-bloqueante (RF-BK-09); `completion_date` de manutenção futura acima de 24h é bloqueado com 422 (RF-BK-10 novo). CA-12 e CA-13 adicionados; CA-06 a CA-09 atualizados para `occurred_at`. R-TZ-04 em `specs/RULES.md` atualizada para refletir as duas decisões, sem marcação de pendência | Douglas Lopes (lps.doug@protonmail.com) |
+| 2026-07-22 | 1.2 | Implementação completa: migration `20260722060748_timezone_aware_datetime.sql` (rename+retype, funções SQL dependentes ajustadas), `date.utils.ts` compartilhado, `PreferencesService`/`ExpensesService`/`MaintenancesService`/`DashboardService` com fuso do usuário, formulários web com `datetime-local`, detecção automática (`TimezoneDetector`) e seção de fuso em `/settings/preferences`. Status `draft` → `approved`. Débito registrado: specs de teste existentes (`.spec.ts`) não foram atualizadas para o novo shape `occurred_at` — ver `matrices/rastreabilidade.md` | Douglas Lopes (lps.doug@protonmail.com) |

@@ -5,8 +5,10 @@ import { CurrencyInput, OdometerInput } from "@nave/ui";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { ApiError, apiClient } from "@/lib/http/api-client";
+import { nowInUserTz, datetimeLocalToIso } from "@/lib/datetime-tz";
+import { usePreferences } from "@/lib/hooks/use-preferences";
 import { useVehicleContextField } from "@/lib/hooks/use-vehicle-context-field";
 
 interface Vehicle {
@@ -25,8 +27,6 @@ function vehicleLabel(vehicle: Vehicle): string {
   return vehicle.nickname ?? (`${vehicle.make ?? ""} ${vehicle.model ?? ""}`.trim() || vehicle.plate);
 }
 
-const TODAY = new Date().toISOString().slice(0, 10);
-
 /**
  * @spec SPEC-20260715-001 RF-16
  * Arquitetura: client component + useState + TanStack Query (mesmo padrão de ExpenseForm,
@@ -41,6 +41,9 @@ export default function NewMaintenancePage(): ReactNode {
     retry: false,
   });
 
+  const { data: preferences } = usePreferences();
+  const tz = preferences?.timezone ?? "UTC";
+
   const {
     vehicleId,
     setVehicleId,
@@ -53,10 +56,18 @@ export default function NewMaintenancePage(): ReactNode {
     dismissContextChangeNotice,
   } = useVehicleContextField(vehicles);
   const [description, setDescription] = useState("");
-  const [scheduledDate, setScheduledDate] = useState(TODAY);
+  const [scheduledDate, setScheduledDate] = useState("");
   const [cost, setCost] = useState<number | undefined>(undefined);
   const [odometerKm, setOdometerKm] = useState<number | undefined>(undefined);
   const [fieldError, setFieldError] = useState<string | null>(null);
+
+  /** @spec SPEC-20260715-002 RF-FE-03 (mesmo padrão do formulário de despesa) */
+  useEffect(() => {
+    if (preferences && scheduledDate === "") {
+      setScheduledDate(nowInUserTz(tz));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [preferences]);
 
   const mutation = useMutation({
     mutationFn: (input: CreateMaintenanceInput) =>
@@ -74,7 +85,7 @@ export default function NewMaintenancePage(): ReactNode {
     const result = createMaintenanceInputSchema.safeParse({
       vehicle_id: vehicleId,
       description,
-      scheduled_date: scheduledDate,
+      scheduled_date: scheduledDate ? datetimeLocalToIso(scheduledDate, tz) : "",
       cost: cost ?? null,
       odometer_km: odometerKm ?? null,
     });
@@ -89,7 +100,7 @@ export default function NewMaintenancePage(): ReactNode {
   const isDirty =
     (vehicleId !== "" && !isVehicleInherited) ||
     description !== "" ||
-    scheduledDate !== TODAY ||
+    (preferences != null && scheduledDate !== nowInUserTz(tz)) ||
     cost != null ||
     odometerKm != null;
 
@@ -187,10 +198,10 @@ export default function NewMaintenancePage(): ReactNode {
           required
         />
 
-        <label htmlFor="scheduled_date">Data agendada *</label>
+        <label htmlFor="scheduled_date">Data e hora agendada *</label>
         <input
           id="scheduled_date"
-          type="date"
+          type="datetime-local"
           value={scheduledDate}
           onChange={(event) => setScheduledDate(event.target.value)}
           required

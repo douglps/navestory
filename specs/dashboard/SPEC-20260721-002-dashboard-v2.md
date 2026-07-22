@@ -1,0 +1,158 @@
+---
+id: SPEC-20260721-002
+title: "Dashboard v2 — KPI Cards com Sparkline, VehicleHealthScore, Tokens de Superfície, Gráficos Inline e Widget Próximos 7 Dias"
+status: draft
+date: 2026-07-21
+author: Douglas Lopes (lps.doug@protonmail.com)
+rules: [R-TZ-01, R-ANA-04, R-BIZ-12, P6]
+security: [S1, S2]
+camadas: [frontend, design]
+---
+
+# SPEC-20260721-002: Dashboard v2 — KPI Cards com Sparkline, VehicleHealthScore, Tokens de Superfície, Gráficos Inline e Widget Próximos 7 Dias
+
+**Status:** draft
+**Criada em:** 2026-07-21
+**Autor:** Douglas Lopes (lps.doug@protonmail.com)
+
+---
+
+## Contexto
+
+Em 2026-07-21, uma análise comparativa cruzou a rota `/dashboard` do Nave atual com a rota equivalente em `C:\Dev\Antigravity\Nave-SaaS-main` — uma versão experimental mais madura da mesma tela, mesma stack (Next.js 14, Tailwind, React Query). A análise identificou divergências em componentes, padrões visuais e experiência de usuário que o Nave atual não implementou.
+
+Estado atual sem esta spec:
+- O componente `FleetKpis`/`KpiTile` (`apps/web/src/components/dashboard/FleetKpis.tsx`) existe em paralelo ao `KpiCard` de `packages/ui` — duplicação de responsabilidade; `KpiCard` não tem sparkline nem trend configurados.
+- O indicador de saúde de veículo em `VehicleHealthCard.tsx` é um "dot" colorido sem valor numérico — insuficiente para quantificar saúde da frota.
+- `FleetAlertBar.tsx` e `VehicleHealthCard.tsx` usam classes Tailwind literais hardcoded (`bg-red-50`, `text-red-800`, `bg-amber-500`, `bg-green-500`), que quebram no tema escuro implementado por SPEC-20260721-001.
+- `globals.css` (~87 linhas) não possui tokens de superfície, tokens de chart nem classes utilitárias (`.glass-card`, `.kicker`) — referenciados em componentes futuros mas ainda ausentes.
+- O bloco `ExportControls` está posicionado entre o grid de veículos e a seção `VehicleSpotlight`, interrompendo o fluxo de scroll; não possui estados de loading ou erro.
+- O grid de veículos usa `grid-cols-1 sm:grid-cols-2 lg:grid-cols-3` — grid menos denso que o padrão estabelecido no projeto de referência.
+- O cabeçalho exibe H1 estático "Dashboard" sem saudação personalizada ou data.
+- Não há gráficos de série temporal nem distribuição de despesas visíveis sem selecionar um veículo.
+- Não há widget de próximos eventos (manutenção, multa, documentos) com valor monetário agregado.
+
+Esta spec não porta a arquitetura RSC (React Server Components) do `Nave-SaaS-main` — o dashboard do Nave permanece 100% client-side via React Query. Os itens de referência do projeto externo são fonte de inspiração de UX, não de arquitetura.
+
+---
+
+## Objetivo
+
+Elevar o dashboard do Nave ao nível de maturidade visual e funcional do projeto de referência, corrigindo inconsistências de design system (especialmente quanto ao tema escuro de SPEC-20260721-001), consolidando o uso dos componentes compartilhados de `packages/ui`, e adicionando informação agregada de frota (gráficos, próximos eventos) sem mudar a estratégia de renderização client-side existente.
+
+---
+
+## Histórias de Usuário e Critérios de Aceitação
+
+Esta spec é um épico com 9 histórias de usuário. As histórias completas com critérios BDD estão em [`STORIES.md`](STORIES.md).
+
+| História | Resumo | Itens RF relacionados |
+|----------|--------|----------------------|
+| US-01 | KPI Cards com Sparkline e Navegação por Clique | RF-01 |
+| US-02 | Indicador Visual de Saúde do Veículo (SVG circular) | RF-02 |
+| US-03 | Cores Semânticas nos Componentes de Alerta e Saúde | RF-03 |
+| US-04 | Tokens de Superfície e Classes Utilitárias em `globals.css` | RF-04 |
+| US-05 | Controles de Exportação com Feedback Visual e Posição Correta | RF-05 |
+| US-06 | Grid de Veículos Mais Denso | RF-06 |
+| US-07 | Cabeçalho de Data Abreviada *(saudação removida do escopo em 2026-07-22)* | RF-07 |
+| US-08 | Gráficos de Frota Inline *(condicional — ver RF-08)* | RF-08 |
+| US-09 | Widget "Próximos 7 Dias" *(condicional — ver RF-09)* | RF-09 |
+
+---
+
+## Requisitos Funcionais
+
+| ID | Requisito | Prioridade | História | Dependência |
+|----|-----------|------------|----------|-------------|
+| RF-01 | **(Revisado em 2026-07-21 — spec ainda `draft`, edição direta sem changelog)** Substituir `FleetKpis`/`KpiTile` por um catálogo curado e configurável de KPIs, renderizado via `KpiCard` de `packages/ui/src/components/kpi-card.tsx`. Catálogo fixo de 8 métricas (`KPI_CATALOG_IDS` em `@nave/validators`), cada usuário ativa entre 1 e 6 simultaneamente (`user_preferences.dashboard_kpi_ids`, default = os 4 KPIs já exibidos antes desta feature). Backend expõe `GET /dashboard/kpi-catalog` computando o catálogo completo; frontend filtra pelos ids ativos e navega ao clicar (rota por KPI). Sparkline de 6 meses e delta percentual apenas nos KPIs onde isso é estatisticamente informativo (`expenses_month`, `cost_per_km`); delta é suprimido (R-KPI-02) quando a amostra do mês anterior tem menos de 3 registros. Teto de 6 KPIs ativos e catálogo fechado (não é um construtor livre de métricas) — decisão de UX registrada em R-KPI-01, fundamentada em Miller's Law/Hick's Law. `FleetKpis`/`KpiTile` removidos do codebase. | Alta | US-01 | RF-04 (tokens de chart para sparkline) |
+| RF-02 | Criar `VehicleHealthScore` em `packages/ui/src/components/vehicle-health-score.tsx` — componente React que renderiza um anel SVG circular (progress ring), score numérico centralizado, e cor do anel conforme faixa: 0–49 → `danger`, 50–74 → `warning`, 75–100 → `success`. Exportar em `packages/ui/src/index.ts`. Substituir o "dot" de `VehicleHealthCard.tsx` pelo novo componente. | Alta | US-02 | RF-06 (grid mais estreito deve comportar o componente) |
+| RF-03 | Substituir todas as classes Tailwind literais de cor em `FleetAlertBar.tsx` e `VehicleHealthCard.tsx` (`bg-red-50`, `text-red-800`, `bg-amber-500`, `bg-amber-100`, `bg-green-500`, `bg-green-100` e variantes equivalentes) pelos tokens semânticos de `packages/ui/src/tokens/colors.ts`: `danger`, `dangerForeground`, `dangerPastel`, `warning`, `warningForeground`, `warningPastel`, `success`, `successForeground`, `successPastel`. Nenhuma classe de cor Tailwind literal deve permanecer nestes dois arquivos após a mudança. | Alta | US-03 | SPEC-20260721-001 (tokens devem estar definidos) |
+| RF-04 | Adicionar ao bloco `:root` e `.dark` de `apps/web/src/app/globals.css` os seguintes tokens e classes, preservando todos os existentes: **Tokens de superfície:** `--surface`, `--surface-elevated`, `--on-surface`, `--on-surface-muted`, `--on-surface-subtle`. **Tokens de chart:** `--chart-1`, `--chart-2`, `--chart-3`, `--chart-4`, `--chart-5`, `--chart-grid`. **Token financeiro:** `--finance-outgoing`. **Classes utilitárias:** `.glass-card` (glassmorphism via `backdrop-filter: blur(Xpx)` + fundo semitransparente + `border` leve), `.kicker` (uppercase, `letter-spacing` ampliado, `font-size` reduzido — label de seção). Todos os valores devem ter par light/dark definidos. | Alta | US-04 | — |
+| RF-05 | Reposicionar o bloco `ExportControls` para após todos os demais blocos de conteúdo do dashboard (posição: última seção antes do footer). Adicionar estados visuais ao controle de exportação: (a) loading — spinner + texto "Exportando..." + botão desabilitado; (b) erro — mensagem inline sem `alert()` do browser; (c) desabilitado com tooltip — quando plano Grátis (aplica R-BIZ-12). Não portar lógica de autenticação ou backend específica do `Nave-SaaS-main`; manter a implementação de download existente e apenas adicionar os estados visuais. | Média | US-05 | — |
+| RF-06 | Alterar o grid de veículos em `apps/web/src/app/(app)/dashboard/page.tsx` (linha ~124) de `grid-cols-1 sm:grid-cols-2 lg:grid-cols-3` para `grid-cols-2 sm:grid-cols-3 lg:grid-cols-4`. Esta mudança é **condicionada à conclusão de RF-02** — o card mais estreito deve comportar `VehicleHealthScore` sem overflow. Validar em breakpoint mobile (360px–375px de largura de viewport). | Média | US-06 | RF-02 |
+| RF-07 | **(Revisado em 2026-07-22 — spec ainda `draft`, edição direta sem changelog)** Substituir o H1 estático "Dashboard" por um cabeçalho de data abreviada renderizado client-side no formato "Dia-da-semana abreviado, DD Mês-abreviado AA" (ex.: "Qua, 22 Jul. 26") via `Intl.DateTimeFormat`. **Saudação personalizada removida do escopo** (decisão do usuário em 2026-07-22): o gap de RF-07 original — nome do usuário indisponível client-side sem novo endpoint (ver IMPACTO-040 #5) — tornava a saudação genérica ("Bom dia"/"Boa tarde"/"Boa noite" sem nome) de baixo valor informativo. `h1` textual de "Dashboard" preservado como `sr-only` para acessibilidade (leitor de tela), sem equivalente visual. | Média | US-07 | — |
+| RF-08 | **[CONDICIONAL — bloqueado por confirmação de backend]** Adicionar ao corpo do dashboard, sempre visíveis (sem requerer seleção de veículo), três gráficos inline usando `recharts` (já presente no projeto): (a) `CostPerKmChart` — gráfico de área, evolução dos últimos 6 meses; (b) `FuelConsumptionChart` — gráfico de barras por veículo, mês corrente; (c) `ExpenseCategoryPie` — gráfico de rosca por categoria de despesa, mês corrente. Todos usam tokens de chart de RF-04. Veículos com `cost_per_km = null` são omitidos da série sem fallback para `0`, `NaN` ou `Infinity` (aplica R-ANA-04). **Decisão em aberto:** verificar se o endpoint existente `GET /dashboard/fleet-kpis` retorna dados suficientes para os três gráficos ou se é necessário novo endpoint `GET /dashboard/charts`. Esta verificação é pré-requisito de implementação — não assumir que os dados já existem. | Baixa | US-08 | Confirmação do time de backend sobre disponibilidade de dados |
+| RF-09 | **(Concluído em 2026-07-22)** Widget "Próximos 7 dias" listando próximas ações com prazo (manutenção agendada, multa com vencimento, renovação de documento) com: indicador de urgência visual por faixa de dias (≤2 → danger, 3–5 → warning, 6–7 → neutro), valor monetário de cada item e valor total agregado do período. Limitado a **no máximo 10 itens** exibidos e carregados (P6) via `limit` opcional em `upcomingCostsQuerySchema`, aplicado com `.limit()` no builder do RPC (PostgREST) — nunca cortado em memória no frontend. A RPC `get_upcoming_costs` **já existia** (`supabase/migrations/20260712172020_analytics_functions.sql`), suporta `p_horizon_days` em `(7, 30, 90)` e já é isolada por `auth.uid()`. Implementado em `UpcomingCostsWidget.tsx`. | Baixa | US-09 | — |
+
+---
+
+## Requisitos Não-Funcionais
+
+| ID | Requisito | Métrica de Aceite |
+|----|-----------|------------------|
+| RNF-01 | Renderização do dashboard (itens RF-01 a RF-07) não deve introduzir regressão de performance perceptível | Tempo de hydration do dashboard ≤ ao estado atual (medir via DevTools antes/depois); nenhum novo `useEffect` encadeado sem necessidade |
+| RNF-02 | Componente `VehicleHealthScore` deve ser reutilizável e independente de contexto de dashboard | Sem imports diretos de módulos de `apps/web` dentro de `packages/ui`; props tipadas via TypeScript sem `any` |
+| RNF-03 | Tokens adicionados a `globals.css` devem ter par light/dark declarado | Cada token novo presente nos blocos `:root` e `.dark`; ausência de token no bloco `.dark` é falha de build |
+| RNF-04 | Consistência de contraste — novos componentes devem respeitar C-DS-01 | Cores de texto sobre `--surface` e `--surface-elevated` atingem contraste ≥ 4.5:1 (WCAG AA); verificável via ferramenta de contraste ou Storybook |
+| RNF-05 | Os itens RF-08 e RF-09 devem permanecer desacoplados dos itens RF-01 a RF-07 | Ausência de RF-08/RF-09 não deve impedir merge e release dos demais itens; implementados em arquivos/componentes independentes |
+| RNF-06 | Dashboard permanece 100% client-side via React Query | Nenhuma conversão de componentes do dashboard para RSC (React Server Components) nesta spec |
+
+---
+
+## Fora de Escopo
+
+- Portabilidade de arquitetura RSC do `Nave-SaaS-main` — o dashboard permanece client-side.
+- Lógica de autenticação/backend específica do `ExportControls` do `Nave-SaaS-main` — apenas os estados visuais são portados (RF-05).
+- Criação de nova RPC `get_upcoming_costs` no banco — essa decisão e implementação ficam fora desta spec se a RPC não existir (RF-09 é condicional).
+- Criação de novo endpoint de API (`/dashboard/charts`) — verificação é pré-requisito, criação do endpoint (se necessário) é tarefa separada de backend.
+- Personalização de quais gráficos exibir (drag/drop, show/hide) — não incluso nesta fase.
+- Notificações push ou alertas proativos derivados do widget "Próximos 7 dias" — fora de escopo (adiados conforme decisão registrada em `C:\Dev\Nave\important\`).
+- Migração de outros consumidores de `FleetKpis`/`KpiTile` fora do dashboard — apenas o dashboard é escopo desta spec.
+
+---
+
+## Dependências
+
+| Tipo | Referência | Descrição |
+|------|-----------|-----------|
+| Spec | SPEC-20260721-001 | Design System Fundamentos — tokens semânticos de cor (`danger`, `warning`, `success` e variantes) e dark/light mode devem estar implementados antes de RF-03; tokens de chart de RF-04 complementam o mesmo `globals.css` |
+| Spec | SPEC-20260531-001 | Dashboard v1 (aprovada) — esta spec evolui sobre a estrutura existente; não substitui; `VehicleHealthCard.tsx`, `FleetAlertBar.tsx` e `FleetKpis.tsx` foram criados por essa spec |
+| Componente | `packages/ui/src/components/kpi-card.tsx` | Já existe — RF-01 o configura; não reescreve |
+| Biblioteca | `recharts` (versão já presente no projeto) | RF-08 (condicional) — não adicionar nova dependência; verificar se a versão instalada suporta os tipos de gráfico necessários |
+| Backend | `GET /dashboard/fleet-kpis` | RF-08 — verificar se o payload atual suporta dados de gráfico; decisão em aberto |
+| Backend | RPC `get_upcoming_costs` (Supabase) | RF-09 — verificar existência antes de qualquer implementação |
+| Segurança | S7 (RULES.md) | Se `get_upcoming_costs` existir, deve ser auditada contra S7 — functions SECURITY DEFINER devem validar `auth.uid()` internamente |
+
+---
+
+## Notas Técnicas
+
+### Estratégia de implementação recomendada
+
+Os 9 itens desta spec têm diferentes graus de risco e dependência. A ordem sugerida de implementação é:
+
+1. **RF-04** (tokens em `globals.css`) — sem dependências, baixo risco, desbloqueia RF-03 e RF-08.
+2. **RF-03** (correção de hardcodes) — corrige regressão imediata de dark mode; depende apenas de SPEC-20260721-001 e RF-04.
+3. **RF-02** (VehicleHealthScore) — novo componente isolado em `packages/ui`; não tem dependência de outros RFs desta spec.
+4. **RF-06** (grid denso) — uma linha de Tailwind, mas **deve vir após RF-02** para validar que o card mais estreito comporta o score.
+5. **RF-07** (saudação) — independente, baixo risco, zero chamadas de API.
+6. **RF-01** (KPI cards) — refactor de componente, requer RF-04 para tokens de chart.
+7. **RF-05** (ExportControls) — reposicionamento + estados visuais; sem dependência de outros RFs.
+8. **RF-08** (gráficos) — **somente após confirmação de dados disponíveis no backend**.
+9. **RF-09** (widget próximos 7 dias) — **somente após confirmação de existência da RPC no banco**.
+
+### Componente `VehicleHealthScore`
+
+O anel SVG deve ser implementado com `stroke-dasharray`/`stroke-dashoffset` — padrão de circle progress ring sem dependência de biblioteca SVG externa. O raio e `stroke-width` devem ser props com valores default adequados para o card de veículo. Referência de implementação: `Nave-SaaS-main/apps/web/components/dashboard/vehicle-health-score.tsx` (como referência de UX — não copiar se houver dependências de contexto RSC).
+
+### Tokens de superfície vs. tokens de cor primitivos
+
+Os tokens `--surface`, `--surface-elevated` etc. (RF-04) são tokens semânticos de nível de superfície — distintos dos tokens de cor primitivos já em `packages/ui/src/tokens/colors.ts`. Devem viver em `globals.css` (camada CSS da aplicação) e não em `colors.ts` (primitivos de design system), para manter a separação entre "paleta da marca" (packages/ui) e "semântica de surface da aplicação" (apps/web).
+
+### Segurança: RPC `get_upcoming_costs`
+
+Se a RPC existir no banco e for usada para RF-09, deve ser auditada contra S7 antes da implementação: verificar se a function valida `auth.uid()` internamente e se `EXECUTE` não está concedido ao role `anon`. O diagnóstico IMPACTO-026 já identificou funções similares com essa vulnerabilidade — RF-09 não deve adicionar nova violação de S7.
+
+### Ausência de novas regras de domínio (R)
+
+Esta spec é majoritariamente de UI/apresentação — nenhuma regra de domínio nova (prefixo R) foi criada. A regra P6 (adicionada a `RULES.md`) cobre o limite de itens do widget de RF-09; qualquer aumento desse limite no futuro deve passar por atualização de P6 com histórico de versão.
+
+---
+
+## Changelog (pós-aprovação)
+
+> Preencher apenas após `status: approved`. Mudança estrutural (reverte/substitui requisito) não edita aqui — cria spec nova com `superseded_by`.
+
+| Data | O que mudou | Por quê |
+|------|-------------|---------|
+| | | |

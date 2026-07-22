@@ -16,7 +16,16 @@ export const MAINTENANCE_STATUS_TRANSITIONS: Record<MaintenanceStatus, Maintenan
   cancelled: [],
 };
 
-const dateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Data deve estar no formato YYYY-MM-DD");
+/**
+ * @spec SPEC-20260715-002 RF-BK-07, R-TZ-03
+ * Aceita `YYYY-MM-DD` (compatibilidade retroativa) ou ISO 8601 com offset explícito.
+ */
+const dateSchema = z
+  .string()
+  .refine(
+    (value) => /^\d{4}-\d{2}-\d{2}$/.test(value) || !Number.isNaN(Date.parse(value)),
+    "Data deve estar no formato YYYY-MM-DD ou ISO 8601 com offset",
+  );
 
 /**
  * @spec SPEC-20260715-001 RF-01, RF-02

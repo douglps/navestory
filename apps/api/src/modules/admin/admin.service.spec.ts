@@ -54,4 +54,27 @@ describe("AdminService", () => {
       }),
     );
   });
+
+  // valida C1
+  describe("EC-11: hard-delete de usuário por admin não seta deleted_at (diferencia do soft-delete de 30 dias)", () => {
+    it("deleteUser delega para auth.admin.deleteUser sem passar deleted_at — é hard delete via Supabase Auth Admin API (C1)", async () => {
+      const adminSupabase = {
+        deleteUser: jest.fn().mockResolvedValue(undefined),
+      } as unknown as AdminSupabaseService;
+      const auditService = { log: jest.fn() } as unknown as AuditService;
+      const service = new AdminService(adminSupabase, auditService);
+
+      await service.deleteUser("target-user", "admin-user");
+
+      // deleteUser recebe apenas o userId — sem objeto de payload contendo deleted_at
+      expect(adminSupabase.deleteUser).toHaveBeenCalledWith("target-user");
+      expect(adminSupabase.deleteUser).not.toHaveBeenCalledWith(
+        expect.objectContaining({ deleted_at: expect.anything() }),
+      );
+      // audit log changes também não deve conter deleted_at
+      const logCall = (auditService.log as jest.Mock).mock.calls[0][0] as Record<string, unknown>;
+      const changes = logCall.changes as Record<string, unknown>;
+      expect(changes).not.toHaveProperty("deleted_at");
+    });
+  });
 });

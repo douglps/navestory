@@ -73,6 +73,28 @@ describe("AuditLogsService", () => {
     expect(rows[0]?.changes).toEqual({ plate: "ABC1234" });
   });
 
+  it("EC-08: remove campos de token de changes antes de retornar (R-MON-02)", async () => {
+    const builder = buildQueryBuilder({
+      data: [
+        {
+          id: "1",
+          action: "Login",
+          table_name: "auth",
+          record_id: "u1",
+          changes: { access_token: "abc.def.ghi", token: "refresh-xyz", plate: "ABC1234" },
+          created_at: "2026-07-18T00:00:00Z",
+        },
+      ],
+      error: null,
+    });
+    mockClient(builder);
+    const service = createService();
+
+    const rows = await service.findRecent("token", "u1");
+
+    expect(rows[0]?.changes).toEqual({ plate: "ABC1234" });
+  });
+
   it("lança BadRequestException quando a query falha", async () => {
     const builder = buildQueryBuilder({ data: null, error: { message: "boom" } });
     mockClient(builder);

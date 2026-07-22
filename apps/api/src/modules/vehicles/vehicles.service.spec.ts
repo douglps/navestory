@@ -1,4 +1,4 @@
-import { NotFoundException } from "@nestjs/common";
+import { BadRequestException, NotFoundException } from "@nestjs/common";
 import type { ConfigService } from "@nestjs/config";
 import type { AuditService } from "../../shared/audit/audit.service";
 import { VehiclesService } from "./vehicles.service";
@@ -139,6 +139,52 @@ describe("VehiclesService", () => {
     const service = createService();
 
     await expect(service.remove("token", "u1", "v1")).rejects.toBeInstanceOf(NotFoundException);
+  });
+
+  // valida R-VEH-02
+  it("EC-06: update com placa em formato inválido lança BadRequestException (R-VEH-02)", async () => {
+    mockClient({ data: null, error: null });
+    const service = createService();
+
+    await expect(
+      service.update("token", "u1", "v1", { plate: "AB1234" } as never),
+    ).rejects.toBeInstanceOf(BadRequestException);
+  });
+
+  // valida R-VEH-01
+  describe("EC-05: cascade de soft-delete aplica o mesmo deleted_at em vehicles, expenses e maintenances", () => {
+    it("todos os três updates recebem exatamente o mesmo valor de deleted_at", async () => {
+      const builder: Record<string, unknown> = {};
+      builder.select = jest.fn().mockReturnValue(builder);
+      builder.update = jest.fn().mockReturnValue(builder);
+      builder.eq = jest.fn().mockReturnValue(builder);
+      builder.is = jest.fn().mockReturnValue(builder);
+      builder.maybeSingle = jest.fn().mockResolvedValue({ data: { id: "v1" }, error: null });
+      (builder.update as jest.Mock).mockImplementation(() => ({
+        ...builder,
+        eq: jest.fn().mockReturnValue({
+          eq: jest.fn().mockResolvedValue({ error: null }),
+          is: jest.fn().mockResolvedValue({ error: null }),
+        }),
+      }));
+      const client = { from: jest.fn().mockReturnValue(builder) };
+      (createUserScopedClient as jest.Mock).mockReturnValue(client);
+      const service = createService();
+
+      await service.remove("token", "u1", "v1");
+
+      // Deve haver 3 chamadas a update: vehicles, expenses, maintenances
+      const updateCalls = (builder.update as jest.Mock).mock.calls;
+      expect(updateCalls).toHaveLength(3);
+
+      // Todos devem carregar o mesmo deleted_at (mesma variável, não só "algum valor definido")
+      const deletedAtValues = updateCalls.map(
+        (args) => (args[0] as Record<string, unknown>).deleted_at,
+      );
+      expect(deletedAtValues[0]).toBeDefined();
+      expect(deletedAtValues[1]).toBe(deletedAtValues[0]);
+      expect(deletedAtValues[2]).toBe(deletedAtValues[0]);
+    });
   });
 
   it("remove soft-deleta veículo, despesas e manutenções com o mesmo timestamp (RF-06, R-VEH-01, CA-05)", async () => {

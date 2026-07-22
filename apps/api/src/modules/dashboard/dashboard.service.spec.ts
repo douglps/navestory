@@ -20,6 +20,7 @@ describe("DashboardService", () => {
     builder.is = jest.fn().mockReturnValue(builder);
     builder.gte = jest.fn().mockReturnValue(builder);
     builder.lte = jest.fn().mockReturnValue(builder);
+    builder.lt = jest.fn().mockReturnValue(builder);
     builder.order = jest.fn().mockReturnValue(builder);
     builder.limit = jest.fn().mockResolvedValue(result);
     return builder;
@@ -35,9 +36,13 @@ describe("DashboardService", () => {
   const expensesService = {
     getKpis: jest.fn(),
     findAll: jest.fn(),
+    getUpcomingCosts: jest.fn(),
   };
   const maintenancesService = {
     findAll: jest.fn(),
+  };
+  const preferencesService = {
+    findOne: jest.fn().mockResolvedValue({ timezone: null }),
   };
 
   function createService() {
@@ -46,6 +51,7 @@ describe("DashboardService", () => {
       configService,
       expensesService as never,
       maintenancesService as never,
+      preferencesService as never,
     );
   }
 
@@ -63,7 +69,7 @@ describe("DashboardService", () => {
     mockClient({
       data: [
         {
-          date: "2026-05-10",
+          occurred_at: "2026-05-10",
           amount: 150.5,
           category: "fuel",
           description: "Abastecimento",
@@ -121,14 +127,14 @@ describe("DashboardService", () => {
     mockClient({
       data: [
         {
-          date: "2026-05-10",
+          occurred_at: "2026-05-10",
           amount: 100,
           category: "fuel",
           description: null,
           vehicles: [{ plate: "ABC1234", model: null }],
         },
         {
-          date: "2026-05-11",
+          occurred_at: "2026-05-11",
           amount: 50,
           category: "fuel",
           description: null,
@@ -149,7 +155,7 @@ describe("DashboardService", () => {
     mockClient({
       data: [
         {
-          date: "2026-05-10",
+          occurred_at: "2026-05-10",
           amount: 10,
           category: "other",
           description: 'Pedágio, "praça 5"',
@@ -167,7 +173,7 @@ describe("DashboardService", () => {
 
   function createQueryBuilder(result: { data?: unknown; error?: unknown; count?: number }) {
     const builder: Record<string, unknown> = {};
-    for (const method of ["select", "eq", "is", "in", "gte", "lte", "order", "limit", "not"]) {
+    for (const method of ["select", "eq", "is", "in", "gte", "lte", "lt", "order", "limit", "not"]) {
       // eslint-disable-next-line security/detect-object-injection -- method vem de lista fixa acima, não de input externo
       builder[method] = jest.fn().mockReturnValue(builder);
     }
@@ -460,7 +466,7 @@ describe("DashboardService", () => {
             error: null,
           });
         }
-        return createQueryBuilder({ data: [{ date: "2026-07-01", amount: 200 }], error: null });
+        return createQueryBuilder({ data: [{ occurred_at: "2026-07-01", amount: 200 }], error: null });
       });
       (createUserScopedClient as jest.Mock).mockReturnValue({ from });
       const service = createService();
@@ -548,7 +554,7 @@ describe("DashboardService", () => {
           });
         }
         return createQueryBuilder({
-          data: [{ date: "2026-07-01", amount: 200, odometer_km: null }],
+          data: [{ occurred_at: "2026-07-01", amount: 200, odometer_km: null }],
           error: null,
         });
       });
@@ -766,11 +772,412 @@ describe("DashboardService", () => {
     });
   });
 
+  describe("getFleetKpiCatalog (RF-01, R-KPI-02)", () => {
+    function buildRpcMock(overrides: Partial<Record<string, { data: unknown; error: unknown }>> = {}) {
+      return jest.fn((fn: string) => {
+        if (fn === "get_vehicle_cost_per_km") {
+          return Promise.resolve(
+            overrides.get_vehicle_cost_per_km ?? { data: [{ total_spent: 0, total_km: 0 }], error: null },
+          );
+        }
+        if (fn === "calculate_fleet_health") {
+          return Promise.resolve(overrides.calculate_fleet_health ?? { data: [], error: null });
+        }
+        if (fn === "detect_expense_anomalies") {
+          return Promise.resolve(overrides.detect_expense_anomalies ?? { data: [], error: null });
+        }
+        return Promise.resolve({ data: null, error: { message: `rpc desconhecida: ${fn}` } });
+      });
+    }
+
+    it("agrega os 8 KPIs do catálogo com sucesso", async () => {
+      (expensesService.getUpcomingCosts as jest.Mock).mockResolvedValue([{ amount: 50 }, { amount: 30 }]);
+      const from = mockFrom({
+        expenses: { data: [{ occurred_at: toDateString(new Date()), amount: 100 }], error: null },
+        vehicles: { data: [{ id: "v1" }], count: 1, error: null },
+        maintenances: { count: 2, error: null, data: [] },
+      });
+      const rpc = buildRpcMock({
+        get_vehicle_cost_per_km: { data: [{ total_spent: 100, total_km: 200 }], error: null },
+        calculate_fleet_health: { data: [{ vehicle_id: "v1", score: 80 }], error: null },
+      });
+      (createUserScopedClient as jest.Mock).mockReturnValue({ from, rpc });
+      const service = createService();
+
+      const kpis = await service.getFleetKpiCatalog("token", "u1", undefined);
+
+      expect(kpis.expenses_month).toEqual({
+        ok: true,
+        value: { value: 100, delta_pct: null, history_6mo: [0, 0, 0, 0, 0, 100] },
+      });
+      expect(kpis.cost_per_km).toEqual({
+        ok: true,
+        value: { value: 0.5, delta_pct: null, history_6mo: [0.5, 0.5, 0.5, 0.5, 0.5, 0.5] },
+      });
+      expect(kpis.fleet_health).toEqual({ ok: true, value: 80 });
+      expect(kpis.urgent_maintenance).toEqual({ ok: true, value: 2 });
+      expect(kpis.total_vehicles).toEqual({ ok: true, value: 1 });
+      expect(kpis.next_maintenance).toEqual({ ok: true, value: null });
+      expect(kpis.upcoming_costs_7d).toEqual({ ok: true, value: { total: 80, count: 2 } });
+      expect(kpis.expense_anomalies).toEqual({ ok: true, value: 0 });
+      expect(expensesService.getUpcomingCosts).toHaveBeenCalledWith("token", {
+        vehicle_id: undefined,
+        horizon_days: 7,
+      });
+    });
+
+    it("suprime delta_pct quando a amostra do mês anterior tem menos de 3 registros (R-KPI-02)", async () => {
+      (expensesService.getUpcomingCosts as jest.Mock).mockResolvedValue([]);
+      const today = new Date();
+      const prevMonth = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth() - 1, 10));
+      const from = mockFrom({
+        expenses: {
+          data: [
+            { occurred_at: toDateString(prevMonth), amount: 100 },
+            { occurred_at: toDateString(prevMonth), amount: 100 },
+            { occurred_at: toDateString(today), amount: 400 },
+          ],
+          error: null,
+        },
+        vehicles: { data: [], count: 0, error: null },
+        maintenances: { count: 0, error: null, data: [] },
+      });
+      const rpc = buildRpcMock();
+      (createUserScopedClient as jest.Mock).mockReturnValue({ from, rpc });
+      const service = createService();
+
+      const kpis = await service.getFleetKpiCatalog("token", "u1", undefined);
+
+      expect(kpis.expenses_month).toEqual({
+        ok: true,
+        value: { value: 400, delta_pct: null, history_6mo: [0, 0, 0, 0, 200, 400] },
+      });
+    });
+
+    it("calcula delta_pct quando a amostra do mês anterior tem 3+ registros", async () => {
+      (expensesService.getUpcomingCosts as jest.Mock).mockResolvedValue([]);
+      const today = new Date();
+      const prevMonth = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth() - 1, 10));
+      const from = mockFrom({
+        expenses: {
+          data: [
+            { occurred_at: toDateString(prevMonth), amount: 100 },
+            { occurred_at: toDateString(prevMonth), amount: 100 },
+            { occurred_at: toDateString(prevMonth), amount: 100 },
+            { occurred_at: toDateString(today), amount: 600 },
+          ],
+          error: null,
+        },
+        vehicles: { data: [], count: 0, error: null },
+        maintenances: { count: 0, error: null, data: [] },
+      });
+      const rpc = buildRpcMock();
+      (createUserScopedClient as jest.Mock).mockReturnValue({ from, rpc });
+      const service = createService();
+
+      const kpis = await service.getFleetKpiCatalog("token", "u1", undefined);
+
+      expect(kpis.expenses_month).toEqual({
+        ok: true,
+        value: { value: 600, delta_pct: 100, history_6mo: [0, 0, 0, 0, 300, 600] },
+      });
+    });
+
+    it("fleet_health retorna null quando a frota não tem veículos", async () => {
+      (expensesService.getUpcomingCosts as jest.Mock).mockResolvedValue([]);
+      const from = mockFrom({
+        expenses: { data: [], error: null },
+        vehicles: { data: [], count: 0, error: null },
+        maintenances: { count: 0, error: null, data: [] },
+      });
+      const rpc = buildRpcMock({ calculate_fleet_health: { data: [], error: null } });
+      (createUserScopedClient as jest.Mock).mockReturnValue({ from, rpc });
+      const service = createService();
+
+      const kpis = await service.getFleetKpiCatalog("token", "u1", undefined);
+
+      expect(kpis.fleet_health).toEqual({ ok: true, value: null });
+    });
+
+    it("isola falha de cost_per_km sem afetar os demais KPIs do catálogo", async () => {
+      (expensesService.getUpcomingCosts as jest.Mock).mockResolvedValue([]);
+      const from = mockFrom({
+        expenses: { data: [], error: null },
+        vehicles: { data: [{ id: "v1" }], count: 1, error: null },
+        maintenances: { count: 0, error: null, data: [] },
+      });
+      const rpc = buildRpcMock({
+        get_vehicle_cost_per_km: { data: null, error: { message: "boom" } },
+      });
+      (createUserScopedClient as jest.Mock).mockReturnValue({ from, rpc });
+      const service = createService();
+
+      const kpis = await service.getFleetKpiCatalog("token", "u1", undefined);
+
+      expect(kpis.cost_per_km).toEqual({ ok: false });
+      expect(kpis.expenses_month.ok).toBe(true);
+      expect(kpis.total_vehicles).toEqual({ ok: true, value: 1 });
+    });
+
+    it("isola falha de upcoming_costs_7d quando a RPC de próximos compromissos falha", async () => {
+      (expensesService.getUpcomingCosts as jest.Mock).mockRejectedValue(new Error("boom"));
+      const from = mockFrom({
+        expenses: { data: [], error: null },
+        vehicles: { data: [], count: 0, error: null },
+        maintenances: { count: 0, error: null, data: [] },
+      });
+      const rpc = buildRpcMock();
+      (createUserScopedClient as jest.Mock).mockReturnValue({ from, rpc });
+      const service = createService();
+
+      const kpis = await service.getFleetKpiCatalog("token", "u1", undefined);
+
+      expect(kpis.upcoming_costs_7d).toEqual({ ok: false });
+    });
+
+    it("expenses_month: ignora linha com mês fora da janela de 6 meses (bucket ausente)", async () => {
+      (expensesService.getUpcomingCosts as jest.Mock).mockResolvedValue([]);
+      const from = mockFrom({
+        expenses: { data: [{ occurred_at: "2000-01-15", amount: 999 }], error: null },
+        vehicles: { data: [], count: 0, error: null },
+        maintenances: { count: 0, error: null, data: [] },
+      });
+      const rpc = buildRpcMock();
+      (createUserScopedClient as jest.Mock).mockReturnValue({ from, rpc });
+      const service = createService();
+
+      const kpis = await service.getFleetKpiCatalog("token", "u1", undefined);
+
+      expect(kpis.expenses_month).toEqual({
+        ok: true,
+        value: { value: 0, delta_pct: null, history_6mo: [0, 0, 0, 0, 0, 0] },
+      });
+    });
+
+    it("expenses_month: usa fallback vazio quando data vem undefined sem erro", async () => {
+      (expensesService.getUpcomingCosts as jest.Mock).mockResolvedValue([]);
+      const from = mockFrom({
+        expenses: { data: undefined, error: null },
+        vehicles: { data: [], count: 0, error: null },
+        maintenances: { count: 0, error: null, data: [] },
+      });
+      const rpc = buildRpcMock();
+      (createUserScopedClient as jest.Mock).mockReturnValue({ from, rpc });
+      const service = createService();
+
+      const kpis = await service.getFleetKpiCatalog("token", "u1", undefined);
+
+      expect(kpis.expenses_month).toEqual({
+        ok: true,
+        value: { value: 0, delta_pct: null, history_6mo: [0, 0, 0, 0, 0, 0] },
+      });
+    });
+
+    it("isola falha de expenses_month quando a query de despesas falha", async () => {
+      (expensesService.getUpcomingCosts as jest.Mock).mockResolvedValue([]);
+      const from = mockFrom({
+        expenses: { data: null, error: { message: "boom" } },
+        vehicles: { data: [], count: 0, error: null },
+        maintenances: { count: 0, error: null, data: [] },
+      });
+      const rpc = buildRpcMock();
+      (createUserScopedClient as jest.Mock).mockReturnValue({ from, rpc });
+      const service = createService();
+
+      const kpis = await service.getFleetKpiCatalog("token", "u1", undefined);
+
+      expect(kpis.expenses_month).toEqual({ ok: false });
+    });
+
+    it("isola falha de cost_per_km quando a query de veículos falha", async () => {
+      (expensesService.getUpcomingCosts as jest.Mock).mockResolvedValue([]);
+      const from = mockFrom({
+        expenses: { data: [], error: null },
+        vehicles: { data: null, count: undefined, error: { message: "boom" } },
+        maintenances: { count: 0, error: null, data: [] },
+      });
+      const rpc = buildRpcMock();
+      (createUserScopedClient as jest.Mock).mockReturnValue({ from, rpc });
+      const service = createService();
+
+      const kpis = await service.getFleetKpiCatalog("token", "u1", undefined);
+
+      expect(kpis.cost_per_km).toEqual({ ok: false });
+    });
+
+    it("cost_per_km: usa fallback vazio quando vehicles.data vem undefined sem erro", async () => {
+      (expensesService.getUpcomingCosts as jest.Mock).mockResolvedValue([]);
+      const from = mockFrom({
+        expenses: { data: [], error: null },
+        vehicles: { data: undefined, count: undefined, error: null },
+        maintenances: { count: 0, error: null, data: [] },
+      });
+      const rpc = buildRpcMock();
+      (createUserScopedClient as jest.Mock).mockReturnValue({ from, rpc });
+      const service = createService();
+
+      const kpis = await service.getFleetKpiCatalog("token", "u1", undefined);
+
+      expect(kpis.cost_per_km).toEqual({
+        ok: true,
+        value: { value: 0, delta_pct: null, history_6mo: [0, 0, 0, 0, 0, 0] },
+      });
+      expect(kpis.total_vehicles).toEqual({ ok: true, value: 0 });
+    });
+
+    it("cost_per_km: ignora resultado de RPC sem linha e aplica fallback quando total_spent/total_km vêm null", async () => {
+      (expensesService.getUpcomingCosts as jest.Mock).mockResolvedValue([]);
+      const from = mockFrom({
+        expenses: { data: [], error: null },
+        vehicles: { data: [{ id: "v1" }, { id: "v2" }], count: 2, error: null },
+        maintenances: { count: 0, error: null, data: [] },
+      });
+      let calls = 0;
+      const rpc = jest.fn((fn: string) => {
+        if (fn !== "get_vehicle_cost_per_km") return buildRpcMock()(fn);
+        calls += 1;
+        // v1: sem linha (continue) — v2: linha com total_spent/total_km nulos (fallback 0)
+        return Promise.resolve(
+          calls % 2 === 1 ? { data: [], error: null } : { data: [{ total_spent: null, total_km: null }], error: null },
+        );
+      });
+      (createUserScopedClient as jest.Mock).mockReturnValue({ from, rpc });
+      const service = createService();
+
+      const kpis = await service.getFleetKpiCatalog("token", "u1", undefined);
+
+      expect(kpis.cost_per_km).toEqual({
+        ok: true,
+        value: { value: 0, delta_pct: null, history_6mo: [0, 0, 0, 0, 0, 0] },
+      });
+    });
+
+    it("isola falha de fleet_health quando a RPC falha", async () => {
+      (expensesService.getUpcomingCosts as jest.Mock).mockResolvedValue([]);
+      const from = mockFrom({
+        expenses: { data: [], error: null },
+        vehicles: { data: [], count: 0, error: null },
+        maintenances: { count: 0, error: null, data: [] },
+      });
+      const rpc = buildRpcMock({ calculate_fleet_health: { data: null, error: { message: "boom" } } });
+      (createUserScopedClient as jest.Mock).mockReturnValue({ from, rpc });
+      const service = createService();
+
+      const kpis = await service.getFleetKpiCatalog("token", "u1", undefined);
+
+      expect(kpis.fleet_health).toEqual({ ok: false });
+    });
+
+    it("fleet_health usa fallback vazio quando data vem undefined sem erro", async () => {
+      (expensesService.getUpcomingCosts as jest.Mock).mockResolvedValue([]);
+      const from = mockFrom({
+        expenses: { data: [], error: null },
+        vehicles: { data: [], count: 0, error: null },
+        maintenances: { count: 0, error: null, data: [] },
+      });
+      const rpc = buildRpcMock({ calculate_fleet_health: { data: undefined, error: null } });
+      (createUserScopedClient as jest.Mock).mockReturnValue({ from, rpc });
+      const service = createService();
+
+      const kpis = await service.getFleetKpiCatalog("token", "u1", undefined);
+
+      expect(kpis.fleet_health).toEqual({ ok: true, value: null });
+    });
+
+    it("isola falha de total_vehicles quando a query de contagem falha", async () => {
+      (expensesService.getUpcomingCosts as jest.Mock).mockResolvedValue([]);
+      const from = mockFrom({
+        expenses: { data: [], error: null },
+        vehicles: { data: [], count: undefined, error: { message: "boom" } },
+        maintenances: { count: 0, error: null, data: [] },
+      });
+      const rpc = buildRpcMock();
+      (createUserScopedClient as jest.Mock).mockReturnValue({ from, rpc });
+      const service = createService();
+
+      const kpis = await service.getFleetKpiCatalog("token", "u1", undefined);
+
+      expect(kpis.total_vehicles).toEqual({ ok: false });
+    });
+
+    it("upcoming_costs_7d aplica fallback 0 quando amount vem null", async () => {
+      (expensesService.getUpcomingCosts as jest.Mock).mockResolvedValue([{ amount: null }, { amount: 40 }]);
+      const from = mockFrom({
+        expenses: { data: [], error: null },
+        vehicles: { data: [], count: 0, error: null },
+        maintenances: { count: 0, error: null, data: [] },
+      });
+      const rpc = buildRpcMock();
+      (createUserScopedClient as jest.Mock).mockReturnValue({ from, rpc });
+      const service = createService();
+
+      const kpis = await service.getFleetKpiCatalog("token", "u1", undefined);
+
+      expect(kpis.upcoming_costs_7d).toEqual({ ok: true, value: { total: 40, count: 2 } });
+    });
+
+    it("isola falha de expense_anomalies quando a RPC falha", async () => {
+      (expensesService.getUpcomingCosts as jest.Mock).mockResolvedValue([]);
+      const from = mockFrom({
+        expenses: { data: [], error: null },
+        vehicles: { data: [], count: 0, error: null },
+        maintenances: { count: 0, error: null, data: [] },
+      });
+      const rpc = buildRpcMock({ detect_expense_anomalies: { data: null, error: { message: "boom" } } });
+      (createUserScopedClient as jest.Mock).mockReturnValue({ from, rpc });
+      const service = createService();
+
+      const kpis = await service.getFleetKpiCatalog("token", "u1", undefined);
+
+      expect(kpis.expense_anomalies).toEqual({ ok: false });
+    });
+
+    it("expense_anomalies usa fallback vazio quando data vem undefined sem erro", async () => {
+      (expensesService.getUpcomingCosts as jest.Mock).mockResolvedValue([]);
+      const from = mockFrom({
+        expenses: { data: [], error: null },
+        vehicles: { data: [], count: 0, error: null },
+        maintenances: { count: 0, error: null, data: [] },
+      });
+      const rpc = buildRpcMock({ detect_expense_anomalies: { data: undefined, error: null } });
+      (createUserScopedClient as jest.Mock).mockReturnValue({ from, rpc });
+      const service = createService();
+
+      const kpis = await service.getFleetKpiCatalog("token", "u1", undefined);
+
+      expect(kpis.expense_anomalies).toEqual({ ok: true, value: 0 });
+    });
+
+    it("expense_anomalies conta apenas anomalias do mês corrente", async () => {
+      (expensesService.getUpcomingCosts as jest.Mock).mockResolvedValue([]);
+      const today = new Date();
+      const startOfMonth = toDateString(new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), 1)));
+      const prevMonth = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth() - 1, 15));
+      const from = mockFrom({
+        expenses: { data: [], error: null },
+        vehicles: { data: [], count: 0, error: null },
+        maintenances: { count: 0, error: null, data: [] },
+      });
+      const rpc = buildRpcMock({
+        detect_expense_anomalies: {
+          data: [{ date: startOfMonth }, { date: toDateString(prevMonth) }],
+          error: null,
+        },
+      });
+      (createUserScopedClient as jest.Mock).mockReturnValue({ from, rpc });
+      const service = createService();
+
+      const kpis = await service.getFleetKpiCatalog("token", "u1", undefined);
+
+      expect(kpis.expense_anomalies).toEqual({ ok: true, value: 1 });
+    });
+  });
+
   describe("getVehicleHistory (RF-DB-07)", () => {
     it("combina despesas e manutenções ordenadas por data decrescente", async () => {
       (expensesService.findAll as jest.Mock).mockResolvedValue({
         data: [
-          { id: "e1", date: "2026-07-01", description: null, category: "fuel", amount: 100 },
+          { id: "e1", occurred_at: "2026-07-01", description: null, category: "fuel", amount: 100 },
         ],
       });
       (maintenancesService.findAll as jest.Mock).mockResolvedValue({
@@ -797,7 +1204,7 @@ describe("DashboardService", () => {
     it("usa description e completion_date quando presentes (sem fallback)", async () => {
       (expensesService.findAll as jest.Mock).mockResolvedValue({
         data: [
-          { id: "e2", date: "2026-07-05", description: "Abastecimento", category: "fuel", amount: 100 },
+          { id: "e2", occurred_at: "2026-07-05", description: "Abastecimento", category: "fuel", amount: 100 },
         ],
       });
       (maintenancesService.findAll as jest.Mock).mockResolvedValue({
@@ -823,7 +1230,7 @@ describe("DashboardService", () => {
 
     it("mantém a ordem original quando as datas são iguais", async () => {
       (expensesService.findAll as jest.Mock).mockResolvedValue({
-        data: [{ id: "e3", date: "2026-07-10", description: "X", category: "fuel", amount: 10 }],
+        data: [{ id: "e3", occurred_at: "2026-07-10", description: "X", category: "fuel", amount: 10 }],
       });
       (maintenancesService.findAll as jest.Mock).mockResolvedValue({
         data: [
@@ -841,6 +1248,125 @@ describe("DashboardService", () => {
       const history = await service.getVehicleHistory("token", "u1", "v1");
 
       expect(history.map((item) => item.id)).toEqual(["e3", "m3"]);
+    });
+  });
+
+  describe("getSpendingHighlights (RF-01, P7)", () => {
+    it("mapeia label pt-BR e arredonda o total para as categorias do catálogo padrão", async () => {
+      const rpc = jest.fn().mockResolvedValue({
+        data: [
+          { category: "fuel", total_amount: 150.505, expense_count: 3 },
+          { category: "toll", total_amount: 42, expense_count: 1 },
+        ],
+        error: null,
+      });
+      (createUserScopedClient as jest.Mock).mockReturnValue({ rpc });
+      const service = createService();
+
+      const result = await service.getSpendingHighlights("token", undefined, undefined);
+
+      expect(result).toEqual([
+        { category: "fuel", label: "Combustível", total_amount: 150.51, count: 3 },
+        { category: "toll", label: "Pedágio", total_amount: 42, count: 1 },
+      ]);
+    });
+
+    it("usa fallback capitalizado para categoria fora do catálogo padrão", async () => {
+      const rpc = jest.fn().mockResolvedValue({
+        data: [{ category: "custom_cat", total_amount: 10, expense_count: 1 }],
+        error: null,
+      });
+      (createUserScopedClient as jest.Mock).mockReturnValue({ rpc });
+      const service = createService();
+
+      const result = await service.getSpendingHighlights("token", undefined, undefined);
+
+      expect(result[0]!.label).toBe("Custom_cat");
+    });
+
+    it("repassa vehicleId e groupIds como parâmetros da RPC", async () => {
+      const rpc = jest.fn().mockResolvedValue({ data: [], error: null });
+      (createUserScopedClient as jest.Mock).mockReturnValue({ rpc });
+      const service = createService();
+
+      await service.getSpendingHighlights("token", "veh1", ["g1", "g2"]);
+
+      expect(rpc).toHaveBeenCalledWith("get_category_spending_highlights", {
+        p_vehicle_id: "veh1",
+        p_group_vehicle_ids: ["g1", "g2"],
+      });
+    });
+
+    it("normaliza groupIds vazio/ausente para null na RPC", async () => {
+      const rpc = jest.fn().mockResolvedValue({ data: [], error: null });
+      (createUserScopedClient as jest.Mock).mockReturnValue({ rpc });
+      const service = createService();
+
+      await service.getSpendingHighlights("token", undefined, []);
+
+      expect(rpc).toHaveBeenCalledWith("get_category_spending_highlights", {
+        p_vehicle_id: null,
+        p_group_vehicle_ids: null,
+      });
+    });
+
+    it("propaga erro da RPC", async () => {
+      const rpc = jest.fn().mockResolvedValue({ data: null, error: { message: "boom" } });
+      (createUserScopedClient as jest.Mock).mockReturnValue({ rpc });
+      const service = createService();
+
+      await expect(service.getSpendingHighlights("token", undefined, undefined)).rejects.toThrow("boom");
+    });
+  });
+
+  describe("getFinesStatus (RF-02, R-SUB-03, R-SUB-04)", () => {
+    it("retorna status 'none' quando não há multas ativas", async () => {
+      const rpc = jest.fn().mockResolvedValue({
+        data: [{ active_count: 0, earliest_pending_due_date: null }],
+        error: null,
+      });
+      (createUserScopedClient as jest.Mock).mockReturnValue({ rpc });
+      const service = createService();
+
+      const result = await service.getFinesStatus("token", "u1");
+
+      expect(result).toEqual({ status: "none", count: 0 });
+    });
+
+    it("retorna 'open' quando há multas ativas mas nenhuma pendente vencida", async () => {
+      const future = new Date(Date.now() + 30 * 86_400_000).toISOString().slice(0, 10);
+      const rpc = jest.fn().mockResolvedValue({
+        data: [{ active_count: 2, earliest_pending_due_date: future }],
+        error: null,
+      });
+      (createUserScopedClient as jest.Mock).mockReturnValue({ rpc });
+      const service = createService();
+
+      const result = await service.getFinesStatus("token", "u1");
+
+      expect(result).toEqual({ status: "open", count: 2 });
+    });
+
+    it("retorna 'overdue' quando a multa pendente mais próxima já venceu (R-SUB-04)", async () => {
+      const past = new Date(Date.now() - 30 * 86_400_000).toISOString().slice(0, 10);
+      const rpc = jest.fn().mockResolvedValue({
+        data: [{ active_count: 3, earliest_pending_due_date: past }],
+        error: null,
+      });
+      (createUserScopedClient as jest.Mock).mockReturnValue({ rpc });
+      const service = createService();
+
+      const result = await service.getFinesStatus("token", "u1");
+
+      expect(result).toEqual({ status: "overdue", count: 3 });
+    });
+
+    it("propaga erro da RPC", async () => {
+      const rpc = jest.fn().mockResolvedValue({ data: null, error: { message: "boom" } });
+      (createUserScopedClient as jest.Mock).mockReturnValue({ rpc });
+      const service = createService();
+
+      await expect(service.getFinesStatus("token", "u1")).rejects.toThrow("boom");
     });
   });
 });

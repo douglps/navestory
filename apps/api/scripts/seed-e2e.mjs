@@ -1,10 +1,19 @@
 #!/usr/bin/env node
 // @spec SPEC-20260716-003 RF-DATA-01, RF-DATA-02
 //
-// Cria (de forma idempotente) o usuário e os veículos de teste exigidos pela suíte E2E
-// (Playwright) descrita em specs/qa/SPEC-20260716-003-e2e-playwright.md: um usuário com
-// login válido, um veículo com odômetro já registrado (necessário para o hard block de
-// R-ODO-01, RF-E2E-04) e um segundo veículo distinto (troca de contexto, RF-E2E-06/07).
+// Cria (de forma idempotente) os usuários e veículos de teste exigidos pela suíte E2E
+// (Playwright) descrita em specs/qa/SPEC-20260716-003-e2e-playwright.md:
+//
+// Usuário principal (E2E_USER_EMAIL):
+//   - Um usuário com login válido (RF-E2E-02, RF-E2E-03, RF-E2E-08)
+//   - Veículo A com odômetro já registrado (hard block R-ODO-01, RF-E2E-04)
+//   - Veículo B distinto (troca de contexto, RF-E2E-06/07)
+//
+// Usuário sem veículos (E2E_USER_NO_VEHICLES_EMAIL) — opcional, RF-E2E-10:
+//   - Conta criada sem nenhum veículo associado
+//   - Reutiliza E2E_USER_PASSWORD como senha
+//   - Se E2E_USER_NO_VEHICLES_EMAIL não estiver definido, esse usuário é ignorado e
+//     o teste RF-E2E-10 ficará marcado como `skip` na suíte
 //
 // Uso:
 //   pnpm --filter @nave/api seed:e2e
@@ -13,7 +22,7 @@
 // já usadas pela API em desenvolvimento). Nunca aponte para o banco de produção real com
 // usuários pagantes — este script é destinado a ambientes de teste/staging.
 
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { randomBytes } from "node:crypto";
@@ -43,6 +52,8 @@ const VEHICLE_A_PLATE = process.env.E2E_VEHICLE_A_PLATE ?? "E2E0A01";
 const VEHICLE_B_PLATE = process.env.E2E_VEHICLE_B_PLATE ?? "E2E0B02";
 // RF-E2E-04/05 reaproveitam o mesmo veículo do teste de contexto A por padrão.
 const TEST_VEHICLE_PLATE = process.env.E2E_TEST_VEHICLE_PLATE ?? VEHICLE_A_PLATE;
+// RF-E2E-10: usuário sem veículos. Se não definido, o seed apenas pula e o teste fica skip.
+const NO_VEHICLES_EMAIL = process.env.E2E_USER_NO_VEHICLES_EMAIL ?? "";
 
 const BASELINE_ODOMETER_KM = 15000;
 
@@ -79,6 +90,31 @@ async function ensureUser() {
     password: PASSWORD,
     email_confirm: true,
     user_metadata: { full_name: "E2E Tester" },
+  });
+  if (error) throw error;
+  return data.user.id;
+}
+
+/**
+ * Versão genérica de ensureUser para qualquer email/senha, usada pelo usuário sem veículos
+ * (RF-E2E-10). Cria o usuário sem associar nenhum veículo — a ausência de veículos é o
+ * estado de teste que interessa.
+ */
+async function ensureUserByEmail(email, password) {
+  const existing = await findUserByEmail(email);
+  if (existing) {
+    console.log(`Usuário já existe (${email}) — atualizando senha.`);
+    const { error } = await supabase.auth.admin.updateUserById(existing.id, { password });
+    if (error) throw error;
+    return existing.id;
+  }
+
+  console.log(`Criando usuário sem veículos ${email}...`);
+  const { data, error } = await supabase.auth.admin.createUser({
+    email,
+    password,
+    email_confirm: true,
+    user_metadata: { full_name: "E2E No-Vehicles Tester" },
   });
   if (error) throw error;
   return data.user.id;
@@ -156,7 +192,7 @@ async function ensureOdometerBaseline(userId, vehicleId) {
     vehicle_id: vehicleId,
     category: "fuel",
     amount: 250.0,
-    date: yesterday.toISOString().slice(0, 10),
+    occurred_at: yesterday.toISOString(),
     odometer_km: BASELINE_ODOMETER_KM,
     liters: 40,
     fuel_type: "gasoline",
@@ -180,6 +216,21 @@ async function main() {
       : await ensureVehicle(userId, TEST_VEHICLE_PLATE);
   await ensureOdometerBaseline(userId, testVehicleId);
 
+  // RF-E2E-10: usuário sem veículos (skip silencioso se a variável não estiver definida)
+  if (NO_VEHICLES_EMAIL) {
+    console.log(`\nCriando/verificando usuário sem veículos para RF-E2E-10 (${NO_VEHICLES_EMAIL})...`);
+    const noVehiclesUserId = await ensureUserByEmail(NO_VEHICLES_EMAIL, PASSWORD);
+    await waitForProfile(noVehiclesUserId);
+    console.log("Usuário sem veículos OK — nenhum veículo será criado para esta conta.");
+  } else {
+    console.log(
+      "\nAVISO: E2E_USER_NO_VEHICLES_EMAIL não definido — teste RF-E2E-10 ficará marcado como skip.",
+    );
+    console.log(
+      "Para habilitar, defina E2E_USER_NO_VEHICLES_EMAIL (ex: e2e-no-vehicles@nave.test) e reexecute.",
+    );
+  }
+
   console.log("\nSeed E2E concluído. Cadastre estes valores como GitHub Secrets");
   console.log("(Settings → Secrets and variables → Actions) e não os commite em lugar nenhum:\n");
   console.log(`E2E_USER_EMAIL=${EMAIL}`);
@@ -194,6 +245,9 @@ async function main() {
   console.log(`E2E_TEST_VEHICLE_PLATE=${TEST_VEHICLE_PLATE}`);
   console.log(`E2E_VEHICLE_A_PLATE=${VEHICLE_A_PLATE}`);
   console.log(`E2E_VEHICLE_B_PLATE=${VEHICLE_B_PLATE}`);
+  if (NO_VEHICLES_EMAIL) {
+    console.log(`E2E_USER_NO_VEHICLES_EMAIL=${NO_VEHICLES_EMAIL}`);
+  }
   console.log(`\nE2E_BASE_URL=<URL do ambiente onde a suíte vai rodar>`);
 }
 

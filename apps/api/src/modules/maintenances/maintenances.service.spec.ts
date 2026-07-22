@@ -63,8 +63,9 @@ describe("MaintenancesService", () => {
       softDeleteBySource: jest.fn().mockResolvedValue(undefined),
       ...expensesOverrides,
     } as unknown as ExpensesService;
+    const preferencesService = { findOne: jest.fn().mockResolvedValue({ timezone: null }) };
     return {
-      service: new MaintenancesService(supabaseAdmin, configService, auditService, expensesService),
+      service: new MaintenancesService(supabaseAdmin, configService, auditService, expensesService, preferencesService as never),
       expensesService,
     };
   }

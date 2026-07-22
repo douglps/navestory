@@ -51,6 +51,30 @@ Threshold atual de cobertura: **88% unitário** (CI falha abaixo disso).
 
 ---
 
+## Casos de Caminho Infeliz (auditoria 2026-07-20)
+
+Gaps de teste identificados numa varredura de branches de erro não exercitadas apesar do
+gate de 88% de cobertura. Exclui R-TZ-04 (código ainda não implementado — depende de
+`SPEC-20260715-002`, priorizada como próxima tarefa dedicada; ver `important/PENDENCIAS-E-PROCESSOS.md`
+e `matrices/rastreabilidade.md`).
+
+| ID | O que valida | Regra | Prioridade | Localização | Status |
+|----|-------------|-------|------------|------------|--------|
+| EC-01 | Transição de multa a partir de estado terminal (`paid`/`cancelled`) lança 409 | grafo de status de fines | Alta | `fines.service.spec.ts` | ✅ |
+| EC-05 | Cascade de soft-delete de veículo aplica o mesmo `deleted_at` em `expenses` e `maintenances` | R-VEH-01 | Alta | `vehicles.service.spec.ts` | ✅ |
+| EC-06 | `update` de veículo com placa inválida lança 400 | R-VEH-02 | Alta | `vehicles.service.spec.ts` | ✅ |
+| EC-07 | Transição de multa a partir de `appealing` (`→ paid`, `→ cancelled`) aplica corretamente | grafo de status de fines | Média | `fines.service.spec.ts` | ✅ |
+| EC-08 | `findRecent` de audit log remove campos de token de `changes` | R-MON-02 | Média | `audit-logs.service.spec.ts` | ✅ (2026-07-21: `SENSITIVE_CHANGE_FIELDS` corrigido para incluir `access_token`/`token`) |
+| EC-09/10 | Login inválido incrementa `failed_count`; login válido zera o contador | S4 | Média | `auth.service.spec.ts` | ✅ |
+| CT-004b | `create` com `category=fuel` sem `odometer_km` lança 400 direto no service (não só no schema Zod) | R4 | Baixa | `expenses.service.spec.ts` | ✅ (2026-07-21: guard imperativo adicionado em `ExpensesService.create`) |
+| EC-11 | Hard-delete de usuário por admin não seta `deleted_at` (sem grace period) | C1 | Baixa | `admin.service.spec.ts` | ✅ |
+| RF-E2E-08 | Login com credenciais inválidas exibe alerta e mantém `/login` | S1 | Alta | `apps/web/e2e/tests/auth.spec.ts` |
+| RF-E2E-09 | Cookie de sessão inválido em rota privada redireciona para `/login` | S1, CT-006 | Média | `apps/web/e2e/tests/auth.spec.ts` |
+| RF-E2E-10 | Usuário sem veículos: dialog de contexto exibe estado vazio | R-CTX-07 | Média | `apps/web/e2e/tests/vehicle-context.spec.ts` |
+| RF-E2E-11 | Busca sem resultado no dialog de contexto não trava a UI | R-CTX-07 | Baixa | `apps/web/e2e/tests/vehicle-context.spec.ts` |
+
+---
+
 ## Nomenclatura de Describes
 
 ```ts

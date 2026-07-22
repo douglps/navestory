@@ -13,6 +13,13 @@ import { AuditService } from "../../shared/audit/audit.service";
 import { escapeCsvField } from "../../shared/csv/csv.util";
 import { createUserScopedClient } from "../../shared/supabase/create-user-scoped-client";
 import { SUPABASE_ADMIN_CLIENT } from "../../shared/supabase/supabase.constants";
+import {
+  FALLBACK_TIMEZONE,
+  exclusiveDayUpperBoundUtc,
+  resolveDateTimeInput,
+  toCalendarDay,
+} from "../../shared/utils/date.utils";
+import { PreferencesService } from "../preferences/preferences.service";
 import type { CreateExpenseDto } from "./dto/create-expense.dto";
 import type { ExpenseKpisDto } from "./dto/expense-kpis.dto";
 import type { ListExpensesDto } from "./dto/list-expenses.dto";
@@ -25,7 +32,7 @@ export interface Expense {
   vehicle_id: string;
   category: string;
   amount: number;
-  date: string;
+  occurred_at: string;
   description: string | null;
   odometer_km: number | null;
   liters: number | null;
@@ -48,6 +55,8 @@ export type ExpenseWithOdometerWarning = Expense & {
 export type ExpenseWithWarnings = ExpenseWithOdometerWarning & {
   duplicate_warning?: true;
   duplicate_id?: string;
+  /** @spec SPEC-20260715-002 RF-BK-09, R-TZ-04 — aviso não-bloqueante, nunca impede a criação */
+  future_date_warning?: true;
 };
 
 export interface PaginatedExpenses {
@@ -55,7 +64,7 @@ export interface PaginatedExpenses {
   meta: { total: number; page: number; limit: number; has_next: boolean };
 }
 
-const EXPENSE_COLUMNS = `id, user_id, vehicle_id, category, amount, date, description, odometer_km,
+const EXPENSE_COLUMNS = `id, user_id, vehicle_id, category, amount, occurred_at, description, odometer_km,
   liters, fuel_type, full_tank, supplier, source_type, source_id, is_readonly, created_at, updated_at`;
 
 const SUPPLIER_SUGGESTION_LIMIT = 10;
@@ -75,6 +84,7 @@ export class ExpensesService {
     @Inject(SUPABASE_ADMIN_CLIENT) private readonly supabaseAdmin: SupabaseClient,
     private readonly configService: ConfigService,
     private readonly auditService: AuditService,
+    private readonly preferencesService: PreferencesService,
   ) {}
 
   private clientForUser(accessToken: string): SupabaseClient {
@@ -83,6 +93,12 @@ export class ExpensesService {
       this.configService.getOrThrow<string>("SUPABASE_ANON_KEY"),
       accessToken,
     );
+  }
+
+  /** @spec SPEC-20260715-002 R-TZ-01, RF-BK-05 — fallback nomeado, nunca o fuso do processo */
+  private async resolveUserTimezone(accessToken: string, userId: string): Promise<string> {
+    const preferences = await this.preferencesService.findOne(accessToken, userId);
+    return preferences.timezone ?? FALLBACK_TIMEZONE;
   }
 
   /**
@@ -125,18 +141,21 @@ export class ExpensesService {
     vehicleId: string,
     userId: string,
     direction: "before" | "after",
-    date: string,
+    occurredAt: string,
     excludeExpenseId?: string,
-  ): Promise<{ odometer_km: number; date: string } | null> {
+  ): Promise<{ odometer_km: number; occurred_at: string } | null> {
     let builder = client
       .from("expenses")
-      .select("odometer_km, date")
+      .select("odometer_km, occurred_at")
       .eq("vehicle_id", vehicleId)
       .eq("user_id", userId)
       .is("deleted_at", null)
       .not("odometer_km", "is", null);
 
-    builder = direction === "before" ? builder.lte("date", date) : builder.gt("date", date);
+    builder =
+      direction === "before"
+        ? builder.lte("occurred_at", occurredAt)
+        : builder.gt("occurred_at", occurredAt);
     if (excludeExpenseId) {
       builder = builder.neq("id", excludeExpenseId);
     }
@@ -149,7 +168,7 @@ export class ExpensesService {
     if (error || !data) {
       return null;
     }
-    return data as { odometer_km: number; date: string };
+    return data as { odometer_km: number; occurred_at: string };
   }
 
   /**
@@ -162,7 +181,7 @@ export class ExpensesService {
     client: SupabaseClient,
     userId: string,
     vehicleId: string,
-    date: string,
+    occurredAt: string,
     odometerKm: number | null | undefined,
     excludeExpenseId?: string,
   ): Promise<void> {
@@ -173,12 +192,12 @@ export class ExpensesService {
       vehicleId,
       userId,
       "before",
-      date,
+      occurredAt,
       excludeExpenseId,
     );
     if (before && odometerKm < before.odometer_km) {
       throw new BadRequestException(
-        `Odômetro inválido: o último valor registrado para este veículo foi ${before.odometer_km} km em ${before.date}. Informe um valor igual ou maior.`,
+        `Odômetro inválido: o último valor registrado para este veículo foi ${before.odometer_km} km em ${before.occurred_at}. Informe um valor igual ou maior.`,
       );
     }
 
@@ -187,12 +206,12 @@ export class ExpensesService {
       vehicleId,
       userId,
       "after",
-      date,
+      occurredAt,
       excludeExpenseId,
     );
     if (after && odometerKm > after.odometer_km) {
       throw new BadRequestException(
-        `Odômetro inválido: existe um registro de ${after.odometer_km} km em ${after.date}, posterior a esta despesa. Informe um valor igual ou menor.`,
+        `Odômetro inválido: existe um registro de ${after.odometer_km} km em ${after.occurred_at}, posterior a esta despesa. Informe um valor igual ou menor.`,
       );
     }
   }
@@ -228,21 +247,33 @@ export class ExpensesService {
    * a query encontraria o registro que acabou de ser inserido como "duplicata de si mesmo"
    * (RF-02 invoca a busca *após* o insert, então o novo registro sempre bate nos 4 critérios).
    */
+  /**
+   * @spec SPEC-20260715-002 RF-BK-08, R2 v2
+   * "Mesma data" passa a significar mesmo dia calendário no fuso do usuário — não igualdade de
+   * `timestamptz`. O intervalo `[início do dia, início do dia seguinte)` no fuso `tz` é convertido
+   * para UTC antes de filtrar, mantendo a comparação no banco (sem carregar candidatos em memória).
+   */
   private async findPotentialDuplicate(
     client: SupabaseClient,
     userId: string,
     vehicleId: string,
-    date: string,
+    occurredAt: string,
+    tz: string,
     amount: number,
     category: string,
     excludeExpenseId: string,
   ): Promise<string | null> {
+    const calendarDay = toCalendarDay(new Date(occurredAt), tz);
+    const dayStartUtc = resolveDateTimeInput(calendarDay, tz);
+    const dayEndUtc = new Date(new Date(dayStartUtc).getTime() + 24 * 60 * 60 * 1000).toISOString();
+
     const { data, error } = await client
       .from("expenses")
       .select("id")
       .eq("user_id", userId)
       .eq("vehicle_id", vehicleId)
-      .eq("date", date)
+      .gte("occurred_at", dayStartUtc)
+      .lt("occurred_at", dayEndUtc)
       .eq("amount", amount)
       .eq("category", category)
       .is("deleted_at", null)
@@ -258,18 +289,21 @@ export class ExpensesService {
 
   /**
    * @spec SPEC-20260601-002 RF-02, RF-03, RF-04, EC-05
+   * @spec SPEC-20260715-002 RF-BK-08
    */
   private async buildDuplicateWarning(
     client: SupabaseClient,
     userId: string,
     expense: Expense,
+    tz: string,
   ): Promise<Pick<ExpenseWithWarnings, "duplicate_warning" | "duplicate_id">> {
     try {
       const duplicateId = await this.findPotentialDuplicate(
         client,
         userId,
         expense.vehicle_id,
-        expense.date,
+        expense.occurred_at,
+        tz,
         expense.amount,
         expense.category,
         expense.id,
@@ -324,11 +358,11 @@ export class ExpensesService {
   async listSuppliers(accessToken: string, userId: string): Promise<string[]> {
     const { data, error } = await this.clientForUser(accessToken)
       .from("expenses")
-      .select("supplier, date")
+      .select("supplier, occurred_at")
       .eq("user_id", userId)
       .not("supplier", "is", null)
       .is("deleted_at", null)
-      .order("date", { ascending: false })
+      .order("occurred_at", { ascending: false })
       .limit(200);
 
     if (error) {
@@ -374,13 +408,24 @@ export class ExpensesService {
       throw new NotFoundException("Veículo não encontrado");
     }
 
+    // valida R4 — guard imperativo no service (schema Zod do controller pode ser
+    // contornado por chamadas diretas ao service, ex: createFromSource)
+    if (dto.category === "fuel" && dto.odometer_km == null) {
+      throw new BadRequestException(
+        "odometer_km é obrigatório para despesas de categoria fuel",
+      );
+    }
+
+    const tz = await this.resolveUserTimezone(accessToken, userId);
+    const occurredAt = resolveDateTimeInput(dto.occurred_at, tz);
+
     if (strict) {
-      await this.checkOdometerHardBlock(client, userId, dto.vehicle_id, dto.date, dto.odometer_km);
+      await this.checkOdometerHardBlock(client, userId, dto.vehicle_id, occurredAt, dto.odometer_km);
     }
 
     const { data, error } = await client
       .from("expenses")
-      .insert({ ...dto, user_id: userId, is_readonly: false })
+      .insert({ ...dto, occurred_at: occurredAt, user_id: userId, is_readonly: false })
       .select(EXPENSE_COLUMNS)
       .single();
 
@@ -399,9 +444,15 @@ export class ExpensesService {
     const odometerWarning = strict
       ? {}
       : await this.buildOdometerWarning(client, userId, expense.vehicle_id, dto.odometer_km);
-    const duplicateWarning = await this.buildDuplicateWarning(client, userId, expense);
+    const duplicateWarning = await this.buildDuplicateWarning(client, userId, expense, tz);
     const fuelMetrics = await this.computeFuelMetrics(client, userId, expense);
-    return { ...expense, ...odometerWarning, ...duplicateWarning, ...fuelMetrics };
+    // @spec SPEC-20260715-002 RF-BK-09, R-TZ-04 — aviso não-bloqueante quando o dia calendário
+    // (fuso do usuário) da despesa é posterior ao dia calendário corrente
+    const futureDateWarning: Pick<ExpenseWithWarnings, "future_date_warning"> =
+      toCalendarDay(new Date(occurredAt), tz) > toCalendarDay(new Date(), tz)
+        ? { future_date_warning: true }
+        : {};
+    return { ...expense, ...odometerWarning, ...duplicateWarning, ...fuelMetrics, ...futureDateWarning };
   }
 
   /**
@@ -430,14 +481,14 @@ export class ExpensesService {
       builder = builder.eq("category", category);
     }
     if (date_from) {
-      builder = builder.gte("date", date_from);
+      builder = builder.gte("occurred_at", date_from);
     }
     if (date_to) {
-      builder = builder.lte("date", date_to);
+      builder = builder.lt("occurred_at", exclusiveDayUpperBoundUtc(date_to));
     }
 
     const { data, error, count } = await builder
-      .order("date", { ascending: false })
+      .order("occurred_at", { ascending: false })
       .range(from, to);
 
     if (error) {
@@ -487,13 +538,16 @@ export class ExpensesService {
     }
 
     const client = this.clientForUser(accessToken);
+    const tz = await this.resolveUserTimezone(accessToken, userId);
+    const resolvedOccurredAt =
+      dto.occurred_at !== undefined ? resolveDateTimeInput(dto.occurred_at, tz) : undefined;
 
     if (strict && dto.odometer_km !== undefined) {
       await this.checkOdometerHardBlock(
         client,
         userId,
         existing.vehicle_id,
-        dto.date ?? existing.date,
+        resolvedOccurredAt ?? existing.occurred_at,
         dto.odometer_km,
         expenseId,
       );
@@ -501,7 +555,7 @@ export class ExpensesService {
 
     const { data, error } = await client
       .from("expenses")
-      .update(dto)
+      .update({ ...dto, ...(resolvedOccurredAt !== undefined ? { occurred_at: resolvedOccurredAt } : {}) })
       .eq("id", expenseId)
       .eq("user_id", userId)
       .is("deleted_at", null)
@@ -558,15 +612,18 @@ export class ExpensesService {
 
   /**
    * @spec SPEC-20260608-001 RF-01, RF-02, RF-03, RNF-02
+   * @spec SPEC-20260721-002 RF-09, P6 — `query.limit` aplica `.limit()` no builder do RPC
+   * (PostgREST), nunca corta o array em memória depois de recebido.
    */
   async getUpcomingCosts(
     accessToken: string,
     query: UpcomingCostsDto,
   ): Promise<UpcomingCostItem[]> {
-    const { data, error } = await this.clientForUser(accessToken).rpc("get_upcoming_costs", {
+    const builder = this.clientForUser(accessToken).rpc("get_upcoming_costs", {
       p_vehicle_id: query.vehicle_id ?? null,
       p_horizon_days: query.horizon_days,
     });
+    const { data, error } = await (query.limit ? builder.limit(query.limit) : builder);
 
     if (error) {
       throw new NotFoundException("Não foi possível carregar as próximas despesas");
@@ -591,10 +648,10 @@ export class ExpensesService {
       builder = builder.eq("vehicle_id", vehicleId);
     }
     if (dateFrom) {
-      builder = builder.gte("date", dateFrom);
+      builder = builder.gte("occurred_at", dateFrom);
     }
     if (dateTo) {
-      builder = builder.lt("date", dateTo);
+      builder = builder.lt("occurred_at", dateTo);
     }
 
     const { data, error } = await builder;
@@ -606,14 +663,21 @@ export class ExpensesService {
 
   /**
    * @spec SPEC-20260608-002 RF-01, RF-02, RF-03
+   * @spec SPEC-20260715-002 R-TZ-01 — limites de mês calculados no fuso do usuário, não no
+   * calendário local do processo Node.js (mesma classe de bug corrigida em `DashboardService`).
    */
   async getKpis(accessToken: string, userId: string, query: ExpenseKpisDto): Promise<ExpenseKpis> {
     const client = this.clientForUser(accessToken);
-    const now = new Date();
-    const toDateString = (date: Date) => date.toISOString().slice(0, 10);
-    const startOfThisMonth = toDateString(new Date(now.getFullYear(), now.getMonth(), 1));
-    const startOfNextMonth = toDateString(new Date(now.getFullYear(), now.getMonth() + 1, 1));
-    const startOfPrevMonth = toDateString(new Date(now.getFullYear(), now.getMonth() - 1, 1));
+    const tz = await this.resolveUserTimezone(accessToken, userId);
+    const todayInTz = toCalendarDay(new Date(), tz);
+    const [year, month] = todayInTz.split("-").map(Number) as [number, number];
+    const monthStart = (offset: number) => {
+      const d = new Date(Date.UTC(year, month - 1 + offset, 1));
+      return resolveDateTimeInput(`${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-01`, tz);
+    };
+    const startOfThisMonth = monthStart(0);
+    const startOfNextMonth = monthStart(1);
+    const startOfPrevMonth = monthStart(-1);
 
     const [totalThisMonth, totalPrevMonth, totalAllTime, upcoming] = await Promise.all([
       this.sumExpensesAmount(client, userId, query.vehicle_id, startOfThisMonth, startOfNextMonth),
@@ -678,7 +742,7 @@ export class ExpensesService {
         vehicle_id: params.vehicle_id,
         category: params.category,
         amount: params.amount,
-        date: params.date,
+        occurred_at: params.date,
         description: params.description ?? null,
         source_type: params.source_type,
         source_id: params.source_id,
@@ -756,25 +820,25 @@ export class ExpensesService {
 
     let builder = client
       .from("expenses")
-      .select("date, amount, category, description, source_type, vehicles(plate, make, model)")
+      .select("occurred_at, amount, category, description, source_type, vehicles(plate, make, model)")
       .eq("user_id", userId)
       .is("deleted_at", null)
-      .gte("date", from)
-      .lte("date", to);
+      .gte("occurred_at", from)
+      .lt("occurred_at", exclusiveDayUpperBoundUtc(to));
 
     if (query.vehicle_id) {
       builder = builder.eq("vehicle_id", query.vehicle_id);
     }
 
     const header = "Data,Veiculo,Placa,Categoria,Valor,Origem,Descricao";
-    const { data, error } = await builder.order("date", { ascending: false }).limit(5_000);
+    const { data, error } = await builder.order("occurred_at", { ascending: false }).limit(5_000);
 
     if (error) {
       return `${header}\n`;
     }
 
     interface ConsolidatedExportRow {
-      date: string;
+      occurred_at: string;
       amount: number;
       category: string;
       description: string | null;
@@ -792,7 +856,7 @@ export class ExpensesService {
         model: null,
       };
       return [
-        row.date,
+        row.occurred_at.slice(0, 10),
         escapeCsvField(`${vehicle.make ?? ""} ${vehicle.model ?? ""}`.trim()),
         escapeCsvField(vehicle.plate),
         escapeCsvField(row.category),

@@ -20,10 +20,11 @@ function alertLabel(alert: FleetAlertItem): string {
   return `Vence em ${alert.days_until_due} ${alert.days_until_due === 1 ? "dia" : "dias"}`;
 }
 
+// @spec SPEC-20260721-002 RF-03 — tokens semânticos em vez de classes Tailwind literais
 function alertStyles(alert: FleetAlertItem): string {
   return alert.days_until_due < 0
-    ? "border-red-400 bg-red-50 text-red-800"
-    : "border-amber-400 bg-amber-50 text-amber-800";
+    ? "border-danger bg-danger-pastel text-danger-foreground"
+    : "border-warning bg-warning-pastel text-warning-foreground";
 }
 
 /**

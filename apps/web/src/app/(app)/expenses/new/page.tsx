@@ -11,11 +11,13 @@ import { CurrencyInput, OdometerInput } from "@nave/ui";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useState, type FormEvent, type ReactNode } from "react";
+import { Suspense, useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { ApiError, apiClient } from "@/lib/http/api-client";
 import { changeDateYear } from "@/lib/date-year";
+import { datetimeLocalToIso, nowInUserTz } from "@/lib/datetime-tz";
 import { FUEL_TYPE_OPTIONS } from "@/lib/fuel-types";
 import { useFuelCrossCalc } from "@/lib/hooks/use-fuel-cross-calc";
+import { usePreferences } from "@/lib/hooks/use-preferences";
 import { useVehicleContextField } from "@/lib/hooks/use-vehicle-context-field";
 
 const TEMPLATE_LIMIT = 20;
@@ -34,10 +36,12 @@ interface CategoriesResponse {
 }
 
 // @spec SPEC-20260720-002 RF-01
+// @spec SPEC-20260715-002 RF-BK-09
 interface ExpenseResponse {
   id: string;
   duplicate_warning?: boolean;
   duplicate_id?: string;
+  future_date_warning?: boolean;
 }
 
 function vehicleLabel(vehicle: Vehicle): string {
@@ -195,8 +199,6 @@ function ExpenseTemplatesTray({
   );
 }
 
-const TODAY = new Date().toISOString().slice(0, 10);
-
 /**
  * @spec SPEC-20260714-001 RF-12
  * @spec SPEC-20260606-001 RF-01, RF-02, R-FUEL-05
@@ -223,6 +225,9 @@ function NewExpensePageContent(): ReactNode {
     retry: false,
   });
 
+  const { data: preferences } = usePreferences();
+  const tz = preferences?.timezone ?? "UTC";
+
   const { data: categories } = useQuery({
     queryKey: ["categories"],
     queryFn: () => apiClient<CategoriesResponse>("/categories"),
@@ -241,7 +246,7 @@ function NewExpensePageContent(): ReactNode {
     dismissContextChangeNotice,
   } = useVehicleContextField(vehicles);
   const [category, setCategory] = useState(initialCategory);
-  const [date, setDate] = useState(TODAY);
+  const [occurredAt, setOccurredAt] = useState("");
   const [description, setDescription] = useState("");
   const [odometerKm, setOdometerKm] = useState<number | undefined>(undefined);
   const [fuelType, setFuelType] = useState("");
@@ -252,8 +257,16 @@ function NewExpensePageContent(): ReactNode {
   const [duplicateId, setDuplicateId] = useState<string | null>(null);
   const fuelCalc = useFuelCrossCalc();
 
+  /** @spec SPEC-20260715-002 RF-FE-03 — preenchimento automático da hora corrente no fuso do usuário */
+  useEffect(() => {
+    if (preferences && occurredAt === "") {
+      setOccurredAt(nowInUserTz(tz));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [preferences]);
+
   const isFuel = category === "fuel";
-  const year = date ? Number(date.slice(0, 4)) : undefined;
+  const year = occurredAt ? Number(occurredAt.slice(0, 4)) : undefined;
 
   /**
    * @spec SPEC-20260606-002 RF-02
@@ -275,6 +288,9 @@ function NewExpensePageContent(): ReactNode {
       if (data.duplicate_warning && data.duplicate_id) {
         setDuplicateId(data.duplicate_id);
         return;
+      }
+      if (data.future_date_warning) {
+        window.alert("Despesa registrada com data futura.");
       }
       router.push("/expenses");
     },
@@ -303,7 +319,10 @@ function NewExpensePageContent(): ReactNode {
 
   function handleYearChange(value: number | undefined): void {
     if (value == null || String(value).length !== 4) return;
-    setDate((current) => changeDateYear(current, value));
+    setOccurredAt((current) => {
+      const [datePart, timePart] = current.split("T");
+      return `${changeDateYear(datePart ?? "", value)}T${timePart ?? "00:00"}`;
+    });
   }
 
   function handleSubmit(event: FormEvent): void {
@@ -314,7 +333,7 @@ function NewExpensePageContent(): ReactNode {
       vehicle_id: vehicleId,
       category,
       amount: fuelCalc.amount,
-      date,
+      occurred_at: occurredAt ? datetimeLocalToIso(occurredAt, tz) : "",
       description: description || null,
       odometer_km: isFuel ? (odometerKm ?? null) : null,
       fuel_type: isFuel && fuelType ? fuelType : null,
@@ -337,7 +356,7 @@ function NewExpensePageContent(): ReactNode {
     (vehicleId !== "" && !isVehicleInherited) ||
     category !== "" ||
     fuelCalc.amount != null ||
-    date !== TODAY ||
+    (preferences != null && occurredAt !== nowInUserTz(tz)) ||
     description !== "" ||
     odometerKm != null ||
     fuelType !== "" ||
@@ -478,12 +497,12 @@ function NewExpensePageContent(): ReactNode {
 
         <div className="flex gap-3">
           <div className="flex flex-1 flex-col gap-1">
-            <label htmlFor="date">Data *</label>
+            <label htmlFor="occurred_at">Data e hora *</label>
             <input
-              id="date"
-              type="date"
-              value={date}
-              onChange={(event) => setDate(event.target.value)}
+              id="occurred_at"
+              type="datetime-local"
+              value={occurredAt}
+              onChange={(event) => setOccurredAt(event.target.value)}
               required
             />
           </div>

@@ -318,6 +318,85 @@ describe("FinesService", () => {
     await expect(service.remove("token", "u1", "f1")).rejects.toBeInstanceOf(NotFoundException);
   });
 
+  // valida grafo de status de fines
+  describe("EC-01: transição a partir de estado terminal lança 409", () => {
+    it("paid → pending lança ConflictException (FINE_STATUS_TRANSITIONS.paid = [])", async () => {
+      mockClient({
+        fines: { data: { id: "f1", status: "paid", amount: 195.23, amount_with_discount: null }, error: null },
+      });
+      const { service } = createService();
+
+      await expect(
+        service.update("token", "u1", "f1", { status: "pending" } as never),
+      ).rejects.toBeInstanceOf(ConflictException);
+    });
+
+    it("paid → appealing lança ConflictException (FINE_STATUS_TRANSITIONS.paid = [])", async () => {
+      mockClient({
+        fines: { data: { id: "f1", status: "paid", amount: 195.23, amount_with_discount: null }, error: null },
+      });
+      const { service } = createService();
+
+      await expect(
+        service.update("token", "u1", "f1", { status: "appealing" } as never),
+      ).rejects.toBeInstanceOf(ConflictException);
+    });
+
+    it("cancelled → pending lança ConflictException (FINE_STATUS_TRANSITIONS.cancelled = [])", async () => {
+      mockClient({
+        fines: { data: { id: "f1", status: "cancelled", amount: 195.23, amount_with_discount: null }, error: null },
+      });
+      const { service } = createService();
+
+      await expect(
+        service.update("token", "u1", "f1", { status: "pending" } as never),
+      ).rejects.toBeInstanceOf(ConflictException);
+    });
+
+    it("cancelled → paid lança ConflictException (FINE_STATUS_TRANSITIONS.cancelled = [])", async () => {
+      mockClient({
+        fines: { data: { id: "f1", status: "cancelled", amount: 195.23, amount_with_discount: null }, error: null },
+      });
+      const { service } = createService();
+
+      await expect(
+        service.update("token", "u1", "f1", { status: "paid" } as never),
+      ).rejects.toBeInstanceOf(ConflictException);
+    });
+  });
+
+  // valida grafo de status de fines
+  describe("EC-07: transições válidas a partir de appealing aplicam corretamente", () => {
+    it("appealing → paid aplica a mudança normalmente (status não fica preso)", async () => {
+      mockClient({
+        fines: [
+          { data: { id: "f1", status: "appealing", amount: 195.23, amount_with_discount: null }, error: null },
+          { data: { id: "f1", status: "paid" }, error: null },
+        ],
+      });
+      const { service } = createService();
+
+      const result = await service.update("token", "u1", "f1", { status: "paid" } as never);
+
+      expect(result).toEqual({ id: "f1", status: "paid" });
+    });
+
+    it("appealing → cancelled aplica a mudança normalmente e soft-deleta a expense vinculada", async () => {
+      mockClient({
+        fines: [
+          { data: { id: "f1", status: "appealing", amount: 195.23, amount_with_discount: null }, error: null },
+          { data: { id: "f1", status: "cancelled" }, error: null },
+        ],
+      });
+      const { service, expensesService } = createService();
+
+      const result = await service.update("token", "u1", "f1", { status: "cancelled" } as never);
+
+      expect(result).toEqual({ id: "f1", status: "cancelled" });
+      expect(expensesService.softDeleteBySource).toHaveBeenCalledWith("token", "u1", "fine", "f1");
+    });
+  });
+
   describe("countPending (RF-07)", () => {
     it("conta multas pendentes do usuário", async () => {
       const { builders } = mockClient({ fines: { count: 3, error: null } });

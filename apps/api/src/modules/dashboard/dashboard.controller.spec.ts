@@ -10,7 +10,10 @@ describe("DashboardController", () => {
       getFleetHealth: jest.fn().mockResolvedValue([]),
       getAlerts: jest.fn().mockResolvedValue([]),
       getFleetKpis: jest.fn().mockResolvedValue({}),
+      getFleetKpiCatalog: jest.fn().mockResolvedValue({}),
       getVehicleCards: jest.fn().mockResolvedValue([]),
+      getSpendingHighlights: jest.fn().mockResolvedValue([]),
+      getFinesStatus: jest.fn().mockResolvedValue({ status: "none", count: 0 }),
       ...overrides,
     } as unknown as DashboardService;
     return { controller: new DashboardController(dashboardService), dashboardService };
@@ -95,12 +98,50 @@ describe("DashboardController", () => {
     expect(dashboardService.getFleetKpis).toHaveBeenCalledWith("token-123", "u1", "v1");
   });
 
+  it("getFleetKpiCatalog repassa o vehicle_id da query e devolve { data } (RF-01)", async () => {
+    const { controller, dashboardService } = createController({
+      getFleetKpiCatalog: jest.fn().mockResolvedValue({ expenses_month: { ok: true, value: 1 } }),
+    });
+
+    const result = await controller.getFleetKpiCatalog(req, "u1", { vehicle_id: "v1" });
+
+    expect(dashboardService.getFleetKpiCatalog).toHaveBeenCalledWith("token-123", "u1", "v1");
+    expect(result).toEqual({ data: { expenses_month: { ok: true, value: 1 } } });
+  });
+
   it("getVehicleCards extrai o token e devolve { data } (RF-DA-04)", async () => {
     const { controller, dashboardService } = createController();
 
     await controller.getVehicleCards(req, "u1");
 
     expect(dashboardService.getVehicleCards).toHaveBeenCalledWith("token-123", "u1");
+  });
+
+  it("getSpendingHighlights repassa vehicleId/groupIds e devolve { data } (RF-01)", async () => {
+    const { controller, dashboardService } = createController({
+      getSpendingHighlights: jest.fn().mockResolvedValue([
+        { category: "fuel", label: "Combustível", total_amount: 100, count: 2 },
+      ]),
+    });
+
+    const result = await controller.getSpendingHighlights(req, {
+      vehicleId: "veh1",
+      groupIds: ["g1", "g2"],
+    });
+
+    expect(dashboardService.getSpendingHighlights).toHaveBeenCalledWith("token-123", "veh1", ["g1", "g2"]);
+    expect(result).toEqual({ data: [{ category: "fuel", label: "Combustível", total_amount: 100, count: 2 }] });
+  });
+
+  it("getFinesStatus extrai o token e devolve { data } (RF-02)", async () => {
+    const { controller, dashboardService } = createController({
+      getFinesStatus: jest.fn().mockResolvedValue({ status: "overdue", count: 3 }),
+    });
+
+    const result = await controller.getFinesStatus(req, "u1");
+
+    expect(dashboardService.getFinesStatus).toHaveBeenCalledWith("token-123", "u1");
+    expect(result).toEqual({ data: { status: "overdue", count: 3 } });
   });
 
   it("usa o cookie de sessão quando não há header Authorization", async () => {

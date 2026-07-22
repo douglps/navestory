@@ -1,7 +1,8 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, type RenderResult, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { act } from "react";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 import { useDashboardStore } from "@/lib/stores/use-dashboard-store";
 import { useUIStore } from "@/lib/stores/ui-store";
 import { Sidebar } from "./sidebar";
@@ -67,6 +68,48 @@ describe("Sidebar", () => {
     act(() => {
       useUIStore.setState({ isSidebarCollapsed: false });
       useDashboardStore.getState().clearAllSelection();
+    });
+  });
+
+  describe("SPEC-20260722-003 — drawer mobile", () => {
+    afterEach(() => {
+      useUIStore.setState({ isMobileNavOpen: false });
+    });
+
+    it("RF-06: fica fora do viewport (-translate-x-full) quando o drawer está fechado", () => {
+      renderSidebar();
+
+      expect(screen.getByRole("dialog", { hidden: true })).toHaveClass("-translate-x-full");
+    });
+
+    it("RF-06: exibe translate-x-0 quando isMobileNavOpen é true", () => {
+      act(() => useUIStore.setState({ isMobileNavOpen: true }));
+      renderSidebar();
+
+      expect(screen.getByRole("dialog", { hidden: true })).toHaveClass("translate-x-0");
+    });
+
+    it("RF-07: exibe backdrop apenas quando o drawer está aberto e fecha ao clicar nele", async () => {
+      const user = userEvent.setup();
+      act(() => useUIStore.setState({ isMobileNavOpen: true }));
+      const { container } = renderSidebar();
+
+      const backdrop = container.querySelector('[aria-hidden="true"].fixed.inset-0') as HTMLElement;
+      expect(backdrop).toBeInTheDocument();
+
+      await user.click(backdrop);
+
+      expect(useUIStore.getState().isMobileNavOpen).toBe(false);
+    });
+
+    it("RF-08: fecha o drawer ao pressionar Esc", async () => {
+      const user = userEvent.setup();
+      act(() => useUIStore.setState({ isMobileNavOpen: true }));
+      renderSidebar();
+
+      await user.keyboard("{Escape}");
+
+      expect(useUIStore.getState().isMobileNavOpen).toBe(false);
     });
   });
 });

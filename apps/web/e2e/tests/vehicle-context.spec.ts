@@ -1,4 +1,4 @@
-// @spec SPEC-20260716-003 RF-E2E-06, RF-E2E-07
+// @spec SPEC-20260716-003 RF-E2E-06, RF-E2E-07, RF-E2E-10, RF-E2E-11
 // @spec SPEC-20260603-001 RF-07, RF-08, RF-09, RF-10, R-CTX-07
 // @spec RULES.md R-CTX-06, R-CTX-07
 import { test, expect } from "../fixtures/base";
@@ -25,6 +25,12 @@ import { ExpenseFormPage } from "../pages/expense-form.page";
 const VEHICLE_A_PLATE = process.env.E2E_VEHICLE_A_PLATE ?? "";
 /** Placa/nome do segundo veículo de teste (para troca de contexto). */
 const VEHICLE_B_PLATE = process.env.E2E_VEHICLE_B_PLATE ?? "";
+/**
+ * Email do usuário de teste sem veículos cadastrados (RF-E2E-10).
+ * Se não configurado, o teste é marcado como `skip` com instrução de provisionamento.
+ * Senha reutiliza E2E_USER_PASSWORD (conta no mesmo ambiente, apenas sem veículos).
+ */
+const USER_NO_VEHICLES_EMAIL = process.env.E2E_USER_NO_VEHICLES_EMAIL ?? "";
 
 test.describe("Troca de contexto de veículo", () => {
   /**
@@ -147,6 +153,138 @@ test.describe("Troca de contexto de veículo", () => {
       const vehicleBId = await expenseForm.getSelectedVehicleId();
       expect(vehicleBId).toBeTruthy();
       expect(vehicleBId).not.toEqual(vehicleAId);
+    },
+  );
+
+  /**
+   * RF-E2E-10: usuário sem veículos → Dialog de contexto exibe estado vazio, não erro JS.
+   *
+   * Valida que o `VehicleSwitcherContent` renderiza corretamente quando a API retorna listas
+   * vazias: deve exibir "Nenhum veículo encontrado" e "Nenhum grupo encontrado" em vez de
+   * travar, exibir erro ou gerar exceção no console.
+   *
+   * PRÉ-CONDIÇÃO (BLOQUEIO PARCIAL): exige uma conta de usuário de teste separada, sem
+   * nenhum veículo cadastrado, acessível via variável de ambiente `E2E_USER_NO_VEHICLES_EMAIL`.
+   * Se a variável não estiver configurada, o teste é marcado como `skip` até que a
+   * infraestrutura de dados seja provisionada.
+   *
+   * PARA PROVISIONAMENTO:
+   *   1. Criar conta de usuário no ambiente E2E (ex: `sem-veiculos@nave-e2e.test`)
+   *   2. Não cadastrar nenhum veículo para essa conta
+   *   3. Configurar GitHub Secret `E2E_USER_NO_VEHICLES_EMAIL` com o email criado
+   *   4. A senha pode reutilizar `E2E_USER_PASSWORD` (mesma para todas as contas de teste)
+   *   5. Adicionar seed da conta no script `apps/api/scripts/seed-e2e.mjs`
+   *
+   * @spec SPEC-20260716-003 RF-E2E-10
+   * @spec SPEC-20260603-001 R-CTX-07
+   */
+  test(
+    "RF-E2E-10: usuário sem veículos vê estado vazio no dialog de contexto (R-CTX-07)",
+    async ({ browser }) => {
+      if (!USER_NO_VEHICLES_EMAIL) {
+        test.skip(
+          true,
+          [
+            "BLOQUEADO: E2E_USER_NO_VEHICLES_EMAIL não configurado.",
+            "Para habilitar este teste, provisione uma conta de usuário sem veículos e configure",
+            "a variável de ambiente E2E_USER_NO_VEHICLES_EMAIL com o email dessa conta.",
+            "Veja o comentário @spec SPEC-20260716-003 RF-E2E-10 neste arquivo para instruções completas.",
+          ].join(" "),
+        );
+        return;
+      }
+
+      const password = process.env.E2E_USER_PASSWORD;
+      if (!password) {
+        throw new Error(
+          "E2E_USER_PASSWORD é obrigatória para RF-E2E-10 (login do usuário sem veículos).",
+        );
+      }
+
+      // Contexto SEM storageState — faz login com a conta sem veículos
+      const context = await browser.newContext({ storageState: undefined });
+      const page = await context.newPage();
+
+      try {
+        // Login com a conta dedicada sem veículos
+        const { LoginPage } = await import("../pages/login.page");
+        const loginPage = new LoginPage(page);
+        await loginPage.goto();
+        await loginPage.login(USER_NO_VEHICLES_EMAIL, password);
+        await loginPage.waitForDashboard();
+
+        const contextChip = new VehicleContextChipPage(page);
+
+        // Abre o Dialog/Sheet de seleção de veículo
+        await contextChip.openDialog();
+
+        // Campo de busca visível — Dialog abriu sem erro JS
+        await expect(contextChip.searchInput).toBeVisible();
+
+        // Estado vazio de veículos: texto "Nenhum veículo encontrado"
+        // (renderizado por VehicleSwitcherContent quando filteredVehicles.length === 0)
+        const emptyVehicleMessage = page.getByText("Nenhum veículo encontrado");
+        await expect(emptyVehicleMessage).toBeVisible({ timeout: 8_000 });
+
+        // Estado vazio de grupos: texto "Nenhum grupo encontrado"
+        const emptyGroupMessage = page.getByText("Nenhum grupo encontrado");
+        await expect(emptyGroupMessage).toBeVisible({ timeout: 8_000 });
+
+        // Ausência de erro JS — nenhuma mensagem de erro visível na UI
+        const errorPanel = page.locator('[class*="red-50"]');
+        await expect(errorPanel).not.toBeVisible();
+      } finally {
+        await context.close();
+      }
+    },
+  );
+
+  /**
+   * RF-E2E-11: busca sem resultado no Dialog de contexto não trava a UI.
+   *
+   * Com o Dialog aberto (usuário NORMAL, com veículos), digita uma string que não
+   * corresponde a nenhum veículo ou grupo cadastrado. Verifica:
+   *   - "Nenhum veículo encontrado" e "Nenhum grupo encontrado" aparecem
+   *   - Nenhum erro JS / tela em branco
+   *   - O Dialog continua respondendo: é possível limpar o campo e o estado se restaura
+   *
+   * Não depende de dado especial — roda com a infraestrutura atual (storageState do globalSetup).
+   *
+   * @spec SPEC-20260716-003 RF-E2E-11
+   * @spec SPEC-20260603-001 R-CTX-07
+   */
+  test(
+    "RF-E2E-11: busca sem resultado no dialog de contexto não trava a UI (R-CTX-07)",
+    async ({ page }) => {
+      const dashboardPage = new DashboardPage(page);
+      const contextChip = new VehicleContextChipPage(page);
+
+      await dashboardPage.goto();
+      await dashboardPage.waitForLoad();
+
+      // Abre o Dialog de seleção
+      await contextChip.openDialog();
+      await expect(contextChip.searchInput).toBeVisible();
+
+      // Busca por string que certamente não existe em nenhum cadastro de teste
+      await contextChip.searchInput.fill("zzz-nonexistent-999");
+
+      // Ambas as seções devem mostrar "Nenhum X encontrado"
+      // (VehicleSwitcherContent renderiza esses spans quando filteredX.length === 0)
+      const emptyVehicleMessage = page.getByText("Nenhum veículo encontrado");
+      await expect(emptyVehicleMessage).toBeVisible({ timeout: 5_000 });
+
+      const emptyGroupMessage = page.getByText("Nenhum grupo encontrado");
+      await expect(emptyGroupMessage).toBeVisible({ timeout: 5_000 });
+
+      // O Dialog continua respondendo: limpa a busca e verifica restauração
+      await contextChip.searchInput.clear();
+
+      // Após limpar, o campo de busca ainda deve estar visível (Dialog não fechou/travou)
+      await expect(contextChip.searchInput).toBeVisible();
+      // Mensagens de "Nenhum X encontrado" devem desaparecer com a busca limpa
+      // (só persistem se não houver veículos — com storageState normal, devem sumir)
+      await expect(emptyVehicleMessage).not.toBeVisible({ timeout: 5_000 });
     },
   );
 });

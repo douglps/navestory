@@ -36,6 +36,7 @@ describe("PreferencesService", () => {
     expect(result).toEqual({
       auto_draft_enabled: false,
       vehicle_chip_fields: ["make", "plate", "model"],
+      dashboard_kpi_ids: ["expenses_month", "urgent_maintenance", "cost_per_km", "next_maintenance"],
     });
   });
 
@@ -52,7 +53,50 @@ describe("PreferencesService", () => {
 
     const result = await service.findOne("token", "u1");
 
-    expect(result).toEqual({ auto_draft_enabled: true, vehicle_chip_fields: ["plate"] });
+    expect(result).toEqual({
+      auto_draft_enabled: true,
+      vehicle_chip_fields: ["plate"],
+      dashboard_kpi_ids: ["expenses_month", "urgent_maintenance", "cost_per_km", "next_maintenance"],
+    });
+  });
+
+  it("findOne retorna dashboard_kpi_ids persistido quando existe (RF-01)", async () => {
+    const builder: Record<string, unknown> = {};
+    builder.select = jest.fn().mockReturnValue(builder);
+    builder.eq = jest.fn().mockReturnValue(builder);
+    builder.maybeSingle = jest.fn().mockResolvedValue({
+      data: { auto_draft_enabled: false, vehicle_chip_fields: ["plate"], dashboard_kpi_ids: ["fleet_health"] },
+      error: null,
+    });
+    mockClient(builder);
+    const service = createService();
+
+    const result = await service.findOne("token", "u1");
+
+    expect(result.dashboard_kpi_ids).toEqual(["fleet_health"]);
+  });
+
+  it("upsert persiste dashboard_kpi_ids (RF-01)", async () => {
+    const builder: Record<string, unknown> = {};
+    builder.upsert = jest.fn().mockReturnValue(builder);
+    builder.select = jest.fn().mockReturnValue(builder);
+    builder.single = jest.fn().mockResolvedValue({
+      data: { dashboard_kpi_ids: ["fleet_health", "total_vehicles"] },
+      error: null,
+    });
+    const client = mockClient(builder);
+    const service = createService();
+
+    const result = await service.upsert("token", "u1", {
+      dashboard_kpi_ids: ["fleet_health", "total_vehicles"],
+    });
+
+    expect(client.from).toHaveBeenCalledWith("user_preferences");
+    expect(builder.upsert).toHaveBeenCalledWith(
+      { user_id: "u1", dashboard_kpi_ids: ["fleet_health", "total_vehicles"] },
+      { onConflict: "user_id" },
+    );
+    expect(result).toEqual({ dashboard_kpi_ids: ["fleet_health", "total_vehicles"] });
   });
 
   it("findOne lança 404 em erro do Supabase", async () => {

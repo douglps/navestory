@@ -3,10 +3,14 @@
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { DEFAULT_DASHBOARD_KPI_IDS, type FleetKpiCatalog, type KpiCatalogId } from "@nave/validators";
 import { apiClient } from "@/lib/http/api-client";
 import { ActionDock } from "@/components/layout/action-dock";
+import { SystemFooter } from "@/components/layout/system-footer";
+import { DashboardKpiGrid } from "@/components/dashboard/DashboardKpiGrid";
 import { FleetAlertBar, type FleetAlertItem } from "@/components/dashboard/FleetAlertBar";
-import { FleetKpis, type FleetKpisData } from "@/components/dashboard/FleetKpis";
+import { KpiPicker } from "@/components/dashboard/KpiPicker";
+import { UpcomingCostsWidget } from "@/components/dashboard/UpcomingCostsWidget";
 import {
   VehicleHealthCard,
   type HealthFlag,
@@ -32,41 +36,105 @@ function currentPeriod(): string {
   return new Date().toISOString().slice(0, 7);
 }
 
+function capitalizeFirst(text: string): string {
+  return text.length > 0 ? text[0]!.toUpperCase() + text.slice(1) : text;
+}
+
+/**
+ * @spec SPEC-20260721-002 RF-07
+ * Formato abreviado "Qua, 22 Jul. 26" — saudação removida (decisão do usuário em 2026-07-22):
+ * sem dado de identidade do usuário disponível client-side, o texto "Bom dia/Boa tarde/Boa
+ * noite" era genérico e não agregava valor. `h1` de "Dashboard" mantido apenas para leitores
+ * de tela (`sr-only`) — a data abreviada é o único conteúdo visível.
+ */
+function DashboardDateHeader(): ReactNode {
+  const now = new Date();
+  const weekday = capitalizeFirst(
+    new Intl.DateTimeFormat("pt-BR", { weekday: "short" }).format(now).replace(/\.$/, ""),
+  );
+  const day = String(now.getDate()).padStart(2, "0");
+  const month = capitalizeFirst(new Intl.DateTimeFormat("pt-BR", { month: "short" }).format(now));
+  const year = String(now.getFullYear()).slice(-2);
+
+  return (
+    <div>
+      <h1 className="sr-only">Dashboard</h1>
+      <p className="text-sm text-muted-foreground">
+        {weekday}, {day} {month} {year}
+      </p>
+    </div>
+  );
+}
+
 /**
  * @spec SPEC-20260531-001 seção 12.3 (migração incremental)
- * Controles preservados do stub original (SPEC-20260521-003 RF-07) dentro da nova estrutura —
- * não removidos, apenas reposicionados abaixo da Zona A.
+ * @spec SPEC-20260721-002 RF-05
+ * Controles preservados do stub original (SPEC-20260521-003 RF-07) — reposicionados para o
+ * final da página (após a Zona B) e com estados de loading/erro reais via `fetch` + `Blob`
+ * (antes: `<a download>` sem feedback nenhum).
+ *
+ * Gap registrado em IMPACTO-040: o estado "desabilitado para plano Grátis" (R-BIZ-12) depende
+ * do plano do usuário, que — assim como o nome em RF-07 — não está disponível client-side ainda.
+ * Não implementado nesta rodada.
  */
 function ExportControls({ vehicles }: { vehicles: VehicleCardData[] | undefined }): ReactNode {
   const [period, setPeriod] = useState(currentPeriod());
   const [vehicleId, setVehicleId] = useState("");
+  const [status, setStatus] = useState<"idle" | "loading" | "error">("idle");
 
-  const exportUrl = `/api/backend/dashboard/export?period=${encodeURIComponent(period)}${
-    vehicleId ? `&vehicle_id=${encodeURIComponent(vehicleId)}` : ""
-  }`;
+  async function handleExport(): Promise<void> {
+    setStatus("loading");
+    const exportUrl = `/api/backend/dashboard/export?period=${encodeURIComponent(period)}${
+      vehicleId ? `&vehicle_id=${encodeURIComponent(vehicleId)}` : ""
+    }`;
+
+    try {
+      const response = await fetch(exportUrl);
+      if (!response.ok) throw new Error(`Falha na exportação: ${response.status}`);
+
+      const blob = await response.blob();
+      const objectUrl = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = objectUrl;
+      link.download = `nave-despesas-${period}.csv`;
+      link.click();
+      URL.revokeObjectURL(objectUrl);
+      setStatus("idle");
+    } catch {
+      setStatus("error");
+    }
+  }
 
   return (
-    <div className="flex flex-wrap items-end gap-3 border-t pt-4">
-      <label className="flex flex-col gap-1">
-        <span>Mês</span>
-        <input type="month" value={period} onChange={(event) => setPeriod(event.target.value)} />
-      </label>
+    <div className="flex flex-col gap-2 border-t pt-4">
+      <div className="flex flex-wrap items-end gap-3">
+        <label className="flex flex-col gap-1">
+          <span>Mês</span>
+          <input type="month" value={period} onChange={(event) => setPeriod(event.target.value)} />
+        </label>
 
-      <label className="flex flex-col gap-1">
-        <span>Veículo</span>
-        <select value={vehicleId} onChange={(event) => setVehicleId(event.target.value)}>
-          <option value="">Todos os veículos</option>
-          {vehicles?.map((vehicle) => (
-            <option key={vehicle.id} value={vehicle.id}>
-              {vehicleLabel(vehicle)}
-            </option>
-          ))}
-        </select>
-      </label>
+        <label className="flex flex-col gap-1">
+          <span>Veículo</span>
+          <select value={vehicleId} onChange={(event) => setVehicleId(event.target.value)}>
+            <option value="">Todos os veículos</option>
+            {vehicles?.map((vehicle) => (
+              <option key={vehicle.id} value={vehicle.id}>
+                {vehicleLabel(vehicle)}
+              </option>
+            ))}
+          </select>
+        </label>
 
-      <a href={exportUrl} download={`nave-despesas-${period}.csv`}>
-        Exportar CSV
-      </a>
+        <button type="button" onClick={handleExport} disabled={status === "loading"}>
+          {status === "loading" ? "Exportando…" : "Exportar CSV"}
+        </button>
+      </div>
+
+      {status === "error" && (
+        <p role="alert" className="text-sm text-danger">
+          Não foi possível exportar. Tente novamente.
+        </p>
+      )}
     </div>
   );
 }
@@ -121,7 +189,8 @@ function VehicleGrid({
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      {/* @spec SPEC-20260721-002 RF-06 — depende de RF-02 (VehicleHealthScore com prop size) */}
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
         {visible.map((vehicle) => (
           <VehicleHealthCard
             key={vehicle.id}
@@ -174,14 +243,22 @@ export default function DashboardPage(): ReactNode {
     retry: false,
   });
 
-  const { data: kpis } = useQuery({
-    queryKey: ["dashboard", "fleet-kpis", activeVehicleId],
+  const { data: kpiCatalog } = useQuery({
+    queryKey: ["dashboard", "kpi-catalog", activeVehicleId],
     queryFn: () =>
-      apiClient<FleetKpisData>(
-        `/dashboard/fleet-kpis${activeVehicleId ? `?vehicle_id=${activeVehicleId}` : ""}`,
+      apiClient<FleetKpiCatalog>(
+        `/dashboard/kpi-catalog${activeVehicleId ? `?vehicle_id=${activeVehicleId}` : ""}`,
       ),
     retry: false,
   });
+
+  /** @spec SPEC-20260721-002 RF-01, R-KPI-01 */
+  const { data: preferences } = useQuery({
+    queryKey: ["preferences"],
+    queryFn: () => apiClient<{ dashboard_kpi_ids?: KpiCatalogId[] }>("/preferences"),
+    retry: false,
+  });
+  const activeKpiIds = preferences?.dashboard_kpi_ids ?? DEFAULT_DASHBOARD_KPI_IDS;
 
   // RF-DA-08: auto-seleciona quando a frota tem exatamente 1 veículo e nada está em foco ainda.
   useEffect(() => {
@@ -216,7 +293,7 @@ export default function DashboardPage(): ReactNode {
   return (
     <main className="mx-auto flex max-w-5xl flex-col gap-4 p-8 pb-24">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold">Dashboard</h1>
+        <DashboardDateHeader />
         {/*
           @spec SPEC-20260602-005 RF-16
           Fora do ActionDock por decisão de RF-DC-02.1/RF-DC-03 (dock fixo em 4 itens,
@@ -233,7 +310,10 @@ export default function DashboardPage(): ReactNode {
       ) : (
         <>
           {alerts && <FleetAlertBar alerts={alerts} />}
-          {kpis && <FleetKpis kpis={kpis} />}
+          <div className="flex flex-col gap-2">
+            <DashboardKpiGrid catalog={kpiCatalog} activeIds={activeKpiIds} />
+            <KpiPicker activeIds={activeKpiIds} />
+          </div>
           {vehicles && (
             <VehicleGrid
               vehicles={vehicles}
@@ -243,15 +323,19 @@ export default function DashboardPage(): ReactNode {
               onSelect={handleSelectVehicle}
             />
           )}
-          <ExportControls vehicles={vehicles} />
 
           <div ref={spotlightRef}>
             <VehicleSpotlight vehicle={activeVehicle} onClear={clearAllSelection} />
           </div>
+
+          <UpcomingCostsWidget />
+
+          <ExportControls vehicles={vehicles} />
         </>
       )}
 
       <ActionDock />
+      <SystemFooter />
     </main>
   );
 }

@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { VehicleHealthScore } from "@nave/ui";
 
 export type DocumentStatus = "ok" | "attention" | "overdue" | "unknown";
 
@@ -50,19 +51,12 @@ function currency(value: number): string {
   return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
-/** @spec SPEC-20260531-001 RF-SH-02 */
-function semaphoreColor(score: number | undefined): string {
-  if (score === undefined) return "bg-neutral-300";
-  if (score >= 70) return "bg-green-500";
-  if (score >= 40) return "bg-amber-500";
-  return "bg-red-500";
-}
-
 const DOCUMENT_BADGE: Record<DocumentStatus, { label: string; className: string } | null> = {
   ok: null,
   unknown: null,
-  attention: { label: "Atenção", className: "border-amber-400 bg-amber-50 text-amber-700" },
-  overdue: { label: "Vencido", className: "border-red-400 bg-red-50 text-red-700" },
+  // @spec SPEC-20260721-002 RF-03 — tokens semânticos em vez de classes Tailwind literais
+  attention: { label: "Atenção", className: "border-warning bg-warning-pastel text-warning-foreground" },
+  overdue: { label: "Vencido", className: "border-danger bg-danger-pastel text-danger-foreground" },
 };
 
 function DocumentBadge({ label, status }: { label: string; status: DocumentStatus }): ReactNode {
@@ -78,9 +72,10 @@ function DocumentBadge({ label, status }: { label: string; status: DocumentStatu
 
 /**
  * @spec SPEC-20260531-001 RF-DA-04, RF-DA-05, RF-SH-01, RF-SH-02, RF-SH-03, CA-S3-03
- * O semáforo consome `calculate_fleet_health` (RF-SH-01) — nunca recalculado aqui. O tooltip
- * (RF-SH-03) só formata os `flags` já retornados pela RPC, sem recalcular pesos. Clicar chama
- * `setActiveVehicle` no store global (RF-DA-05).
+ * @spec SPEC-20260721-002 RF-02, RF-03
+ * O indicador de saúde (`VehicleHealthScore`) consome `calculate_fleet_health` (RF-SH-01) —
+ * nunca recalculado aqui. O tooltip (RF-SH-03) só formata os `flags` já retornados pela RPC,
+ * sem recalcular pesos. Clicar chama `setActiveVehicle` no store global (RF-DA-05).
  */
 export function VehicleHealthCard({
   vehicle,
@@ -102,20 +97,18 @@ export function VehicleHealthCard({
       aria-pressed={isActive}
       aria-label={`Ver análise de ${vehicleLabel(vehicle)}`}
       className={`flex flex-col gap-1.5 rounded border p-3 text-left ${
-        isActive ? "border-amber-400 bg-amber-50" : "border-neutral-200"
+        isActive ? "border-primary/40 bg-primary/8" : "border-border"
       }`}
     >
       <div className="flex items-center justify-between gap-2">
         <span className="font-medium">{vehicleLabel(vehicle)}</span>
-        <span
-          aria-hidden
-          title={flagsTooltip(score, flags)}
-          className={`h-3 w-3 shrink-0 rounded-full ${semaphoreColor(score)}`}
-        />
+        <span title={flagsTooltip(score, flags)}>
+          <VehicleHealthScore score={score} size={28} />
+        </span>
       </div>
-      <span className="text-xs text-neutral-500">{vehicle.plate}</span>
+      <span className="text-xs text-muted-foreground">{vehicle.plate}</span>
 
-      <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-neutral-600">
+      <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
         <span>{vehicle.odometer != null ? `${vehicle.odometer.toLocaleString("pt-BR")} km` : "Odômetro —"}</span>
         <span>
           {vehicle.last_fuel_date
@@ -129,7 +122,7 @@ export function VehicleHealthCard({
       {vehicle.last_fuel_odometer_missing && (
         <span
           role="alert"
-          className="rounded border border-amber-400 bg-amber-50 px-1.5 py-0.5 text-[10px] font-medium text-amber-700"
+          className="rounded border border-warning bg-warning-pastel px-1.5 py-0.5 text-[10px] font-medium text-warning-foreground"
         >
           Último abastecimento sem odômetro registrado
         </span>

@@ -34,7 +34,7 @@ Esta pasta é a **fonte de verdade de requisitos** do projeto. Antes de implemen
 | Preferencias | [preferences/](preferences/) | SPEC-20260603-004, SPEC-20260612-003 |
 | Segurança | [security/](security/) | SPEC-20260521-001 |
 | Admin / LGPD | [admin/](admin/) | SPEC-20260521-004, SPEC-20260521-005 |
-| Design System | [design-system/](design-system/) | SPEC-20260525-001 (approved — §10 implementado em componentes; migração de consumidores ⏳) |
+| Design System | [design-system/](design-system/) | SPEC-20260525-001 (approved — §10 implementado em componentes; migração de consumidores ⏳), SPEC-20260721-001 (approved), SPEC-20260722-001 (approved — direção criativa v2), SPEC-20260722-002 (approved — canvas quente light mode) |
 | Contexto Global | [context/](context/) | SPEC-20260602-001, SPEC-20260603-001 |
 | Formulários | [forms/](forms/) | SPEC-20260619-001 |
 | Negócio / Estratégia | [business/](business/) | SPEC-20260620-001 |
@@ -42,6 +42,7 @@ Esta pasta é a **fonte de verdade de requisitos** do projeto. Antes de implemen
 | PWA / Offline | [pwa/](pwa/) | SPEC-20260712-001 (approved, v0.5 — implementada) |
 | QA / Testes E2E | [qa/](qa/) | SPEC-20260716-003 (draft) |
 | DevOps / Infra | [devops/](devops/) | SPEC-20260716-001 (approved), SPEC-20260716-002 (draft) |
+| Layout Responsivo | [layout-responsivo/](layout-responsivo/) | SPEC-20260722-003 (approved) |
 
 ---
 

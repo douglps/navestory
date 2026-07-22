@@ -197,6 +197,43 @@ describe("AuthService", () => {
       ).rejects.toMatchObject({ message: "INVALID_CREDENTIALS" });
     });
 
+    // valida S4
+    it("EC-09: credenciais inválidas incrementam failed_count em auth_login_attempts (S4)", async () => {
+      const { service, supabaseAdmin } = createService({
+        signInWithPassword: jest.fn().mockResolvedValue({
+          data: { session: null },
+          error: { message: "Invalid login credentials" },
+        }),
+      });
+
+      await expect(
+        service.login({ email: "ana@example.com", password: "errada", rememberMe: false }),
+      ).rejects.toBeInstanceOf(UnauthorizedException);
+
+      // supabaseAdmin.from("auth_login_attempts") retorna o mesmo attemptsBuilder
+      const attemptsBuilder = (supabaseAdmin as unknown as { from: jest.Mock }).from(
+        "auth_login_attempts",
+      ) as ReturnType<typeof createQueryBuilder>;
+      // valida S4: upsert com failed_count = currentCount(0) + 1 = 1
+      expect(attemptsBuilder.upsert).toHaveBeenCalledWith(
+        expect.objectContaining({ email: "ana@example.com", failed_count: 1 }),
+      );
+    });
+
+    // valida S4
+    it("EC-10: login bem-sucedido zera o failed_count em auth_login_attempts (S4)", async () => {
+      const { service, supabaseAdmin } = createService();
+
+      await service.login({ email: "ana@example.com", password: "abc12!", rememberMe: false });
+
+      const attemptsBuilder = (supabaseAdmin as unknown as { from: jest.Mock }).from(
+        "auth_login_attempts",
+      ) as ReturnType<typeof createQueryBuilder>;
+      // valida S4: resetLoginAttempts usa delete + eq no email
+      expect(attemptsBuilder.delete).toHaveBeenCalled();
+      expect(attemptsBuilder.eq).toHaveBeenCalledWith("email", "ana@example.com");
+    });
+
     it("bloqueia login por 15min após 5 tentativas inválidas (STORY-03)", async () => {
       const { service } = createService({
         attemptsResult: {

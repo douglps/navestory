@@ -62,7 +62,7 @@ interface FuelExpenseRow {
   supplier: string;
   amount: number;
   liters: number;
-  date: string;
+  occurred_at: string;
 }
 
 interface SupplierAggregate {
@@ -428,7 +428,7 @@ export class AnalyticsService {
   ): Promise<AnalyticsInsight | null> {
     let builder = client
       .from("expenses")
-      .select("supplier, amount, liters, date")
+      .select("supplier, amount, liters, occurred_at")
       .eq("user_id", userId)
       .eq("category", "fuel")
       .is("deleted_at", null)
@@ -439,7 +439,7 @@ export class AnalyticsService {
       builder = builder.eq("vehicle_id", vehicleId);
     }
 
-    const { data, error } = await builder.order("date", { ascending: false }).limit(200);
+    const { data, error } = await builder.order("occurred_at", { ascending: false }).limit(200);
     if (error || !data) return null;
 
     const bySupplier = new Map<string, SupplierAggregate>();
@@ -450,14 +450,14 @@ export class AnalyticsService {
         totalPrice: 0,
         count: 0,
         totalLiters: 0,
-        firstDate: row.date,
-        lastDate: row.date,
+        firstDate: row.occurred_at,
+        lastDate: row.occurred_at,
       };
       entry.totalPrice += price;
       entry.count += 1;
       entry.totalLiters += row.liters;
-      if (row.date < entry.firstDate) entry.firstDate = row.date;
-      if (row.date > entry.lastDate) entry.lastDate = row.date;
+      if (row.occurred_at < entry.firstDate) entry.firstDate = row.occurred_at;
+      if (row.occurred_at > entry.lastDate) entry.lastDate = row.occurred_at;
       bySupplier.set(row.supplier, entry);
     }
 

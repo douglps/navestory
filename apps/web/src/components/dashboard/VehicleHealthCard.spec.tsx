@@ -47,25 +47,25 @@ describe("VehicleHealthCard", () => {
     expect(onSelect).toHaveBeenCalledTimes(1);
   });
 
-  it("RF-SH-02: score >= 70 mapeia para semáforo verde", () => {
+  it("RF-SH-02: score >= 70 mapeia para tier 'success' (Em dia) no VehicleHealthScore", () => {
     render(
       <VehicleHealthCard vehicle={vehicle()} score={80} flags={[]} isActive={false} onSelect={vi.fn()} />,
     );
-    expect(screen.getByTitle(/Saúde: 80\/100/)).toHaveClass("bg-green-500");
+    expect(screen.getByRole("img", { name: /Saúde: 80 de 100 — Em dia/ })).toBeInTheDocument();
   });
 
-  it("RF-SH-02: score entre 40 e 69 mapeia para semáforo amarelo", () => {
+  it("RF-SH-02: score entre 40 e 69 mapeia para tier 'warning' (Atenção) no VehicleHealthScore", () => {
     render(
       <VehicleHealthCard vehicle={vehicle()} score={50} flags={[]} isActive={false} onSelect={vi.fn()} />,
     );
-    expect(screen.getByTitle(/Saúde: 50\/100/)).toHaveClass("bg-amber-500");
+    expect(screen.getByRole("img", { name: /Saúde: 50 de 100 — Atenção/ })).toBeInTheDocument();
   });
 
-  it("RF-SH-02: score abaixo de 40 mapeia para semáforo vermelho", () => {
+  it("RF-SH-02: score abaixo de 40 mapeia para tier 'danger' (Crítico) no VehicleHealthScore", () => {
     render(
       <VehicleHealthCard vehicle={vehicle()} score={20} flags={[]} isActive={false} onSelect={vi.fn()} />,
     );
-    expect(screen.getByTitle(/Saúde: 20\/100/)).toHaveClass("bg-red-500");
+    expect(screen.getByRole("img", { name: /Saúde: 20 de 100 — Crítico/ })).toBeInTheDocument();
   });
 
   it("RF-SH-03: tooltip detalha os flags retornados pela RPC sem recalcular pesos", () => {

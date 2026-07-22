@@ -2,15 +2,27 @@ import { z } from "zod";
 import { fuelTypeSchema } from "./vehicle.schemas";
 
 /**
+ * @spec SPEC-20260715-002 RF-BK-06, R-TZ-03
+ * Aceita `YYYY-MM-DD` (compatibilidade retroativa — interpretado como meia-noite no fuso do
+ * usuário pelo service) ou ISO 8601 com offset explícito (`2026-07-15T21:30:00-03:00`).
+ */
+export const occurredAtSchema = z
+  .string()
+  .refine(
+    (value) => /^\d{4}-\d{2}-\d{2}$/.test(value) || !Number.isNaN(Date.parse(value)),
+    "Data deve estar no formato YYYY-MM-DD ou ISO 8601 com offset",
+  );
+
+/**
  * @spec SPEC-20260714-001 RF-01, RF-02
- * Campos obrigatórios (vehicle_id, category, amount, date) + opcionais de combustível.
+ * Campos obrigatórios (vehicle_id, category, amount, occurred_at) + opcionais de combustível.
  * source_type/source_id/is_readonly nunca aparecem aqui — somente-leitura via API pública (RNF-04).
  */
 export const expenseBaseSchema = z.object({
   vehicle_id: z.string().uuid(),
   category: z.string().trim().min(1).max(100),
   amount: z.number().min(0.01).max(100_000_000),
-  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Data deve estar no formato YYYY-MM-DD"),
+  occurred_at: occurredAtSchema,
   description: z
     .string()
     .transform((value) => value.trim().normalize("NFC"))
@@ -80,15 +92,22 @@ export type ListExpensesQuery = z.infer<typeof listExpensesQuerySchema>;
 /**
  * @spec SPEC-20260608-001 RF-01, RNF-03
  */
+/**
+ * @spec SPEC-20260721-002 RF-01 — `7` habilitado para o KPI "compromissos próximos 7 dias" e o
+ * widget RF-09; a RPC `get_upcoming_costs` já suporta os 3 valores (`p_horizon_days`).
+ * @spec SPEC-20260721-002 RF-09, P6 — `limit` opcional aplicado via PostgREST (`.limit()` no
+ * builder do RPC, não em memória) para o widget "Próximos 7 dias" nunca carregar mais que o teto.
+ */
 export const upcomingCostsQuerySchema = z.object({
   vehicle_id: z.string().uuid().optional(),
   horizon_days: z.coerce
     .number()
     .int()
-    .refine((value) => value === 30 || value === 90, {
-      message: "horizon_days deve ser 30 ou 90",
+    .refine((value) => value === 7 || value === 30 || value === 90, {
+      message: "horizon_days deve ser 7, 30 ou 90",
     })
     .default(30),
+  limit: z.coerce.number().int().min(1).max(50).optional(),
 });
 export type UpcomingCostsQuery = z.infer<typeof upcomingCostsQuerySchema>;
 

@@ -18,7 +18,14 @@ const MAX_ENTRIES = 100;
  * Campos nunca expostos na coluna "Detalhes" da página, mesmo que gravados por engano
  * em `changes` (defesa em profundidade além de R-MON-02).
  */
-const SENSITIVE_CHANGE_FIELDS = ["user_id", "deleted_at", "photo_url", "photo_thumbnail_url"];
+const SENSITIVE_CHANGE_FIELDS = [
+  "user_id",
+  "deleted_at",
+  "photo_url",
+  "photo_thumbnail_url",
+  "access_token",
+  "token",
+];
 
 /**
  * @spec SPEC-20260602-005 RF-09, RF-10

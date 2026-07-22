@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import { SerwistProvider } from "@serwist/turbopack/react";
 import { QueryProvider } from "@/lib/query/providers";
+import { ThemeProvider } from "@/components/providers/theme-provider";
 import { ServiceWorkerUpdateListener } from "@/components/pwa/service-worker-update-listener";
 import { AppToastViewport } from "@/components/layout/app-toast-viewport";
 import "./globals.css";
@@ -24,7 +25,10 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: ReactNode }): ReactNode {
   return (
-    <html lang="pt-BR">
+    // @spec SPEC-20260721-001 RF-03 — `suppressHydrationWarning`: o next-themes injeta a
+    // classe `.dark` no <html> antes da hidratação para evitar flash de tema errado, o que
+    // difere do HTML renderizado no servidor por design (recomendação oficial da lib).
+    <html lang="pt-BR" suppressHydrationWarning>
       <body>
         {/*
           @spec SPEC-20260712-001 RF-05, RF-14
@@ -33,15 +37,17 @@ export default function RootLayout({ children }: { children: ReactNode }): React
           interação. `disable` em dev evita cachear HMR (comportamento equivalente ao antigo
           plugin de webpack).
         */}
-        <SerwistProvider
-          swUrl="/serwist/sw.js"
-          reloadOnOnline={false}
-          disable={process.env.NODE_ENV === "development"}
-        >
-          <QueryProvider>{children}</QueryProvider>
-          <ServiceWorkerUpdateListener />
-        </SerwistProvider>
-        <AppToastViewport />
+        <ThemeProvider>
+          <SerwistProvider
+            swUrl="/serwist/sw.js"
+            reloadOnOnline={false}
+            disable={process.env.NODE_ENV === "development"}
+          >
+            <QueryProvider>{children}</QueryProvider>
+            <ServiceWorkerUpdateListener />
+          </SerwistProvider>
+          <AppToastViewport />
+        </ThemeProvider>
       </body>
     </html>
   );

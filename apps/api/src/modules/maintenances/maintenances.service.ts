@@ -12,10 +12,15 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { AuditService } from "../../shared/audit/audit.service";
 import { createUserScopedClient } from "../../shared/supabase/create-user-scoped-client";
 import { SUPABASE_ADMIN_CLIENT } from "../../shared/supabase/supabase.constants";
+import { FALLBACK_TIMEZONE, resolveDateTimeInput } from "../../shared/utils/date.utils";
 import { ExpensesService } from "../expenses/expenses.service";
+import { PreferencesService } from "../preferences/preferences.service";
 import type { CreateMaintenanceDto } from "./dto/create-maintenance.dto";
 import type { ListMaintenancesDto } from "./dto/list-maintenances.dto";
 import type { UpdateMaintenanceDto } from "./dto/update-maintenance.dto";
+
+/** @spec SPEC-20260715-002 R-TZ-04, RF-BK-10 — 24h de tolerância no futuro para completion_date */
+const COMPLETION_DATE_FUTURE_TOLERANCE_MS = 24 * 60 * 60 * 1000;
 
 const MAINTENANCE_COLUMNS = `id, user_id, vehicle_id, description, status, scheduled_date,
   completion_date, cost, odometer_km, metadata, created_at, updated_at`;
@@ -43,6 +48,7 @@ export class MaintenancesService {
     private readonly configService: ConfigService,
     private readonly auditService: AuditService,
     private readonly expensesService: ExpensesService,
+    private readonly preferencesService: PreferencesService,
   ) {}
 
   private clientForUser(accessToken: string): SupabaseClient {
@@ -51,6 +57,12 @@ export class MaintenancesService {
       this.configService.getOrThrow<string>("SUPABASE_ANON_KEY"),
       accessToken,
     );
+  }
+
+  /** @spec SPEC-20260715-002 R-TZ-01, RF-BK-05 */
+  private async resolveUserTimezone(accessToken: string, userId: string): Promise<string> {
+    const preferences = await this.preferencesService.findOne(accessToken, userId);
+    return preferences.timezone ?? FALLBACK_TIMEZONE;
   }
 
   private async assertVehicleOwnership(
@@ -139,10 +151,17 @@ export class MaintenancesService {
     const client = this.clientForUser(accessToken);
     await this.assertVehicleOwnership(client, dto.vehicle_id, userId);
 
+    const tz = await this.resolveUserTimezone(accessToken, userId);
+
     // `status` nunca faz parte de createMaintenanceInputSchema, mas é removido explicitamente
     // aqui (defesa em profundidade) para o caso de o service ser chamado fora do pipeline de
     // validação Zod do controller (RF-03) — toda criação nasce com o default `scheduled` do banco.
-    const insertPayload: Record<string, unknown> = { ...dto, user_id: userId };
+    const insertPayload: Record<string, unknown> = {
+      ...dto,
+      user_id: userId,
+      scheduled_date: resolveDateTimeInput(dto.scheduled_date, tz),
+      completion_date: dto.completion_date != null ? resolveDateTimeInput(dto.completion_date, tz) : null,
+    };
     delete insertPayload.status;
 
     const { data, error } = await client
@@ -245,6 +264,7 @@ export class MaintenancesService {
   ): Promise<MaintenanceWithOdometerWarning> {
     const existing = await this.findOne(accessToken, userId, maintenanceId);
     const client = this.clientForUser(accessToken);
+    const tz = await this.resolveUserTimezone(accessToken, userId);
 
     if (dto.status) {
       const allowed: MaintenanceStatus[] = MAINTENANCE_STATUS_TRANSITIONS[existing.status];
@@ -260,6 +280,29 @@ export class MaintenancesService {
     }
 
     const changes: Record<string, unknown> = { ...dto };
+
+    if (dto.scheduled_date != null) {
+      changes.scheduled_date = resolveDateTimeInput(dto.scheduled_date, tz);
+    }
+
+    if (dto.completion_date !== undefined) {
+      const resolvedCompletionDate =
+        dto.completion_date != null ? resolveDateTimeInput(dto.completion_date, tz) : null;
+
+      // @spec SPEC-20260715-002 RF-BK-10, R-TZ-04 — completion_date não pode exceder "agora" em
+      // mais de 24h (dia/hora calendário do usuário); diferente de RF-BK-09 (despesa futura), aqui
+      // a operação é bloqueada, não apenas sinalizada.
+      if (
+        resolvedCompletionDate != null &&
+        new Date(resolvedCompletionDate).getTime() - Date.now() > COMPLETION_DATE_FUTURE_TOLERANCE_MS
+      ) {
+        throw new UnprocessableEntityException(
+          "completion_date não pode exceder a data/hora atual em mais de 24 horas",
+        );
+      }
+
+      changes.completion_date = resolvedCompletionDate;
+    }
 
     const { data, error } = await client
       .from("maintenances")

@@ -95,6 +95,53 @@
 > descreve soft warning); RF-E2E-05 bloqueado por ausência de UI de `duplicate_warning` no frontend.
 > Suíte não pôde ser executada localmente por falta de stack rodando. Novos secrets necessários em
 > CI: `E2E_TEST_VEHICLE_PLATE`, `E2E_VEHICLE_A_PLATE`, `E2E_VEHICLE_B_PLATE`.
+>
+> **ATUALIZAÇÃO — 2026-07-20 (rev. 49) — fechamento de feature (commit f9810cd)**
+> Duas specs fechadas nesta rodada:
+>
+> - **SPEC-20260720-002** (Aviso de Duplicata no Formulário de Criação de Despesa, `approved`):
+>   todos os RFs (RF-01 a RF-06) implementados em `apps/web/src/app/(app)/expenses/new/page.tsx`
+>   e cobertos por `apps/web/src/app/(app)/expenses/new/page.spec.tsx` (✅). RF-03 também
+>   coberto por `apps/web/e2e/tests/expense-warnings.spec.ts` (E2E, 🔶 — aguarda secrets).
+>   Entradas já presentes na matriz com status e caminhos reais; nenhuma linha ⏳ pendente.
+>
+> - **SPEC-20260716-003** (Testes E2E com Playwright, `draft`): seção `RF-DATA` adicionada
+>   nesta revisão — estava presente na spec mas ausente da matriz. `apps/api/scripts/seed-e2e.mjs`
+>   mapeado em RF-DATA-02. RF-E2E-05 destravada (RF-E2E-04 e RF-E2E-05 deixam de ser ⏳ e
+>   passam a 🔶 implementado). Status `draft` mantido: CA-01 a CA-09 não verificáveis até
+>   provisionamento dos GitHub Secrets (ver `important/PENDENCIAS-E-PROCESSOS.md`).
+>
+> `specs/expenses/README.md` já referenciava SPEC-20260720-002. `specs/qa/README.md` não
+> existe — não exigido pois há apenas 1 spec em `specs/qa/` (regra: obrigatório com 2+).
+>
+> **ATUALIZAÇÃO — 2026-07-20 (rev. 50) — auditoria de gaps de teste (EC-01, EC-05 a EC-11, CT-004b)**
+> Testes dedicados adicionados para cobrir branches de erro/edge case identificadas pela auditoria
+> de cobertura (ver `specs/TESTS_SPEC.md` seção "Casos de Caminho Infeliz"). 6 de 8 casos
+> implementados com sucesso — 2 divergências de comportamento encontradas (ver seção de achados
+> abaixo). Gate de 88% de branches mantido (88.01% pós-implementação):
+>
+> - **EC-01** ✅ `fines.service.spec.ts`: 4 testes para transições a partir de estados terminais
+>   (`paid → *`, `cancelled → *`) — todos lançam `ConflictException`.
+> - **EC-05** ✅ `vehicles.service.spec.ts`: verifica que todos os 3 updates de cascade de
+>   soft-delete (`vehicles`, `expenses`, `maintenances`) recebem exatamente o mesmo `deleted_at`.
+> - **EC-06** ✅ `vehicles.service.spec.ts`: `update` com placa inválida lança `BadRequestException`.
+> - **EC-07** ✅ `fines.service.spec.ts`: 2 testes para `appealing → paid` e `appealing → cancelled`
+>   resolvem normalmente (comprova que `appealing` não é estado terminal).
+> - **EC-09** ✅ `auth.service.spec.ts`: credenciais inválidas incrementam `failed_count` via upsert.
+> - **EC-10** ✅ `auth.service.spec.ts`: login bem-sucedido deleta o registro via `delete().eq()`.
+> - **EC-11** ✅ `admin.service.spec.ts`: hard-delete via `auth.admin.deleteUser` não passa `deleted_at`
+>   nem no payload de exclusão nem no audit log `changes`.
+>
+> **DIVERGÊNCIAS ENCONTRADAS — não corrigidas (aguardam spec/implementação):**
+> - **EC-08** (não implementado como teste): `SENSITIVE_CHANGE_FIELDS` em `audit-logs.service.ts`
+>   não inclui `access_token` nem `token` — campos de token NÃO são removidos de `changes`.
+>   Código real: `["user_id", "deleted_at", "photo_url", "photo_thumbnail_url"]`. A spec R-MON-02
+>   não detalha explicitamente esses campos; gap de implementação a avaliar.
+> - **CT-004b** (não implementado como teste): `ExpensesService.create` não valida
+>   `category === 'fuel' && odometer_km == null` — a verificação existe apenas no schema Zod em
+>   `packages/validators`, nunca chega ao service quando o payload já foi validado pelo Zod no
+>   controller. Implementar a guard no service exigiria uma mudança de comportamento de produção
+>   não autorizada nesta tarefa.
 
 > **ATUALIZAÇÃO — 2026-07-18**
 > Corrigida colisão de ID: a spec de Testes E2E (`specs/qa/`) e a spec de Deploy Automatizado/CD
@@ -106,6 +153,55 @@
 > `docs/operations/runbooks.md`, `docs/reference/environment-variables.md`), evitando qualquer
 > necessidade de tocar código de produção. Referências atualizadas em `specs/README.md` e
 > `specs/TESTS_SPEC.md`; achado identificado pelo agente `doc-keeper` durante o fechamento de T5.1.
+
+> **ATUALIZAÇÃO — 2026-07-22 (rev. 54) — SPEC-20260722-002 criada e aprovada**
+> Canvas quente sutil aplicado ao light mode: `background`/`card`/`border`/`muted` ganharam
+> chroma 0.004 no eixo b+ (matiz 80), L inalterada, em `packages/ui/src/tokens/colors.ts` e
+> `apps/web/src/app/globals.css`. Item que estava marcado "Fora de Escopo" em SPEC-20260722-001
+> (nota técnica de canvas quente) agora implementado em spec própria, por ser mudança estrutural
+> sobre item já explicitamente adiado. Dark mode inalterado. Suíte `vitest` de `packages/ui`
+> (139 testes, incl. `jest-axe`) passou integralmente após a mudança — ver "Notas Técnicas" da
+> spec para a ressalva sobre o limite do jsdom em medir contraste pixel-a-pixel.
+> `INVENTARIO-DESIGN-SYSTEM.md` e `specs/design-system/README.md` atualizados.
+
+> **ATUALIZAÇÃO — 2026-07-22 (rev. 53) — SPEC-20260722-001 criada e aprovada**
+> Spec de direção criativa v2 do design system registrada: estrutura obrigatória de seções para
+> documentação (`Design.md` novo na raiz + `docs/ui-design/design-system.md`), proibição
+> explícita de paleta decorativa multicolor e de `rounded-full` em ações de interface, proporção
+> cromática de referência (70/15/10/5). Regras R-DS-02, R-DS-03, R-DS-04 e R-DS-05 adicionadas a
+> `specs/RULES.md`. RF-03 (`tabular-nums` em `KpiCard` e `TableCell`) implementado nesta rodada
+> (ver seção da spec abaixo). RF-01, RF-02 e RF-04 concluídos junto com a criação desta entrada
+> (documentação/regras). Spec promovida de `draft` para `approved` na mesma rodada, com gate de
+> sincronia satisfeito por esta entrada. `specs/design-system/README.md` atualizado com a nova spec.
+
+> **ATUALIZAÇÃO — 2026-07-21 (rev. 52) — SPEC-20260721-001 criada (draft)**
+> Spec de fundamentos de design system registrada: tokens `--gold`/`--gold-foreground` (F-1),
+> `--muted-foreground` L≤42% WCAG AA (F-3), `next-themes` com `prefers-color-scheme` (F-2),
+> `NavBadge` truncado em "9+" (F-6), `VehicleContextSelector` no header (F-4) e `CommandPalette`
+> global Ctrl+K/⌘K (F-5). Regras R-DS-01 e C-DS-01 adicionadas a `specs/RULES.md`.
+> `specs/design-system/README.md` atualizado como índice da feature (agora com 2+ specs).
+> Nenhum código implementado — todas as linhas em ⏳. Status `draft` mantido; gate de sincronia
+> para `approved` requer atualização das colunas Código/Teste quando a implementação iniciar.
+
+> **ATUALIZAÇÃO — 2026-07-20 (rev. 51) — RF-E2E-08 a RF-E2E-11 implementados**
+> Quatro casos de caminho infeliz adicionados à suíte E2E (SPEC-20260716-003 v1.4):
+>
+> - **RF-E2E-08** (login inválido — exibe `role="alert"`, mantém `/login`): adicionado a
+>   `apps/web/e2e/tests/auth.spec.ts`; usa `LoginPage.errorAlert` já existente mas sem cobertura.
+> - **RF-E2E-09** (cookie `nave_access_token` inválido/corrompido → redirect para `/login`):
+>   adicionado a `apps/web/e2e/tests/auth.spec.ts`; injeta cookie via `context.addCookies()`.
+>   Cookie confirmado em `apps/web/middleware.ts` linha 22 (`nave_access_token`).
+> - **RF-E2E-10** (usuário sem veículos — estado vazio no dialog): adicionado a
+>   `apps/web/e2e/tests/vehicle-context.spec.ts`; marcado como `skip` até que
+>   `E2E_USER_NO_VEHICLES_EMAIL` seja provisionado — instruções de provisionamento inline no
+>   arquivo. Mensagem exata verificada em `vehicle-switcher-content.tsx`: "Nenhum veículo encontrado".
+> - **RF-E2E-11** (busca sem resultado não trava a UI): adicionado a
+>   `apps/web/e2e/tests/vehicle-context.spec.ts`; não depende de dado especial, roda com
+>   storageState do globalSetup (usuário normal, com veículos).
+>
+> Ambos os arquivos compilam sem erros (`tsc --noEmit`). `playwright test --list` reconhece
+> 11 testes em 3 arquivos (de 7 para 11, +4). CA-10, CA-11 e CA-12 da spec cobertos.
+> Novo GitHub Secret necessário: `E2E_USER_NO_VEHICLES_EMAIL` (para RF-E2E-10).
 
 ---
 
@@ -1414,6 +1510,151 @@ que o artefato ainda não existe no repositório.
 
 ---
 
+## SPEC-20260721-001 — Design System: Fundamentos de Marca, Tokens de Cor, Tema e Componentes de Navegação Global (approved)
+
+> Formaliza as seis decisões de produto tomadas em 2026-07-21 com base na pesquisa de fundamentos
+> de design system (`PESQUISA-FUNDAMENTOS-DESIGN-SYSTEM.md`). Cobre: token `--gold` dedicado (F-1),
+> tema padrão via `prefers-color-scheme` com toggle (F-2), `--muted-foreground` L≤42% para WCAG AA
+> (F-3), `VehicleContextSelector` no header (F-4), `CommandPalette` global Ctrl+K/⌘K (F-5),
+> `NavBadge` truncado em "9+" (F-6). Regras: R-DS-01, C-DS-01. Camadas: frontend, design.
+> **Status:** implementado (2026-07-21). RF-05 reaproveita `VehicleContextChip`
+> (SPEC-20260603-001) já existente no header como ponto de seleção — não foi criado um
+> componente `VehicleContextSelector` paralelo (ver nota técnica da spec sobre fronteira de
+> responsabilidade com R-CTX-07). Propagação de filtro implementada em `/expenses` e
+> `/maintenance`; `/fines` ainda não existe como rota no app e fica pendente de outra spec.
+> Overrides `.dark` cobrem só os tokens necessários para o tema ser legível (neutros, primary,
+> gold) — recalibração completa da paleta de marca em dark mode (secondary/accent/success/
+> warning/danger/info) segue fora do escopo, conforme "Fora de Escopo" da spec.
+
+### Tokens de Cor e Dark/Light Mode (RF-01, RF-02, RF-03)
+
+| Req | Descrição | Código | Teste | Status |
+|-----|-----------|--------|-------|--------|
+| RF-01 | Tokens `--gold` e `--gold-foreground` em `packages/ui/src/tokens/colors.ts` e `globals.css`, valores OKLCH distintos de `--warning`, em light e dark | `packages/ui/src/tokens/colors.ts`, `apps/web/src/app/globals.css`, `apps/web/tailwind.config.ts` | — (tokens visuais; validação de contraste manual conforme C.3 da pesquisa) | ✅ |
+| RF-02 | `--muted-foreground` com L≤42% em OKLCH em ambos os temas; contraste ≥4.5:1 sobre `--background` (C-DS-01) | `packages/ui/src/tokens/colors.ts`, `apps/web/src/app/globals.css` | — | ✅ |
+| RF-03 | `next-themes` configurado com `defaultTheme="system"` e `enableSystem={true}`; preferência manual persiste em localStorage sobre `prefers-color-scheme` | `apps/web/src/components/providers/theme-provider.tsx`, `apps/web/src/app/layout.tsx`, `apps/web/tailwind.config.ts` (`darkMode: "class"`), `packages/ui/src/components/theme-toggle.tsx` | — (mecanismo de terceiros; sem teste de integração automatizado) | ✅ |
+
+### NavBadge com Truncamento "9+" (RF-04)
+
+| Req | Descrição | Código | Teste | Status |
+|-----|-----------|--------|-------|--------|
+| RF-04 | `NavBadge` component: valor >9 renderiza "9+"; valor 0 oculta o badge; valores 1–9 exibem o número real (R-DS-01) | `packages/ui/src/components/nav-badge.tsx` | `packages/ui/src/components/nav-badge.test.tsx` | ✅ |
+
+### Seletor de Veículo Ativo no Header Shell (RF-05)
+
+| Req | Descrição | Código | Teste | Status |
+|-----|-----------|--------|-------|--------|
+| RF-05 | Seletor de veículo visível no header (reaproveita `VehicleContextChip`); seleção propaga filtro para `/expenses` e `/maintenance` | `apps/web/src/components/layout/header.tsx`, `apps/web/src/app/(app)/expenses/page.tsx`, `apps/web/src/app/(app)/maintenance/page.tsx` | `apps/web/src/app/(app)/expenses/page.spec.tsx`, `apps/web/src/app/(app)/maintenance/page.spec.tsx` (cobertura pré-existente; sem caso novo dedicado ao filtro) | ⚠️ parcial — `/fines` não existe como rota, filtro não se aplica a ela; CTA "Adicionar veículo" quando lista vazia não implementado |
+
+### Command Palette de Busca Global (RF-06)
+
+| Req | Descrição | Código | Teste | Status |
+|-----|-----------|--------|-------|--------|
+| RF-06 | `CommandPalette` ativada por `Ctrl+K`/`⌘K`: campo de busca focado ao abrir; resultados cruzando veículos, despesas e multas; navegação por teclado (setas, Enter, Esc) | `packages/ui/src/components/command-palette.tsx`, `apps/web/src/components/layout/command-palette-trigger.tsx` | `packages/ui/src/components/command-palette.test.tsx` | ⚠️ parcial — busca cruza veículos/despesas/manutenções (não multas, rota inexistente); sem lazy-load dedicado (RNF-03 não verificado) |
+
+### Contraste WCAG AA em Componentes de `packages/ui` (RNF-02)
+
+| Req | Descrição | Código | Teste | Status |
+|-----|-----------|--------|-------|--------|
+| RNF-02 | `KpiCard`: texto da tendência usava `text-{variant}` (tons "solid") direto sobre `--card`, falhando AA (warning ~2.1:1, success ~3.4:1, info ~4.2:1). Corrigido para `bg-{variant}-pastel text-foreground`, mesmo padrão de `Alert`/`Toast` (contraste ≥14:1) | `packages/ui/src/components/kpi-card.tsx` | `packages/ui/src/components/kpi-card.test.tsx` (`jest-axe` cobrindo warning/success/info/danger, gap de cobertura anterior corrigido) | ✅ |
+
+---
+
+## SPEC-20260722-001 — Design System v2: Direção Criativa, Gramática de Cor e Estrutura de Documentação (approved)
+
+> Formaliza a evolução criativa do Steel & Sapphire a partir de pesquisa de mercado (estrutura de
+> documentação de design system) e de um documento de inspiração externo (análise do Notion),
+> descartando explicitamente paleta decorativa multicolor e pill buttons em ações de interface —
+> ver "Contexto" e "Notas Técnicas" da spec para o racional completo.
+
+### Documentação e Regras (RF-01, RF-02, RF-04)
+
+| Req | Descrição | Código | Teste | Status |
+|-----|-----------|--------|-------|--------|
+| RF-01 | `Design.md` criado na raiz do repositório seguindo a estrutura de seções de R-DS-02 | `/Design.md` | — (documentação) | ✅ |
+| RF-02 | Regras R-DS-02 a R-DS-05 registradas em `specs/RULES.md` | `specs/RULES.md` | — (documentação) | ✅ |
+| RF-04 | `docs/ui-design/design-system.md` atualizado para referenciar `Design.md` e esta spec | `docs/ui-design/design-system.md` | — (documentação) | ✅ |
+
+### Numerais Tabulares (RF-03)
+
+| Req | Descrição | Código | Teste | Status |
+|-----|-----------|--------|-------|--------|
+| RF-03 | `tabular-nums` aplicado ao valor principal de `KpiCard` e a toda `TableCell` | `packages/ui/src/components/kpi-card.tsx`, `packages/ui/src/components/table.tsx` | Cobertura visual existente (`kpi-card.test.tsx`, `table` sem spec dedicada) — sem novo caso automatizado nesta rodada; classe CSS não altera snapshot de acessibilidade | ⚠️ parcial — mudança puramente visual, sem teste dedicado que assert a classe `tabular-nums` |
+
+### Auditoria de Não-Regressão (RNF-01, RNF-02)
+
+| Req | Descrição | Código | Teste | Status |
+|-----|-----------|--------|-------|--------|
+| RNF-01 | Nenhuma família de cor decorativa nova em `colors.ts` | `packages/ui/src/tokens/colors.ts` (inalterado nesta spec) | — | ✅ |
+| RNF-02 | Nenhum `rounded-full` na forma do botão (CVA de `variant`/`size`) | `packages/ui/src/components/button.tsx` (verificado — única ocorrência de `rounded-full` é o spinner circular de `loading`, elemento decorativo redondo por natureza, não a forma do botão) | — | ✅ |
+
+---
+
+## SPEC-20260722-002 — Design System: Canvas Quente Sutil no Light Mode (approved)
+
+> Implementa item que estava explicitamente "Fora de Escopo" em SPEC-20260722-001 (canvas
+> levemente quente inspirado na análise do Notion), agora liberado pelo usuário. Chroma sutil
+> (0.004, matiz 80) aplicado só ao light mode; dark mode inalterado. Ver "Notas Técnicas" da
+> spec para a ressalva sobre limite do jsdom em medição de contraste automatizada.
+
+### Canvas Quente em Superfícies Neutras (RF-01, RF-02)
+
+| Req | Descrição | Código | Teste | Status |
+|-----|-----------|--------|-------|--------|
+| RF-01 | `background`/`card`/`border`/`muted` ganham chroma 0.004 (matiz 80) em light mode, L inalterada; `.dark` sem mudança | `packages/ui/src/tokens/colors.ts`, `apps/web/src/app/globals.css` | Suíte `vitest` completa de `packages/ui` (139 testes, incl. `jest-axe`) — sem violação após a mudança | ✅ |
+| RF-02 | `INVENTARIO-DESIGN-SYSTEM.md` (tabela de tokens + bloco Figma Variables) atualizado com os novos valores | `specs/design-system/INVENTARIO-DESIGN-SYSTEM.md` | — (documentação) | ✅ |
+
+---
+
+## SPEC-20260721-002 — Dashboard v2: KPI Cards, VehicleHealthScore, Tokens de Superfície e Widget Próximos 7 Dias (draft)
+
+> RF-01 foi revisado em 2026-07-21 (edição direta, spec ainda `draft`): em vez de 4 KPIs fixos,
+> virou um catálogo curado de 8 métricas com preset editável por usuário (`user_preferences.dashboard_kpi_ids`),
+> decisão tomada após levantamento de dados disponíveis (RPCs de `SPEC-20260622-001` já prontas),
+> ciência de dados (amostra pequena distorce sparkline/delta em frotas de 1–5 veículos) e UX
+> (Miller's Law/Hick's Law — catálogo ≤10, ativos ≤6). Regras novas: R-KPI-01, R-KPI-02 (`RULES.md`).
+> RF-09 foi desbloqueado na mesma rodada: a RPC `get_upcoming_costs` já existia no banco
+> (não precisou ser criada) — só o dado agregado (KPI `upcoming_costs_7d`) chegou ao dashboard
+> nesta rodada; a lista de itens individuais do widget RF-09 ainda não foi implementada.
+> RF-02 a RF-06 (exceto o catálogo de KPIs de RF-01) já estavam implementados antes desta
+> atualização da matriz — linhas adicionadas abaixo para fechar o gate de sincronia. RF-07 foi
+> revisado em 2026-07-22: a saudação personalizada foi removida do escopo (decisão do usuário),
+> ficando só a data abreviada; spec, STORIES.md e esta matriz atualizados na mesma rodada.
+> RF-08 permanece bloqueado (decisão de backend não tomada nesta rodada).
+> RF-09 concluído em 2026-07-22: `UpcomingCostsWidget` lista os itens individuais (antes só o
+> agregado existia). Teto de 10 itens (P6) aplicado via `.limit()` no builder do RPC
+> (`upcomingCostsQuerySchema.limit`, PostgREST) — nunca cortado em memória no frontend.
+
+### Catálogo de KPIs Configurável (RF-01, R-KPI-01, R-KPI-02)
+
+| Req | Descrição | Código | Teste | Status |
+|-----|-----------|--------|-------|--------|
+| RF-01 | Migration `dashboard_kpi_ids text[]` em `user_preferences` (1–6 ids, default = 4 KPIs pré-existentes) | `supabase/migrations/20260721150000_dashboard_kpi_preferences.sql` | — (migration; sem harness de teste de banco no projeto) | ✅ |
+| RF-01 | Catálogo fixo de 8 KPIs + schema de validação (`KPI_CATALOG_IDS`, `dashboardKpiIdsSchema`, `FleetKpiCatalog`) | `packages/validators/src/dashboard.schemas.ts`, `packages/validators/src/preferences.schemas.ts` | `packages/validators/src/dashboard.schemas.spec.ts`, `packages/validators/src/preferences.schemas.spec.ts` | ✅ |
+| RF-01 | `GET /dashboard/kpi-catalog` — computa os 8 KPIs (`Promise.allSettled`, falha isolada por métrica); sparkline de 6 meses + delta com supressão por amostra pequena (R-KPI-02) em `expenses_month`/`cost_per_km` | `apps/api/src/modules/dashboard/dashboard.service.ts` (`getFleetKpiCatalog`), `apps/api/src/modules/dashboard/dashboard.controller.ts` | `apps/api/src/modules/dashboard/dashboard.service.spec.ts`, `apps/api/src/modules/dashboard/dashboard.controller.spec.ts` | ✅ |
+| RF-01 | `PATCH /preferences` aceita `dashboard_kpi_ids`; `GET /preferences` retorna com fallback default | `apps/api/src/modules/preferences/preferences.service.ts` | `apps/api/src/modules/preferences/preferences.service.spec.ts` | ✅ |
+| RF-01 | Grid de KPIs ativos + navegação por clique + picker de personalização (teto 6) | `apps/web/src/components/dashboard/DashboardKpiGrid.tsx`, `apps/web/src/components/dashboard/KpiPicker.tsx`, `apps/web/src/components/dashboard/kpi-catalog.ts`, `apps/web/src/app/(app)/dashboard/page.tsx` | `apps/web/src/app/(app)/dashboard/page.spec.tsx` | ✅ — `FleetKpis.tsx`/`FleetKpisData` removidos do codebase |
+| RF-09 | `horizon_days: 7` habilitado em `upcomingCostsQuerySchema`, reaproveitado por `upcoming_costs_7d` do catálogo | `packages/validators/src/expense.schemas.ts` | `packages/validators/src/expense.schemas.spec.ts` | ✅ |
+| RF-09, P6 | Widget "Próximos 7 dias": lista até 10 itens (`limit` opcional no schema, aplicado via `.limit()` no builder do RPC — nunca cortado em memória), urgência visual por faixa (≤2d `danger`, 3–5d `warning`, 6–7d neutro), total agregado, empty state e link "Ver todos" ao atingir o teto | `apps/web/src/components/dashboard/UpcomingCostsWidget.tsx`, `apps/api/src/modules/expenses/expenses.service.ts` (`getUpcomingCosts`), `packages/validators/src/expense.schemas.ts` | `apps/web/src/components/dashboard/UpcomingCostsWidget.spec.tsx`, `apps/api/src/modules/expenses/expenses.service.spec.ts`, `packages/validators/src/expense.schemas.spec.ts` | ✅ |
+
+### Health Score, Tokens, Export e Grid (RF-02 a RF-06)
+
+| Req | Descrição | Código | Teste | Status |
+|-----|-----------|--------|-------|--------|
+| RF-02 | `VehicleHealthScore` (anel SVG progress ring, score numérico, cor por faixa 0–49/50–74/75–100) substitui o "dot" em `VehicleHealthCard` | `packages/ui/src/components/vehicle-health-score.tsx`, `apps/web/src/components/dashboard/VehicleHealthCard.tsx` | `packages/ui/src/components/vehicle-health-score.test.tsx`, `apps/web/src/components/dashboard/VehicleHealthCard.spec.tsx` | ✅ |
+| RF-03 | Classes Tailwind literais (`bg-red-*`, `bg-amber-*`, `bg-green-*`) substituídas por tokens semânticos (`danger`/`warning`/`success` + `-pastel`/`-foreground`) | `apps/web/src/components/dashboard/FleetAlertBar.tsx`, `apps/web/src/components/dashboard/VehicleHealthCard.tsx` | `apps/web/src/components/dashboard/VehicleHealthCard.spec.tsx` | ✅ |
+| RF-04 | Tokens `--surface`, `--surface-elevated`, `--on-surface`, `--on-surface-muted`, `--on-surface-subtle`, `--chart-1..5`, `--chart-grid`, `--finance-outgoing` + classes `.glass-card`/`.kicker`, com par light/dark | `apps/web/src/app/globals.css` | — (tokens CSS; sem harness de teste visual) | ✅ |
+| RF-05 | `ExportControls` reposicionado após a Zona B (última seção antes do footer); estados loading (`fetch` + `Blob`, botão desabilitado) e erro (mensagem inline `role="alert"`, sem `alert()` do browser) | `apps/web/src/app/(app)/dashboard/page.tsx` (`ExportControls`) | — (sem spec dedicado; verificado por leitura de código) | 🔶 estado "desabilitado plano Grátis" (R-BIZ-12) não implementado — depende do mesmo gap de dado de plano do usuário citado em RF-07 |
+| RF-06 | Grid de veículos `grid-cols-2 sm:grid-cols-3 lg:grid-cols-4` (era `grid-cols-1 sm:grid-cols-2 lg:grid-cols-3`) | `apps/web/src/app/(app)/dashboard/page.tsx` (`VehicleGrid`) | — (sem teste de layout dedicado; validação visual manual pendente em breakpoint 360–375px) | 🔶 |
+
+### Cabeçalho de Data Abreviada (RF-07 — revisado em 2026-07-22)
+
+| Req | Descrição | Código | Teste | Status |
+|-----|-----------|--------|-------|--------|
+| RF-07 | Saudação personalizada removida do escopo (decisão do usuário, 2026-07-22 — gap de nome de usuário client-side em IMPACTO-040 #5 não resolvido, texto genérico sem nome tinha baixo valor). H1 "Dashboard" mantido `sr-only`; cabeçalho visível é a data abreviada "Dia-da-semana, DD Mês. AA" (ex.: "Qua, 22 Jul. 26") via `Intl.DateTimeFormat` | `apps/web/src/app/(app)/dashboard/page.tsx` (`DashboardDateHeader`) | — (sem teste dedicado nesta rodada — formatação de data client-side) | 🔶 |
+
+---
+
 ## SPEC-20260524-002 — Cadastro de Conta: Regras de Senha e Frontend (aprovado)
 
 > Atualiza SPEC-20260524-001 §4.1 (nova regra de senha: 6 chars + letra + número + especial) e
@@ -1993,21 +2234,33 @@ que o artefato ainda não existe no repositório.
 
 ---
 
-## SPEC-20260715-002 — Suporte a Fuso Horário por Usuário (draft)
+## SPEC-20260715-002 — Suporte a Fuso Horário por Usuário (approved)
 
-> Torna os lançamentos transacionais (`expenses.date`, `maintenances.scheduled_date`,
-> `maintenances.completion_date`) cientes do fuso do usuário. Migra os campos de `DATE` para
-> `timestamptz`. Armazena o fuso IANA em `user_preferences.timezone`. Corrige o comportamento
-> de "hoje" em alertas e KPIs para usar o dia calendário no fuso do usuário, não em UTC do servidor.
-> Regras: R-TZ-01, R-TZ-02, R-TZ-03, R-TZ-04, R2 (critério de duplicata passa a usar dia
-> calendário no fuso do usuário). Segurança: S1, S2. Camadas: frontend, backend, database.
-> **Status: draft — nenhum código implementado.** Entrada incompleta por design: será preenchida
-> quando a spec avançar para `review`/`approved` (gate de sincronia).
+> Torna os lançamentos transacionais (`expenses.occurred_at` — renomeada de `date`,
+> `maintenances.scheduled_date`, `maintenances.completion_date`) cientes do fuso do usuário.
+> Migra os campos de `DATE` para `timestamptz`. Armazena o fuso IANA em
+> `user_preferences.timezone`. Corrige o comportamento de "hoje" em alertas e KPIs para usar o
+> dia calendário no fuso do usuário, não em UTC do servidor.
+> Regras: R-TZ-01, R-TZ-02, R-TZ-03, R-TZ-04, R2 v2. Segurança: S1, S2. Camadas: frontend,
+> backend, database.
+>
+> **Implementado em 2026-07-22.** Testes automatizados (spec files existentes de
+> `expenses.service.spec.ts`, `dashboard.service.spec.ts`, `maintenances.service.spec.ts`,
+> `analytics.service.spec.ts`, `fines.service.spec.ts`, `recurring-costs.service.spec.ts`)
+> **não foram atualizados** para o novo shape (`occurred_at` em vez de `date`) nesta rodada —
+> débito de teste explícito, sinalizado abaixo por RF, não fica implícito.
 
 | Req | Descrição | Código | Teste | Status |
 |-----|-----------|--------|-------|--------|
-| RF-BK-01 a RF-BK-12 | Backend: migrations `occurred_at`/`completion_date` `timestamptz`, campo `user_preferences.timezone`, endpoint `PATCH /preferences` estendido, lógica de "hoje no fuso do usuário" em dashboard e expenses | — | — | ⏳ |
-| RF-FE-01 a RF-FE-08 | Frontend: `datetime-local` + `Intl.DateTimeFormat`, detecção automática de timezone, envio com offset explícito | — | — | ⏳ |
+| RF-BD-01 a RF-BD-05 | Migration: `user_preferences.timezone`, rename+retype `expenses.date`→`occurred_at timestamptz`, retype `maintenances.scheduled_date`/`completion_date`, migração de dados existentes via JOIN, funções SQL dependentes ajustadas | `supabase/migrations/20260722060748_timezone_aware_datetime.sql` | ⏳ pendente (sem teste de migration automatizado) | ✅ |
+| RF-BK-01, RF-BK-02 | `PreferencesService`/`preferences.schemas.ts` — campo `timezone` (fallback `null` cru, validação IANA básica) | `apps/api/src/modules/preferences/preferences.service.ts`, `packages/validators/src/preferences.schemas.ts` | ⏳ pendente (spec não atualizado) | ✅ |
+| RF-BK-03, RF-BK-04, RF-BK-05 | `DashboardService` — `daysUntil`/`classifyDocument` recebem `tz`; `toCalendarDay`/`FALLBACK_TIMEZONE` em util compartilhado | `apps/api/src/modules/dashboard/dashboard.service.ts`, `apps/api/src/shared/utils/date.utils.ts` | ⏳ pendente (spec não atualizado) | ✅ |
+| RF-BK-06, RF-BK-08, RF-BK-09 | `ExpensesService.create/update` — aceita `occurred_at` (YYYY-MM-DD ou ISO+offset), duplicata por dia calendário no fuso do usuário, `future_date_warning` não-bloqueante | `apps/api/src/modules/expenses/expenses.service.ts` | ⏳ pendente (spec não atualizado) | ✅ |
+| RF-BK-07, RF-BK-10 | `MaintenancesService` — `scheduled_date`/`completion_date` timestamptz, `completion_date` > agora+24h rejeitado com 422 | `apps/api/src/modules/maintenances/maintenances.service.ts` | ⏳ pendente (spec não atualizado) | ✅ |
+| RF-FE-01, RF-FE-06 | Detecção automática silenciosa (`TimezoneDetector`), seletor de fuso com fusos IANA do Brasil obrigatórios | `apps/web/src/components/layout/timezone-detector.tsx`, `apps/web/src/app/(app)/settings/preferences/page.tsx` | ⏳ pendente | ✅ |
+| RF-FE-02 | Seção "Fuso horário" em `/settings/preferences` (exibir/editar/salvar) | `apps/web/src/app/(app)/settings/preferences/page.tsx` | ⏳ pendente | ✅ |
+| RF-FE-03, RF-FE-04 | Formulários de despesa/manutenção com `datetime-local`, preenchimento automático (despesa/agendamento) e campo `completion_date` manual em manutenção | `apps/web/src/app/(app)/expenses/new/page.tsx`, `apps/web/src/app/(app)/expenses/[id]/page.tsx`, `apps/web/src/app/(app)/maintenance/new/page.tsx`, `apps/web/src/app/(app)/maintenance/[id]/page.tsx`, `apps/web/src/lib/datetime-tz.ts` | ⏳ pendente | ✅ |
+| RF-FE-05 | Exibição de datas com `timeZone` explícito nas listagens de despesas e manutenções | `apps/web/src/app/(app)/expenses/page.tsx`, `apps/web/src/app/(app)/maintenance/page.tsx`, `apps/web/src/lib/datetime-tz.ts` | ⏳ pendente | 🟡 parcial (demais telas com data ainda usam formatação sem `timeZone` explícito) |
 
 ---
 
@@ -2084,6 +2337,18 @@ que o artefato ainda não existe no repositório.
 | RF-E2E-05 | Duplicata → exibe banner de aviso (R2, CT-002) — banner implementado via SPEC-20260720-002 (RF-02, RF-03); teste destravado | `apps/web/src/app/(app)/expenses/new/page.tsx`, `apps/api/src/modules/expenses/expenses.service.ts` | `apps/web/e2e/tests/expense-warnings.spec.ts` | 🔶 implementado; requer `E2E_TEST_VEHICLE_PLATE` |
 | RF-E2E-06 | Clica no VehicleContextChip → abre dialog → seleciona veículo → chip atualiza (R-CTX-07) | `apps/web/src/components/layout/vehicle-context-chip.tsx` | `apps/web/e2e/tests/vehicle-context.spec.ts` | 🔶 implementado; requer `E2E_VEHICLE_B_PLATE` |
 | RF-E2E-07 | Troca de contexto propaga para `vehicle_id` do formulário de despesa (R-CTX-06, R-CTX-07) | `apps/web/src/lib/hooks/use-vehicle-context-field.ts` | `apps/web/e2e/tests/vehicle-context.spec.ts` | 🔶 implementado; requer `E2E_VEHICLE_A_PLATE` e `E2E_VEHICLE_B_PLATE` |
+| RF-E2E-08 | Login com credenciais inválidas → alerta de erro visível (`role="alert"`), URL permanece `/login` (S1) | `apps/web/src/app/(auth)/login/page.tsx` | `apps/web/e2e/tests/auth.spec.ts` | 🔶 implementado; aguarda secrets |
+| RF-E2E-09 | Cookie `nave_access_token` presente mas inválido em rota privada → redirect para `/login` (S1, CT-006) | `apps/web/middleware.ts` | `apps/web/e2e/tests/auth.spec.ts` | 🔶 implementado; aguarda secrets |
+| RF-E2E-10 | Usuário sem veículos: Dialog de contexto exibe "Nenhum veículo encontrado" e "Nenhum grupo encontrado" sem erro JS (R-CTX-07) | `apps/web/src/components/layout/vehicle-switcher-content.tsx` | `apps/web/e2e/tests/vehicle-context.spec.ts` | ⏸️ skip até `E2E_USER_NO_VEHICLES_EMAIL` ser provisionado como GitHub Secret e seed correspondente ser adicionado a `apps/api/scripts/seed-e2e.mjs` |
+| RF-E2E-11 | Busca sem resultado no Dialog de contexto: estado vazio exibido, Dialog continua respondendo após limpar busca (R-CTX-07) | `apps/web/src/components/layout/vehicle-switcher-content.tsx` | `apps/web/e2e/tests/vehicle-context.spec.ts` | 🔶 implementado; não depende de dado especial |
+
+### Dados de Teste E2E (RF-DATA)
+
+| Req | Descrição | Código | Teste | Status |
+|-----|-----------|--------|-------|--------|
+| RF-DATA-01 | Usuário de teste E2E via `E2E_USER_EMAIL`/`E2E_USER_PASSWORD`; credenciais nunca hardcodadas nos arquivos de teste | `apps/web/e2e/global-setup.ts`, `apps/web/e2e/fixtures/base.ts` | — | 🔶 implementado; secrets não provisionados |
+| RF-DATA-02 | Veículo(s) de teste pré-existente(s) via seed; placas identificadas por `E2E_TEST_VEHICLE_PLATE`, `E2E_VEHICLE_A_PLATE`, `E2E_VEHICLE_B_PLATE` | `apps/api/scripts/seed-e2e.mjs`, `apps/web/e2e/global-setup.ts` | — | 🔶 seed existe; execução em CI depende dos secrets |
+| RF-DATA-03 | Isolamento de estado entre testes (`afterEach` para remover registros criados) | `apps/web/e2e/tests/expense-warnings.spec.ts` | — | 🔶 implementado nos testes de despesa |
 
 ### Integração com CI (RF-CI)
 
@@ -2184,6 +2449,76 @@ depende da tabela `profiles` existir e ser acessível pelo client service role (
 
 ---
 
+## SPEC-20260722-003 — Shell Mobile-First e Migração Tailwind v3 → v4 (approved)
+
+> Dois blocos: (A) atualiza dependências para Tailwind v4 usando estratégia `@config` compat layer; (B) converte sidebar para drawer/overlay em mobile (< 768 px), torna o header responsivo com hamburger e elimina padding fixo de layout. Reutiliza `isMobileNavOpen`/`toggleMobileNav()` já presentes em `ui-store.ts`. Camadas: frontend, devops. Regras: R-NAV-01, R-NAV-02, R-NAV-03, R-NAV-04, R-DS-04.
+>
+> **Desvios da spec confirmados na implementação:** (1) z-index do drawer/backdrop usa `z-[250]`/`z-[240]` em vez de `z-[4000]`/`z-[3999]` — a spec já previa ajustar para a escala local (`docs/ui-design/ux-rules.md` define `z-[250]` como teto para "Menus Mobile Fullscreen"); (2) caminho do `@config` é `../../tailwind.config.ts` (dois níveis, não três — `globals.css` fica em `src/app/`); (3) ícones hamburger/fechar são SVG inline, seguindo o padrão já usado em `packages/ui/src/components/dialog.tsx`, sem adicionar `lucide-react` como nova dependência; (4) trap focus é hook nativo (`querySelectorAll` + `Tab`/`Shift+Tab`), sem nova dependência — `@radix-ui/react-focus-scope` só existe como transitiva do `@radix-ui/react-dialog`; (5) breakpoint mobile reaproveita o hook `useMediaQuery` já existente em `src/lib/hooks/use-media-query.ts` em vez de criar um novo.
+
+### Bloco A — Migração Tailwind v4
+
+| Req | Descrição | Código | Teste | Status |
+|-----|-----------|--------|-------|--------|
+| RF-01 | Atualizar dependências: `tailwindcss@^4.x`, `@tailwindcss/postcss@^4.x`, remover `autoprefixer` | `apps/web/package.json` | `pnpm build` | ✅ |
+| RF-02 | Substituir plugin PostCSS de `tailwindcss` por `@tailwindcss/postcss` | `apps/web/postcss.config.js` | `pnpm build` | ✅ |
+| RF-03 | Converter `@tailwind base/components/utilities` para `@import "tailwindcss"` + `@config` no CSS | `apps/web/src/app/globals.css` | `pnpm build` sem erros de CSS | ✅ |
+| RF-04 | Validar `@tailwindcss/typography` compatível com v4 (mantido `^0.5.20`, já compatível) | `apps/web/package.json` | `pnpm build` | ✅ |
+| RF-05 | Build completo e dev sem erros em CI | — | `pnpm build` passando (validado localmente); CI confirma no próximo push | ✅ |
+
+### Bloco B — Shell Mobile-First
+
+| Req | Descrição | Código | Teste | Status |
+|-----|-----------|--------|-------|--------|
+| RF-06 | Sidebar como drawer/overlay em < 768 px (`translate-x-0`/`-translate-x-full`, `z-[250]`) | `apps/web/src/components/layout/sidebar.tsx` | `sidebar.spec.tsx` ("drawer mobile" — RF-06) | ✅ |
+| RF-07 | Backdrop com fechar ao clicar (`z-[240]`, `bg-black/60`) | `apps/web/src/components/layout/sidebar.tsx` | `sidebar.spec.tsx` (RF-07) | ✅ |
+| RF-08 | Fechar drawer via tecla `Esc` | `apps/web/src/components/layout/sidebar.tsx` | `sidebar.spec.tsx` (RF-08) | ✅ |
+| RF-09 | Fechar drawer ao navegar (via `usePathname`) | `apps/web/src/components/layout/sidebar.tsx` | ⏳ pendente (E2E em SPEC-20260716-003) | ✅ (código) |
+| RF-10 | Botão hamburger no header com ícone SVG inline (abrir/fechar) e `aria-label` dinâmico | `apps/web/src/components/layout/header.tsx` | `header.spec.tsx` (RF-10) | ✅ |
+| RF-11 | Header mobile-first: chip de contexto e Command Palette com `hidden md:flex` | `apps/web/src/components/layout/header.tsx` | `header.spec.tsx` (verifica renderização, cobertura visual pendente de revisão manual) | ✅ |
+| RF-12 | Layout shell com `md:pl-16`/`md:pl-64` responsivo em vez de `pl-16`/`pl-64` fixo | `apps/web/src/app/(app)/layout.tsx` | ⏳ pendente (E2E em SPEC-20260716-003) | ✅ (código) |
+| RF-13 | Touch targets mínimos 44 px (`min-h-[44px]`, revertido em `md:min-h-0`) nos itens do drawer e no hamburger | `sidebar.tsx`, `header.tsx` | ⏳ pendente (auditoria axe-core) | ✅ (código) |
+| RF-14 | `aria-expanded`/`aria-controls` no hamburger; drawer com `role="dialog"` e `aria-modal="true"` | `header.tsx`, `sidebar.tsx` | `header.spec.tsx` (RF-10/RF-14) | ✅ |
+
+RNF-04 (foco preso no drawer + retorno ao hamburger ao fechar) implementado em `sidebar.tsx` (`useFocusTrap`) e `header.tsx` (ref + `useEffect` de retorno de foco) — cobertura automatizada dedicada ainda pendente (⏳), validado via leitura de código.
+
+---
+
+## SPEC-20260722-004 — Subheader Financeiro — Chips de Categoria e Indicador de Multas (approved)
+
+> Barra fina (44 px) persistente abaixo do header do shell autenticado: até 3 chips das
+> categorias de maior gasto do mês corrente (respeitando contexto de veículo/grupo ativo),
+> atalhos de navegação para Despesas e Manutenções, e link de Multas com indicador dinâmico
+> de status (neutro / aviso / perigo). Backend (NestJS) faz a agregação; nenhum acesso ao
+> Supabase client direto no browser. Regras: R-SUB-01, R-SUB-02, R-SUB-03, R-SUB-04, P7.
+> Segurança: S1, S2. Camadas: frontend, backend.
+> Dependência aceita conforme spec: tela `/fines` não existe no frontend — link aponta para
+> `/fines` mesmo assim (404 temporário aceito pelo usuário, 2026-07-22; dívida técnica em
+> `important/PENDENCIAS-E-PROCESSOS.md`, ver seção Dependências na spec).
+> Adaptação de RF-07: `activeGroupData` do store ainda não existe (dependência
+> SPEC-20260602-001/RF-19 segue `⏳` abaixo) — os membros do grupo ativo são resolvidos em
+> `FinancialSubheader` a partir de `GET /vehicle-groups` (mesma query key de `FleetAside`).
+
+### Backend — DashboardModule (extensão)
+
+| Req | Descrição | Código | Teste | Status |
+|-----|-----------|--------|-------|--------|
+| RF-01 | `GET /dashboard/spending-highlights` — retorna até 3 categorias com maior `SUM(amount)` no mês corrente; params opcionais `vehicleId` e `groupIds[]`; `LIMIT 3` na query SQL (R-SUB-01, P7) | `apps/api/src/modules/dashboard/dashboard.controller.ts` (`getSpendingHighlights`), `dashboard.service.ts` (`getSpendingHighlights`), `supabase/migrations/20260722120000_category_spending_and_fines_status.sql` (`get_category_spending_highlights`) | `dashboard.service.spec.ts`, `dashboard.controller.spec.ts` | ✅ |
+| RF-02 | `GET /dashboard/fines-status` — retorna `{ status: 'none'\|'open'\|'overdue', count: number }` para multas ativas (`pending`/`appealing`, `deleted_at IS NULL`); vencida = `status='pending'` AND `due_date < hoje` (R-SUB-03, R-SUB-04) | `dashboard.controller.ts` (`getFinesStatus`), `dashboard.service.ts` (`getFinesStatus`), migração acima (`get_fines_status_summary`) | `dashboard.service.spec.ts`, `dashboard.controller.spec.ts` | ✅ |
+| RF-08 | Schemas Zod `categorySummaryQuerySchema` e `finesStatusResponseSchema` em `packages/validators` | `packages/validators/src/dashboard.schemas.ts` | — (schemas simples, cobertos indiretamente pelos testes de controller/service) | ✅ |
+
+### Frontend — Shell autenticado
+
+| Req | Descrição | Código | Teste | Status |
+|-----|-----------|--------|-------|--------|
+| RF-03 | Componente `FinancialSubheader` montado no layout autenticado, com 44 px fixos, skeletons durante carregamento | `apps/web/src/components/layout/financial-subheader.tsx`, `apps/web/src/app/(app)/layout.tsx` | `financial-subheader.spec.tsx` | ✅ |
+| RF-04 | Chips de categoria: label, valor BRL formatado, badge de contagem; cada chip é `<Link>` para `/expenses?category=<slug>` com params de contexto (R-SUB-02, R-DS-04) | `financial-subheader.tsx` (`formatChipAmount`, `buildChipHref`) | `financial-subheader.spec.tsx` | ✅ |
+| RF-05 | Atalhos estáticos: "Despesas" → `/expenses`; "Manutenções" → `/maintenance` | `financial-subheader.tsx` | `financial-subheader.spec.tsx` | ✅ |
+| RF-06 | Link "Multas" → `/fines` com estilo dinâmico por status e badge de contagem (R-DS-01, R-SUB-03) | `financial-subheader.tsx` (`FINES_STYLE`, `NavBadge`) | `financial-subheader.spec.tsx` | ✅ |
+| RF-07 | Reatividade ao store: re-executa query de RF-01 ao mudar `activeVehicleId`/grupo ativo/`selectionMode` (R-CTX-01) — ver nota de adaptação acima | `financial-subheader.tsx` (query key inclui `selectionMode`, `activeVehicleId`, `activeGroupId`, `groupVehicleIds`) | `financial-subheader.spec.tsx` (caso RF-01/contexto `single`) | ✅ |
+| RF-09 | Separador visual (1 px × 18 px, `border/20`) entre área de chips e atalhos | `financial-subheader.tsx` | — (visual, sem asserção dedicada) | ✅ |
+
+---
+
 ## Requisitos do PRD sem Spec (Fase 2 / Backlog)
 
 | Req PRD | Descrição | Fase |
@@ -2237,4 +2572,6 @@ depende da tabela `profiles` existir e ser acessível pelo client service role (
 | `validators/categories` | `categories.schema.spec.ts` | ⏳ |
 | `validators/fines` | `packages/validators/src/fine.schemas.spec.ts` | ✅ (Vitest) |
 | `validators/recurring-costs` | `packages/validators/src/recurring-cost.schemas.spec.ts` | ✅ (Vitest) |
+| `web/expenses-new` | `apps/web/src/app/(app)/expenses/new/page.spec.tsx` | ✅ (Vitest — cobre SPEC-20260720-002 RF-01 a RF-06 e R-FORM-04/05/07, 2026-07-20) |
 | Edge Functions | Testes de integração via Supabase CLI | ⏳ (Fase 2) |
+| E2E (Playwright) | `apps/web/e2e/tests/auth.spec.ts`, `expense-warnings.spec.ts`, `vehicle-context.spec.ts` | 🔶 (SPEC-20260716-003 — arquivos existem; suíte não executada; aguarda GitHub Secrets provisionados) |

@@ -150,13 +150,31 @@ describe("upcomingCostsQuerySchema", () => {
     expect(upcomingCostsQuerySchema.safeParse({ horizon_days: 90 }).success).toBe(true);
   });
 
-  it("rejeita horizon_days fora de (30, 90) (RNF-03)", () => {
+  it("aceita horizon_days=7 (SPEC-20260721-002 RF-01 — KPI de compromissos próximos 7 dias)", () => {
+    expect(upcomingCostsQuerySchema.safeParse({ horizon_days: 7 }).success).toBe(true);
+  });
+
+  it("rejeita horizon_days fora de (7, 30, 90) (RNF-03)", () => {
     expect(upcomingCostsQuerySchema.safeParse({ horizon_days: 15 }).success).toBe(false);
-    expect(upcomingCostsQuerySchema.safeParse({ horizon_days: 7 }).success).toBe(false);
+    expect(upcomingCostsQuerySchema.safeParse({ horizon_days: 45 }).success).toBe(false);
   });
 
   it("aceita vehicle_id opcional", () => {
     expect(upcomingCostsQuerySchema.safeParse({ vehicle_id: validUuid }).success).toBe(true);
+  });
+
+  it("aceita limit opcional (SPEC-20260721-002 RF-09, P6)", () => {
+    const result = upcomingCostsQuerySchema.parse({ horizon_days: 7, limit: 10 });
+    expect(result.limit).toBe(10);
+  });
+
+  it("limit é undefined quando omitido (sem teto aplicado)", () => {
+    const result = upcomingCostsQuerySchema.parse({});
+    expect(result.limit).toBeUndefined();
+  });
+
+  it("rejeita limit acima de 50", () => {
+    expect(upcomingCostsQuerySchema.safeParse({ limit: 51 }).success).toBe(false);
   });
 });
 

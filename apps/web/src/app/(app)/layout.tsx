@@ -1,25 +1,32 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { FinancialSubheader } from "@/components/layout/financial-subheader";
 import { FleetAside } from "@/components/layout/fleet-aside";
 import { Header } from "@/components/layout/header";
 import { Sidebar } from "@/components/layout/sidebar";
+import { TimezoneDetector } from "@/components/layout/timezone-detector";
 import { VehicleActivator } from "@/components/layout/vehicle-activator";
 import { InstallPromptBanner } from "@/components/pwa/install-prompt-banner";
 import { IosInstallBanner } from "@/components/pwa/ios-install-banner";
 import { useUIStore } from "@/lib/stores/ui-store";
 
 // @spec SPEC-20260603-001 RF-01 — Header fixo acima do conteúdo, com chip de contexto sempre visível.
+// @spec SPEC-20260722-003 RF-12 — mobile-first: sem padding-left abaixo de `md`, já que a
+// sidebar vira drawer overlay; padding fixo pré-existente preservado a partir de `md`.
+// @spec SPEC-20260722-004 RF-03 — FinancialSubheader como elemento irmão do Header, não wrapper.
 export default function AppLayout({ children }: { children: ReactNode }): ReactNode {
   const isCollapsed = useUIStore((state) => state.isSidebarCollapsed);
 
   return (
     <div className="flex min-h-screen">
       <VehicleActivator />
+      <TimezoneDetector />
       <FleetAside />
       <Sidebar />
-      <div className={`flex-1 ${isCollapsed ? "pl-16" : "pl-64"}`}>
+      <div className={`flex-1 ${isCollapsed ? "md:pl-16" : "md:pl-64"}`}>
         <Header />
+        <FinancialSubheader />
         {children}
       </div>
       <InstallPromptBanner />

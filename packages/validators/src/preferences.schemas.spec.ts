@@ -37,6 +37,16 @@ describe("updatePreferencesInputSchema", () => {
     const result = updatePreferencesInputSchema.safeParse({ vehicle_chip_fields: ["plate"] });
     expect(result.success).toBe(true);
   });
+
+  it("aceita apenas dashboard_kpi_ids (SPEC-20260721-002 RF-01 — atualização parcial)", () => {
+    const result = updatePreferencesInputSchema.safeParse({ dashboard_kpi_ids: ["fleet_health"] });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejeita dashboard_kpi_ids com id fora do catálogo", () => {
+    const result = updatePreferencesInputSchema.safeParse({ dashboard_kpi_ids: ["nao_existe"] });
+    expect(result.success).toBe(false);
+  });
 });
 
 describe("DEFAULT_CHIP_FIELDS", () => {

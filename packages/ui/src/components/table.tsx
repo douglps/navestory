@@ -62,9 +62,10 @@ export const TableHead = forwardRef<HTMLTableCellElement, ThHTMLAttributes<HTMLT
 );
 TableHead.displayName = "TableHead";
 
+// @spec SPEC-20260722-001 RF-03 — tabular-nums em toda célula: alinha dígitos em colunas de valor/km sem afetar texto não-numérico
 export const TableCell = forwardRef<HTMLTableCellElement, TdHTMLAttributes<HTMLTableCellElement>>(
   ({ className, ...props }, ref) => (
-    <td ref={ref} className={cn("px-3 py-2 align-top", className)} {...props} />
+    <td ref={ref} className={cn("px-3 py-2 align-top tabular-nums", className)} {...props} />
   ),
 );
 TableCell.displayName = "TableCell";

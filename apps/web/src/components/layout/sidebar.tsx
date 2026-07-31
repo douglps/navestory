@@ -123,18 +123,20 @@ export function Sidebar(): ReactNode {
       {/* RF-07: backdrop do drawer mobile — z-[240], abaixo do drawer (z-[250], ver docs/ui-design/ux-rules.md). */}
       {isMobileNavOpen && (
         <div
-          className="fixed inset-0 z-[240] bg-black/60 backdrop-blur-sm md:hidden"
+          className="fixed inset-x-0 top-14 bottom-0 z-[240] bg-black/60 backdrop-blur-sm md:hidden"
           onClick={toggleMobileNav}
           aria-hidden="true"
         />
       )}
+      {/* Sidebar inicia logo abaixo do Header (top-14 = h-14 do header), não mais da borda
+          superior da tela — o header agora ocupa a largura inteira do viewport acima dela. */}
       <nav
         id={MOBILE_NAV_DRAWER_ID}
         ref={navRef}
         role="dialog"
         aria-modal="true"
         aria-label="Menu de navegação"
-        className={`fixed inset-y-0 left-0 z-[250] flex w-64 flex-col gap-3 border-r border-border bg-card p-4 text-card-foreground transition-transform duration-200 ease-in-out md:z-30 md:translate-x-0 ${
+        className={`fixed left-0 top-14 bottom-0 z-[250] flex w-64 flex-col gap-3 border-r border-border bg-card p-4 text-card-foreground transition-transform duration-200 ease-in-out md:z-30 md:translate-x-0 ${
           isMobileNavOpen ? "translate-x-0" : "-translate-x-full"
         } ${isCollapsed ? "md:w-16 md:items-center" : "md:w-64"}`}
       >

@@ -6,6 +6,7 @@ import RecoverPasswordPage from "./page";
 const searchParams = new URLSearchParams();
 vi.mock("next/navigation", () => ({
   useSearchParams: () => searchParams,
+  useRouter: () => ({ back: vi.fn(), push: vi.fn() }),
 }));
 
 vi.mock("@/lib/http/api-client", async () => {

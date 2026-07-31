@@ -1,7 +1,7 @@
 ---
 id: SPEC-20260730-001
 title: "Score de Saúde de Veículo e Frota"
-status: draft
+status: approved
 date: 2026-07-30
 author: Douglas Lopes (lps.doug@protonmail.com)
 rules: [R-HS-01, R-HS-02, R-HS-03, R-HS-04, R-HS-05, R-HS-06, R-HS-07, R-HS-08, R-HS-09, R-HS-10, R-TZ-01, S2, S7]
@@ -11,10 +11,18 @@ camadas: [database, backend, frontend]
 
 # SPEC-20260730-001: Score de Saúde de Veículo e Frota
 
-**Status:** Draft
+**Status:** Approved
 **Criada em:** 2026-07-30
 **Autor:** Douglas Lopes (lps.doug@protonmail.com)
 **Revisores:** —
+
+---
+
+## Changelog (pós-aprovação)
+
+| Data | O que mudou | Por quê |
+|------|-------------|---------|
+| 2026-07-31 | RF-13 a RF-20 implementados: `GET /vehicles/:id/health` (`VehiclesController`/`VehiclesService.getHealth`, chama `calculate_vehicle_health` via RPC) para a página de detalhe; `/vehicles` passou a consumir `GET /dashboard/fleet-health` (já implementado) para exibir `VehicleHealthScore` em cada item e ordenar por score ascendente (RF-15), com fallback silencioso para "Calculando" em caso de falha (RF-16); `/vehicles/[id]` ganhou a seção "Saúde do Veículo" com score, flags humanizadas (reexportando `FLAG_LABEL`/`HealthFlag` de `VehicleHealthCard.tsx`), estado "Nenhum problema identificado" (RF-18) e links de ação por tipo de flag (RF-20). Testes novos em `vehicles.service.spec.ts`, `vehicles.controller.spec.ts` e `page.spec.tsx` (o mock de `apiClient` do spec de detalhe foi refeito para responder por URL/método, já que a página agora dispara duas queries em paralelo). Verificado manualmente via browser logado com o usuário E2E: score e anel exibidos na listagem e no detalhe, flag `km_alert` com link funcional. Suíte completa sem regressão (`apps/api` 511/511, `apps/web` 358+/358+). | RF-01 a RF-12 (algoritmo e semáforo) já estavam implementados antes desta spec; faltava só a camada de exibição em `/vehicles` e `/vehicles/[id]`, que foi o escopo real desta rodada. |
 
 ---
 

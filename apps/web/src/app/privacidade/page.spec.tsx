@@ -1,6 +1,10 @@
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import PrivacyPolicyPage from "./page";
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ back: vi.fn(), push: vi.fn() }),
+}));
 
 /** @spec SPEC-20260720-001 RF-01, US-01 */
 describe("PrivacyPolicyPage", () => {

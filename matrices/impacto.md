@@ -1199,6 +1199,29 @@ confirmação de backend/banco (ver spec).
 
 ---
 
+
+### IMPACTO-046 — Migração de Emoji para Ícones Lucide em KPI Catalog e Feed de Atividades (2026-07-31)
+
+| Campo | Valor |
+|-------|-------|
+| **Spec** | A criar — `spec-writer` a acionar após aprovação desta análise |
+| **Status** | Avaliação pré-implementação |
+| **Risco geral** | Baixo (mudança puramente visual; sem lógica de negócio, API ou modelo de dados envolvidos) |
+
+| # | Mudança | Módulos afetados | Risco | Mitigação |
+|---|---------|-----------------|-------|-----------|
+| 1 | `kpi-catalog.ts`: campo `icon: string` → `icon: LucideIcon`; substituição dos 8 valores emoji por referências de componente Lucide | `apps/web/src/components/dashboard/kpi-catalog.ts` | Baixo | Import type-only de `LucideIcon`; sem impacto em runtime; TypeScript aponta todos os locais a atualizar |
+| 2 | `DashboardKpiGrid.tsx`: render de `meta.icon` de texto interpolado para instância de componente (`<meta.Icon size={16} />`) | `apps/web/src/components/dashboard/DashboardKpiGrid.tsx` | Baixo | `KpiCard.icon` já aceita `ReactNode` — sem mudança no contrato do componente de UI |
+| 3 | `KpiPicker.tsx`: mesma atualização de render do campo `icon` na lista de checkboxes | `apps/web/src/components/dashboard/KpiPicker.tsx` | Baixo | Render local em `<span aria-hidden>`; apenas troca conteúdo, não estrutura |
+| 4 | `atividades/page.tsx`: `DOMAIN_LABELS.icon: string` → `LucideIcon`; `domainInfo()` retorno tipado; render de `domain.icon` no `<td>` da tabela | `apps/web/src/app/(app)/atividades/page.tsx` | Baixo | Constante local ao arquivo; zero consumidores externos; nenhum teste verifica o emoji do domínio |
+| 5 | Decisão de mapeamento emoji → Lucide para 14 casos (8 KPIs + 6 domínios de atividades + 1 fallback) | Design (decisão) | Baixo | Mapeamento sugerido nas recomendações do relatório de impacto |
+
+**Riscos a observar:**
+- `DashboardKpiGrid.tsx` linha 120 tem `<span aria-hidden>⚠</span>` hardcoded no estado "unavailable" — emoji fora do escopo desta mudança, mas inconsistência adjacente a observar.
+- `atividades/page.tsx` também usa `<EmptyState icon="🛡️" ...>` — `EmptyState` aceita `ReactNode`; fora do escopo solicitado, mas vale migrar na mesma rodada para não deixar o arquivo parcialmente migrado.
+- Nenhum teste existente (`dashboard/page.spec.tsx` ou `atividades/page.spec.tsx`) faz asserção de texto de emoji — confirmado por grep. Risco de quebra de teste = zero.
+
+---
 ## Legenda de Risco
 
 | Nível | Critério |

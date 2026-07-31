@@ -39,6 +39,7 @@ function gitDiffNameStatus(base) {
 }
 
 const TEST_FILE_RE = /\.(spec|test)\.(ts|tsx|js|jsx)$/;
+const STORYBOOK_FILE_RE = /\.stories\.(ts|tsx)$/;
 const SOURCE_EXT_RE = /\.(ts|tsx)$/;
 const EXCLUDED_BASENAMES = new Set(["index.ts", "index.tsx"]);
 const EXCLUDED_PATH_PARTS = ["/e2e/", "/dto/", ".d.ts"];
@@ -46,6 +47,7 @@ const EXCLUDED_PATH_PARTS = ["/e2e/", "/dto/", ".d.ts"];
 function isCandidateSourceFile(path) {
   if (!SOURCE_EXT_RE.test(path)) return false;
   if (TEST_FILE_RE.test(path)) return false;
+  if (STORYBOOK_FILE_RE.test(path)) return false;
   if (!/^(apps|packages)\/[^/]+\/src\//.test(path)) return false;
   const basename = path.split("/").pop();
   if (EXCLUDED_BASENAMES.has(basename)) return false;

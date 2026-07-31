@@ -62,6 +62,19 @@ export class VehiclesController {
     return { data: vehicle };
   }
 
+  /**
+   * @spec SPEC-20260730-001 RF-19
+   */
+  @Get(":id/health")
+  @ApiOperation({ summary: "Calcular e retornar a saúde do veículo (score + flags)" })
+  @ApiResponse({ status: 200, description: "Score e flags de saúde" })
+  @ApiResponse({ status: 404, description: "Veículo não encontrado" })
+  async getHealth(@Req() req: Request, @Param("id") id: string) {
+    const accessToken = this.extractAccessToken(req);
+    const health = await this.vehiclesService.getHealth(accessToken, id);
+    return { data: health };
+  }
+
   @Patch(":id")
   @UsePipes(new ZodValidationPipe(updateVehicleDtoSchema))
   @ApiOperation({ summary: "Atualizar veículo" })

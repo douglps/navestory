@@ -14,10 +14,11 @@ export type KpiCardVariant = "success" | "danger" | "warning" | "info" | "neutra
 
 /**
  * @spec SPEC-20260721-001 RF-02, RNF-02 — os tons "solid" (success/danger/warning/info) falham
- * contraste AA de texto sobre `--card`/`--background` (ex: warning ~1.8:1, info ~3.7:1). Por
- * isso a cor semântica fica só na seta (↑↓→) — elemento gráfico pequeno, exige apenas 3:1
- * não-textual (WCAG 1.4.11), que todas as variantes cumprem — e o número/`%` usa
- * `text-foreground`, sempre legível independente da variante.
+ * contraste AA de texto (4.5:1) sobre `--card`/`--background`. Por isso a cor semântica fica só
+ * na seta (↑↓→) — elemento gráfico pequeno, exige apenas 3:1 não-textual (WCAG 1.4.11), que
+ * todas as variantes cumprem desde `SPEC-20260731-002` (recalibração de `--warning`, que até
+ * então ficava em ~1.88:1, abaixo do piso não-textual) — e o número/`%` usa `text-foreground`,
+ * sempre legível independente da variante.
  */
 function variantArrowClass(variant: KpiCardVariant): string {
   switch (variant) {

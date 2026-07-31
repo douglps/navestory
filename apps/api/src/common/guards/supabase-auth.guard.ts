@@ -42,7 +42,7 @@ export class SupabaseAuthGuard implements CanActivate {
       sub: data.user.id,
       email: data.user.email ?? "",
       aud: data.user.aud,
-      user_metadata: data.user.user_metadata,
+      app_metadata: data.user.app_metadata as { role?: string },
     };
     if (payload.aud !== "authenticated") {
       throw new UnauthorizedException("Token inválido");

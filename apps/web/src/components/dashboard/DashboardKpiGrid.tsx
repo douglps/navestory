@@ -3,6 +3,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import type { FleetKpiCatalog, KpiCatalogId } from "@nave/validators";
+import { TriangleAlert } from "lucide-react";
 import { KpiCard, type KpiCardProps } from "@nave/ui";
 import { KPI_CATALOG_META } from "./kpi-catalog";
 
@@ -117,7 +118,8 @@ export function DashboardKpiGrid({
                 className="mt-1 flex items-center gap-1 text-lg font-semibold text-muted-foreground"
                 title="Não foi possível carregar. Tente novamente."
               >
-                <span aria-hidden>⚠</span>
+                {/* @spec SPEC-20260731-007 RF-04 */}
+                <TriangleAlert size={16} aria-hidden />
                 <span>—</span>
               </div>
             </div>
@@ -132,7 +134,7 @@ export function DashboardKpiGrid({
           >
             <KpiCard
               title={meta.title}
-              icon={<span aria-hidden>{meta.icon}</span>}
+              icon={<meta.icon size={16} aria-hidden />}
               reverseTrend={meta.reverseTrend}
               {...spec}
             />

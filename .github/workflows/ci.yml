@@ -60,6 +60,21 @@ jobs:
       - uses: ./.github/actions/setup
       - run: node scripts/check-hardcoded-colors.mjs
 
+  doc-sync-gate:
+    # Avisa (não bloqueia) quando specs/RULES.md ou uma spec de feature mudam sem que
+    # nenhuma matriz seja tocada no mesmo PR — ver scripts/check-doc-sync.mjs.
+    name: Aviso de sincronia doc↔matriz
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: ./.github/actions/setup
+      - name: Checagem mecânica de sincronia entre specs/RULES.md e matrices/
+        env:
+          DIFF_BASE: ${{ github.event_name == 'pull_request' && format('origin/{0}', github.base_ref) || github.event.before }}
+        run: node scripts/check-doc-sync.mjs
+
   integration-test:
     name: Integration test (Supabase local — CT-006, CT-007)
     runs-on: ubuntu-latest

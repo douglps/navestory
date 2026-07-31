@@ -22,7 +22,7 @@ describe("RolesGuard", () => {
     const guard = new RolesGuard(reflector);
     const context = {
       switchToHttp: () => ({
-        getRequest: () => ({ user: { sub: "u1", user_metadata: { role: "user" } } }),
+        getRequest: () => ({ user: { sub: "u1", app_metadata: { role: "user" } } }),
       }),
       getHandler: () => undefined,
       getClass: () => undefined,
@@ -38,13 +38,36 @@ describe("RolesGuard", () => {
     const guard = new RolesGuard(reflector);
     const context = {
       switchToHttp: () => ({
-        getRequest: () => ({ user: { sub: "u1", user_metadata: { role: "admin" } } }),
+        getRequest: () => ({ user: { sub: "u1", app_metadata: { role: "admin" } } }),
       }),
       getHandler: () => undefined,
       getClass: () => undefined,
     } as unknown as ExecutionContext;
 
     expect(guard.canActivate(context)).toBe(true);
+  });
+
+  /**
+   * @spec SPEC-20260731-006 RF-SEC-005 — valida S12
+   * Critério de fechamento da vulnerabilidade: `user_metadata.role` é gravável pelo próprio
+   * usuário via API pública do Supabase — mesmo forjado como "admin", não pode conceder acesso.
+   */
+  it("bloqueia usuário com user_metadata.role='admin' forjado, sem app_metadata.role (S12)", () => {
+    const reflector = {
+      getAllAndOverride: jest.fn().mockReturnValue(["admin"]),
+    } as unknown as Reflector;
+    const guard = new RolesGuard(reflector);
+    const context = {
+      switchToHttp: () => ({
+        getRequest: () => ({
+          user: { sub: "u1", user_metadata: { role: "admin" } },
+        }),
+      }),
+      getHandler: () => undefined,
+      getClass: () => undefined,
+    } as unknown as ExecutionContext;
+
+    expect(guard.canActivate(context)).toBe(false);
   });
 
   it("bloqueia (fail-safe) quando não há usuário no request", () => {

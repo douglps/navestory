@@ -48,7 +48,8 @@ for (const { name, path, waitFor } of PAGES) {
       `visual: ${name} (${colorScheme})`,
       async ({ page }) => {
         await page.emulateMedia({ colorScheme });
-        await page.goto(path);
+        // domcontentloaded em vez do "load" padrão — ver nota em dashboard.page.ts
+        await page.goto(path, { waitUntil: "domcontentloaded" });
         await waitFor(page);
         // Tolerância pequena (ratio) absorve antialiasing/font-rendering entre runs sem
         // mascarar regressão visual real.

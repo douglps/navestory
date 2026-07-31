@@ -1,9 +1,10 @@
 import type { MetadataRoute } from "next";
 
 // @spec SPEC-20260712-001 RF-01, RF-02
-// @spec SPEC-20260729-002 — recalculado para a direção Prata (era o azul pré-Prata #3b70ca).
-// Primary light oklch(35.3% 0.093 259) = #1B3A6B, Background light oklch(97.2% 0.003 248) =
-// #F4F6F8 — hex-fonte já documentados em SPEC-20260729-001 (não reconvertidos).
+// @spec SPEC-20260731-001 RF-02 — recalculado para a direção Azul-Índigo (era o azul-prata de
+// Prata, #1B3A6B). Primary light oklch(44% 0.19 250) = #004FB5, Background light
+// oklch(97.0% 0.003 265) = #F4F5F7 (grafite dedicado, ver colors.ts) — conversão sRGB↔OKLab
+// padrão (Björn Ottosson).
 export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "Nave — Gestão Inteligente de Veículos",
@@ -11,8 +12,8 @@ export default function manifest(): MetadataRoute.Manifest {
     description: "Gestão inteligente de veículos, despesas e manutenções.",
     start_url: "/",
     display: "standalone",
-    background_color: "#F4F6F8",
-    theme_color: "#1B3A6B",
+    background_color: "#F4F5F7",
+    theme_color: "#004FB5",
     icons: [
       {
         src: "/icons/icon-192-any.png",

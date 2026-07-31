@@ -9,28 +9,32 @@
  */
 @layer base {
   :root {
-    /* @spec SPEC-20260729-001 RF-01 — direção Prata: acorde azul-prata-cinza frio, substitui
-     * o canvas quente de SPEC-20260722-002 (H=80→248, deprecated/superseded_by esta spec). */
-    --background: 97.2% 0.003 248;
-    --foreground: 20.4% 0.011 261;
+    /* @spec SPEC-20260731-001 RF-02 — direção Azul-Índigo: grafite dedicado (independente da
+     * família de --primary), substitui o acorde azul-prata-cinza de Prata (deprecated/
+     * superseded_by SPEC-20260731-001). Ver colors.ts para o racional completo. */
+    --background: 97.0% 0.003 265;
+    --foreground: 19.0% 0.014 285;
 
-    --card: 92.6% 0.007 248;
-    --card-foreground: 20.4% 0.011 261;
+    --card: 94.0% 0.004 271;
+    --card-foreground: 19.0% 0.014 285;
 
-    --border: 88.5% 0.007 248;
+    --border: 88% 0.005 270;
 
-    --muted: 92.6% 0.007 248;
+    --muted: 90% 0.005 270;
     /* @spec SPEC-20260729-001 — L=50.4% (era 42%): C-DS-01 exige razão ≥4.5:1, não um teto de
-     * L fixo; este tom (`ink-muted` de Prata) atinge ~5.2:1 sobre o novo --background. */
+     * L fixo; este tom atinge a razão exigida sobre o novo --background grafite. */
     --muted-foreground: 50.4% 0.021 246;
 
-    --primary: 35.3% 0.093 259;
-    --primary-foreground: 97.2% 0.003 248;
+    /* @spec SPEC-20260731-001 RF-02 — Azul-Índigo (H≈250), substitui o azul-prata frio de
+     * Prata (H≈259) — ver ADR-011. */
+    --primary: 44% 0.19 250;
+    --primary-foreground: 97.0% 0.003 265;
 
-    /* @spec SPEC-20260729-001 — tom estrutural derivado, mesma família de --primary; sem
+    /* @spec SPEC-20260731-001 RF-02 — ouro estrutural ("bronze"), segunda cor de marca
+     * (referência Barroco Mineiro) — distinto de --gold (acento de brilho, inalterado). Sem
      * consumidor hoje, ver colors.ts para o racional completo. */
-    --secondary: 75% 0.03 255;
-    --secondary-foreground: 20.4% 0.011 261;
+    --secondary: 48% 0.10 82;
+    --secondary-foreground: 97.0% 0.003 265;
 
     --accent: 55.6% 0.15 140;
     --accent-foreground: 15% 0 0;
@@ -44,16 +48,26 @@
     --success-foreground: 98.5% 0 0;
     --success-pastel: 92% 0.12 150;
 
-    --warning: 75% 0.16 85;
+    /* @spec SPEC-20260731-002 — recalibrado de L=75% para L=54% (fecha C-DS-01): o tom claro
+     * original só atingia 1.88:1 sobre --card e 1.68:1 sobre --warning-pastel no light mode
+     * (mínimo não-textual 3:1). Usado como ícone/borda, nunca texto — ver colors.ts. */
+    --warning: 54% 0.14 85;
     --warning-foreground: 15% 0 0;
     --warning-pastel: 92% 0.15 85;
 
     /* @spec SPEC-20260729-001 — terracota dessaturado de Prata, substitui o vermelho saturado
      * anterior (H=25→32, C=0.2→0.14); sem override dark, ver colors.ts. */
     --danger: 56.3% 0.14 32;
-    --danger-foreground: 97.2% 0.003 248;
+    /* @spec SPEC-20260731-002 — unificado com a família de grafite Azul-Índigo (H=265, mesma de
+     * --background/--primary-foreground): L=97.5% (era 97.2%/H=248, literal de Prata) atinge
+     * ~4,57:1 sobre --danger, com margem acima do piso AA. Ver colors.ts para o racional
+     * completo, incluindo por que o ajuste não foi feito escurecendo --danger. */
+    --danger-foreground: 97.5% 0.003 265;
     --danger-pastel: 92% 0.06 32;
 
+    /* @spec SPEC-20260731-001 RF-04, C-DS-01 — --warning/--success (e --danger/--info) são
+     * calibrados para uso como fundo de texto/ícone sobre o próprio -pastel da mesma família,
+     * nunca como texto direto sobre --card/--background do tema ativo. */
     --info: 55.6% 0.15 240;
     --info-foreground: 98.5% 0 0;
     --info-pastel: 92% 0.08 240;
@@ -108,34 +122,49 @@
 
   /*
    * @spec SPEC-20260721-001 RF-01, RF-03
-   * @spec SPEC-20260729-001 RF-01 — dark mode da direção Prata (valores validados no showcase)
+   * @spec SPEC-20260731-001 RF-02, RF-03 — dark mode da direção Azul-Índigo (valores validados
+   * em apps/web/.../design-system/_lib/tokens.ts, PROPOSED_TOKENS/GRAPHITE_SCALE)
    * Overrides de dark mode aplicados via classe `.dark` no <html> (next-themes,
-   * `defaultTheme="system"` + `enableSystem`, F-2). `secondary` ganhou override porque Prata
-   * define seu dark explicitamente; `accent`/`success`/`warning`/`info` em dark seguem fora
-   * de escopo — ver "Fora de Escopo" em SPEC-20260729-001.
+   * `defaultTheme="system"` + `enableSystem`, F-2). `--background` passa a ser o grafite
+   * dedicado da proposta (`≈#13131A`), independente da família de `--primary`. `*-pastel`
+   * ganham override próprio (C-DS-02) — antes caíam silenciosamente no valor claro do light
+   * mode. `accent`/`success`/`warning`/`info` (sólidos) em dark seguem fora de escopo.
    */
   .dark {
-    --background: 20.4% 0.011 261;
-    --foreground: 95.1% 0.005 258;
+    --background: 19.0% 0.014 285;
+    --foreground: 97.0% 0.003 265;
 
-    --card: 27.5% 0.016 260;
-    --card-foreground: 95.1% 0.005 258;
+    --card: 22.5% 0.014 285;
+    --card-foreground: 97.0% 0.003 265;
 
-    --border: 34% 0.016 260;
+    --border: 30% 0.014 285;
 
-    --muted: 32.5% 0.016 260;
+    --muted: 27% 0.014 285;
     --muted-foreground: 75.9% 0.018 248;
 
-    /* @spec SPEC-20260729-002 — chroma reforçada (era 0.038, fiel ao valor literal do showcase
-     * Prata) para funcionar melhor como cor de botão/link real em dark mode; mesmo H (~254,
-     * meio do range entre o H=250 do dark original e o H=259 do light). */
-    --primary: 68% 0.11 254;
+    /* @spec SPEC-20260731-001 RF-02 — dark de Azul-Índigo (tom 70 da escala tonal, §3.5 da
+     * proposta), mais claro que o light para funcionar como CTA/link sobre o grafite escuro. */
+    --primary: 66% 0.16 250;
+    /* @spec SPEC-20260731-001 RF-02 — override explícito: como --primary de dark é claro
+     * (66% L), o texto sobre ele precisa ser escuro, não o claro herdado do light mode. */
+    --primary-foreground: 19.0% 0.014 285;
 
-    --secondary: 30% 0.03 255;
-    --secondary-foreground: 95.1% 0.005 258;
+    --secondary: 62% 0.09 82;
+    --secondary-foreground: 19.0% 0.014 285;
 
     --gold: 82.9% 0.12 91;
     --gold-foreground: 20.4% 0.011 261;
+
+    /* @spec SPEC-20260731-002 — override explícito preservando o tom claro que era o único valor
+     * de --warning antes da recalibração de light mode: já atingia ≥3:1 contra fundos escuros. */
+    --warning: 75% 0.16 85;
+
+    /* @spec SPEC-20260731-001 RF-03, C-DS-02 — mantêm o hue de cada família, escurecidos para
+     * que --foreground (claro em dark) leia ~13:1 (AAA) sobre o fundo. */
+    --success-pastel: 28% 0.09 150;
+    --warning-pastel: 30% 0.10 85;
+    --danger-pastel: 28% 0.05 32;
+    --info-pastel: 28% 0.06 240;
 
     /* @spec SPEC-20260721-002 RF-04, RNF-03
      * @spec SPEC-20260729-002 RF-01 — realinhado à direção Prata */

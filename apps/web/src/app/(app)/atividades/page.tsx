@@ -2,6 +2,8 @@
 
 import type { ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
+import type { LucideIcon } from "lucide-react";
+import { Car, FileText, Gauge, Receipt, Repeat, ShieldAlert, User, Wrench } from "lucide-react";
 import { Badge, Container, EmptyState, Tooltip, type BadgeProps } from "@nave/ui";
 import { apiClient } from "@/lib/http/api-client";
 
@@ -14,20 +16,21 @@ interface AuditLogRow {
   created_at: string;
 }
 
-const DOMAIN_LABELS: Record<string, { label: string; icon: string }> = {
-  vehicles: { label: "Veículo", icon: "🚗" },
-  expenses: { label: "Despesa", icon: "🧾" },
-  maintenances: { label: "Manutenção", icon: "🔧" },
-  fines: { label: "Multa", icon: "🚓" },
-  recurring_costs: { label: "Custo Recorrente", icon: "🔁" },
-  vehicle_odometer_cycles: { label: "Ciclo de Odômetro", icon: "📍" },
-  auth: { label: "Conta", icon: "👤" },
-  users: { label: "Conta", icon: "👤" },
+/** @spec SPEC-20260731-007 RF-06, RF-07 — componente Lucide, nunca emoji */
+const DOMAIN_LABELS: Record<string, { label: string; icon: LucideIcon }> = {
+  vehicles: { label: "Veículo", icon: Car },
+  expenses: { label: "Despesa", icon: Receipt },
+  maintenances: { label: "Manutenção", icon: Wrench },
+  fines: { label: "Multa", icon: ShieldAlert },
+  recurring_costs: { label: "Custo Recorrente", icon: Repeat },
+  vehicle_odometer_cycles: { label: "Ciclo de Odômetro", icon: Gauge },
+  auth: { label: "Conta", icon: User },
+  users: { label: "Conta", icon: User },
 };
 
-function domainInfo(tableName: string): { label: string; icon: string } {
+function domainInfo(tableName: string): { label: string; icon: LucideIcon } {
   // eslint-disable-next-line security/detect-object-injection -- tableName vem do backend (audit_logs.table_name), não de input do usuário
-  return DOMAIN_LABELS[tableName] ?? { label: tableName, icon: "📄" };
+  return DOMAIN_LABELS[tableName] ?? { label: tableName, icon: FileText };
 }
 
 /**
@@ -133,7 +136,7 @@ export default function AtividadesPage(): ReactNode {
       {isLoading && <p className="text-sm text-muted-foreground">Carregando…</p>}
 
       {!isLoading && (!logs || logs.length === 0) && (
-        <EmptyState icon="🛡️" title="Nenhuma operação registrada ainda." />
+        <EmptyState icon={<ShieldAlert size={24} aria-hidden />} title="Nenhuma operação registrada ainda." />
       )}
 
       {logs && logs.length > 0 && (
@@ -163,9 +166,7 @@ export default function AtividadesPage(): ReactNode {
                       </Badge>
                     </td>
                     <td className="p-2">
-                      <span aria-hidden className="mr-1">
-                        {domain.icon}
-                      </span>
+                      <domain.icon size={16} aria-hidden className="mr-1 inline" />
                       {domain.label}
                     </td>
                     <td className="hidden p-2 text-xs text-muted-foreground sm:table-cell">

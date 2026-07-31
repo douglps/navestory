@@ -8,6 +8,7 @@ import {
   ApiUnavailableError,
   OfflineWriteBlockedError,
   getRestoreAccountRedirectUrl,
+  getLoginRedirectUrl,
 } from "./api-client";
 
 describe("apiClient", () => {
@@ -193,6 +194,72 @@ describe("apiClient", () => {
         statusCode: 403,
         code: "ACCOUNT_PENDING_DELETION",
       });
+    });
+  });
+
+  describe("SPEC-20260731-003 RF-01/RF-02/RF-03: 401 redireciona globalmente para /login", () => {
+    const originalLocation = window.location;
+
+    beforeEach(() => {
+      Object.defineProperty(window, "location", {
+        value: { ...originalLocation, pathname: "/dashboard", assign: vi.fn() },
+        writable: true,
+      });
+    });
+
+    afterEach(() => {
+      Object.defineProperty(window, "location", { value: originalLocation, writable: true });
+    });
+
+    it("RF-01: chama window.location.assign com /login?redirect=<pathname> em 401 fora de /auth", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({ ok: false, status: 401, json: async () => ({}) }),
+      );
+
+      await expect(apiClient("/vehicles")).rejects.toBeInstanceOf(ApiError);
+
+      expect(window.location.assign).toHaveBeenCalledWith("/login?redirect=%2Fdashboard");
+    });
+
+    it("RF-02: não redireciona em 401 de /auth/login (STORY-02, credenciais inválidas)", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: false,
+          status: 401,
+          json: async () => ({ message: "INVALID_CREDENTIALS" }),
+        }),
+      );
+
+      await expect(apiClient("/auth/login", { method: "POST" })).rejects.toBeInstanceOf(ApiError);
+
+      expect(window.location.assign).not.toHaveBeenCalled();
+    });
+
+    it("RF-03: não redireciona de novo se um 401 em segundo plano ocorrer já em /login", async () => {
+      Object.defineProperty(window, "location", {
+        value: { ...originalLocation, pathname: "/login", assign: vi.fn() },
+        writable: true,
+      });
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({ ok: false, status: 401, json: async () => ({}) }),
+      );
+
+      await expect(apiClient("/preferences")).rejects.toBeInstanceOf(ApiError);
+
+      expect(window.location.assign).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("getLoginRedirectUrl", () => {
+    it("monta a URL de login com o redirect codificado", () => {
+      expect(getLoginRedirectUrl("/dashboard")).toBe("/login?redirect=%2Fdashboard");
+    });
+
+    it("retorna null quando já está em /login (evita loop de redirect)", () => {
+      expect(getLoginRedirectUrl("/login")).toBeNull();
     });
   });
 

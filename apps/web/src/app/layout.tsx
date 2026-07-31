@@ -1,11 +1,15 @@
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
+import { Inter } from "next/font/google";
 import { SerwistProvider } from "@serwist/turbopack/react";
 import { QueryProvider } from "@/lib/query/providers";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { ServiceWorkerUpdateListener } from "@/components/pwa/service-worker-update-listener";
 import { AppToastViewport } from "@/components/layout/app-toast-viewport";
 import "./globals.css";
+
+// @spec SPEC-20260731-001 RF-06 — Inter única e variável, substitui a fonte default do SO.
+const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
 // @spec SPEC-20260712-001 RF-01
 export const metadata: Metadata = {
@@ -19,10 +23,10 @@ export const metadata: Metadata = {
   },
 };
 
-// @spec SPEC-20260729-002 — recalculado para a direção Prata (era o azul pré-Prata #3b70ca);
-// mesmo hex do primary light usado em manifest.ts.
+// @spec SPEC-20260731-001 RF-02 — recalculado para a direção Azul-Índigo (era o azul-prata de
+// Prata, #1B3A6B); mesmo hex do primary light usado em manifest.ts.
 export const viewport: Viewport = {
-  themeColor: "#1B3A6B",
+  themeColor: "#004FB5",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }): ReactNode {
@@ -30,8 +34,12 @@ export default function RootLayout({ children }: { children: ReactNode }): React
     // @spec SPEC-20260721-001 RF-03 — `suppressHydrationWarning`: o next-themes injeta a
     // classe `.dark` no <html> antes da hidratação para evitar flash de tema errado, o que
     // difere do HTML renderizado no servidor por design (recomendação oficial da lib).
-    <html lang="pt-BR" suppressHydrationWarning>
-      <body>
+    <html lang="pt-BR" className={inter.variable} suppressHydrationWarning>
+      {/* @spec SPEC-20260731-001 RF-02 — bg-background/text-foreground aplicados no <body>: sem
+          isso, nenhuma rota (pública ou autenticada) tinha um fundo/texto base ligado aos
+          tokens de tema — o navegador caía no branco/preto default do Preflight em vez do
+          grafite Azul-Índigo, mais visível em telas com pouco conteúdo (landing, /termos). */}
+      <body className="bg-background text-foreground">
         {/*
           @spec SPEC-20260712-001 RF-05, RF-14
           `reloadOnOnline={false}`: o Serwist recarregaria a página sozinho ao recuperar

@@ -33,7 +33,8 @@ test.describe("Autenticação", () => {
       const page = await context.newPage();
 
       try {
-        await page.goto("/dashboard");
+        // domcontentloaded em vez do "load" padrão — ver nota em dashboard.page.ts
+        await page.goto("/dashboard", { waitUntil: "domcontentloaded" });
         // Middleware SSR redireciona para /login?redirect=/dashboard
         await expect(page).toHaveURL(/\/login/, { timeout: 10_000 });
       } finally {
@@ -166,7 +167,8 @@ test.describe("Autenticação", () => {
         ]);
 
         // Navega para rota privada — middleware deve detectar token inválido e redirecionar
-        await page.goto("/dashboard");
+        // domcontentloaded em vez do "load" padrão — ver nota em dashboard.page.ts
+        await page.goto("/dashboard", { waitUntil: "domcontentloaded" });
         await expect(page).toHaveURL(/\/login/, { timeout: 10_000 });
       } finally {
         await context.close();
@@ -205,7 +207,8 @@ test.describe("Autenticação", () => {
       await expect(page).toHaveURL(/\/login/);
 
       // Tenta acessar /dashboard sem sessão — deve ser redirecionado novamente
-      await page.goto("/dashboard");
+      // domcontentloaded em vez do "load" padrão — ver nota em dashboard.page.ts
+      await page.goto("/dashboard", { waitUntil: "domcontentloaded" });
       await expect(page).toHaveURL(/\/login/, { timeout: 10_000 });
     },
   );

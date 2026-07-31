@@ -1,7 +1,8 @@
 ---
 id: SPEC-20260729-001
 title: "Design System — Adoção da Direção Prata como Identidade de Marca"
-status: approved
+status: deprecated
+superseded_by: SPEC-20260731-001
 date: 2026-07-29
 author: Douglas Lopes (lps.doug@protonmail.com)
 rules: [R-DS-05, R-DS-06, C-DS-01]
@@ -11,7 +12,7 @@ camadas: [frontend, design]
 
 # SPEC-20260729-001: Design System — Adoção da Direção Prata como Identidade de Marca
 
-**Status:** approved
+**Status:** deprecated (superseded_by [SPEC-20260731-001](SPEC-20260731-001-adocao-direcao-azul-indigo.md))
 **Criada em:** 2026-07-29
 **Autor:** Douglas Lopes (lps.doug@protonmail.com)
 
@@ -150,3 +151,4 @@ Conversão feita com a fórmula sRGB→OKLab padrão (Björn Ottosson), script d
 |------|-------------|---------|
 | 2026-07-29 | Implementação concluída (RF-01 a RF-03) e spec criada já como `approved` — decisão e implementação ocorreram na mesma sessão de trabalho, a pedido do usuário. | Gate de sincronia exige matriz atualizada com caminhos reais; ver `matrices/rastreabilidade.md`. |
 | 2026-07-29 | Os dois itens de "Fora de Escopo" (varredura de cor hardcoded; realinhamento de `--surface*`/`--chart-*`/`--finance-outgoing`) foram fechados por [SPEC-20260729-002](SPEC-20260729-002-prata-fase-2-categoricos-urgencia-varredura.md) ([ADR-010](../../docs/architecture/decisions/ADR-010-paleta-categorica-e-escala-urgencia.md)), na mesma sessão. Texto original desta spec não foi alterado — só este registro de fechamento. | Usuário pediu para "implementar por completo" o que ficara fora de escopo. |
+| 2026-07-31 | Spec marcada `deprecated`, `superseded_by: SPEC-20260731-001` — mudança estrutural, não editada in-place. Pesquisa de mercado (fintech + frota) mostrou que Prata reforça o padrão visual da categoria de frota (azul naval/acromático) em vez de diferenciar o Nave, além de carregar frieza emocional num produto que lida com estresse financeiro do usuário. | Decisão de Douglas em 2026-07-30, formalizada em [ADR-011](../../docs/architecture/decisions/ADR-011-adocao-direcao-azul-indigo.md) e [SPEC-20260731-001](SPEC-20260731-001-adocao-direcao-azul-indigo.md) — substituição pela direção Azul-Índigo. |

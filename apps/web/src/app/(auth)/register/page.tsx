@@ -7,6 +7,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent, type ReactNode } from "react";
 import { LegalFooter } from "@/components/legal-footer";
+import { PublicHeader } from "@/components/public-header";
 import { PasswordInput } from "@/components/password-input";
 import { apiClient, ApiError } from "@/lib/http/api-client";
 
@@ -54,81 +55,85 @@ export default function RegisterPage(): ReactNode {
   }
 
   return (
-    <Container size="sm">
-      <h1 className="text-xl font-semibold">Criar conta</h1>
-      <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-        <label htmlFor="name">Nome</label>
-        <Input
-          id="name"
-          value={name}
-          onChange={(event) => setName(event.target.value)}
-          required
-        />
-
-        <label htmlFor="email">E-mail</label>
-        <Input
-          id="email"
-          type="email"
-          value={email}
-          onChange={(event) => setEmail(event.target.value)}
-          required
-        />
-
-        <label htmlFor="password">Senha</label>
-        <PasswordInput
-          id="password"
-          aria-label="Senha"
-          placeholder="6+ caracteres, 1 letra, 1 número, 1 especial"
-          value={password}
-          onChange={(event) => setPassword(event.target.value)}
-          required
-        />
-
-        {fieldError && <Alert variant="error" description={fieldError} />}
-
-        {emailAlreadyExists && (
-          <div role="alert" aria-live="polite" className="rounded-md bg-warning-pastel p-3 text-sm text-foreground">
-            <p>Este e-mail já está cadastrado.</p>
-            <div className="mt-2 flex gap-2">
-              <Link href="/login" className="underline">
-                Entrar com este e-mail
-              </Link>
-              <Link href={`/recover-password?email=${encodeURIComponent(email)}`} className="underline">
-                Recuperar senha
-              </Link>
-            </div>
-          </div>
-        )}
-
-        {mutation.isError && !emailAlreadyExists && (
-          <Alert variant="error" description="Não foi possível criar a conta. Tente novamente." />
-        )}
-
-        {/* @spec SPEC-20260720-001 RF-06, US-03 */}
-        <label className="flex items-start gap-2 text-sm">
-          <Checkbox
-            checked={acceptedTerms}
-            onChange={(event) => setAcceptedTerms(event.target.checked)}
+    <>
+      {/* @spec SPEC-20260731-004 RF-05 */}
+      <PublicHeader navLink={{ label: "Entrar", href: "/login" }} />
+      <Container size="sm">
+        <h1 className="text-xl font-semibold">Criar conta</h1>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+          <label htmlFor="name">Nome</label>
+          <Input
+            id="name"
+            value={name}
+            onChange={(event) => setName(event.target.value)}
             required
           />
-          <span>
-            Li e concordo com os{" "}
-            <Link href="/termos" target="_blank" className="underline">
-              Termos de Uso
-            </Link>{" "}
-            e a{" "}
-            <Link href="/privacidade" target="_blank" className="underline">
-              Política de Privacidade
-            </Link>
-          </span>
-        </label>
 
-        <Button type="submit" disabled={mutation.isPending || !acceptedTerms}>
-          {mutation.isPending ? "Criando Conta..." : "Criar conta"}
-        </Button>
-      </form>
+          <label htmlFor="email">E-mail</label>
+          <Input
+            id="email"
+            type="email"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            required
+          />
 
-      <LegalFooter />
-    </Container>
+          <label htmlFor="password">Senha</label>
+          <PasswordInput
+            id="password"
+            aria-label="Senha"
+            placeholder="6+ caracteres, 1 letra, 1 número, 1 especial"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            required
+          />
+
+          {fieldError && <Alert variant="error" description={fieldError} />}
+
+          {emailAlreadyExists && (
+            <div role="alert" aria-live="polite" className="rounded-md bg-warning-pastel p-3 text-sm text-foreground">
+              <p>Este e-mail já está cadastrado.</p>
+              <div className="mt-2 flex gap-2">
+                <Link href="/login" className="underline">
+                  Entrar com este e-mail
+                </Link>
+                <Link href={`/recover-password?email=${encodeURIComponent(email)}`} className="underline">
+                  Recuperar senha
+                </Link>
+              </div>
+            </div>
+          )}
+
+          {mutation.isError && !emailAlreadyExists && (
+            <Alert variant="error" description="Não foi possível criar a conta. Tente novamente." />
+          )}
+
+          {/* @spec SPEC-20260720-001 RF-06, US-03 */}
+          <label className="flex items-start gap-2 text-sm">
+            <Checkbox
+              checked={acceptedTerms}
+              onChange={(event) => setAcceptedTerms(event.target.checked)}
+              required
+            />
+            <span>
+              Li e concordo com os{" "}
+              <Link href="/termos" target="_blank" className="underline">
+                Termos de Uso
+              </Link>{" "}
+              e a{" "}
+              <Link href="/privacidade" target="_blank" className="underline">
+                Política de Privacidade
+              </Link>
+            </span>
+          </label>
+
+          <Button type="submit" disabled={mutation.isPending || !acceptedTerms}>
+            {mutation.isPending ? "Criando Conta..." : "Criar conta"}
+          </Button>
+        </form>
+
+        <LegalFooter />
+      </Container>
+    </>
   );
 }

@@ -96,6 +96,8 @@ export function KpiPicker({ activeIds }: { activeIds: KpiCatalogId[] }): ReactNo
         <div className="flex flex-col gap-1">
           {KPI_CATALOG_IDS.map((id) => {
             const isChecked = selected.includes(id);
+            // eslint-disable-next-line security/detect-object-injection -- id é KpiCatalogId, união fixa de 8 literais
+            const meta = KPI_CATALOG_META[id];
             return (
               <label key={id} className="flex items-center gap-2">
                 <Checkbox
@@ -103,10 +105,9 @@ export function KpiPicker({ activeIds }: { activeIds: KpiCatalogId[] }): ReactNo
                   onChange={(event) => toggle(id, event.target.checked)}
                   disabled={!isChecked && selected.length >= MAX_ACTIVE_DASHBOARD_KPIS}
                 />
-                {/* eslint-disable-next-line security/detect-object-injection -- id é KpiCatalogId, união fixa de 8 literais */}
-                <span aria-hidden>{KPI_CATALOG_META[id].icon}</span>
-                {/* eslint-disable-next-line security/detect-object-injection -- id é KpiCatalogId, união fixa de 8 literais */}
-                {KPI_CATALOG_META[id].title}
+                {/* @spec SPEC-20260731-007 RF-05 */}
+                <meta.icon size={16} aria-hidden />
+                {meta.title}
               </label>
             );
           })}

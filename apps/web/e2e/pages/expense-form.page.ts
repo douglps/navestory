@@ -42,7 +42,8 @@ export class ExpenseFormPage {
 
   /** Navega para /expenses/new. */
   async goto(): Promise<void> {
-    await this.page.goto("/expenses/new");
+    // domcontentloaded em vez do "load" padrão — ver nota em dashboard.page.ts
+    await this.page.goto("/expenses/new", { waitUntil: "domcontentloaded" });
     await this.vehicleSelect.waitFor({ state: "visible", timeout: 10_000 });
   }
 

@@ -15,19 +15,23 @@ import { useUIStore } from "@/lib/stores/ui-store";
 // @spec SPEC-20260722-003 RF-12 — mobile-first: sem padding-left abaixo de `md`, já que a
 // sidebar vira drawer overlay; padding fixo pré-existente preservado a partir de `md`.
 // @spec SPEC-20260722-004 RF-03 — FinancialSubheader como elemento irmão do Header, não wrapper.
+// Header ocupa a largura inteira do viewport (w-full) e fica acima da sidebar; a sidebar
+// (fixed, top-14) inicia logo abaixo dele em vez de correr da borda superior da tela.
 export default function AppLayout({ children }: { children: ReactNode }): ReactNode {
   const isCollapsed = useUIStore((state) => state.isSidebarCollapsed);
 
   return (
-    <div className="flex min-h-screen">
+    <div className="min-h-screen">
       <VehicleActivator />
       <TimezoneDetector />
       <FleetAside />
-      <Sidebar />
-      <div className={`flex-1 ${isCollapsed ? "md:pl-16" : "md:pl-64"}`}>
-        <Header />
-        <FinancialSubheader />
-        {children}
+      <Header />
+      <div className="flex">
+        <Sidebar />
+        <div className={`flex-1 ${isCollapsed ? "md:pl-16" : "md:pl-64"}`}>
+          <FinancialSubheader />
+          {children}
+        </div>
       </div>
       <InstallPromptBanner />
       <IosInstallBanner />

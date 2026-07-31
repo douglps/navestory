@@ -1,0 +1,6 @@
+/*
+ * Reaproveita o CSS global real do app (Tailwind v4 + tokens de design em OKLCH) em vez de
+ * duplicar as variáveis aqui — fonte única de verdade continua em apps/web/src/app/globals.css
+ * (que por sua vez referencia packages/ui/src/tokens/colors.ts).
+ */
+@import "../../../apps/web/src/app/globals.css";

@@ -1857,6 +1857,200 @@ que o artefato ainda não existe no repositório.
 
 ---
 
+## SPEC-20260731-001 — Design System: Adoção da Direção Azul-Índigo como Identidade de Marca (approved)
+
+> Substitui Prata (`SPEC-20260729-001`, agora `deprecated`) pela direção Azul-Índigo. Ver
+> [ADR-011](../docs/architecture/decisions/ADR-011-adocao-direcao-azul-indigo.md) e
+> `specs/design-system/PROPOSTA-BRAND-DESIGN-SYSTEM-2026-07-30.md` para o racional completo.
+>
+> **Atualização — 2026-07-31 (mesmo dia, rodada 2):** RF-01 a RF-06 implementados. `dangerForeground`
+> foi mantido no valor literal de Prata (não migrado para o novo `background` grafite) — trocar
+> derrubava o contraste `danger`/`danger-foreground` de ~4.51:1 para ~4.499:1, abaixo do piso AA,
+> confirmado por `contrast.spec.ts`; fica como pendência de calibração dedicada. **Fechada em
+> `SPEC-20260731-002` (mesmo dia, rodada 3)** — ver seção própria abaixo. A escala tipográfica
+> (RF-06) é formal em `packages/ui/src/tokens/typography.ts` e Inter foi aplicada em produção
+> (`apps/web/src/app/layout.tsx`, `tailwind.config.ts` `fontFamily.sans`), mas a escala de
+> utilitários `text-*` do Tailwind já em uso no app não foi remapeada (exigiria QA visual completa,
+> fora de escopo). RNF-01 confirmado: `packages/ui` 179/179, `apps/web` 349/351 — as 2 falhas
+> restantes (`warning sobre card`, `warning sobre warning-pastel`, light mode) são pendência
+> pré-existente à migração (já falhavam com os tokens Prata), não regressão desta spec.
+
+### Migração de Tokens e Regras (RF-01 a RF-08)
+
+| Req | Descrição | Código | Teste | Status |
+|-----|-----------|--------|-------|--------|
+| RF-01 | Conversão OKLCH completa do Azul-Índigo (12 tons) e grafite dedicado, com `contrastExpectations` | `apps/web/src/app/(app)/design-system/_lib/tokens.ts` (`PROPOSED_TOKENS`, `INDIGO_SCALE`, `GRAPHITE_SCALE`) | `contrast.spec.ts` (indireto, via produção após RF-02) | ✅ |
+| RF-02 | Migrar `primary`/`primaryForeground`/`background`/`foreground`/`card`/`cardForeground`/`border`/`muted`/`secondary`/`secondaryForeground` em `colors.ts`/`globals.css` | `packages/ui/src/tokens/colors.ts`, `apps/web/src/app/globals.css`, `apps/web/src/app/layout.tsx`, `apps/web/src/app/manifest.ts` (hex do `theme_color`) | Suíte `vitest` completa — `packages/ui` 179/179, `apps/web` 349/351 (2 pendências pré-existentes, não regressão) | ✅ |
+| RF-03 | Overrides de dark mode para `successPastel`/`warningPastel`/`dangerPastel`/`infoPastel` (`C-DS-02`) | `packages/ui/src/tokens/colors.ts`, `apps/web/src/app/globals.css` | `contrast.spec.ts` — 4 pares `{token} sobre {token}-pastel` em dark, todos ✅ | ✅ |
+| RF-04 | Documentar contrato "`warning`/`success` só sobre o próprio `-pastel`" no token/`Design.md` (fecha `C-DS-01`) | `packages/ui/src/tokens/colors.ts`, `apps/web/src/app/globals.css`, `Design.md` | — (documentação) | ✅ |
+| RF-05 | Atualizar `/Design.md` (ainda referencia "Steel & Sapphire") | `Design.md` | — (documentação) | ✅ |
+| RF-06 | Sistema tipográfico formal (Inter variável, escala modular, `tabular-nums`) | `packages/ui/src/tokens/typography.ts`, `apps/web/src/app/layout.tsx`, `apps/web/tailwind.config.ts` | `tsc --noEmit` limpo; `tabular-nums` já coberto por `kpi-card.test.tsx`/`table.test.tsx` (pré-existentes) | ✅ 🔶 escala `text-*` do Tailwind não remapeada (fora de escopo) |
+| RF-07 | Atualizar `matrices/rastreabilidade.md` com esta entrada | `matrices/rastreabilidade.md` | — (documentação) | ✅ |
+| RF-08 | `SPEC-20260729-001` marcada `deprecated`, `superseded_by: SPEC-20260731-001` | `specs/design-system/SPEC-20260729-001-adocao-direcao-prata.md` | — (documentação) | ✅ |
+
+### Auditoria de Não-Regressão (RNF-01 a RNF-03)
+
+| Req | Descrição | Código | Teste | Status |
+|-----|-----------|--------|-------|--------|
+| RNF-01 | Nenhuma regressão em `packages/ui`/`apps/web` | — | `packages/ui` 179/179; `apps/web` 349/351 (2 falhas pré-existentes de `warning`, comparadas linha a linha contra a baseline Prata via `git stash`) | ✅ |
+| RNF-02 | Contraste AA para `primary`/`primaryForeground`/`secondary`/`secondaryForeground` em ambos os temas | `packages/ui/src/tokens/colors.ts` | `contrast.spec.ts` não cobre o par `primary`/`primaryForeground` diretamente (gap pré-existente, não introduzido por esta spec); validado manualmente via a mesma lógica de `contrastRatio` | 🔶 sem cobertura automatizada direta (gap pré-existente) |
+| RNF-03 | `*-pastel` ≥4.5:1 contra `--foreground` em dark mode | `packages/ui/src/tokens/colors.ts` | `contrast.spec.ts` — todos os 4 pares em dark ✅ | ✅ |
+
+---
+
+## SPEC-20260731-002 — Design System: Recalibração de `--warning`/`--danger-foreground` e Fecho de C-DS-01 (approved)
+
+> Fecha a pendência registrada na Rodada 4 de `PLANO-MIGRACAO-SHOWCASE-INFRA.md`: `warning` sobre
+> `card` (~1,88:1) e `warning` sobre `warning-pastel` (~1,68:1) em light mode, abaixo do piso
+> não-textual de 3:1 (`C-DS-01`). O par `success` sobre `card`, também vermelho naquela rodada, já
+> havia sido resolvido como efeito colateral de `SPEC-20260731-001` (migração de `--card` para o
+> grafite Azul-Índigo). Escopo ampliado durante a implementação para também fechar a nota técnica
+> pendente de `--danger-foreground` (mantido no valor literal de Prata em `SPEC-20260731-001` por
+> risco de derrubar o par abaixo do piso AA ao migrar para o grafite).
+
+| Req | Descrição | Código | Teste | Status |
+|-----|-----------|--------|-------|--------|
+| RF-01 | Recalibrar `colorChannels.warning` (light) de `75% 0.16 85` para `54% 0.14 85` | `packages/ui/src/tokens/colors.ts`, `apps/web/src/app/globals.css` | `contrast.spec.ts` — `warning` sobre `card`/`warning-pastel` (light) ✅ | ✅ |
+| RF-02 | Override explícito de `darkColorChannels.warning` (`75% 0.16 85`, valor claro original preservado) | `packages/ui/src/tokens/colors.ts`, `apps/web/src/app/globals.css` | `contrast.spec.ts` — pares de `warning` em dark inalterados ✅ | ✅ |
+| RF-03 | Atualizar comentário desatualizado em `kpi-card.tsx` (RF-02/RNF-02 de `SPEC-20260721-001`) | `packages/ui/src/components/kpi-card.tsx` | — (documentação) | ✅ |
+| RF-04 | Atualizar `matrices/rastreabilidade.md` e `PLANO-MIGRACAO-SHOWCASE-INFRA.md` (changelog Rodada 4) | `matrices/rastreabilidade.md`, `specs/design-system/PLANO-MIGRACAO-SHOWCASE-INFRA.md` | — (documentação) | ✅ |
+| RF-05 | Recalibrar `dangerForeground`/`--danger-foreground` de `97.2% 0.003 248` (literal de Prata) para `97.5% 0.003 265` (hue de grafite, L elevado para preservar margem AA) | `packages/ui/src/tokens/colors.ts`, `apps/web/src/app/globals.css` | `contrast.spec.ts` — `danger` sobre `danger-foreground` ~4,57:1 ✅ | ✅ |
+
+| Req | Descrição | Código | Teste | Status |
+|-----|-----------|--------|-------|--------|
+| RNF-01 | `contrast.spec.ts` passa 100% (22/22), ambos os temas | — | `contrast.spec.ts` 22/22 ✅ | ✅ |
+| RNF-02 | Nenhuma regressão em `packages/ui`/`apps/web` | — | `packages/ui` 179/179; `apps/web` 351/351 (as 2 falhas pré-existentes de `warning` desaparecem) | ✅ |
+| RNF-03 | `danger`/`danger-foreground` mantém margem folgada acima do piso AA após RF-05 | `packages/ui/src/tokens/colors.ts` | `contrast.spec.ts` — ~4,57:1 (era ~4,53:1) ✅ | ✅ |
+
+---
+
+## SPEC-20260731-003 — Redirecionamento Global para /login em 401 de Chamadas Client-Side (Sessão Inválida) (approved)
+
+> Bug reportado por Douglas em 2026-07-31: navegando pelas rotas protegidas com sessão inválida,
+> as páginas carregavam normalmente exibindo `Alert` de erro genérico em vez de redirecionar para
+> `/login`. Causa raiz: o matcher de `middleware.ts` exclui `api/backend`, então chamadas
+> client-side de dados (`apiClient`) nunca passavam pelo guard S1 do middleware — um 401 de
+> sessão expirada caía direto no `throw` genérico de `ApiError`.
+
+| Req | Descrição | Código | Teste | Status |
+|-----|-----------|--------|-------|--------|
+| RF-01 | Interceptação global: `401` de qualquer chamada `apiClient` redireciona para `/login?redirect=<pathname atual>` | `apps/web/src/lib/http/api-client.ts` | `apps/web/src/lib/http/api-client.spec.ts` — describe RF-01/RF-02/RF-03 | ✅ |
+| RF-02 | Endpoints `/auth/*` excluídos do redirect (401 de `/auth/login` é fluxo normal de credenciais inválidas, STORY-02) | `apps/web/src/lib/http/api-client.ts` (`isAuthEndpoint`) | `apps/web/src/lib/http/api-client.spec.ts` | ✅ |
+| RF-03 | Sem loop de redirect quando já em `/login` | `apps/web/src/lib/http/api-client.ts` (`getLoginRedirectUrl`) | `apps/web/src/lib/http/api-client.spec.ts` | ✅ |
+| RF-04 | `ApiError` continua sendo lançado após o redirect (efeito colateral, mesmo padrão de RF-13/SPEC-20260719-001) | `apps/web/src/lib/http/api-client.ts` | `apps/web/src/lib/http/api-client.spec.ts` | ✅ |
+
+---
+
+## SPEC-20260731-006 — Correção: Escalação de Privilégio via user_metadata do Supabase (approved)
+
+> Auditoria de segurança de 2026-07-31 identificou que `RolesGuard` decidia acesso admin lendo
+> `user_metadata.role` — campo gravável pelo próprio usuário autenticado via API pública do
+> Supabase (`PUT /auth/v1/user`), fora do backend NestJS. Corrigido migrando a fonte do claim
+> para `app_metadata`, gravável apenas via API administrativa (service role). Regra S12.
+> Substitui o mecanismo descrito no RF-09 de `SPEC-20260521-004` (ver changelog daquela spec).
+
+| Req | Descrição | Código | Teste | Status |
+|-----|-----------|--------|-------|--------|
+| RF-SEC-001 | `RolesGuard` lê `app_metadata.role` em vez de `user_metadata.role` | `apps/api/src/common/guards/roles.guard.ts` | `apps/api/src/common/guards/roles.guard.spec.ts` | ✅ |
+| RF-SEC-002 | `SupabaseAuthGuard` e `SoftDeletedUserGuard` populam `request.user.app_metadata` a partir de `data.user.app_metadata` | `apps/api/src/common/guards/supabase-auth.guard.ts`, `apps/api/src/common/guards/soft-deleted-user.guard.ts` | `apps/api/src/common/guards/supabase-auth.guard.spec.ts`, `apps/api/src/common/guards/soft-deleted-user.guard.spec.ts` | ✅ |
+| RF-SEC-003 | `JwtPayload` declara `app_metadata?: { role?: string }` (campo `user_metadata` removido — não tinha outro consumidor) | `apps/api/src/modules/auth/jwt.strategy.ts` | — (tipo, verificado por `tsc --noEmit`) | ✅ |
+| RF-SEC-004 | Migração manual de contas admin existentes para `app_metadata.role` antes do deploy | Supabase Dashboard (operacional, sem código) | — | ⏳ pendente (execução manual por Douglas antes do deploy) |
+| RF-SEC-005 | Teste de regressão cobre o critério de fechamento: `user_metadata.role="admin"` forjado, sem `app_metadata.role`, é negado | `apps/api/src/common/guards/roles.guard.spec.ts` | mesmo arquivo (caso "bloqueia usuário com user_metadata.role='admin' forjado, sem app_metadata.role (S12)") | ✅ |
+| RF-SEC-006 | Changelog em `SPEC-20260521-004` registrando a substituição do mecanismo do RF-09 | `specs/admin/SPEC-20260521-004.md` (rodapé) | — (documentação) | ✅ |
+
+---
+
+## SPEC-20260731-004 — Shell de Rotas Públicas: PublicHeader, Footer Consistente e Navegação de Retorno (approved)
+
+> Lacuna de UI nas rotas públicas: ausência de header de marca, footer inconsistente
+> (`LegalFooter` presente apenas em `/`, `/login`, `/register`) e sem navegação de retorno
+> em fluxos de recuperação de senha e documentos legais.
+> Spec em `specs/public-shell/SPEC-20260731-004-public-routes-shell.md`.
+> Testes unitários novos fora de escopo (ver `specs/TEST_DECISIONS.md`); suítes existentes das
+> páginas afetadas foram ajustadas para mockar `useRouter` (consumido por `BackLink`) e continuam
+> verdes com os componentes novos renderizados.
+
+| Req | Descrição | Código | Teste | Status |
+|-----|-----------|--------|-------|--------|
+| RF-01 | Criar `PublicHeader` em `apps/web/src/components/public-header.tsx` | `apps/web/src/components/public-header.tsx` | — | ✅ |
+| RF-02 | Prop `navLink?` opcional no `PublicHeader` | `apps/web/src/components/public-header.tsx` | — | ✅ |
+| RF-03 | `PublicHeader` em todas as rotas públicas (`/`, `/login`, `/register`, `/recover-password`, `/reset-password`, `/restore-account`, `/termos`, `/privacidade`, `/offline`) | `apps/web/src/app/page.tsx`, `apps/web/src/app/(auth)/login/page.tsx`, `apps/web/src/app/(auth)/register/page.tsx`, `apps/web/src/app/(auth)/recover-password/page.tsx`, `apps/web/src/app/(auth)/reset-password/page.tsx`, `apps/web/src/app/(auth)/restore-account/page.tsx`, `apps/web/src/app/termos/page.tsx`, `apps/web/src/app/privacidade/page.tsx`, `apps/web/src/app/offline/page.tsx` | — | ✅ |
+| RF-04 | Em `/login`: `navLink={{ label: "Criar conta", href: "/register" }}` | `apps/web/src/app/(auth)/login/page.tsx` | `apps/web/src/app/(auth)/login/page.spec.tsx` | ✅ |
+| RF-05 | Em `/register`: `navLink={{ label: "Entrar", href: "/login" }}` | `apps/web/src/app/(auth)/register/page.tsx` | `apps/web/src/app/(auth)/register/page.spec.tsx` | ✅ |
+| RF-06 | Demais rotas: `PublicHeader` sem `navLink` | `apps/web/src/app/page.tsx`, `apps/web/src/app/(auth)/recover-password/page.tsx`, `apps/web/src/app/(auth)/reset-password/page.tsx`, `apps/web/src/app/(auth)/restore-account/page.tsx`, `apps/web/src/app/termos/page.tsx`, `apps/web/src/app/privacidade/page.tsx`, `apps/web/src/app/offline/page.tsx` | — | ✅ |
+| RF-07 | `LegalFooter` presente em todas as rotas públicas (adicionado em `/recover-password`, `/reset-password`, `/restore-account`, `/termos`, `/privacidade`, `/offline`) | `apps/web/src/app/(auth)/recover-password/page.tsx`, `apps/web/src/app/(auth)/reset-password/page.tsx`, `apps/web/src/app/(auth)/restore-account/page.tsx`, `apps/web/src/app/termos/page.tsx`, `apps/web/src/app/privacidade/page.tsx`, `apps/web/src/app/offline/page.tsx` | — | ✅ |
+| RF-08 | Link "Voltar para o login" (→ `/login`) em `/recover-password`, abaixo do formulário | `apps/web/src/app/(auth)/recover-password/page.tsx` | `apps/web/src/app/(auth)/recover-password/page.spec.tsx` | ✅ |
+| RF-09 | Link "Voltar para o login" (→ `/login`) em `/reset-password`, abaixo do formulário | `apps/web/src/app/(auth)/reset-password/page.tsx` | `apps/web/src/app/(auth)/reset-password/page.spec.tsx` | ✅ |
+| RF-10 | Link "Voltar para o login" (→ `/login`) em `/restore-account`, terciário abaixo dos dois CTAs existentes | `apps/web/src/app/(auth)/restore-account/page.tsx` | `apps/web/src/app/(auth)/restore-account/page.spec.tsx` | ✅ |
+| RF-11 | Criar `BackLink` em `apps/web/src/components/back-link.tsx` (`router.back()` com fallback por prop) | `apps/web/src/components/back-link.tsx` | — | ✅ |
+| RF-12 | `BackLink` com `fallback="/"` e rótulo "Voltar" em `/termos` e `/privacidade`, acima do conteúdo | `apps/web/src/app/termos/page.tsx`, `apps/web/src/app/privacidade/page.tsx` | `apps/web/src/app/termos/page.spec.tsx`, `apps/web/src/app/privacidade/page.spec.tsx` | ✅ |
+| RF-13 | `ThemeToggle` (`@nave/ui`) no `PublicHeader`, alinhado à direita, com `useTheme`/`resolvedTheme` (`next-themes`) — mesmo padrão de `layout/header.tsx` | `apps/web/src/components/public-header.tsx` | — | ✅ |
+
+---
+
+## SPEC-20260731-005 — Design System: Remapeamento da Escala text-* do Tailwind para Tokens Formais (approved)
+
+> Fecha a pendência registrada no changelog de `SPEC-20260731-001` (RF-06): a escala de
+> utilitários `text-*` do Tailwind ainda resolvia para os defaults de fábrica em vez dos valores
+> formais de `packages/ui/src/tokens/typography.ts`. Sobrescreve `theme.extend.fontSize` em
+> `apps/web/tailwind.config.ts` importando `typographyScale` diretamente (sem duplicar valores),
+> mesmo princípio de substituição global silenciosa já usado para `fontFamily.sans`.
+>
+> **2026-07-31 (fecho de RF-04):** baseline de visual regression gerada — seed E2E rodado
+> contra o Supabase remoto de `apps/api/.env`, stack local subida, `playwright test
+> visual-regression --update-snapshots` (6/6, confirmado depois sem `--update-snapshots`).
+> Encontrados e corrigidos dois bugs pré-existentes de locator na suíte (nunca executada de
+> fato até agora): `getByLabel("Senha")` sem `exact: true` colidia com o botão "Mostrar/Ocultar
+> senha" do `PasswordInput` (substring match); `DashboardPage.sidebar` (`page.locator("nav")`)
+> deixou de ser único após o shell passar a renderizar `<nav>` extras no footer — corrigido para
+> `getByRole("dialog", { name: "Menu de navegação" })`. Outros bugs de locator encontrados na
+> rodada completa da suíte (`auth.spec.ts`, `expense-warnings.spec.ts`, `vehicle-context.spec.ts`)
+> são de `SPEC-20260716-003`, não desta spec — registrados em
+> `important/PENDENCIAS-E-PROCESSOS.md`.
+
+| Req | Descrição | Código | Teste | Status |
+|-----|-----------|--------|-------|--------|
+| RF-01 | Sobrescrever `theme.extend.fontSize` com os 7 passos da escala formal (`xs/sm/base/md/lg/xl/2xl`), sem `fontWeight` (D-03) | `apps/web/tailwind.config.ts` | `next build` sem erro; verificação visual manual (dashboard, expenses, maintenance, expenses/new, showcase) | ✅ |
+| RF-02 | Importar `typographyScale` de `packages/ui/src/tokens/typography.ts` diretamente no Tailwind config — sem duplicar valores | `apps/web/tailwind.config.ts` (`import { typographyScale } from "@nave/ui/tokens"`) | `npx tsc --noEmit` limpo; `next build` resolve o import via workspace `@nave/ui` sem necessidade do fallback `.json` cogitado na spec | ✅ |
+| RF-03 | Comentário de rastreabilidade `@spec SPEC-20260731-005 RF-01` no bloco `extend.fontSize` | `apps/web/tailwind.config.ts` | — (documentação) | ✅ |
+| RF-04 | QA visual completo (D-05): visual regression com baseline atualizada + auditoria manual + `C-DS-01` íntegro | `apps/web/e2e/tests/visual-regression.spec.ts`, `apps/web/e2e/global-setup.ts`, `apps/web/e2e/pages/login.page.ts`, `apps/web/e2e/pages/dashboard.page.ts` | `visual-regression.spec.ts` 6/6 ✅ (baseline em `visual-regression.spec.ts-snapshots/`); auditoria manual sem regressão visível | ✅ |
+| RF-05 | `contrast.spec.ts` continua 100% após o remapeamento | `packages/ui/src/tokens/typography.ts` (fonte), `apps/web/tailwind.config.ts` (consumo) | `apps/web/src/app/(app)/design-system/_lib/contrast.spec.ts` — 22/22 ✅ | ✅ |
+| RF-06 | Atualizar comentário de `typography.ts` removendo a nota de "não remapeado" | `packages/ui/src/tokens/typography.ts` | — (documentação) | ✅ |
+| RF-07 | Atualizar `matrices/rastreabilidade.md` com esta entrada | `matrices/rastreabilidade.md` | — (documentação) | ✅ |
+
+| Req | Descrição | Código | Teste | Status |
+|-----|-----------|--------|-------|--------|
+| RNF-01 | Build sem erro após o remapeamento | — | `next build` (`apps/web`) ✅ | ✅ |
+| RNF-02 | Nenhuma regressão em testes unitários existentes | — | `packages/ui` 179/179; `apps/web` 356/356 | ✅ |
+| RNF-03 | `C-DS-01` preservado no novo limiar de "texto grande" (`text-2xl` cruza para ≥24px, `text-lg` permanece "normal") | `packages/ui/src/tokens/colors.ts` | `contrast.spec.ts` 22/22 ✅ | ✅ |
+| RNF-04 | Sem `text-[Npx]` novo introduzido pela mudança | — | Nenhum arquivo tocado por esta spec introduz valor arbitrário (`R-DS-12`) | ✅ |
+
+---
+
+## SPEC-20260731-007 — Migração de Emoji para Ícones Lucide — KPI Catalog e Feed de Atividades (approved)
+
+> Substitui emojis crus usados como ícones funcionais em `kpi-catalog.ts` e `atividades/page.tsx`
+> (e nos render sites `DashboardKpiGrid.tsx` e `KpiPicker.tsx`) por componentes Lucide, alinhando
+> esses pontos ao padrão de iconografia documentado em `PROPOSTA-BRAND-DESIGN-SYSTEM-2026-07-30.md`
+> §8 e exemplificado na vitrine (`iconografia.tsx`). Mudança puramente visual; zero impacto em
+> lógica de negócio. Spec em `specs/design-system/SPEC-20260731-007-migracao-emoji-lucide-producao.md`.
+> Análise de impacto: IMPACTO-046.
+
+| Req | Descrição | Código | Teste | Status |
+|-----|-----------|--------|-------|--------|
+| RF-01 | `kpi-catalog.ts`: campo `icon: string` → `import type { LucideIcon }` de `lucide-react` | `apps/web/src/components/dashboard/kpi-catalog.ts` | Dispensado (ver `TEST_DECISIONS.md`) | ✅ |
+| RF-02 | 8 emojis do catálogo de KPI → componentes Lucide (Wallet, Fuel, HeartPulse, Wrench, Car, CalendarClock, Timer, TriangleAlert) | `apps/web/src/components/dashboard/kpi-catalog.ts` | Dispensado | ✅ |
+| RF-03 | `DashboardKpiGrid.tsx`: render de `meta.icon` de interpolação string → instância Lucide `size={16}` | `apps/web/src/components/dashboard/DashboardKpiGrid.tsx` | Dispensado — coberto por `dashboard/page.spec.tsx` (8 testes verdes) | ✅ |
+| RF-04 | `DashboardKpiGrid.tsx`: `<span aria-hidden>⚠</span>` hardcoded → `<TriangleAlert size={16} aria-hidden />` | `apps/web/src/components/dashboard/DashboardKpiGrid.tsx` | Dispensado | ✅ |
+| RF-05 | `KpiPicker.tsx`: render de `icon` → instância Lucide `size={16}` | `apps/web/src/components/dashboard/KpiPicker.tsx` | Dispensado | ✅ |
+| RF-06 | `atividades/page.tsx`: campo `icon` de `DOMAIN_LABELS` → `LucideIcon`; tipo de retorno de `domainInfo()` atualizado | `apps/web/src/app/(app)/atividades/page.tsx` | Dispensado — coberto por `atividades/page.spec.tsx` (3 testes verdes) | ✅ |
+| RF-07 | 9 domínios de `DOMAIN_LABELS` → componentes Lucide (Car, Receipt, Wrench, ShieldAlert, Repeat, Gauge, User, User, FileText) | `apps/web/src/app/(app)/atividades/page.tsx` | Dispensado | ✅ |
+| RF-08 | Render site da tabela de atividades: instanciar `LucideIcon` em vez de interpolar string emoji | `apps/web/src/app/(app)/atividades/page.tsx` | Dispensado | ✅ |
+| RF-09 | `<EmptyState icon="🛡️" />` → `<EmptyState icon={<ShieldAlert size={24} aria-hidden />} />` | `apps/web/src/app/(app)/atividades/page.tsx` | Dispensado | ✅ |
+| RF-10 | Comentários `@spec SPEC-20260731-007 RF-XX` nos arquivos alterados | `kpi-catalog.ts`, `DashboardKpiGrid.tsx`, `atividades/page.tsx` | — (documentação) | ✅ |
+
+---
+
 ## SPEC-20260721-002 — Dashboard v2: KPI Cards, VehicleHealthScore, Tokens de Superfície e Widget Próximos 7 Dias (approved)
 
 > **Promovida de `draft` para `approved` em 2026-07-22**: RF-01 a RF-09 implementados
@@ -2816,7 +3010,7 @@ RNF-04 (foco preso no drawer + retorno ao hamburger ao fechar) implementado em `
 
 ---
 
-## SPEC-20260730-001 — Score de Saúde de Veículo e Frota (draft)
+## SPEC-20260730-001 — Score de Saúde de Veículo e Frota (approved)
 
 > Formaliza o algoritmo de cálculo de score (R-HS-01 a R-HS-10) já implementado nas funções
 > SQL `calculate_vehicle_health`/`calculate_fleet_health`. Estende a exibição do score para a
@@ -2827,6 +3021,14 @@ RNF-04 (foco preso no drawer + retorno ao hamburger ao fechar) implementado em `
 >
 > **2026-07-30 (criação):** Spec em `draft`. Código das funções SQL e do backend já implementado;
 > exibição em `/vehicles` e `/vehicles/[id]` ainda pendente de implementação no frontend.
+>
+> **2026-07-31 (fecho RF-13 a RF-20):** exibição implementada em `/vehicles` (score + ordenação
+> ascendente + fallback silencioso) e `/vehicles/[id]` (seção "Saúde do Veículo" com flags
+> humanizadas e links de ação). Novo endpoint `GET /vehicles/:id/health`
+> (`VehiclesController.getHealth`/`VehiclesService.getHealth`) chama `calculate_vehicle_health`
+> para a página de detalhe — `/vehicles` continua usando `GET /dashboard/fleet-health` já
+> existente. Verificado manualmente no browser com usuário E2E (score 95, flag `km_alert` com
+> link funcional). Spec promovida para `approved`.
 
 ### Algoritmo de Cálculo — RPC Postgres (RF-01 a RF-08, R-HS-01 a R-HS-09)
 
@@ -2859,19 +3061,19 @@ RNF-04 (foco preso no drawer + retorno ao hamburger ao fechar) implementado em `
 
 | Req | Descrição | Código | Teste | Status |
 |-----|-----------|--------|-------|--------|
-| RF-13 | `VehicleHealthScore` exibido para cada veículo na listagem; score lido de `vehicles.health_score` (campo persistido pela última chamada à RPC) | — | — | ⏳ |
-| RF-14 | Listagem chama `calculate_fleet_health` via `GET /dashboard/fleet-health` ao carregar para atualizar os scores | `apps/api/src/modules/dashboard/dashboard.controller.ts`, `dashboard.service.ts` (`getFleetHealth`) | `apps/api/src/modules/dashboard/dashboard.service.spec.ts`, `dashboard.controller.spec.ts` | ⏳ frontend; backend ✅ |
-| RF-15 | Ordenação padrão por score ascendente (pior primeiro) | — | — | ⏳ |
-| RF-16 | Falha da RPC de health não bloqueia a listagem; fallback para `undefined`/estado neutro | — | — | ⏳ |
+| RF-13 | `VehicleHealthScore` exibido para cada veículo na listagem; score lido de `vehicles.health_score` (campo persistido pela última chamada à RPC) | `apps/web/src/app/(app)/vehicles/page.tsx` | `apps/web/src/app/(app)/vehicles/page.spec.tsx` | ✅ |
+| RF-14 | Listagem chama `calculate_fleet_health` via `GET /dashboard/fleet-health` ao carregar para atualizar os scores | `apps/web/src/app/(app)/vehicles/page.tsx`, `apps/api/src/modules/dashboard/dashboard.controller.ts`, `dashboard.service.ts` (`getFleetHealth`) | `apps/web/src/app/(app)/vehicles/page.spec.tsx`, `apps/api/src/modules/dashboard/dashboard.service.spec.ts`, `dashboard.controller.spec.ts` | ✅ |
+| RF-15 | Ordenação padrão por score ascendente (pior primeiro); score `undefined` vai para o fim | `apps/web/src/app/(app)/vehicles/page.tsx` (`byScoreAscending`) | `apps/web/src/app/(app)/vehicles/page.spec.tsx` | ✅ |
+| RF-16 | Falha da RPC de health não bloqueia a listagem; fallback para `undefined`/estado neutro | `apps/web/src/app/(app)/vehicles/page.tsx` (query de `fleet-health` sem `isError` tratado — falha só deixa `scores` vazio) | Verificado manualmente (query independente da de veículos, `retry: false`) | ✅ |
 
 ### Frontend — Detalhe do Veículo `/vehicles/[id]` (RF-17 a RF-20)
 
 | Req | Descrição | Código | Teste | Status |
 |-----|-----------|--------|-------|--------|
-| RF-17 | Seção "Saúde do Veículo" com `VehicleHealthScore` + lista de flags em linguagem humana | — | — | ⏳ |
-| RF-18 | Flags vazio → "Nenhum problema identificado" em vez de lista vazia | — | — | ⏳ |
-| RF-19 | Página chama `calculate_vehicle_health(vehicle_id)` ao carregar para atualizar score individual | — | — | ⏳ |
-| RF-20 | Links de ação por tipo de flag (manutenção vencida → `/maintenance`, docs → seção de docs, multas → `/fines`, km → `/maintenance/new`) | — | — | ⏳ |
+| RF-17 | Seção "Saúde do Veículo" com `VehicleHealthScore` + lista de flags em linguagem humana | `apps/web/src/app/(app)/vehicles/[id]/page.tsx`, `apps/web/src/components/dashboard/VehicleHealthCard.tsx` (`FLAG_LABEL` reexportado) | `apps/web/src/app/(app)/vehicles/[id]/page.spec.tsx` | ✅ |
+| RF-18 | Flags vazio → "Nenhum problema identificado" em vez de lista vazia | `apps/web/src/app/(app)/vehicles/[id]/page.tsx` | `apps/web/src/app/(app)/vehicles/[id]/page.spec.tsx` | ✅ |
+| RF-19 | Página chama `calculate_vehicle_health(vehicle_id)` ao carregar para atualizar score individual | `apps/api/src/modules/vehicles/vehicles.controller.ts` (`GET /vehicles/:id/health`), `vehicles.service.ts` (`getHealth`), `apps/web/src/app/(app)/vehicles/[id]/page.tsx` | `apps/api/src/modules/vehicles/vehicles.service.spec.ts`, `vehicles.controller.spec.ts`, `apps/web/.../page.spec.tsx` | ✅ |
+| RF-20 | Links de ação por tipo de flag (manutenção vencida → `/maintenance`, docs → seção de docs, multas → `/fines`, km → `/maintenance/new`) | `apps/web/src/app/(app)/vehicles/[id]/page.tsx` (`flagActionLink`) | Verificado manualmente (flag `km_alert` com link funcional) | ✅ |
 
 ---
 

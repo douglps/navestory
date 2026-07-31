@@ -53,6 +53,39 @@ function redirectToRestoreAccount(deletedAt?: string): void {
   }
 }
 
+/**
+ * @spec SPEC-20260731-003 RF-01, RF-02, RF-03
+ * S1 (RULES.md) exige sessão válida em toda rota privada, mas `/api/backend/*` fica fora do
+ * matcher do middleware SSR (apps/web/middleware.ts) — chamadas client-side não passam por ele.
+ * Sem esta interceptação, um 401 (sessão expirada após a navegação já ter ocorrido) virava um
+ * `Alert` de erro genérico em cada página, nunca um redirect para /login (achado reportado por
+ * Douglas em 2026-07-31).
+ *
+ * `/auth/*` é excluído (RF-02): `POST /auth/login` retorna 401 como fluxo normal de credenciais
+ * inválidas (STORY-02) — redirecionar aqui quebraria o próprio formulário de login.
+ */
+function isAuthEndpoint(path: string): boolean {
+  return path.startsWith("/auth/");
+}
+
+/** Exportado só para teste unitário puro — evita depender de `window.location` real em jsdom. */
+export function getLoginRedirectUrl(pathname: string): string | null {
+  if (pathname === "/login") {
+    return null;
+  }
+  return `/login?redirect=${encodeURIComponent(pathname)}`;
+}
+
+function redirectToLogin(): void {
+  if (typeof window === "undefined") {
+    return;
+  }
+  const url = getLoginRedirectUrl(window.location.pathname);
+  if (url) {
+    window.location.assign(url);
+  }
+}
+
 export class ApiUnavailableError extends Error {
   constructor(message = "Serviço indisponível. Tente novamente em instantes.") {
     super(message);
@@ -146,6 +179,9 @@ export async function apiClient<T>(path: string, options: RequestOptions = {}): 
     }
     if (response.status === 403 && body.code === ACCOUNT_PENDING_DELETION_CODE) {
       redirectToRestoreAccount(body.deleted_at);
+    }
+    if (response.status === 401 && !isAuthEndpoint(path)) {
+      redirectToLogin();
     }
     throw new ApiError(body.message ?? "Erro inesperado", response.status, body.code);
   }

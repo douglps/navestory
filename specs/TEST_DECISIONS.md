@@ -16,6 +16,16 @@
 
 ---
 
+### SPEC-20260731-007 — Migração de Emoji para Ícones Lucide — KPI Catalog e Feed de Atividades
+
+**Status:** dispensado
+**Decisão:** não requer testes
+**Justificativa:** Mudança puramente visual — troca de representação de ícone sem alteração de lógica de negócio, estrutura de componente ou contrato de API. O TypeScript valida em tempo de compilação (campo `icon: LucideIcon` rejeita string após a migração) e o build existente (`tsc --noEmit` + `next build`) funciona como teste de sanidade suficiente. Nenhum caso de teste existente verifica o emoji, portanto a migração não quebra nenhuma suite. Confirmado por Douglas.
+**Escopo (se aprovado):** N/A
+**Decidido em:** 2026-07-31
+
+---
+
 ### SPEC-20260730-002 — Melhorias de UX do Shell (Hold-to-Confirm Logout, Avatar Dropdown, Sidebar Persistente, Header Full-Width)
 
 **Status:** aprovado

@@ -24,12 +24,18 @@ export class DashboardPage {
     this.header = page.locator("header");
     // O sidebar exibe "Sair" (expandido) ou "⏻" (recolhido) — usamos regex para cobrir ambos
     this.logoutButton = page.getByRole("button", { name: /sair|⏻/i });
-    this.sidebar = page.locator("nav");
+    // Locator específico via role+aria-label: o footer do shell também renderiza <nav>
+    // próprios (links de rodapé), então `page.locator("nav")` deixou de ser único
+    this.sidebar = page.getByRole("dialog", { name: "Menu de navegação" });
   }
 
   /** Navega diretamente para /dashboard. */
   async goto(): Promise<void> {
-    await this.page.goto("/dashboard");
+    // domcontentloaded em vez do "load" padrão: o dev server do Next.js mantém conexões
+    // (HMR, streaming dos gráficos) que impedem o evento "load" de disparar dentro do
+    // timeout de 30s, mesmo com o conteúdo já renderizado — waitForLoad() abaixo já
+    // espera explicitamente pelos elementos concretos do shell autenticado.
+    await this.page.goto("/dashboard", { waitUntil: "domcontentloaded" });
   }
 
   /** Verifica que o dashboard está carregado (header + sidebar visíveis). */

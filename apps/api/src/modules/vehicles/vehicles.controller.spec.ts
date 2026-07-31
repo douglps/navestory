@@ -11,6 +11,7 @@ describe("VehiclesController", () => {
       findOne: jest.fn().mockResolvedValue({ id: "v1" }),
       update: jest.fn().mockResolvedValue({ id: "v1", color: "Azul" }),
       remove: jest.fn().mockResolvedValue(undefined),
+      getHealth: jest.fn().mockResolvedValue({ score: 100, flags: [] }),
       ...overrides,
     } as unknown as VehiclesService;
     return { controller: new VehiclesController(vehiclesService), vehiclesService };
@@ -54,6 +55,15 @@ describe("VehiclesController", () => {
       color: "Azul",
     });
     expect(result.data).toEqual({ id: "v1", color: "Azul" });
+  });
+
+  it("getHealth retorna score e flags do veículo (SPEC-20260730-001 RF-19)", async () => {
+    const { controller, vehiclesService } = createController();
+
+    const result = await controller.getHealth(req, "v1");
+
+    expect(vehiclesService.getHealth).toHaveBeenCalledWith("token-123", "v1");
+    expect(result.data).toEqual({ score: 100, flags: [] });
   });
 
   it("remove remove o veículo", async () => {

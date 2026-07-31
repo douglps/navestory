@@ -27,11 +27,13 @@ export class VehicleContextChipPage {
 
   /**
    * Localiza o chip de contexto no header.
-   * Usa regex para cobrir todos os estados (sem contexto e em foco).
+   * Usa regex ancorada no início do aria-label para cobrir todos os estados (sem
+   * contexto e em foco) sem colidir com o botão "Limpar veículo em foco" — este também
+   * contém a substring "em foco", causando strict mode violation com um regex não ancorado.
    */
   private getChip(): Locator {
     return this.page.getByRole("button", {
-      name: /selecionar veículo|em foco|seleção personalizada|filtro de frota/i,
+      name: /^(sem contexto|em foco|seleção personalizada|filtro de frota)/i,
     });
   }
 

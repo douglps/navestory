@@ -1,4 +1,4 @@
-import { BadRequestException, NotFoundException } from "@nestjs/common";
+import { BadRequestException, InternalServerErrorException, NotFoundException } from "@nestjs/common";
 import type { ConfigService } from "@nestjs/config";
 import type { AuditService } from "../../shared/audit/audit.service";
 import { VehiclesService } from "./vehicles.service";
@@ -211,5 +211,43 @@ describe("VehiclesService", () => {
     expect(auditLog).toHaveBeenCalledWith(
       expect.objectContaining({ action: "VEHICLE_DELETED", recordId: "v1" }),
     );
+  });
+
+  // @spec SPEC-20260730-001 RF-19
+  describe("getHealth", () => {
+    function mockRpcClient(result: { data: unknown; error: unknown }) {
+      const client = { rpc: jest.fn().mockResolvedValue(result) };
+      (createUserScopedClient as jest.Mock).mockReturnValue(client);
+      return client;
+    }
+
+    it("repassa score e flags retornados pela RPC calculate_vehicle_health (R-HS-01)", async () => {
+      const client = mockRpcClient({
+        data: { score: 62, flags: [{ type: "fines_pending", count: 1 }] },
+        error: null,
+      });
+      const service = createService();
+
+      const health = await service.getHealth("token", "v1");
+
+      expect(client.rpc).toHaveBeenCalledWith("calculate_vehicle_health", { p_vehicle_id: "v1" });
+      expect(health).toEqual({ score: 62, flags: [{ type: "fines_pending", count: 1 }] });
+    });
+
+    it("lança 404 quando a RPC recusa por veículo de outro usuário (RNF-02, S7)", async () => {
+      mockRpcClient({ data: null, error: { message: "unauthorized" } });
+      const service = createService();
+
+      await expect(service.getHealth("token", "v1")).rejects.toBeInstanceOf(NotFoundException);
+    });
+
+    it("lança 500 em erro inesperado da RPC", async () => {
+      mockRpcClient({ data: null, error: { message: "connection reset" } });
+      const service = createService();
+
+      await expect(service.getHealth("token", "v1")).rejects.toBeInstanceOf(
+        InternalServerErrorException,
+      );
+    });
   });
 });

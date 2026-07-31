@@ -82,7 +82,8 @@ test.describe("Troca de contexto de veículo", () => {
       expect(chipAriaLabel).toContain(VEHICLE_B_PLATE);
 
       // Persistência do contexto ao navegar para outra rota
-      await page.goto("/expenses");
+      // domcontentloaded em vez do "load" padrão — ver nota em dashboard.page.ts
+      await page.goto("/expenses", { waitUntil: "domcontentloaded" });
       await page.waitForURL("**/expenses");
 
       // Chip ainda deve exibir veículo B após navegação

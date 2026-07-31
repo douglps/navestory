@@ -21,7 +21,12 @@ export interface HealthFlag {
   [key: string]: unknown;
 }
 
-const FLAG_LABEL: Record<string, (flag: HealthFlag) => string> = {
+/**
+ * @spec SPEC-20260730-001 RF-17
+ * Reexportado para reuso em `/vehicles/[id]` — nenhuma tela inventa label ou tipo de flag
+ * adicional (RF-09), todas consomem este dicionário único.
+ */
+export const FLAG_LABEL: Record<string, (flag: HealthFlag) => string> = {
   maintenance_overdue: (flag) => `${String(flag.count)} manutenção(ões) vencida(s)`,
   ipva_expiring: (flag) => `IPVA vence em ${String(flag.days)} dias`,
   insurance_expiring: (flag) => `Seguro vence em ${String(flag.days)} dias`,

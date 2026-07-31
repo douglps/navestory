@@ -35,7 +35,7 @@ Esta pasta é a **fonte de verdade de requisitos** do projeto. Antes de implemen
 | Preferencias | [preferences/](preferences/) | SPEC-20260603-004, SPEC-20260612-003 |
 | Segurança | [security/](security/) | SPEC-20260521-001 |
 | Admin / LGPD | [admin/](admin/) | SPEC-20260521-004, SPEC-20260521-005 |
-| Design System | [design-system/](design-system/) | SPEC-20260525-001 (approved — §10 implementado; migração de consumidores ⏳), SPEC-20260721-001 (approved), SPEC-20260722-001 (approved — direção criativa v2), SPEC-20260722-002 (deprecated — superseded_by SPEC-20260729-001), SPEC-20260729-001 (approved — Prata como identidade de marca), SPEC-20260729-002 (approved — Prata Fase 2: paleta categórica + urgência + varredura), SPEC-20260729-003 (approved — Fecho de Formulários: Input/Textarea/Checkbox/Switch + migração de consumidores), SPEC-20260730-001 (approved — Showcase Prata: Badge/Skeleton/Container/Tooltip). Ver também `PROPOSTA-BRAND-DESIGN-SYSTEM-2026-07-30.md` e `PROPOSTA-BRAND-PLATAFORMA-2026-07-30.md` — direção "Azul-Índigo" + identidade de marca (definição, não spec formal ainda) |
+| Design System | [design-system/](design-system/) | SPEC-20260525-001 (approved — §10 implementado; migração de consumidores ⏳), SPEC-20260721-001 (approved), SPEC-20260722-001 (approved — direção criativa v2), SPEC-20260722-002 (deprecated — superseded_by SPEC-20260729-001), SPEC-20260729-001 (approved — Prata como identidade de marca), SPEC-20260729-002 (approved — Prata Fase 2: paleta categórica + urgência + varredura), SPEC-20260729-003 (approved — Fecho de Formulários: Input/Textarea/Checkbox/Switch + migração de consumidores), SPEC-20260730-001 (approved — Showcase Prata: Badge/Skeleton/Container/Tooltip), SPEC-20260731-007 (draft — Migração de Emoji para Ícones Lucide em KPI Catalog e Feed de Atividades). Ver também `PROPOSTA-BRAND-DESIGN-SYSTEM-2026-07-30.md` e `PROPOSTA-BRAND-PLATAFORMA-2026-07-30.md` — direção "Azul-Índigo" + identidade de marca (definição, não spec formal ainda) |
 | Contexto Global | [context/](context/) | SPEC-20260602-001, SPEC-20260603-001 |
 | Formulários | [forms/](forms/) | SPEC-20260619-001 |
 | Negócio / Estratégia | [business/](business/) | SPEC-20260620-001. Ver também `PLANO-MARKETING-PUBLICIDADE-FUTURO.md` — plano represado de Marketing/Publicidade, ativa só com gatilho real (soft launch, primeiro pagante, verba aprovada) |
@@ -44,6 +44,7 @@ Esta pasta é a **fonte de verdade de requisitos** do projeto. Antes de implemen
 | QA / Testes E2E | [qa/](qa/) | SPEC-20260716-003 (draft) |
 | DevOps / Infra | [devops/](devops/) | SPEC-20260716-001 (approved), SPEC-20260716-002 (draft) |
 | Layout Responsivo | [layout-responsivo/](layout-responsivo/) | SPEC-20260722-003 (approved), SPEC-20260730-002 (draft — melhorias UX shell) |
+| Shell de Rotas Públicas | [public-shell/](public-shell/) | SPEC-20260731-004 (draft — PublicHeader, footer consistente, navegação de retorno) |
 
 ---
 

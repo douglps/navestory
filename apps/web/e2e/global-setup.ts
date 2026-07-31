@@ -31,13 +31,16 @@ export default async function globalSetup(config: FullConfig): Promise<void> {
   const page = await context.newPage();
 
   try {
-    await page.goto(`${baseURL}/login`);
+    // domcontentloaded em vez do "load" padrão — ver nota em dashboard.page.ts
+    await page.goto(`${baseURL}/login`, { waitUntil: "domcontentloaded" });
 
     // Aguarda o formulário estar visível e pronto
     await page.getByLabel("E-mail").waitFor({ state: "visible" });
 
     await page.getByLabel("E-mail").fill(email);
-    await page.getByLabel("Senha").fill(password);
+    // exact: true evita colisão com o botão "Mostrar senha"/"Ocultar senha" do PasswordInput,
+    // cujo aria-label contém "senha" como substring
+    await page.getByLabel("Senha", { exact: true }).fill(password);
     await page.getByRole("button", { name: "Entrar" }).click();
 
     // Aguarda redirect para /dashboard após login bem-sucedido

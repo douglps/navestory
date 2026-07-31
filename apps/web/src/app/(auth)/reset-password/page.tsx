@@ -5,6 +5,9 @@ import { Alert, Button, Container } from "@nave/ui";
 import { useMutation } from "@tanstack/react-query";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState, type FormEvent, type ReactNode } from "react";
+import { BackLink } from "@/components/back-link";
+import { LegalFooter } from "@/components/legal-footer";
+import { PublicHeader } from "@/components/public-header";
 import { PasswordInput } from "@/components/password-input";
 import { apiClient } from "@/lib/http/api-client";
 
@@ -53,28 +56,37 @@ function ResetPasswordForm(): ReactNode {
   }
 
   return (
-    <Container size="sm">
-      <h1 className="text-xl font-semibold">Redefinir senha</h1>
-      <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-        <label htmlFor="password">Nova senha</label>
-        <PasswordInput
-          id="password"
-          aria-label="Nova senha"
-          value={password}
-          onChange={(event) => setPassword(event.target.value)}
-          required
-        />
+    <>
+      {/* @spec SPEC-20260731-004 RF-06 */}
+      <PublicHeader />
+      <Container size="sm">
+        <h1 className="text-xl font-semibold">Redefinir senha</h1>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+          <label htmlFor="password">Nova senha</label>
+          <PasswordInput
+            id="password"
+            aria-label="Nova senha"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            required
+          />
 
-        {fieldError && <Alert variant="error" description={fieldError} />}
+          {fieldError && <Alert variant="error" description={fieldError} />}
 
-        {mutation.isError && (
-          <Alert variant="error" description="Link de redefinição inválido ou expirado." />
-        )}
+          {mutation.isError && (
+            <Alert variant="error" description="Link de redefinição inválido ou expirado." />
+          )}
 
-        <Button type="submit" disabled={mutation.isPending}>
-          {mutation.isPending ? "Redefinindo..." : "Redefinir senha"}
-        </Button>
-      </form>
-    </Container>
+          <Button type="submit" disabled={mutation.isPending}>
+            {mutation.isPending ? "Redefinindo..." : "Redefinir senha"}
+          </Button>
+
+          {/* @spec SPEC-20260731-004 RF-09 */}
+          <BackLink fallback="/login" label="Voltar para o login" />
+        </form>
+
+        <LegalFooter />
+      </Container>
+    </>
   );
 }

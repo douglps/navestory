@@ -54,9 +54,12 @@ Threshold atual de cobertura: **88% unitário** (CI falha abaixo disso).
 ## Casos de Caminho Infeliz (auditoria 2026-07-20)
 
 Gaps de teste identificados numa varredura de branches de erro não exercitadas apesar do
-gate de 88% de cobertura. Exclui R-TZ-04 (código ainda não implementado — depende de
-`SPEC-20260715-002`, priorizada como próxima tarefa dedicada; ver `important/PENDENCIAS-E-PROCESSOS.md`
-e `matrices/rastreabilidade.md`).
+gate de 88% de cobertura.
+
+> **Nota 2026-07-31:** R-TZ-04 já está implementada (`ExpensesService.create()` e
+> `MaintenancesService.update()`, ambos com `@spec SPEC-20260715-002 R-TZ-04` anotado) — a exclusão
+> anterior desta tabela estava desatualizada. Verificado que não há caso de teste dedicado a
+> `future_date_warning`/422 na suíte atual — ver EC-12/EC-13 abaixo.
 
 | ID | O que valida | Regra | Prioridade | Localização | Status |
 |----|-------------|-------|------------|------------|--------|
@@ -72,6 +75,8 @@ e `matrices/rastreabilidade.md`).
 | RF-E2E-09 | Cookie de sessão inválido em rota privada redireciona para `/login` | S1, CT-006 | Média | `apps/web/e2e/tests/auth.spec.ts` |
 | RF-E2E-10 | Usuário sem veículos: dialog de contexto exibe estado vazio | R-CTX-07 | Média | `apps/web/e2e/tests/vehicle-context.spec.ts` |
 | RF-E2E-11 | Busca sem resultado no dialog de contexto não trava a UI | R-CTX-07 | Baixa | `apps/web/e2e/tests/vehicle-context.spec.ts` |
+| EC-12 | Despesa criada com `occurred_at` futuro retorna `future_date_warning: true` sem bloquear a operação | R-TZ-04 (RF-BK-09) | Média | `expenses.service.spec.ts` | Pendente |
+| EC-13 | `completion_date` de manutenção excedendo "agora" em mais de 24h lança 422 | R-TZ-04 (RF-BK-10) | Média | `maintenances.service.spec.ts` | Pendente |
 
 ---
 

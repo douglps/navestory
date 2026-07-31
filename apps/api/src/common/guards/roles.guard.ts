@@ -6,7 +6,10 @@ import type { JwtPayload } from "../../modules/auth/jwt.strategy";
 
 /**
  * @spec SPEC-20260521-004 RF-09, RNF-01
+ * @spec SPEC-20260731-006 RF-SEC-001 — valida S12
  * Fail-safe: qualquer dúvida (role ausente/não reconhecida) resulta em 403, nunca em acesso.
+ * Lê `app_metadata.role`, nunca `user_metadata.role` — este último é gravável pelo próprio
+ * usuário via API pública do Supabase, o que permitiria auto-promoção a admin.
  */
 @Injectable()
 export class RolesGuard implements CanActivate {
@@ -22,7 +25,7 @@ export class RolesGuard implements CanActivate {
     }
 
     const request = context.switchToHttp().getRequest<Request & { user?: JwtPayload }>();
-    const role = request.user?.user_metadata?.role;
+    const role = request.user?.app_metadata?.role;
     return typeof role === "string" && requiredRoles.includes(role);
   }
 }

@@ -94,7 +94,7 @@ describe("Sidebar", () => {
       act(() => useUIStore.setState({ isMobileNavOpen: true }));
       const { container } = renderSidebar();
 
-      const backdrop = container.querySelector('[aria-hidden="true"].fixed.inset-0') as HTMLElement;
+      const backdrop = container.querySelector('[aria-hidden="true"].fixed.inset-x-0.top-14.bottom-0') as HTMLElement;
       expect(backdrop).toBeInTheDocument();
 
       await user.click(backdrop);

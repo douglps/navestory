@@ -43,7 +43,7 @@ export function Header(): ReactNode {
   }, [isMobileNavOpen]);
 
   return (
-    <header className="sticky top-0 z-20 flex h-14 items-center gap-3 border-b border-border bg-card px-4 text-card-foreground">
+    <header className="sticky top-0 z-20 flex h-14 w-full items-center gap-3 border-b border-border bg-card px-4 text-card-foreground">
       <button
         ref={hamburgerRef}
         type="button"

@@ -1,10 +1,16 @@
 # Matriz de Permissões — Nave SaaS
 
-> Última atualização: 2026-07-31 (rev. 9)
-> Responsável: doc-keeper — rev. 9: Dashboard expandido com 6 endpoints de T5.1/SPEC-20260721-002
-> (fleet-health, alerts, vehicle-cards, vehicle-history, kpi-catalog, fleet-charts); POST
-> /users/me/restore adicionado (SPEC-20260719-002); seção Preferências criada (SPEC-20260603-004 /
-> SPEC-20260612-003). Rev. 8 anterior: guards `/admin` reconciliados, rev-password adicionadas.
+> Última atualização: 2026-07-31 (rev. 10)
+> Responsável: doc-keeper — rev. 10: corrigida dessincronia encontrada em
+> `docs/discussions/2026-07-31-analise-comparativa-nave-saas-legacy.md` — seção "Grupos de
+> Veículos" descrevia Server Actions Next.js, mas a implementação real é REST via
+> `VehicleGroupsController` (`apps/api/src/modules/vehicle-groups`); role `admin` corrigido de
+> `user_metadata.role` para `app_metadata.role` (já corrigido no código pelo S12/SPEC-20260731-006,
+> matriz não tinha acompanhado). Rev. 9 anterior: Dashboard expandido com 6 endpoints de
+> T5.1/SPEC-20260721-002 (fleet-health, alerts, vehicle-cards, vehicle-history, kpi-catalog,
+> fleet-charts); POST /users/me/restore adicionado (SPEC-20260719-002); seção Preferências criada
+> (SPEC-20260603-004 / SPEC-20260612-003). Rev. 8 anterior: guards `/admin` reconciliados,
+> rev-password adicionadas.
 
 ---
 
@@ -14,7 +20,7 @@
 |------|-----------|---------------------|
 | `anonymous` | Não autenticado | Ausência de token JWT |
 | `user` | Usuário autenticado com conta ativa | JWT válido do Supabase; `profiles.deleted_at IS NULL` |
-| `admin` | Administrador do sistema | JWT com `user_metadata.role = 'admin'` (definido via Supabase Dashboard) |
+| `admin` | Administrador do sistema | JWT com `app_metadata.role = 'admin'` (definido via API administrativa do Supabase com `SERVICE_ROLE_KEY`; nunca via `user_metadata`, gravável pelo próprio usuário — ver S12) |
 | `workspace_owner` | Dono de um workspace (plano Frota) | Cria workspace ao assinar plano Frota — **Fase 4** |
 | `workspace_member` | Convidado de um workspace | Aceita convite do owner — **Fase 4** |
 
@@ -61,16 +67,20 @@
 
 ---
 
-## Grupos de Veículos (Server Actions)
+## Grupos de Veículos (`/vehicle-groups`) — SPEC-20260602-003
 
-> Grupos de veículos são gerenciados exclusivamente via Server Actions Next.js (não há endpoints REST dedicados). As operações são autenticadas via Supabase session no lado do servidor.
+> Grupos de veículos são gerenciados via REST no NestJS (`VehicleGroupsController`,
+> `apps/api/src/modules/vehicle-groups/vehicle-groups.controller.ts`) — **não** são Server Actions
+> Next.js. Todos os endpoints exigem `SupabaseAuthGuard`; o token é extraído do header
+> `Authorization: Bearer` ou do cookie `nave_access_token`.
 
-| Server Action | anonymous | user | admin | Isolamento | Observação |
-|---------------|-----------|------|-------|------------|-----------|
-| `createGroup` | ❌ | ✅ | ✅ | `user_id` = userId da sessão JWT | Cria grupo com `name` e `color`; revalida `/dashboard` |
-| `updateGroup` | ❌ | 🔒 | ✅ | Filtra por `id + user_id` | Atualiza `name`/`color` do próprio grupo |
-| `deleteGroup` | ❌ | 🔒 | ✅ | Filtra por `id + user_id` | Hard delete; cascade FK remove `vehicle_group_members` |
-| `setGroupMembers` | ❌ | 🔒 | ✅ | Filtra veículos por `user_id` + `deleted_at IS NULL` | Replace-all; descarta IDs inválidos silenciosamente; máx. 200 membros (R-GRP-01) |
+| Endpoint | Método | anonymous | user | admin | Isolamento | Observação |
+|----------|--------|-----------|------|-------|------------|-----------|
+| `/vehicle-groups` | POST | ❌ | ✅ | ✅ | `user_id` = userId do JWT | Cria grupo com `name` e `color` |
+| `/vehicle-groups` | GET | ❌ | 🔒 | ✅ | `user_id = auth.uid()` | Lista grupos do usuário com contagem de membros |
+| `/vehicle-groups/:id` | PATCH | ❌ | 🔒 | ✅ | Filtra por `id + user_id` | Atualiza `name`/`color` do próprio grupo; 404 se não pertence |
+| `/vehicle-groups/:id` | DELETE | ❌ | 🔒 | ✅ | Filtra por `id + user_id` | Hard delete (204); cascade FK remove `vehicle_group_members`; 404 se não pertence |
+| `/vehicle-groups/:id/members` | PUT | ❌ | 🔒 | ✅ | Filtra veículos por `user_id` + `deleted_at IS NULL` | Replace-all; descarta IDs inválidos silenciosamente; máx. 200 membros (R-GRP-01); 404 se grupo não pertence |
 
 ### Supabase RLS — Tabelas de Grupos
 
@@ -215,7 +225,7 @@
 | `/admin/users/:id` | DELETE | ❌ | ❌ | ✅ | `SupabaseAuthGuard` + `RolesGuard` + `@Roles('admin')` | Exclusão de qualquer conta (LGPD); registro em `audit_logs` |
 | `/admin/audit-logs` | GET | ❌ | ❌ | ✅ | `SupabaseAuthGuard` + `RolesGuard` + `@Roles('admin')` | Filtros: `user_id`, `period` |
 
-> **Composição de guards:** Não existe uma classe `AdminGuard` única. A proteção de endpoints admin usa a composição `@UseGuards(SupabaseAuthGuard, RolesGuard)` com o decorator `@Roles('admin')` — dois guards distintos, aplicados em sequência. `SupabaseAuthGuard` autentica o JWT; `RolesGuard` verifica `user_metadata.role === 'admin'` no payload.
+> **Composição de guards:** Não existe uma classe `AdminGuard` única. A proteção de endpoints admin usa a composição `@UseGuards(SupabaseAuthGuard, RolesGuard)` com o decorator `@Roles('admin')` — dois guards distintos, aplicados em sequência. `SupabaseAuthGuard` autentica o JWT; `RolesGuard` verifica `app_metadata.role === 'admin'` no payload (corrigido de `user_metadata` — ver S12/SPEC-20260731-006, achado real de escalação de privilégio de 2026-07-31).
 > **Segurança:** `AdminSupabaseService` usa `SERVICE_ROLE_KEY` (bypass de RLS) — nunca compartilhado com `SupabaseService` (anon key). Isolamento garantido por módulo NestJS. Toda operação admin é registrada em `audit_logs` com o `user_id` do administrador executor.
 
 ---

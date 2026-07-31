@@ -4,6 +4,9 @@ import { Alert, Button, Container } from "@nave/ui";
 import { useMutation } from "@tanstack/react-query";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, type ReactNode } from "react";
+import { BackLink } from "@/components/back-link";
+import { LegalFooter } from "@/components/legal-footer";
+import { PublicHeader } from "@/components/public-header";
 import { apiClient, ApiError } from "@/lib/http/api-client";
 import { logout } from "@/lib/auth/logout";
 import { useUIStore } from "@/lib/stores/ui-store";
@@ -58,46 +61,55 @@ function RestoreAccountContent(): ReactNode {
       : "Não foi possível restaurar sua conta agora. Tente novamente ou entre em contato com o suporte.";
 
   return (
-    <Container size="md">
-      <h1 className="text-xl font-semibold">Sua conta está marcada para exclusão</h1>
+    <>
+      {/* @spec SPEC-20260731-004 RF-06 */}
+      <PublicHeader />
+      <Container size="md">
+        <h1 className="text-xl font-semibold">Sua conta está marcada para exclusão</h1>
 
-      <Alert
-        variant="warning"
-        title={projectedDeletionDate ? `Exclusão definitiva em ${projectedDeletionDate}` : undefined}
-        description={
-          "Você solicitou a exclusão da sua conta. Até essa data, você ainda pode cancelar " +
-          "e continuar usando o Nave normalmente."
-        }
-      />
+        <Alert
+          variant="warning"
+          title={projectedDeletionDate ? `Exclusão definitiva em ${projectedDeletionDate}` : undefined}
+          description={
+            "Você solicitou a exclusão da sua conta. Até essa data, você ainda pode cancelar " +
+            "e continuar usando o Nave normalmente."
+          }
+        />
 
-      <div className="flex flex-col gap-1 rounded-md border border-border bg-card p-4 text-sm text-muted-foreground">
-        <p className="font-medium text-foreground">Ao cancelar a exclusão, você recupera:</p>
-        <ul className="list-inside list-disc">
-          <li>Todos os seus veículos e grupos</li>
-          <li>Histórico de despesas, manutenções e multas</li>
-          <li>Nome e preferências da conta — nada foi anonimizado ainda</li>
-        </ul>
-      </div>
+        <div className="flex flex-col gap-1 rounded-md border border-border bg-card p-4 text-sm text-muted-foreground">
+          <p className="font-medium text-foreground">Ao cancelar a exclusão, você recupera:</p>
+          <ul className="list-inside list-disc">
+            <li>Todos os seus veículos e grupos</li>
+            <li>Histórico de despesas, manutenções e multas</li>
+            <li>Nome e preferências da conta — nada foi anonimizado ainda</li>
+          </ul>
+        </div>
 
-      {restoreMutation.isError && <Alert variant="error" description={errorMessage} />}
+        {restoreMutation.isError && <Alert variant="error" description={errorMessage} />}
 
-      <Button
-        type="button"
-        onClick={() => restoreMutation.mutate()}
-        disabled={restoreMutation.isPending}
-        aria-busy={restoreMutation.isPending}
-      >
-        {restoreMutation.isPending ? "Restaurando..." : "Cancelar exclusão e restaurar minha conta"}
-      </Button>
+        <Button
+          type="button"
+          onClick={() => restoreMutation.mutate()}
+          disabled={restoreMutation.isPending}
+          aria-busy={restoreMutation.isPending}
+        >
+          {restoreMutation.isPending ? "Restaurando..." : "Cancelar exclusão e restaurar minha conta"}
+        </Button>
 
-      <Button
-        type="button"
-        variant="outline"
-        onClick={() => void logout()}
-        disabled={restoreMutation.isPending}
-      >
-        Continuar com a exclusão
-      </Button>
-    </Container>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => void logout()}
+          disabled={restoreMutation.isPending}
+        >
+          Continuar com a exclusão
+        </Button>
+
+        {/* @spec SPEC-20260731-004 RF-10 */}
+        <BackLink fallback="/login" label="Voltar para o login" className="text-sm text-muted-foreground underline" />
+
+        <LegalFooter />
+      </Container>
+    </>
   );
 }

@@ -3,7 +3,7 @@
 **Propósito:** documento de apoio para recriar no Figma o design system já implementado em código.
 **Fonte de verdade:** `packages/ui/src/` — o Figma deve espelhar o código, não o contrário.
 **Spec de referência:** `specs/design-system/SPEC-20260525-001.md` (aprovada v0.3, 2026-07-19)
-**Última atualização:** 2026-07-30 — `Badge`/`Skeleton`/`Container`/`Tooltip` novos (`SPEC-20260730-001`), padronizam o design system conforme o brand showcase Prata (Rodada 6, `PLANO-MIGRACAO-CONSUMIDORES.md`)
+**Última atualização:** 2026-07-31 — paleta de marca migrada de Prata para Azul-Índigo (`SPEC-20260731-001`, `ADR-011`); sistema tipográfico formal adicionado (§1.4)
 
 ---
 
@@ -15,49 +15,49 @@ Arquivo-fonte: `packages/ui/src/tokens/colors.ts`
 
 Os valores são canais OKLCH no formato `"L C H"` (sem a função `oklch()` em volta). No CSS gerado, o token vira `oklch(var(--token) / <alpha>)`, permitindo modificador de opacidade Tailwind (`bg-primary/50`). O nome da variável CSS é derivado do nome camelCase: `primaryForeground` → `--primary-foreground`.
 
-#### Neutros e Base
+#### Neutros e Base (grafite dedicado — Azul-Índigo, SPEC-20260731-001)
 
 | Nome do token | Variável CSS | Valor OKLCH | Uso |
 |---|---|---|---|
-| `background` | `--background` | `oklch(97.2% 0.003 248)` | Fundo da página — direção Prata desde SPEC-20260729-001 RF-01 (canvas frio azul-prata-cinza, substitui o canvas quente de SPEC-20260722-002, agora deprecated) |
-| `foreground` | `--foreground` | `oklch(20.4% 0.011 261)` | Texto sobre background |
-| `card` | `--card` | `oklch(92.6% 0.007 248)` | Fundo de cartões/panels |
-| `cardForeground` | `--card-foreground` | `oklch(20.4% 0.011 261)` | Texto dentro de cartões |
-| `border` | `--border` | `oklch(88.5% 0.007 248)` | Bordas, divisores, linhas de tabela |
-| `muted` | `--muted` | `oklch(92.6% 0.007 248)` | Fundo de elementos secundários (hover, zebra) |
-| `mutedForeground` | `--muted-foreground` | `oklch(50.4% 0.021 246)` | Texto auxiliar, placeholders, labels secundários — L=50.4% desde SPEC-20260729-001 (era 42%; o teto de L≤42% de SPEC-20260721-001 RF-02 era calibração do par acromático anterior, não o requisito em si — C-DS-01 exige razão ≥4.5:1, atingida ~5.2:1 light / ~6.8:1 dark) |
+| `background` | `--background` | `oklch(97.0% 0.003 265)` (`#F4F5F7`) | Fundo da página — grafite dedicado, independente da família de `primary` (substitui o acorde azul-prata-cinza de Prata, agora deprecated) |
+| `foreground` | `--foreground` | `oklch(19.0% 0.014 285)` | Texto sobre background |
+| `card` | `--card` | `oklch(94.0% 0.004 271)` | Fundo de cartões/panels |
+| `cardForeground` | `--card-foreground` | `oklch(19.0% 0.014 285)` | Texto dentro de cartões |
+| `border` | `--border` | `oklch(88% 0.005 270)` | Bordas, divisores, linhas de tabela |
+| `muted` | `--muted` | `oklch(90% 0.005 270)` | Fundo de elementos secundários (hover, zebra) |
+| `mutedForeground` | `--muted-foreground` | `oklch(50.4% 0.021 246)` | Texto auxiliar, placeholders, labels secundários — inalterado desde Prata (mesma família acromática, atinge razão ≥4.5:1 sobre o novo `background`, C-DS-01) |
 
-#### Marca (Paleta Prata — SPEC-20260729-001, ADR-009)
+#### Marca (Azul-Índigo — SPEC-20260731-001, ADR-011)
 
 | Nome do token | Variável CSS | Valor OKLCH | Uso |
 |---|---|---|---|
-| `primary` | `--primary` | `oklch(35.3% 0.093 259)` | Azul tecnológico (acorde azul-prata-cinza, Heller) — CTAs, links, anel de foco, borda ativa de tabs |
-| `primaryForeground` | `--primary-foreground` | `oklch(97.2% 0.003 248)` | Texto sobre primary (= `background`, par validado em `contrastExpectations` da direção Prata) |
-| `secondary` | `--secondary` | `oklch(75% 0.03 255)` | Tom estrutural derivado (mesma família de matiz de `primary`, chroma reduzida) — não é parte literal da paleta Prata; sem consumidor em `packages/ui` hoje |
-| `secondaryForeground` | `--secondary-foreground` | `oklch(20.4% 0.011 261)` | Texto sobre secondary |
-| `accent` | `--accent` | `oklch(55.6% 0.15 140)` | Verde — inalterado, sem consumidor em `packages/ui`; fora de escopo da adoção de Prata (R-DS-03 já reserva destaque decorativo só a `gold`) |
+| `primary` | `--primary` | `oklch(44% 0.19 250)` | Azul-índigo (H≈250) — CTAs, links, anel de foco, borda ativa de tabs. Substitui o azul-prata de Prata (H≈259) |
+| `primaryForeground` | `--primary-foreground` | `oklch(97.0% 0.003 265)` | Texto sobre primary (= `background`) |
+| `secondary` | `--secondary` | `oklch(48% 0.10 82)` | Ouro estrutural ("bronze"/"ouro velho", referência Barroco Mineiro) — segunda cor de marca, distinta de `gold`; sem consumidor em `packages/ui` hoje |
+| `secondaryForeground` | `--secondary-foreground` | `oklch(97.0% 0.003 265)` | Texto sobre secondary (= `background`) |
+| `accent` | `--accent` | `oklch(55.6% 0.15 140)` | Verde — inalterado, sem consumidor em `packages/ui`; fora de escopo (R-DS-03 já reserva destaque decorativo só a `gold`) |
 | `accentForeground` | `--accent-foreground` | `oklch(15% 0 0)` | Texto escuro sobre accent |
 
-#### Marca — Dourado (direção Prata, SPEC-20260729-001)
+#### Marca — Dourado (inalterado desde Prata, SPEC-20260729-001)
 
 | Nome do token | Variável CSS | Valor OKLCH | Uso |
 |---|---|---|---|
 | `gold` | `--gold` | `oklch(67.4% 0.122 86)` | Acento de destaque, badge de status premium — nunca texto pequeno sobre fundo claro, nunca fundo de CTA principal, nunca ao lado de elemento prateado de mesmo peso (regra heráldica) |
 | `goldForeground` | `--gold-foreground` | `oklch(20.4% 0.011 261)` | Texto sobre fundo `--gold` — fixo, não inverte em dark mode (ouro permanece claro/quente nos dois temas; ver bug corrigido no showcase Prata antes desta adoção) |
 
-#### Dark Mode (SPEC-20260721-001 RF-01, RF-02, RF-03; SPEC-20260729-001 RF-01)
+#### Dark Mode (SPEC-20260721-001 RF-01, RF-02, RF-03; SPEC-20260731-001 RF-02, RF-03)
 
-Aplicado via classe `.dark` no `<html>` (`next-themes`, `defaultTheme="system"` + `enableSystem`). `secondary` ganhou override porque a direção Prata define seu dark explicitamente; `accent`/`success`/`warning`/`danger`/`info` em dark seguem fora de escopo.
+Aplicado via classe `.dark` no `<html>` (`next-themes`, `defaultTheme="system"` + `enableSystem`). `background` passa a ser o grafite dedicado da proposta (`≈#13131A`), independente da família de `primary`. `primaryForeground` ganha override explícito (o `primary` de dark é claro, então o texto sobre ele precisa ser escuro — não herda mais o claro do light mode). `accent`/`success`/`warning`/`danger`/`info` (sólidos) em dark seguem fora de escopo.
 
 | Nome do token | Valor OKLCH (dark) |
 |---|---|
-| `background` | `oklch(20.4% 0.011 261)` |
-| `foreground` | `oklch(95.1% 0.005 258)` |
-| `card` / `cardForeground` | `oklch(27.5% 0.016 260)` / `oklch(95.1% 0.005 258)` |
-| `border` | `oklch(34% 0.016 260)` |
-| `muted` / `mutedForeground` | `oklch(32.5% 0.016 260)` / `oklch(75.9% 0.018 248)` |
-| `primary` | `oklch(68% 0.11 254)` — chroma reforçada por SPEC-20260729-002 (era `70.7% 0.038 250`, fiel ao hex literal do showcase mas discreto demais como cor de botão/link real) |
-| `secondary` / `secondaryForeground` | `oklch(30% 0.03 255)` / `oklch(95.1% 0.005 258)` |
+| `background` | `oklch(19.0% 0.014 285)` (`#13131A`) |
+| `foreground` | `oklch(97.0% 0.003 265)` |
+| `card` / `cardForeground` | `oklch(22.5% 0.014 285)` / `oklch(97.0% 0.003 265)` |
+| `border` | `oklch(30% 0.014 285)` |
+| `muted` / `mutedForeground` | `oklch(27% 0.014 285)` / `oklch(75.9% 0.018 248)` |
+| `primary` / `primaryForeground` | `oklch(66% 0.16 250)` / `oklch(19.0% 0.014 285)` |
+| `secondary` / `secondaryForeground` | `oklch(62% 0.09 82)` / `oklch(19.0% 0.014 285)` |
 | `gold` / `goldForeground` | `oklch(82.9% 0.12 91)` / `oklch(20.4% 0.011 261)` |
 
 #### Semânticos — Sólidos (ícone, borda, texto)
@@ -69,20 +69,20 @@ Aplicado via classe `.dark` no `<html>` (`next-themes`, `defaultTheme="system"` 
 | `warning` | `--warning` | `oklch(75% 0.16 85)` | Âmbar — borda, texto e ícone de aviso |
 | `warningForeground` | `--warning-foreground` | `oklch(15% 0 0)` | Texto escuro sobre warning |
 | `danger` | `--danger` | `oklch(56.3% 0.14 32)` | Terracota dessaturado (direção Prata, R-DS-06) — borda, texto e ícone de erro/destrutivo. Substitui o vermelho saturado anterior (era `57.7% 0.2 25`); sem override dark, mesmo tom nos dois temas (nunca direto sobre `background`/`card`, só sobre `dangerPastel`) |
-| `dangerForeground` | `--danger-foreground` | `oklch(97.2% 0.003 248)` | Texto sobre danger |
+| `dangerForeground` | `--danger-foreground` | `oklch(97.2% 0.003 248)` | Texto sobre danger — mantido no valor literal de Prata (não o novo `background` grafite): trocar derrubaria o contraste abaixo do piso AA (C-DS-01, confirmado por `contrast.spec.ts`) |
 | `info` | `--info` | `oklch(55.6% 0.15 240)` | Azul-info (matiz 240, leve em relação ao primary 260) |
 | `infoForeground` | `--info-foreground` | `oklch(98.5% 0 0)` | Texto sobre info |
 
 #### Semânticos — Pastel (fundo de alerta/toast)
 
-| Nome do token | Variável CSS | Valor OKLCH | Uso |
-|---|---|---|---|
-| `successPastel` | `--success-pastel` | `oklch(92% 0.12 150)` | Fundo do Alert/Toast de sucesso |
-| `warningPastel` | `--warning-pastel` | `oklch(92% 0.15 85)` | Fundo do Alert/Toast de aviso |
-| `dangerPastel` | `--danger-pastel` | `oklch(92% 0.06 32)` | Fundo do Alert/Toast de erro — matiz atualizado para o terracota (era `92% 0.08 25`) |
-| `infoPastel` | `--info-pastel` | `oklch(92% 0.08 240)` | Fundo do Alert/Toast de info |
+| Nome do token | Variável CSS | Valor OKLCH (light) | Valor OKLCH (dark) | Uso |
+|---|---|---|---|---|
+| `successPastel` | `--success-pastel` | `oklch(92% 0.12 150)` | `oklch(28% 0.09 150)` | Fundo do Alert/Toast de sucesso |
+| `warningPastel` | `--warning-pastel` | `oklch(92% 0.15 85)` | `oklch(30% 0.10 85)` | Fundo do Alert/Toast de aviso |
+| `dangerPastel` | `--danger-pastel` | `oklch(92% 0.06 32)` | `oklch(28% 0.05 32)` | Fundo do Alert/Toast de erro — matiz atualizado para o terracota (era `92% 0.08 25`) |
+| `infoPastel` | `--info-pastel` | `oklch(92% 0.08 240)` | `oklch(28% 0.06 240)` | Fundo do Alert/Toast de info |
 
-> Nota sobre os pastéis: todos têm L=92%, o que garante que são fundos claros com contraste legível. O C varia ligeiramente para compensar a percepção de saturação diferente por matiz.
+> Nota sobre os pastéis: os valores de light têm L=92% (fundos claros com contraste legível); o C varia ligeiramente para compensar a percepção de saturação diferente por matiz. **C-DS-02 (`SPEC-20260731-001` RF-03):** os quatro ganharam override próprio de dark mode — antes caíam silenciosamente no valor claro do light mode, tornando `text-foreground` (claro em dark) sobre `bg-*-pastel` quase ilegível em `Alert`/`Badge`/`Toast`.
 
 #### Paleta Categórica (SPEC-20260729-002, ADR-010) — substitui `--chart-1..5`
 
@@ -142,6 +142,28 @@ Arquivo-fonte: `packages/ui/src/tokens/radius.ts`
 | `md` | `0.375rem` (6 px) | `rounded-md` | Padrão da maioria dos componentes (Button, Alert, inputs) |
 | `lg` | `0.5rem` (8 px) | `rounded-lg` | Card, Dialog, Combobox popover, KpiCard |
 | `full` | `9999px` | `rounded-full` | Tags/badges redondos, presets do DateRangePicker |
+
+---
+
+### 1.4 Tipografia (SPEC-20260731-001 RF-06)
+
+Arquivo-fonte: `packages/ui/src/tokens/typography.ts`. Formal pela primeira vez — antes o produto rodava no default do Tailwind/fonte do SO, por omissão.
+
+**Família:** Inter (única, variável), aplicada via `next/font/google` em `apps/web/src/app/layout.tsx` (`--font-inter`, conectada a `fontFamily.sans` em `tailwind.config.ts`).
+
+| Nome do token | `font-size` | `line-height` | Peso | Uso |
+|---|---|---|---|---|
+| `xs` | `11px` | `1.5` | 400 | Labels de campo, metadados |
+| `sm` | `13px` | `1.45` | 400/500 | Corpo de tabela, badges |
+| `base` | `15px` | `1.5` | 400 | Corpo padrão, parágrafos |
+| `md` | `18px` | `1.4` | 500 | Subtítulos de seção |
+| `lg` | `22px` | `1.3` | 600 | Título de página |
+| `xl` | `26px` | `1.25` | 700 | KPI principal |
+| `2xl` | `32px` | `1.2` | 700 | Display de destaque |
+
+> A escala de utilitários `text-*` do Tailwind já em uso no app não foi remapeada para estes valores nesta rodada — os tokens são referência formal para componentes novos; remapear a escala existente exige QA visual completa do produto (fora de escopo de `SPEC-20260731-001`).
+
+`tabular-nums` obrigatório em toda célula de tabela, KPI, contador, valor monetário e leitura de odômetro — já implementado em `KpiCard` (`kpi-card.tsx`) e `TableCell` (`table.tsx`).
 
 ---
 

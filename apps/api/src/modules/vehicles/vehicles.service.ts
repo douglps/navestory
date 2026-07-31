@@ -1,4 +1,4 @@
-import { Inject, Injectable, NotFoundException } from "@nestjs/common";
+import { Inject, Injectable, InternalServerErrorException, NotFoundException } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { AuditService } from "../../shared/audit/audit.service";
@@ -17,6 +17,11 @@ export interface Vehicle {
   year: number | null;
   vehicle_type: string;
   [key: string]: unknown;
+}
+
+export interface VehicleHealth {
+  score: number;
+  flags: Array<{ type: string; [key: string]: unknown }>;
 }
 
 const VEHICLE_COLUMNS = `id, user_id, plate, make, model, year, model_year, nickname, color,
@@ -194,5 +199,26 @@ export class VehiclesService {
       tableName: "vehicles",
       recordId: vehicleId,
     });
+  }
+
+  /**
+   * @spec SPEC-20260730-001 RF-19
+   * Chama a RPC `calculate_vehicle_health`, que já valida internamente `auth.uid() =
+   * vehicles.user_id` (R-HS-01, RNF-02) e persiste `health_score` como efeito colateral —
+   * o backend nunca recalcula pesos, só repassa o resultado.
+   */
+  async getHealth(accessToken: string, vehicleId: string): Promise<VehicleHealth> {
+    const { data, error } = await this.clientForUser(accessToken).rpc("calculate_vehicle_health", {
+      p_vehicle_id: vehicleId,
+    });
+
+    if (error) {
+      if (error.message?.includes("unauthorized")) {
+        throw new NotFoundException("Veículo não encontrado");
+      }
+      throw new InternalServerErrorException("Não foi possível calcular a saúde do veículo");
+    }
+
+    return data as VehicleHealth;
   }
 }

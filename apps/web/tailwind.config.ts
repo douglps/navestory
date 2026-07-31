@@ -1,5 +1,6 @@
 import typography from "@tailwindcss/typography";
 import type { Config } from "tailwindcss";
+import { typographyScale } from "@nave/ui/tokens";
 
 // @spec SPEC-20260525-001 §4.1
 // Fonte de verdade dos valores de cor é `packages/ui/src/tokens/colors.ts` — este arquivo só
@@ -98,6 +99,25 @@ const config: Config = {
       },
       spacing: {
         touch: "var(--spacing-touch-target)",
+      },
+      // @spec SPEC-20260731-001 RF-06 — Inter aplicada via `--font-inter` (next/font, layout.tsx);
+      // fallback para a stack padrão do Tailwind caso a variável não esteja presente (ex: testes).
+      fontFamily: {
+        sans: ["var(--font-inter)", "ui-sans-serif", "system-ui", "sans-serif"],
+      },
+      // @spec SPEC-20260731-003 RF-01, RF-02 — sobrescreve as chaves padrão do Tailwind (que
+      // resolviam para os defaults de fábrica) com os valores formais de `typographyScale`
+      // (fonte única de verdade em packages/ui), mais `md` como chave nova (sem equivalente
+      // default do Tailwind). `fontWeight` é deliberadamente omitido (ver D-03 da spec) —
+      // peso continua via `font-*` semântico aplicado à parte de cada componente.
+      fontSize: {
+        xs: [typographyScale.xs.fontSize, { lineHeight: typographyScale.xs.lineHeight }],
+        sm: [typographyScale.sm.fontSize, { lineHeight: typographyScale.sm.lineHeight }],
+        base: [typographyScale.base.fontSize, { lineHeight: typographyScale.base.lineHeight }],
+        md: [typographyScale.md.fontSize, { lineHeight: typographyScale.md.lineHeight }],
+        lg: [typographyScale.lg.fontSize, { lineHeight: typographyScale.lg.lineHeight }],
+        xl: [typographyScale.xl.fontSize, { lineHeight: typographyScale.xl.lineHeight }],
+        "2xl": [typographyScale["2xl"].fontSize, { lineHeight: typographyScale["2xl"].lineHeight }],
       },
     },
   },

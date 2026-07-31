@@ -19,14 +19,17 @@ export class LoginPage {
   constructor(private readonly page: Page) {
     // Seletores semânticos baseados em label/role — estáveis a mudanças de CSS/classe
     this.emailInput = page.getByLabel("E-mail");
-    this.passwordInput = page.getByLabel("Senha");
+    // exact: true evita colisão com o botão "Mostrar senha"/"Ocultar senha" do PasswordInput,
+    // cujo aria-label contém "senha" como substring
+    this.passwordInput = page.getByLabel("Senha", { exact: true });
     this.submitButton = page.getByRole("button", { name: "Entrar" });
     this.errorAlert = page.getByRole("alert");
   }
 
   /** Navega para a tela de login. */
   async goto(): Promise<void> {
-    await this.page.goto("/login");
+    // domcontentloaded em vez do "load" padrão — ver nota em dashboard.page.ts
+    await this.page.goto("/login", { waitUntil: "domcontentloaded" });
     await this.emailInput.waitFor({ state: "visible" });
   }
 

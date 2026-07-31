@@ -2822,7 +2822,7 @@ que o artefato ainda não existe no repositório.
 |-----|-----------|--------|-------|--------|
 | RF-E2E-01 | Acesso a rota privada sem sessão → redirect para `/login` (S1, CT-006) | `apps/web/middleware.ts` | `apps/web/e2e/tests/auth.spec.ts` | 🔶 implementado, não executado localmente |
 | RF-E2E-02 | Login com credenciais válidas → acesso ao dashboard (S1, CT-006) | `apps/web/src/app/(auth)/login/page.tsx` | `apps/web/e2e/tests/auth.spec.ts` | 🔶 implementado, não executado localmente |
-| RF-E2E-03 | Logout → redirect para `/login` e bloqueio de acesso (S1) | `apps/web/src/lib/auth/logout.ts` | `apps/web/e2e/tests/auth.spec.ts` | 🔶 implementado, não executado localmente |
+| RF-E2E-03 | Logout → redirect para `/login` e bloqueio de acesso (S1) | `apps/web/src/lib/auth/logout.ts` | `apps/web/e2e/tests/auth-logout.spec.ts` (projeto Playwright isolado `chromium-logout`, roda por último — `signOut` escopo "global" revoga o storageState compartilhado) | ✅ |
 | RF-E2E-04 | Odômetro fora de sequência → hard block com alerta na tela, sem salvar (R-ODO-01, CT-001) — spec corrigida em 2026-07-20 (changelog v1.1): descrevia soft warning (R1), comportamento real e testado é hard block via `strict=true`, exclusivo do fluxo web | `apps/web/src/app/(app)/expenses/new/page.tsx`, `apps/api/src/modules/expenses/expenses.service.ts` | `apps/web/e2e/tests/expense-warnings.spec.ts` | 🔶 implementado; requer `E2E_TEST_VEHICLE_PLATE` e odômetro pré-existente |
 | RF-E2E-05 | Duplicata → exibe banner de aviso (R2, CT-002) — banner implementado via SPEC-20260720-002 (RF-02, RF-03); teste destravado | `apps/web/src/app/(app)/expenses/new/page.tsx`, `apps/api/src/modules/expenses/expenses.service.ts` | `apps/web/e2e/tests/expense-warnings.spec.ts` | 🔶 implementado; requer `E2E_TEST_VEHICLE_PLATE` |
 | RF-E2E-06 | Clica no VehicleContextChip → abre dialog → seleciona veículo → chip atualiza (R-CTX-07) | `apps/web/src/components/layout/vehicle-context-chip.tsx` | `apps/web/e2e/tests/vehicle-context.spec.ts` | 🔶 implementado; requer `E2E_VEHICLE_B_PLATE` |
@@ -3098,6 +3098,49 @@ RNF-04 (foco preso no drawer + retorno ao hamburger ao fechar) implementado em `
 
 ---
 
+## SPEC-20260731-008 — Painel de Administração — Gestão de Roles e Interface Web (approved)
+
+> Implementa o escopo postergado da Fase 2 da SPEC-20260521-004: endpoint `PATCH
+> /admin/users/:id/role` (promoção/rebaixamento de admin, bloqueio de auto-rebaixamento S14,
+> auditoria obrigatória C2) e a primeira interface web `/admin` (usuários, audit logs, exclusão
+> de conta, gestão de role). `GET /admin/users` foi enriquecido para juntar `profiles`
+> (`name`/`deleted_at`) — campos exigidos por RF-10 que não existem no objeto de usuário bruto do
+> GoTrue; endpoint continua sendo o mesmo de SPEC-20260521-004, sem rota nova.
+>
+> **2026-07-31 (criação e implementação):** Spec criada e implementada no mesmo ciclo — backend e
+> frontend completos, testes unitários cobrindo CA-01 a CA-05. Testes E2E/frontend automatizados
+> não incluídos nesta rodada (RF-08 a RF-16 verificados por typecheck, lint e `next build`;
+> validação manual em browser pendente). Spec promovida direto para `approved` (gate de sincronia
+> — matriz atualizada com código real desde a aprovação, sem passar por `draft`/`review` separados).
+
+### Backend — `PATCH /admin/users/:id/role` (RF-01 a RF-07)
+
+| Req | Descrição | Código | Teste | Status |
+|-----|-----------|--------|-------|--------|
+| RF-01 | Endpoint novo protegido por `SupabaseAuthGuard` + `RolesGuard` + `@Roles("admin")` | `apps/api/src/modules/admin/admin.controller.ts` | `apps/api/src/modules/admin/admin.controller.spec.ts` | ✅ |
+| RF-02 | Body validado por Zod (`role: "admin" \| null`); fora do domínio → 400 | `apps/api/src/modules/admin/dto/update-user-role.dto.ts` | `apps/api/src/modules/admin/admin.controller.spec.ts` | ✅ |
+| RF-03 | Grava `app_metadata.role` via `auth.admin.updateUserById` (merge, não sobrescreve `app_metadata`) | `apps/api/src/modules/admin/admin-supabase.service.ts` | `apps/api/src/modules/admin/admin-supabase.service.spec.ts` | ✅ |
+| RF-04 | Bloqueio de auto-rebaixamento — 422, sem alteração, sem audit log (S14) | `apps/api/src/modules/admin/admin.service.ts` | `apps/api/src/modules/admin/admin.service.spec.ts` | ✅ |
+| RF-05 | Auditoria obrigatória: `ADMIN_ROLE_GRANTED`/`ADMIN_ROLE_REVOKED` com `role_before`/`role_after` (C2, S14) | `apps/api/src/modules/admin/admin.service.ts` | `apps/api/src/modules/admin/admin.service.spec.ts` | ✅ |
+| RF-06 | Usuário alvo inexistente → 404 | `apps/api/src/modules/admin/admin.service.ts`, `admin-supabase.service.ts` | `apps/api/src/modules/admin/admin.service.spec.ts`, `admin-supabase.service.spec.ts` | ✅ |
+| RF-07 | Idempotência: role igual antes/depois → sem update, sem audit log | `apps/api/src/modules/admin/admin.service.ts` | `apps/api/src/modules/admin/admin.service.spec.ts` | ✅ |
+
+### Frontend — rota `/admin` (RF-08 a RF-16)
+
+| Req | Descrição | Código | Teste | Status |
+|-----|-----------|--------|-------|--------|
+| RF-08 | Rota `/admin` com layout dedicado (sem sidebar de usuário comum) | `apps/web/src/app/admin/layout.tsx`, `admin-nav.tsx`, `page.tsx` | — | 🔶 |
+| RF-09 | Proteção client-side: middleware decodifica `app_metadata.role` do JWT e redireciona para `/403`; layout `/admin` repete a checagem (defesa em profundidade) | `apps/web/middleware.ts`, `apps/web/src/lib/auth/decode-jwt-role.ts`, `apps/web/src/app/admin/layout.tsx` | — | 🔶 |
+| RF-10 | Tabela de usuários paginada; colunas email/nome/role/status/cadastro; ações promover/revogar/excluir | `apps/web/src/app/admin/admin-users-table.tsx` | — | 🔶 |
+| RF-11 | Botão "Revogar admin" do próprio usuário desabilitado com tooltip (S14 — UI) | `apps/web/src/app/admin/admin-users-table.tsx` | — | 🔶 |
+| RF-12 | Tabela de audit logs paginada com filtros `user_id`/`from`/`to` refletidos na URL | `apps/web/src/app/admin/admin-audit-logs-table.tsx` | — | 🔶 |
+| RF-13 | Modal de confirmação de exclusão com email do usuário — usa `Dialog` de `@nave/ui` (não existe `AlertDialog` no pacote; ver changelog) | `apps/web/src/app/admin/delete-user-dialog.tsx` | — | 🔶 |
+| RF-14 | Loading state + toast de sucesso/erro na alteração de role; revalidação via `queryClient.invalidateQueries` | `apps/web/src/app/admin/admin-users-table.tsx` | — | 🔶 |
+| RF-15 | `Skeleton` de `@nave/ui` nos estados de carregamento | `apps/web/src/app/admin/admin-users-table.tsx`, `admin-audit-logs-table.tsx` | — | 🔶 |
+| RF-16 | `EmptyState` para listas vazias | `apps/web/src/app/admin/admin-users-table.tsx`, `admin-audit-logs-table.tsx` | — | 🔶 |
+
+---
+
 ## Requisitos do PRD sem Spec (Fase 2 / Backlog)
 
 | Req PRD | Descrição | Fase |
@@ -3105,10 +3148,8 @@ RNF-04 (foco preso no drawer + retorno ao hamburger ao fechar) implementado em `
 | RF-008 | Push Notifications nativas (iOS/Android) | Fase 2 |
 | RF-009 | Configuração de horário de alerta por usuário | Fase 2 |
 | RF-010 | Exportação de dados pessoais (portabilidade LGPD Art. 18 II) | Fase 2 |
-| RF-011 | Painel administrativo com UI | Fase 2 |
 | RF-012 | Hard delete automático de contas após 30 dias | Fase 2 |
 | RF-013 | MFA para operações administrativas | Fase 2 |
-| RF-014 | Gestão de roles via UI | Fase 2 |
 | RF-015 | Export de manutenções em CSV | Fase 2 |
 | RF-016 | Versionamento de API (`/v1/`) | Fase 2 |
 | RF-017 | Export em XLSX nativo | Fase 2 |
@@ -3130,7 +3171,7 @@ RNF-04 (foco preso no drawer + retorno ao hamburger ao fechar) implementado em `
 |--------|-----------------|--------|
 | `auth` | `apps/api/src/modules/auth/auth.service.spec.ts`, `auth.controller.spec.ts` + `apps/api/test/integration/auth.int-spec.ts` | ✅ (67 testes Jest, 90%+) |
 | `users` | `apps/api/src/modules/users/users.service.spec.ts`, `users.controller.spec.ts` | ✅ (Jest, 90%+) |
-| `admin` | `apps/api/src/modules/admin/admin.service.spec.ts`, `admin.controller.spec.ts` | ✅ (Jest, 90%+) |
+| `admin` | `apps/api/src/modules/admin/admin.service.spec.ts`, `admin.controller.spec.ts`, `admin-supabase.service.spec.ts` | ✅ (Jest, 90%+; SPEC-20260731-008) |
 | `common/filters` | `apps/api/src/common/filters/http-exception.filter.spec.ts` | ✅ (Jest, 90%+) |
 | `common/guards` | `apps/api/src/common/guards/supabase-auth.guard.spec.ts`, `roles.guard.spec.ts` | ✅ (Jest, 90%+) |
 | `common/pipes` | `apps/api/src/common/pipes/zod-validation.pipe.spec.ts` | ✅ (Jest, 90%+) |

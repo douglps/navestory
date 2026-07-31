@@ -1222,6 +1222,75 @@ confirmação de backend/banco (ver spec).
 - Nenhum teste existente (`dashboard/page.spec.tsx` ou `atividades/page.spec.tsx`) faz asserção de texto de emoji — confirmado por grep. Risco de quebra de teste = zero.
 
 ---
+
+### IMPACTO-047 — RLS bloqueia soft-delete em 5 tabelas por falta de `WITH CHECK` explícito (2026-07-31)
+
+| Campo | Valor |
+|-------|-------|
+| **Spec** | N/A — correção de bug de infraestrutura de banco, não feature nova |
+| **Status** | **Corrigido e confirmado por teste real em 2026-07-31** — ver atualização ao final do bloco (causa-raiz tinha uma segunda parte, além do `WITH CHECK` do `UPDATE`) |
+| **Risco geral** | **Crítico** — soft-delete de despesas, veículos, manutenções, multas e custos recorrentes falha com 500 via qualquer cliente autenticado normal (anon key + JWT do usuário), não apenas em teste |
+
+**Como foi encontrado:** durante investigação de falhas de E2E (`apps/web/e2e`), a limpeza (`afterEach`) de despesas de teste criadas por `expense-warnings.spec.ts` falhava silenciosamente (`.catch(() => undefined)`). Reproduzido manualmente com o token real do usuário de teste via `@supabase/supabase-js` (anon key + `Authorization: Bearer <jwt>`), fora do contexto de teste: `UPDATE expenses SET deleted_at = now() WHERE id = ...` retorna erro Postgres `42501` ("new row violates row-level security policy for table expenses").
+
+**Causa raiz:** `supabase/migrations/20260712172047_rls_policies.sql` define `create policy X_update_own on public.X for update using (auth.uid() = user_id and deleted_at is null ...)` sem `with check` explícito. Em Postgres, uma policy de `UPDATE` sem `WITH CHECK` reaplica o mesmo predicado do `USING` à linha **resultante**. Como a operação de soft-delete faz exatamente `deleted_at = now()`, a linha pós-update nunca satisfaz `deleted_at is null` — a policy bloqueia a própria operação que deveria permitir.
+
+| # | Tabela afetada | Endpoint(s) que quebram | Confirmado |
+|---|----------------|--------------------------|-----------|
+| 1 | `expenses` | `DELETE /expenses/:id` | Sim — reproduzido diretamente |
+| 2 | `vehicles` | `DELETE /vehicles/:id` | Mesma estrutura de policy — não testado ao vivo, mas idêntico padrão de código (`clientForUser(...).update({deleted_at})`) |
+| 3 | `maintenances` | `DELETE /maintenance/:id` | Idem |
+| 4 | `fines` | `DELETE /fines/:id` | Idem |
+| 5 | `vehicle_recurring_costs` | `DELETE /recurring-costs/:id` | Idem |
+| — | `profiles` | Soft-delete de conta (`DELETE /users/me`) | A verificar — usa fluxo próprio (`SoftDeletedUserGuard`); pode usar `AdminSupabaseService` (service role, que bypassa RLS) em vez do client do usuário — checar antes de assumir que também quebra |
+
+**Correção:** `WITH CHECK` explícito mantendo apenas a verificação de posse (`auth.uid() = user_id`/`id`), sem repetir `deleted_at is null`/`not is_readonly` — essas continuam válidas no `USING` (decidem quais linhas podem ser alvo do update), só não devem valer para o estado resultante.
+
+**Resolvido (parcial):** migration `20260731192440_fix_soft_delete_rls_with_check.sql` aplicada diretamente ao banco remoto via MCP do Supabase em 2026-07-31, contornando a dessincronia do CLI local. Confirmado via `pg_policies` que o `WITH CHECK` ficou correto — mas o soft-delete **continuava falhando com 42501** ao testar de fato.
+
+**Atualização 2026-07-31 — causa-raiz completa:** o `WITH CHECK` do `UPDATE` era necessário mas não suficiente. Em Postgres, para `UPDATE`, o `USING` da policy de **SELECT** da mesma tabela é combinado (AND) com o `WITH CHECK` da policy de `UPDATE` ao validar a linha resultante — e `expenses_select_own` (e as 5 policies equivalentes) ainda exigiam `deleted_at is null`, que a linha pós-soft-delete nunca satisfaz. Isolado via teste em SQL puro (transação com rollback, simulando o JWT real do usuário de teste): `UPDATE expenses SET description = ...` funcionava normalmente, `UPDATE expenses SET deleted_at = now()` falhava com o mesmo erro — provando que o bloqueio vinha da policy de SELECT, não da de UPDATE.
+
+**Correção final:** removido `deleted_at is null` do `USING` das 6 policies de SELECT (`profiles_select_own`, `vehicles_select_own`, `expenses_select_own`, `maintenances_select_own`, `fines_select_own`, `recurring_costs_select_own`), via `migration 20260731204319_fix_soft_delete_select_policy_implicit_check.sql`. Seguro porque a aplicação já filtra `deleted_at is null` explicitamente em toda query de leitura (mais de 50 ocorrências nos services de `apps/api`) — a policy de SELECT não precisava repetir esse filtro, que é responsabilidade de query, não de RLS.
+
+**Confirmado:** teste real de soft-delete (transação com rollback, sem alterar dados reais) — `UPDATE ... RETURNING` passou a retornar a linha com `deleted_at` preenchido, sem erro. Dessincronia de migrations locais x remoto também resolvida (arquivos renomeados para bater com os timestamps reais aplicados; arquivo faltante recriado a partir do SQL já em produção) — `supabase migration list` confirma sincronia total. Detalhe completo em `specs/RULES.md` (regra S13 v2) e `important/PENDENCIAS-E-PROCESSOS.md`.
+
+---
+
+### IMPACTO-048 — Painel de Administração: gestão de roles + primeira interface web `/admin` (SPEC-20260731-008) (2026-07-31)
+
+| Campo | Valor |
+|-------|-------|
+| **Spec** | [SPEC-20260731-008](../specs/admin/SPEC-20260731-008-painel-admin-gestao-roles-ui.md) RF-01 a RF-16 |
+| **Status** | Decidido e implementado — backend e frontend completos, spec aprovada no mesmo ciclo |
+| **Risco geral** | Alto (justificativa: escalonamento de privilégio é uma superfície sensível por natureza — um bug aqui permite um usuário comum virar admin ou trava o sistema sem nenhum admin ativo) |
+
+**Descrição:** Endpoint novo `PATCH /admin/users/:id/role` (promoção/rebaixamento de
+`app_metadata.role`, gravado exclusivamente via `AdminSupabaseService`/service role key — S3,
+S12) e a primeira UI web em `/admin` (tabela de usuários, audit logs com filtros, exclusão de
+conta, gestão de role), consumindo os endpoints do `AdminModule` já aprovados em
+SPEC-20260521-004.
+
+**Mitigação do risco de escalonamento:** S14 exige bloqueio de auto-rebaixamento (422 antes de
+qualquer chamada ao Supabase, sem audit log) e auditoria obrigatória (`ADMIN_ROLE_GRANTED`/
+`ADMIN_ROLE_REVOKED` com `role_before`/`role_after`) em toda alteração bem-sucedida — nenhuma
+mudança de role ocorre sem rastro. A superfície de ataque real (gravação em `app_metadata`)
+já é protegida desde SPEC-20260731-006 (RolesGuard lê `app_metadata`, nunca `user_metadata`);
+esta spec só adiciona a via de escrita administrativa sobre a mesma garantia.
+
+**Impacto:** `GET /admin/users` (já aprovado) foi estendido para juntar `profiles`
+(`name`/`deleted_at`) — necessário para a UI exibir nome e status da conta (RF-10), campos que
+não existem no objeto de usuário bruto do GoTrue. É um enriquecimento do mesmo endpoint, não uma
+rota nova; sem mudança de contrato para os dois campos já existentes (`id`, agora também
+`email`/`role`/`created_at` normalizados no mesmo objeto). Frontend introduz duas rotas novas
+fora do grupo `(app)` (`/admin`, `/403`) e um novo helper `decodeJwtRole` (heurística de UX,
+mesma família de `decodeJwtExp`) — sem alterar nenhuma rota ou componente existente de usuário
+comum (RNF-04).
+
+**Desvio da spec registrado no changelog dela:** RF-13/Dependências citam `AlertDialog` de
+`@nave/ui`, que não existe no pacote — o componente real usado para confirmação destrutiva no
+repositório é `Dialog` (mesmo padrão de `DeleteAccountDialog`). Implementado com `Dialog`.
+
+---
 ## Legenda de Risco
 
 | Nível | Critério |

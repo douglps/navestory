@@ -55,6 +55,108 @@ describe("AdminService", () => {
     );
   });
 
+  describe("updateUserRole (SPEC-20260731-008)", () => {
+    it("promove usuário comum a admin e audita ADMIN_ROLE_GRANTED (RF-01, RF-05, CA-01)", async () => {
+      const adminSupabase = {
+        getUserById: jest.fn().mockResolvedValue({ id: "target-user", app_metadata: {} }),
+        updateUserRole: jest.fn().mockResolvedValue(undefined),
+      } as unknown as AdminSupabaseService;
+      const auditService = { log: jest.fn() } as unknown as AuditService;
+      const service = new AdminService(adminSupabase, auditService);
+
+      const result = await service.updateUserRole("target-user", "admin-user", "admin");
+
+      expect(adminSupabase.updateUserRole).toHaveBeenCalledWith("target-user", "admin");
+      expect(auditService.log).toHaveBeenCalledWith(
+        expect.objectContaining({
+          userId: "admin-user",
+          action: "ADMIN_ROLE_GRANTED",
+          tableName: "auth.users",
+          recordId: "target-user",
+          changes: { role_before: null, role_after: "admin" },
+        }),
+      );
+      expect(result).toEqual({ data: { id: "target-user", role: "admin" } });
+    });
+
+    it("revoga role de outro admin e audita ADMIN_ROLE_REVOKED (RF-01, RF-05, CA-02)", async () => {
+      const adminSupabase = {
+        getUserById: jest.fn().mockResolvedValue({ id: "target-user", app_metadata: { role: "admin" } }),
+        updateUserRole: jest.fn().mockResolvedValue(undefined),
+      } as unknown as AdminSupabaseService;
+      const auditService = { log: jest.fn() } as unknown as AuditService;
+      const service = new AdminService(adminSupabase, auditService);
+
+      await service.updateUserRole("target-user", "admin-user", null);
+
+      expect(adminSupabase.updateUserRole).toHaveBeenCalledWith("target-user", null);
+      expect(auditService.log).toHaveBeenCalledWith(
+        expect.objectContaining({
+          action: "ADMIN_ROLE_REVOKED",
+          changes: { role_before: "admin", role_after: null },
+        }),
+      );
+    });
+
+    // valida S14
+    it("bloqueia auto-rebaixamento com 422 e não chama Supabase nem audit log (RF-04, CA-03)", async () => {
+      const adminSupabase = {
+        getUserById: jest.fn(),
+        updateUserRole: jest.fn(),
+      } as unknown as AdminSupabaseService;
+      const auditService = { log: jest.fn() } as unknown as AuditService;
+      const service = new AdminService(adminSupabase, auditService);
+
+      await expect(service.updateUserRole("admin-user", "admin-user", null)).rejects.toThrow(
+        "Admin não pode revogar o próprio role",
+      );
+      expect(adminSupabase.getUserById).not.toHaveBeenCalled();
+      expect(adminSupabase.updateUserRole).not.toHaveBeenCalled();
+      expect(auditService.log).not.toHaveBeenCalled();
+    });
+
+    it("admin promove a si mesmo para admin novamente sem 422 (auto-promoção permitida)", async () => {
+      const adminSupabase = {
+        getUserById: jest.fn().mockResolvedValue({ id: "admin-user", app_metadata: { role: "admin" } }),
+        updateUserRole: jest.fn(),
+      } as unknown as AdminSupabaseService;
+      const auditService = { log: jest.fn() } as unknown as AuditService;
+      const service = new AdminService(adminSupabase, auditService);
+
+      await expect(
+        service.updateUserRole("admin-user", "admin-user", "admin"),
+      ).resolves.toEqual({ data: { id: "admin-user", role: "admin" } });
+    });
+
+    it("retorna 404 quando o usuário alvo não existe (RF-06, CA-05)", async () => {
+      const adminSupabase = {
+        getUserById: jest.fn().mockResolvedValue(null),
+        updateUserRole: jest.fn(),
+      } as unknown as AdminSupabaseService;
+      const auditService = { log: jest.fn() } as unknown as AuditService;
+      const service = new AdminService(adminSupabase, auditService);
+
+      await expect(service.updateUserRole("missing-user", "admin-user", "admin")).rejects.toThrow(
+        "Usuário não encontrado",
+      );
+      expect(adminSupabase.updateUserRole).not.toHaveBeenCalled();
+    });
+
+    it("é idempotente: role já é o mesmo antes e depois → sem update, sem audit log (RF-07, RNF-03)", async () => {
+      const adminSupabase = {
+        getUserById: jest.fn().mockResolvedValue({ id: "target-user", app_metadata: { role: "admin" } }),
+        updateUserRole: jest.fn(),
+      } as unknown as AdminSupabaseService;
+      const auditService = { log: jest.fn() } as unknown as AuditService;
+      const service = new AdminService(adminSupabase, auditService);
+
+      await service.updateUserRole("target-user", "admin-user", "admin");
+
+      expect(adminSupabase.updateUserRole).not.toHaveBeenCalled();
+      expect(auditService.log).not.toHaveBeenCalled();
+    });
+  });
+
   // valida C1
   describe("EC-11: hard-delete de usuário por admin não seta deleted_at (diferencia do soft-delete de 30 dias)", () => {
     it("deleteUser delega para auth.admin.deleteUser sem passar deleted_at — é hard delete via Supabase Auth Admin API (C1)", async () => {

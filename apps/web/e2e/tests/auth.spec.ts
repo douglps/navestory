@@ -176,40 +176,6 @@ test.describe("Autenticação", () => {
     },
   );
 
-  /**
-   * RF-E2E-03: logout → redirect para /login e rota privada não acessível.
-   *
-   * Valida que o botão "Sair" chama `logout()` corretamente:
-   * - Chama POST /auth/logout no backend
-   * - Limpa o contexto global do store + sessionStorage
-   * - Redireciona para /login via window.location.href
-   * - Após logout, /dashboard não é mais acessível sem novo login
-   *
-   * Usa sessão autenticada do storageState (globalSetup).
-   *
-   * @spec SPEC-20260716-003 RF-E2E-03
-   */
-  test(
-    "CT-006: logout redireciona para /login e bloqueia acesso a /dashboard (S1)",
-    async ({ page }) => {
-      const dashboardPage = new DashboardPage(page);
-      const loginPage = new LoginPage(page);
-
-      // Sessão autenticada via storageState do globalSetup
-      await dashboardPage.goto();
-      await dashboardPage.waitForLoad();
-
-      // Realiza logout
-      await dashboardPage.logout();
-
-      // Deve estar na tela de login
-      await loginPage.expectLoginPage();
-      await expect(page).toHaveURL(/\/login/);
-
-      // Tenta acessar /dashboard sem sessão — deve ser redirecionado novamente
-      // domcontentloaded em vez do "load" padrão — ver nota em dashboard.page.ts
-      await page.goto("/dashboard", { waitUntil: "domcontentloaded" });
-      await expect(page).toHaveURL(/\/login/, { timeout: 10_000 });
-    },
-  );
+  // RF-E2E-03 (logout) mora em `auth-logout.spec.ts`, em projeto Playwright à parte
+  // que depende de `chromium` (roda por último) — ver nota nesse arquivo.
 });

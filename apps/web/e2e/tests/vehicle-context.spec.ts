@@ -86,7 +86,11 @@ test.describe("Troca de contexto de veículo", () => {
       await page.goto("/expenses", { waitUntil: "domcontentloaded" });
       await page.waitForURL("**/expenses");
 
-      // Chip ainda deve exibir veículo B após navegação
+      // Chip ainda deve exibir veículo B após navegação — a leitura do contexto
+      // (sessionStorage) acontece num efeito React pós-montagem, então o chip renderiza
+      // primeiro com o rótulo genérico ("Em foco: veículo selecionado") antes de
+      // hidratar com o veículo real; espera explicitamente em vez de ler no mesmo tick.
+      await contextChip.waitForChipUpdate(VEHICLE_B_PLATE);
       const chipLabelAfterNav = await contextChip.getChipAriaLabel();
       expect(chipLabelAfterNav).toContain(VEHICLE_B_PLATE);
     },
@@ -131,7 +135,10 @@ test.describe("Troca de contexto de veículo", () => {
       // Passo 2: abre /expenses/new — vehicle_id deve estar herdado do contexto (veículo A)
       await expenseForm.goto();
 
-      // Campo herdado do contexto — label âmbar "↩ Herdado do contexto em foco" visível
+      // Campo herdado do contexto — label âmbar "↩ Herdado do contexto em foco" visível.
+      // O cálculo de herança roda num efeito React pós-montagem (mesma race do chip acima)
+      // — espera o hint aparecer em vez de checar isVisible() no mesmo tick do goto().
+      await expenseForm.inheritedHint.first().waitFor({ state: "visible", timeout: 5_000 });
       expect(await expenseForm.isVehicleInherited()).toBe(true);
 
       const vehicleAId = await expenseForm.getSelectedVehicleId();

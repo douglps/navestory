@@ -9,6 +9,7 @@ describe("AdminController", () => {
         .fn()
         .mockResolvedValue({ data: [], meta: { total: 0, page: 1, limit: 20 } }),
       deleteUser: jest.fn().mockResolvedValue(undefined),
+      updateUserRole: jest.fn().mockResolvedValue({ data: { id: "target-user", role: "admin" } }),
       ...overrides,
     } as unknown as AdminService;
     return { controller: new AdminController(adminService), adminService };
@@ -38,5 +39,21 @@ describe("AdminController", () => {
     await controller.deleteUser("target-user", "admin-user");
 
     expect(adminService.deleteUser).toHaveBeenCalledWith("target-user", "admin-user");
+  });
+
+  it("updateUserRole delega para o service com id, adminUserId e role (RF-01)", async () => {
+    const { controller, adminService } = createController();
+
+    await controller.updateUserRole("target-user", { role: "admin" }, "admin-user");
+
+    expect(adminService.updateUserRole).toHaveBeenCalledWith("target-user", "admin-user", "admin");
+  });
+
+  it("updateUserRole aceita role null para revogação (RF-01)", async () => {
+    const { controller, adminService } = createController();
+
+    await controller.updateUserRole("target-user", { role: null }, "admin-user");
+
+    expect(adminService.updateUserRole).toHaveBeenCalledWith("target-user", "admin-user", null);
   });
 });

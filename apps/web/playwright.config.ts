@@ -46,6 +46,18 @@ export default defineConfig({
     {
       name: "chromium",
       use: { ...devices["Desktop Chrome"] },
+      testIgnore: /auth-logout\.spec\.ts/,
+    },
+    // Isolado: auth-logout.spec.ts faz signOut com escopo "global" (revoga TODAS as
+    // sessões do usuário e2e-tester, incluindo o storageState do globalSetup
+    // compartilhado por todo o resto da suíte). `dependencies` garante que este
+    // projeto só roda depois que "chromium" termina, evitando quebrar os demais
+    // testes autenticados — ver nota em auth-logout.spec.ts.
+    {
+      name: "chromium-logout",
+      use: { ...devices["Desktop Chrome"] },
+      testMatch: /auth-logout\.spec\.ts/,
+      dependencies: ["chromium"],
     },
     // firefox e webkit opcionais — habilitados em revisão posterior (RF-CFG-03)
     // { name: 'firefox', use: { ...devices['Desktop Firefox'] } },

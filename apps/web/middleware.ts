@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { decodeJwtExp } from "./src/lib/auth/decode-jwt-exp";
+import { decodeJwtRole } from "./src/lib/auth/decode-jwt-role";
 
 const PUBLIC_PATHS = ["/login", "/register", "/recover-password", "/reset-password"];
 // @spec SPEC-20260720-001 RF-04 — acessíveis com ou sem sessão, sem nenhum redirect
@@ -44,6 +45,11 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
   }
 
   if (accessTokenValid) {
+    // @spec SPEC-20260731-008 RF-09 — conveniência de UX (redireciona sem expor dados admin
+    // na UI); a garantia real é o RolesGuard no backend, independente do que a UI exibir.
+    if (pathname.startsWith("/admin") && decodeJwtRole(accessToken as string) !== "admin") {
+      return NextResponse.redirect(new URL("/403", request.url));
+    }
     return NextResponse.next();
   }
 

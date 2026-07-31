@@ -223,6 +223,8 @@
 | S10 | Logs estruturados nunca devem conter PII ou dados sensíveis. Campos proibidos (redacted para `[REDACTED]` pelo serializer do Pino antes de serem escritos): `password`, `token`, `accessToken`, `refreshToken`, `jwt`, `authorization`, `service_role_key`, `cpf`, `email` em texto plano, `photo_url`. Qualquer campo cujo nome case com o padrão `/password\|token\|secret\|key\|cpf\|ssn/i` é redacted automaticamente. Aplica-se a todos os logs de `apps/api` e a qualquer pipeline de logging futuro | [SPEC-20260716-002](devops/SPEC-20260716-002-observabilidade.md) |
 | S11 | O `apps/web/middleware.ts` que aplica S1 no lado web protege apenas a navegação de página — o matcher exclui `api/backend`, então toda chamada client-side de dados (`apiClient`) não passa por ele. Por isso `apiClient` também precisa interceptar `401` de qualquer chamada (exceto `/auth/*`, que tem 401 como fluxo normal de credenciais inválidas) e redirecionar para `/login?redirect=<pathname>` — sem essa camada, sessão inválida em página já carregada exibe erro genérico de carregamento em vez de levar ao login. **Achado real 2026-07-31:** reportado por Douglas — o gap existia desde a criação do middleware (2026-06-22) | [SPEC-20260731-003](auth/SPEC-20260731-003-redirect-login-sessao-invalida.md) |
 | S12 | Dados de autorização (role, permissões) nunca devem ser lidos de `user_metadata` do Supabase Auth — campo gravável pelo próprio usuário autenticado via API pública (`PUT /auth/v1/user`). Todo claim usado para decisão de autorização no backend deve vir exclusivamente de `app_metadata`, gravável apenas via API administrativa com `SUPABASE_SERVICE_ROLE_KEY`. **Achado real 2026-07-31:** `RolesGuard` (`roles.guard.ts:25`) lia `user_metadata.role` para decidir acesso admin, permitindo que qualquer usuário autenticado escalasse privilégio chamando a API pública do Supabase diretamente, fora do backend NestJS | [SPEC-20260731-006](security/SPEC-20260731-006-correcao-role-user-metadata.md) |
+| S13 | Toda policy RLS de `UPDATE` que restringe por `deleted_at is null` (padrão de soft-delete) precisa de `WITH CHECK` explícito que valide apenas posse (`auth.uid() = user_id`/`id`) — nunca deixar o `WITH CHECK` herdar implicitamente o mesmo predicado do `USING`. **Além disso (v2):** a policy de `SELECT` da mesma tabela nunca deve restringir por `deleted_at is null` — o Postgres combina (AND) o `USING` da policy de `SELECT` com o `WITH CHECK` da policy de `UPDATE` ao validar a linha resultante, então mesmo com o `WITH CHECK` do `UPDATE` correto, uma policy de `SELECT` que exige `deleted_at is null` bloqueia o soft-delete do mesmo jeito. O filtro de "não mostrar registro deletado" é responsabilidade da query da aplicação (`.is("deleted_at", null)`), nunca da policy de `SELECT`. **Achado real 2026-07-31 (v1):** `profiles_update_own`, `vehicles_update_own`, `expenses_update_own`, `maintenances_update_own`, `fines_update_own` e `recurring_costs_update_own` tinham apenas `USING`, sem `WITH CHECK` — corrigido, mas insuficiente. **Achado real 2026-07-31 (v2):** mesmo após o fix do `WITH CHECK`, `DELETE /expenses/:id` continuava retornando 500 (42501) — reproduzido em SQL puro simulando o JWT do usuário de teste, isolando que `UPDATE expenses SET deleted_at = now()` falha mas `UPDATE expenses SET <outra coluna>` funciona; causa era a policy `expenses_select_own` (e as 5 equivalentes) exigindo `deleted_at is null`. **Corrigido e aplicado ao banco remoto em 2026-07-31, confirmado com teste real de soft-delete (transação com rollback, sem alterar dados)** | [migration 20260731192440](../supabase/migrations/20260731192440_fix_soft_delete_rls_with_check.sql), [migration 20260731204319](../supabase/migrations/20260731204319_fix_soft_delete_select_policy_implicit_check.sql) |
+| S14 | Toda alteração de role de admin (promoção ou rebaixamento via `PATCH /admin/users/:id/role`) é auditada obrigatoriamente via `AuditService` (aplica C2); um admin não pode rebaixar o próprio role via este endpoint — a tentativa retorna 422 com mensagem explícita, para prevenir lockout acidental do sistema por ausência de admin ativo | [SPEC-20260731-008](../specs/admin/SPEC-20260731-008-painel-admin-gestao-roles-ui.md) |
 
 ---
 
@@ -297,12 +299,27 @@ R-ODO-01 não é uma versão de R1 — é uma regra própria que supersede R1 **
 |--------|------|---------|
 | v1 | 2026-07-31 | Criação (SPEC-20260731-005): proíbe `text-[Npx]` e chaves não formais (`text-3xl` e acima) em código de produção; exceções documentadas: `concept/*` e copy de marketing com comentário explícito. |
 
+### S13 — Bloqueio de soft-delete via RLS: WITH CHECK do UPDATE e USING do SELECT
+**Versão atual:** v2 (2026-07-31)
+
+| Versão | Data | Mudança |
+|--------|------|---------|
+| v1 | 2026-07-31 | Criação: `WITH CHECK` das policies de `UPDATE` precisa validar apenas posse, nunca herdar `deleted_at is null` do `USING` — 6 policies corrigidas (`migration 20260731192440`). Insuficiente sozinho: o bug persistia. |
+| v2 | 2026-07-31 | Causa-raiz completa: o Postgres também combina o `USING` da policy de `SELECT` no `WITH CHECK` efetivo do `UPDATE`. As 6 policies de `SELECT` (`profiles`, `vehicles`, `expenses`, `maintenances`, `fines`, `vehicle_recurring_costs`) removeram `deleted_at is null` do `USING` (`migration 20260731204319`). Confirmado com teste real (transação com rollback simulando JWT de usuário real): soft-delete passa a funcionar. |
+
 ### S12 — `app_metadata` como única fonte de autorização no Supabase Auth
 **Versão atual:** v1 (2026-07-31)
 
 | Versão | Data | Mudança |
 |--------|------|---------|
 | v1 | 2026-07-31 | Criação (SPEC-20260731-006): achado crítico de escalação de privilégio via `user_metadata`; proíbe o uso de `user_metadata` para decisões de autorização em toda a codebase do backend; `app_metadata` passa a ser a única fonte permitida de claim de role. |
+
+### S14 — Gestão de role de admin: auditoria obrigatória e bloqueio de auto-rebaixamento
+**Versão atual:** v1 (2026-07-31)
+
+| Versão | Data | Mudança |
+|--------|------|---------|
+| v1 | 2026-07-31 | Criação (SPEC-20260731-008): toda alteração de role via endpoint admin é auditada; auto-rebaixamento é bloqueado com 422 para prevenir lockout acidental. |
 
 ---
 

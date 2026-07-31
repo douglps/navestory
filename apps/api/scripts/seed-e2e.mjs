@@ -134,16 +134,32 @@ async function waitForProfile(userId) {
 }
 
 async function ensureVehicle(userId, plate) {
+  // Apelido = a própria placa: os dois veículos de teste têm make/model idênticos
+  // ("Nave" / "E2E Test Car"), e o Combobox de veículo do formulário de despesa exibe
+  // `nickname ?? (make + model) ?? plate` — sem nickname, as duas opções ficam com o
+  // mesmo texto visível ("Nave E2E Test Car"), impossíveis de distinguir por seletor de
+  // texto na suíte E2E (`expense-form.page.ts`/`ExpenseFormPage.selectVehicle`).
+  const nickname = plate;
+
   const { data: existing, error: selectError } = await supabase
     .from("vehicles")
-    .select("id")
+    .select("id, nickname")
     .eq("user_id", userId)
     .eq("plate", plate)
     .is("deleted_at", null)
     .maybeSingle();
   if (selectError) throw selectError;
   if (existing) {
-    console.log(`Veículo ${plate} já existe (${existing.id}).`);
+    if (existing.nickname !== nickname) {
+      console.log(`Veículo ${plate} já existe (${existing.id}) — atualizando nickname.`);
+      const { error: updateError } = await supabase
+        .from("vehicles")
+        .update({ nickname })
+        .eq("id", existing.id);
+      if (updateError) throw updateError;
+    } else {
+      console.log(`Veículo ${plate} já existe (${existing.id}).`);
+    }
     return existing.id;
   }
 
@@ -153,6 +169,7 @@ async function ensureVehicle(userId, plate) {
     .insert({
       user_id: userId,
       plate,
+      nickname,
       make: "Nave",
       model: "E2E Test Car",
       year: 2024,

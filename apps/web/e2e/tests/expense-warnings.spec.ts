@@ -130,9 +130,13 @@ test.describe("Avisos de negócio no formulário de despesa", () => {
         page.waitForResponse((res) => res.url().includes("/api/backend/expenses") && res.request().method() === "POST"),
         expenseForm.submit(),
       ]);
-      const firstBody = (await firstResponse.json()) as { id?: string };
-      if (firstBody.id) createdExpenseIds.push(firstBody.id);
-      await page.waitForURL(/\/expenses(?!\/new)/, { timeout: 8_000 });
+      // A API responde envelopada em `{ data: ... }` (ver ExpensesController.create) — não
+      // `{ id }` na raiz.
+      const firstBody = (await firstResponse.json()) as { data?: { id?: string } };
+      const firstExpenseId = firstBody.data?.id;
+      if (firstExpenseId) createdExpenseIds.push(firstExpenseId);
+      // domcontentloaded em vez do "load" padrão — ver nota em dashboard.page.ts
+      await page.waitForURL(/\/expenses(?!\/new)/, { timeout: 8_000, waitUntil: "domcontentloaded" });
 
       // Segunda criação — mesmos vehicle_id, category, amount e date (default: hoje)
       await expenseForm.goto();
@@ -143,8 +147,9 @@ test.describe("Avisos de negócio no formulário de despesa", () => {
         page.waitForResponse((res) => res.url().includes("/api/backend/expenses") && res.request().method() === "POST"),
         expenseForm.submit(),
       ]);
-      const secondBody = (await secondResponse.json()) as { id?: string };
-      if (secondBody.id) createdExpenseIds.push(secondBody.id);
+      const secondBody = (await secondResponse.json()) as { data?: { id?: string } };
+      const secondExpenseId = secondBody.data?.id;
+      if (secondExpenseId) createdExpenseIds.push(secondExpenseId);
 
       const alertText = await expenseForm.waitForAlert();
       expect(alertText).toMatch(/já existe/i);
@@ -154,10 +159,11 @@ test.describe("Avisos de negócio no formulário de despesa", () => {
 
       await expect(page.getByRole("link", { name: /ver despesa duplicada/i })).toHaveAttribute(
         "href",
-        `/expenses/${firstBody.id}`,
+        `/expenses/${firstExpenseId}`,
       );
       await page.getByRole("button", { name: /entendido/i }).click();
-      await page.waitForURL(/\/expenses(?!\/new)/, { timeout: 8_000 });
+      // domcontentloaded em vez do "load" padrão — ver nota em dashboard.page.ts
+      await page.waitForURL(/\/expenses(?!\/new)/, { timeout: 8_000, waitUntil: "domcontentloaded" });
     });
   });
 });

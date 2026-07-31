@@ -19,7 +19,7 @@ export function VehicleContextDialog({ open, onOpenChange }: VehicleContextDialo
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-[200] bg-black/20 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out data-[state=closed]:duration-150" />
         <Dialog.Content
-          className="fixed left-1/2 top-1/2 z-[201] w-[calc(100%-2rem)] max-w-[380px] -translate-x-1/2 -translate-y-1/2 rounded-lg border border-neutral-200 bg-white p-4 shadow-xl data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out data-[state=closed]:duration-150"
+          className="fixed left-1/2 top-1/2 z-[201] w-[calc(100%-2rem)] max-w-[380px] -translate-x-1/2 -translate-y-1/2 rounded-lg border border-border bg-card p-4 shadow-xl data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out data-[state=closed]:duration-150"
           onEscapeKeyDown={(event) => {
             // RF-08: evita conflito com o handler global do sidebar (Esc fecha drawer mobile).
             event.stopPropagation();

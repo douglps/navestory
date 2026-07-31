@@ -5,7 +5,7 @@ const MAX_VISIBLE_ALERTS = 3;
 
 export interface FleetAlertItem {
   id: string;
-  type: "maintenance_overdue" | "maintenance_upcoming" | "document_overdue";
+  type: "maintenance_overdue" | "maintenance_upcoming" | "document_overdue" | "document_upcoming";
   vehicle_plate: string;
   description: string;
   days_until_due: number;
@@ -20,11 +20,17 @@ function alertLabel(alert: FleetAlertItem): string {
   return `Vence em ${alert.days_until_due} ${alert.days_until_due === 1 ? "dia" : "dias"}`;
 }
 
-// @spec SPEC-20260721-002 RF-03 — tokens semânticos em vez de classes Tailwind literais
-function alertStyles(alert: FleetAlertItem): string {
-  return alert.days_until_due < 0
-    ? "border-danger bg-danger-pastel text-danger-foreground"
-    : "border-warning bg-warning-pastel text-warning-foreground";
+/**
+ * @spec SPEC-20260721-002 RF-03 — tokens semânticos em vez de classes Tailwind literais
+ * @spec SPEC-20260729-002 — direção Prata: cor de alerta é acento pontual (regra 60-30-10 e
+ * "vermelho sempre sobre superfície neutra clara" de `directions.ts`), nunca fundo dominante.
+ * A linha usa `bg-card` neutro (mesmo tom de `surface-alt` da paleta Prata); a cor semântica
+ * fica confinada ao chip de prazo, no padrão `bg-{variant}-pastel text-foreground` já
+ * comprovado acessível por `Alert`/`KpiCard` (border-{variant} sozinho falha contraste 3:1
+ * não-textual para `warning` sobre `card`, por isso não é usado como borda colorida aqui).
+ */
+function alertChipStyles(alert: FleetAlertItem): string {
+  return alert.days_until_due < 0 ? "bg-danger-pastel text-foreground" : "bg-warning-pastel text-foreground";
 }
 
 /**
@@ -43,12 +49,16 @@ export function FleetAlertBar({ alerts }: { alerts: FleetAlertItem[] }): ReactNo
       {visible.map((alert) => (
         <div
           key={alert.id}
-          className={`flex items-center justify-between gap-2 rounded border px-3 py-2 text-sm ${alertStyles(alert)}`}
+          className="flex items-center justify-between gap-2 rounded border border-border bg-card px-3 py-2 text-sm text-foreground"
         >
           <span>
             <strong>{alert.vehicle_plate}</strong> — {alert.description}
           </span>
-          <span className="shrink-0 text-xs font-medium">{alertLabel(alert)}</span>
+          <span
+            className={`shrink-0 rounded px-1.5 py-0.5 text-xs font-medium ${alertChipStyles(alert)}`}
+          >
+            {alertLabel(alert)}
+          </span>
         </div>
       ))}
       {overflowCount > 0 && (

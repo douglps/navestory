@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { Injectable, InternalServerErrorException, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import {
   DEFAULT_AUTO_DRAFT_ENABLED,
@@ -26,6 +26,8 @@ const PREFERENCES_COLUMNS = "auto_draft_enabled, vehicle_chip_fields, dashboard_
  */
 @Injectable()
 export class PreferencesService {
+  private readonly logger = new Logger(PreferencesService.name);
+
   constructor(private readonly configService: ConfigService) {}
 
   private clientForUser(accessToken: string): SupabaseClient {
@@ -48,7 +50,8 @@ export class PreferencesService {
       .maybeSingle();
 
     if (error) {
-      throw new NotFoundException("Não foi possível carregar as preferências");
+      this.logger.error("Falha ao carregar preferências", error.message);
+      throw new InternalServerErrorException("Não foi possível carregar as preferências");
     }
 
     const row = data as PreferencesResponse | null;
@@ -78,7 +81,8 @@ export class PreferencesService {
       .single();
 
     if (error) {
-      throw new NotFoundException("Não foi possível salvar as preferências");
+      this.logger.error("Falha ao salvar preferências", error.message);
+      throw new InternalServerErrorException("Não foi possível salvar as preferências");
     }
 
     return data as PreferencesResponse;

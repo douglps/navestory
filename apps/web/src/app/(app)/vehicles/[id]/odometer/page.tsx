@@ -1,7 +1,7 @@
 "use client";
 
 import { updateVehicleInputSchema, type UpdateVehicleInput } from "@nave/validators";
-import { OdometerInput } from "@nave/ui";
+import { Alert, Button, Container, OdometerInput } from "@nave/ui";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
@@ -82,34 +82,34 @@ export default function VehicleOdometerPage({
 
   if (isLoading || !vehicle) {
     return (
-      <main className="mx-auto flex max-w-sm flex-col gap-4 p-8">
+      <Container size="sm">
         <p>Carregando…</p>
-      </main>
+      </Container>
     );
   }
 
   return (
-    <main className="mx-auto flex max-w-sm flex-col gap-4 p-8">
+    <Container size="sm">
       <h1 className="text-xl font-semibold">Registrar KM — {vehicleLabel(vehicle)}</h1>
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-3">
         <label htmlFor="odometer">Odômetro atual (km) *</label>
         <OdometerInput id="odometer" value={odometer} onChange={setOdometer} required />
 
-        {fieldError && <p role="alert">{fieldError}</p>}
+        {fieldError && <Alert variant="error" description={fieldError} />}
         {mutation.isError && !fieldError && (
-          <p role="alert">Não foi possível atualizar o odômetro.</p>
+          <Alert variant="error" description="Não foi possível atualizar o odômetro." />
         )}
 
         <div className="flex gap-2">
-          <button type="submit" disabled={mutation.isPending}>
+          <Button type="submit" disabled={mutation.isPending}>
             {mutation.isPending ? "Salvando..." : "Salvar"}
-          </button>
-          <button type="button" onClick={() => router.push("/dashboard")}>
+          </Button>
+          <Button type="button" variant="outline" onClick={() => router.push("/dashboard")}>
             Cancelar
-          </button>
+          </Button>
         </div>
       </form>
-    </main>
+    </Container>
   );
 }

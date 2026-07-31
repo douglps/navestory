@@ -1,6 +1,7 @@
 "use client";
 
 import { passwordSchema } from "@nave/validators";
+import { Alert, Button, Container } from "@nave/ui";
 import { useMutation } from "@tanstack/react-query";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState, type FormEvent, type ReactNode } from "react";
@@ -52,7 +53,7 @@ function ResetPasswordForm(): ReactNode {
   }
 
   return (
-    <main className="mx-auto flex max-w-sm flex-col gap-4 p-8">
+    <Container size="sm">
       <h1 className="text-xl font-semibold">Redefinir senha</h1>
       <form onSubmit={handleSubmit} className="flex flex-col gap-3">
         <label htmlFor="password">Nova senha</label>
@@ -64,22 +65,16 @@ function ResetPasswordForm(): ReactNode {
           required
         />
 
-        {fieldError && (
-          <p role="alert" className="text-sm text-red-600">
-            {fieldError}
-          </p>
-        )}
+        {fieldError && <Alert variant="error" description={fieldError} />}
 
         {mutation.isError && (
-          <p role="alert" className="text-sm text-red-600">
-            Link de redefinição inválido ou expirado.
-          </p>
+          <Alert variant="error" description="Link de redefinição inválido ou expirado." />
         )}
 
-        <button type="submit" disabled={mutation.isPending}>
+        <Button type="submit" disabled={mutation.isPending}>
           {mutation.isPending ? "Redefinindo..." : "Redefinir senha"}
-        </button>
+        </Button>
       </form>
-    </main>
+    </Container>
   );
 }

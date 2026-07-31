@@ -1,9 +1,8 @@
 "use client";
 
 import { createMaintenanceInputSchema, type CreateMaintenanceInput } from "@nave/validators";
-import { CurrencyInput, OdometerInput } from "@nave/ui";
+import { Alert, Button, Combobox, Container, CurrencyInput, EmptyState, Input, OdometerInput } from "@nave/ui";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { ApiError, apiClient } from "@/lib/http/api-client";
@@ -111,87 +110,88 @@ export default function NewMaintenancePage(): ReactNode {
 
   if (!vehiclesLoading && vehicles?.length === 0) {
     return (
-      <main className="mx-auto flex max-w-sm flex-col gap-4 p-8">
+      <Container size="sm">
         <h1 className="text-xl font-semibold">Nova manutenção</h1>
-        <div className="flex flex-col items-center gap-2 rounded border p-6 text-center">
-          <p className="font-medium">Nenhum veículo cadastrado</p>
-          <p className="text-sm text-muted-foreground">
-            Cadastre um veículo para agendar manutenções.
-          </p>
-          <Link href="/vehicles/new" className="underline">
-            Cadastrar veículo →
-          </Link>
-        </div>
-      </main>
+        <EmptyState
+          title="Nenhum veículo cadastrado"
+          description="Cadastre um veículo para agendar manutenções."
+          action={{ label: "Cadastrar veículo", onClick: () => router.push("/vehicles/new") }}
+        />
+      </Container>
     );
   }
 
   return (
-    <main className="mx-auto flex max-w-sm flex-col gap-4 p-8">
+    <Container size="sm">
       <h1 className="text-xl font-semibold">Nova manutenção</h1>
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-3">
         {contextChangeNotice && (
-          <div role="status" className="flex items-center justify-between gap-2 rounded border border-neutral-200 p-2 text-sm">
+          <div role="status" className="flex items-center justify-between gap-2 rounded-md border border-border p-2 text-sm">
             <span>{contextChangeNotice}</span>
             <div className="flex shrink-0 gap-2">
-              <button type="button" onClick={applyContextChange} className="underline">
+              <Button type="button" variant="ghost" size="sm" onClick={applyContextChange}>
                 Atualizar campo
-              </button>
-              <button type="button" onClick={dismissContextChangeNotice} aria-label="Fechar aviso">
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={dismissContextChangeNotice}
+                aria-label="Fechar aviso"
+              >
                 ×
-              </button>
+              </Button>
             </div>
           </div>
         )}
 
-        <label htmlFor="vehicle_id">Veículo *</label>
-        <select
-          id="vehicle_id"
+        <span className="text-sm font-medium">Veículo *</span>
+        <Combobox
+          aria-label="Veículo *"
+          options={filteredVehicles.map((vehicle) => ({
+            value: vehicle.id,
+            label: vehicleLabel(vehicle),
+          }))}
           value={vehicleId}
-          onChange={(event) => setVehicleId(event.target.value)}
-          required
+          onValueChange={setVehicleId}
+          placeholder="Selecione um veículo"
+          searchPlaceholder="Buscar veículo..."
+          emptyMessage="Nenhum veículo encontrado"
+          loading={vehiclesLoading}
           className={
             isVehicleInherited
-              ? "border border-amber-300 bg-amber-50"
+              ? "border-warning bg-warning-pastel"
               : vehicleId
-                ? "border border-neutral-300"
-                : ""
+                ? "border-border"
+                : undefined
           }
-        >
-          <option value="" disabled>
-            Selecione um veículo
-          </option>
-          {filteredVehicles.map((vehicle) => (
-            <option key={vehicle.id} value={vehicle.id}>
-              {vehicleLabel(vehicle)}
-            </option>
-          ))}
-        </select>
+        />
         {isVehicleInherited && (
-          <span className="text-xs text-amber-700">↩ Herdado do contexto em foco</span>
+          <span className="text-xs text-foreground">↩ Herdado do contexto em foco</span>
         )}
         {!isVehicleInherited && vehicleId && (
-          <span className="text-xs text-neutral-500">✓ Selecionado manualmente</span>
+          <span className="text-xs text-muted-foreground">✓ Selecionado manualmente</span>
         )}
         {vehicleContextHint && <p className="text-xs text-muted-foreground">{vehicleContextHint}</p>}
         {vehicleQuickPicks.length > 0 && (
           <div className="flex flex-wrap gap-1">
             {vehicleQuickPicks.map((vehicle) => (
-              <button
+              <Button
                 key={vehicle.id}
                 type="button"
+                variant="outline"
+                size="sm"
                 onClick={() => setVehicleId(vehicle.id)}
-                className="rounded border px-2 py-0.5 text-xs hover:bg-neutral-100"
               >
                 {vehicleLabel(vehicle)}
-              </button>
+              </Button>
             ))}
           </div>
         )}
 
         <label htmlFor="description">Descrição *</label>
-        <input
+        <Input
           id="description"
           value={description}
           onChange={(event) => setDescription(event.target.value)}
@@ -199,7 +199,7 @@ export default function NewMaintenancePage(): ReactNode {
         />
 
         <label htmlFor="scheduled_date">Data e hora agendada *</label>
-        <input
+        <Input
           id="scheduled_date"
           type="datetime-local"
           value={scheduledDate}
@@ -213,20 +213,20 @@ export default function NewMaintenancePage(): ReactNode {
         <label htmlFor="odometer_km">Odômetro (km)</label>
         <OdometerInput id="odometer_km" value={odometerKm} onChange={setOdometerKm} />
 
-        {fieldError && <p role="alert">{fieldError}</p>}
+        {fieldError && <Alert variant="error" description={fieldError} />}
         {mutation.isError && !fieldError && (
-          <p role="alert">Não foi possível agendar a manutenção.</p>
+          <Alert variant="error" description="Não foi possível agendar a manutenção." />
         )}
 
         <div className="flex gap-2">
-          <button type="submit" disabled={mutation.isPending}>
+          <Button type="submit" disabled={mutation.isPending}>
             {mutation.isPending ? "Salvando..." : "Agendar"}
-          </button>
-          <button type="button" onClick={handleCancel}>
+          </Button>
+          <Button type="button" variant="outline" onClick={handleCancel}>
             Cancelar
-          </button>
+          </Button>
         </div>
       </form>
-    </main>
+    </Container>
   );
 }

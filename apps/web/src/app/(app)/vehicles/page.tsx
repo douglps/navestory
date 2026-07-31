@@ -3,6 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { Alert, Container, EmptyState } from "@nave/ui";
 import { apiClient } from "@/lib/http/api-client";
 
 interface Vehicle {
@@ -25,16 +26,16 @@ export default function VehiclesPage(): ReactNode {
   });
 
   return (
-    <main className="mx-auto flex max-w-2xl flex-col gap-4 p-8">
+    <Container size="2xl">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold">Meus veículos</h1>
         <Link href="/vehicles/new">Novo veículo</Link>
       </div>
 
       {isLoading && <p>Carregando...</p>}
-      {isError && <p role="alert">Não foi possível carregar os veículos.</p>}
+      {isError && <Alert variant="error" description="Não foi possível carregar os veículos." />}
       {!isLoading && !isError && vehicles?.length === 0 && (
-        <p>Você ainda não cadastrou nenhum veículo.</p>
+        <EmptyState size="sm" title="Você ainda não cadastrou nenhum veículo." />
       )}
 
       <ul className="flex flex-col gap-2">
@@ -46,6 +47,6 @@ export default function VehiclesPage(): ReactNode {
           </li>
         ))}
       </ul>
-    </main>
+    </Container>
   );
 }

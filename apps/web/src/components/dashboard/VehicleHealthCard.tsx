@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { VehicleHealthScore } from "@nave/ui";
+import { Badge, Tooltip, VehicleHealthScore, type BadgeProps } from "@nave/ui";
 
 export type DocumentStatus = "ok" | "attention" | "overdue" | "unknown";
 
@@ -51,12 +51,12 @@ function currency(value: number): string {
   return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
-const DOCUMENT_BADGE: Record<DocumentStatus, { label: string; className: string } | null> = {
+const DOCUMENT_BADGE: Record<DocumentStatus, { label: string; variant: NonNullable<BadgeProps["variant"]> } | null> = {
   ok: null,
   unknown: null,
-  // @spec SPEC-20260721-002 RF-03 — tokens semânticos em vez de classes Tailwind literais
-  attention: { label: "Atenção", className: "border-warning bg-warning-pastel text-warning-foreground" },
-  overdue: { label: "Vencido", className: "border-danger bg-danger-pastel text-danger-foreground" },
+  // @spec SPEC-20260730-001 — migrado para variant de `Badge` de `@nave/ui`
+  attention: { label: "Atenção", variant: "warning" },
+  overdue: { label: "Vencido", variant: "danger" },
 };
 
 function DocumentBadge({ label, status }: { label: string; status: DocumentStatus }): ReactNode {
@@ -64,9 +64,9 @@ function DocumentBadge({ label, status }: { label: string; status: DocumentStatu
   const badge = DOCUMENT_BADGE[status];
   if (!badge) return null;
   return (
-    <span className={`rounded border px-1.5 py-0.5 text-[10px] font-medium ${badge.className}`}>
+    <Badge variant={badge.variant} className="text-[10px]">
       {label} {badge.label}
-    </span>
+    </Badge>
   );
 }
 
@@ -102,9 +102,11 @@ export function VehicleHealthCard({
     >
       <div className="flex items-center justify-between gap-2">
         <span className="font-medium">{vehicleLabel(vehicle)}</span>
-        <span title={flagsTooltip(score, flags)}>
-          <VehicleHealthScore score={score} size={28} />
-        </span>
+        <Tooltip content={flagsTooltip(score, flags)}>
+          <span>
+            <VehicleHealthScore score={score} size={28} />
+          </span>
+        </Tooltip>
       </div>
       <span className="text-xs text-muted-foreground">{vehicle.plate}</span>
 

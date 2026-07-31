@@ -1,4 +1,5 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { QueryProvider } from "@/lib/query/providers";
 import MaintenanceDetailPage from "./page";
@@ -66,10 +67,12 @@ describe("MaintenanceDetailPage", () => {
     renderPage();
 
     await screen.findByDisplayValue("Troca de óleo");
-    const select = screen.getByLabelText("Mudar status") as HTMLSelectElement;
-    const options = Array.from(select.options).map((option) => option.value);
+    await userEvent.click(screen.getByLabelText("Mudar status"));
 
-    expect(options).toEqual(["", "in_progress", "completed", "cancelled"]);
+    expect(screen.getByRole("option", { name: "Manter status atual" })).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "Em andamento" })).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "Concluída" })).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "Cancelada" })).toBeInTheDocument();
   });
 
   it("não exibe seletor de status quando o estado é terminal", async () => {
@@ -85,9 +88,8 @@ describe("MaintenanceDetailPage", () => {
     renderPage();
 
     await screen.findByDisplayValue("Troca de óleo");
-    fireEvent.change(screen.getByLabelText("Mudar status"), {
-      target: { value: "in_progress" },
-    });
+    await userEvent.click(screen.getByLabelText("Mudar status"));
+    await userEvent.click(screen.getByRole("option", { name: "Em andamento" }));
     fireEvent.click(screen.getByRole("button", { name: "Salvar" }));
 
     await waitFor(() => expect(pushMock).toHaveBeenCalledWith("/maintenance"));

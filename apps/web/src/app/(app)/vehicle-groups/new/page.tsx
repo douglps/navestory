@@ -1,6 +1,7 @@
 "use client";
 
 import { createGroupInputSchema, PRESET_GROUP_COLORS } from "@nave/validators";
+import { Alert, Button, Checkbox, Container, Input } from "@nave/ui";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent, type ReactNode } from "react";
@@ -72,11 +73,11 @@ export default function NewVehicleGroupPage(): ReactNode {
   }
 
   return (
-    <main className="mx-auto flex max-w-sm flex-col gap-4 p-8">
+    <Container size="sm">
       <h1 className="text-xl font-semibold">Novo grupo de veículos</h1>
       <form onSubmit={handleSubmit} className="flex flex-col gap-3">
         <label htmlFor="name">Nome</label>
-        <input id="name" value={name} onChange={(event) => setName(event.target.value)} required />
+        <Input id="name" value={name} onChange={(event) => setName(event.target.value)} required />
 
         <label htmlFor="color">Cor</label>
         <div className="flex gap-2">
@@ -87,19 +88,18 @@ export default function NewVehicleGroupPage(): ReactNode {
               aria-label={preset}
               aria-pressed={color === preset}
               onClick={() => setColor(preset)}
-              className="h-6 w-6 rounded-full border"
+              className="h-6 w-6 rounded-full border border-border"
               style={{ backgroundColor: preset }}
             />
           ))}
         </div>
-        <input id="color" value={color} onChange={(event) => setColor(event.target.value)} />
+        <Input id="color" value={color} onChange={(event) => setColor(event.target.value)} />
 
         <fieldset className="flex flex-col gap-1">
           <legend>Veículos membros</legend>
           {vehicles?.map((vehicle) => (
             <label key={vehicle.id} className="flex items-center gap-2">
-              <input
-                type="checkbox"
+              <Checkbox
                 checked={selectedVehicleIds.includes(vehicle.id)}
                 onChange={() => toggleVehicle(vehicle.id)}
               />
@@ -108,13 +108,13 @@ export default function NewVehicleGroupPage(): ReactNode {
           ))}
         </fieldset>
 
-        {fieldError && <p role="alert">{fieldError}</p>}
-        {mutation.isError && <p role="alert">Não foi possível criar o grupo.</p>}
+        {fieldError && <Alert variant="error" description={fieldError} />}
+        {mutation.isError && <Alert variant="error" description="Não foi possível criar o grupo." />}
 
-        <button type="submit" disabled={mutation.isPending}>
+        <Button type="submit" disabled={mutation.isPending}>
           {mutation.isPending ? "Salvando..." : "Criar grupo"}
-        </button>
+        </Button>
       </form>
-    </main>
+    </Container>
   );
 }

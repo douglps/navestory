@@ -12,6 +12,14 @@ export {
 } from "./components/masked-input";
 
 export { Button, type ButtonProps } from "./components/button";
+export { Input, type InputProps, inputBaseClass } from "./components/input";
+export { Textarea, type TextareaProps } from "./components/textarea";
+export { Checkbox, type CheckboxProps } from "./components/checkbox";
+export { Switch, type SwitchProps } from "./components/switch";
+export { Badge, type BadgeProps } from "./components/badge";
+export { Skeleton } from "./components/skeleton";
+export { Container, type ContainerProps } from "./components/container";
+export { Tooltip, type TooltipProps } from "./components/tooltip";
 export { Card, type CardProps } from "./components/card";
 export { Alert, type AlertProps } from "./components/alert";
 export { EmptyState, type EmptyStateProps } from "./components/empty-state";

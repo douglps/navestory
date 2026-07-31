@@ -1,6 +1,8 @@
 "use client";
 
 import { type KeyboardEvent, type ReactNode } from "react";
+import { cn } from "../lib/cn";
+import { inputBaseClass } from "./input";
 
 /**
  * @spec SPEC-20260612-001 RF-03
@@ -73,6 +75,7 @@ interface MaskedNumberInputProps {
   required?: boolean;
   "aria-label"?: string;
   placeholder?: string;
+  className?: string;
 }
 
 /**
@@ -86,6 +89,7 @@ export function CurrencyInput({
   disabled,
   required,
   prefix = "R$",
+  className,
   ...rest
 }: MaskedNumberInputProps & { prefix?: string | null }): ReactNode {
   const digits = valueToCurrencyDigits(value);
@@ -112,6 +116,7 @@ export function CurrencyInput({
         onKeyDown={handleKeyDown}
         disabled={disabled}
         required={required}
+        className={cn(inputBaseClass, "h-10", className)}
         {...rest}
       />
     </span>
@@ -128,6 +133,7 @@ export function OdometerInput({
   onChange,
   disabled,
   required,
+  className,
   ...rest
 }: MaskedNumberInputProps): ReactNode {
   const digits = valueToOdometerDigits(value);
@@ -152,6 +158,7 @@ export function OdometerInput({
       onKeyDown={handleKeyDown}
       disabled={disabled}
       required={required}
+      className={cn(inputBaseClass, "h-10", className)}
       {...rest}
     />
   );

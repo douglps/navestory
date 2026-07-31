@@ -1,8 +1,9 @@
 import type { MetadataRoute } from "next";
 
 // @spec SPEC-20260712-001 RF-01, RF-02
-// Paleta Nave (.agents/nave-ui-pwa/SKILL.md): Primary oklch(0.556 0.15 260) ≈ #3b70ca,
-// Background oklch(0.985 0 0) ≈ #fafafa.
+// @spec SPEC-20260729-002 — recalculado para a direção Prata (era o azul pré-Prata #3b70ca).
+// Primary light oklch(35.3% 0.093 259) = #1B3A6B, Background light oklch(97.2% 0.003 248) =
+// #F4F6F8 — hex-fonte já documentados em SPEC-20260729-001 (não reconvertidos).
 export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "Nave — Gestão Inteligente de Veículos",
@@ -10,8 +11,8 @@ export default function manifest(): MetadataRoute.Manifest {
     description: "Gestão inteligente de veículos, despesas e manutenções.",
     start_url: "/",
     display: "standalone",
-    background_color: "#fafafa",
-    theme_color: "#3b70ca",
+    background_color: "#F4F6F8",
+    theme_color: "#1B3A6B",
     icons: [
       {
         src: "/icons/icon-192-any.png",

@@ -1,6 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { useState, type ReactNode } from "react";
+import { Skeleton } from "@nave/ui";
 import { CONTEXT_LABELS } from "@/lib/context/context-labels";
 import { useVehicleContext } from "@/lib/context/use-vehicle-context";
 import { useMediaQuery } from "@/lib/hooks/use-media-query";
@@ -19,17 +21,20 @@ const MODE_ICONS: Record<SelectionMode, string> = {
 /**
  * @spec SPEC-20260603-001 RF-02 — estados visuais por modo (sólido = permanente,
  * tracejado = temporário, mesma convenção da SPEC-20260602-001).
+ * @spec SPEC-20260729-002 RF-02 — paleta categórica (não tem status real, R-DS-07): single/multi
+ * compartilham o mesmo matiz (categorical-4/Sand), diferenciados só por borda sólida/tracejada e
+ * intensidade; group usa categorical-1/Azure; attribute usa categorical-5/Plum.
  */
 function getModeStyles(mode: SelectionMode): string {
   switch (mode) {
     case "single":
-      return "border border-amber-300 bg-amber-50 dark:border-amber-700 dark:bg-amber-900/20";
+      return "border border-categorical-4 bg-categorical-4/10";
     case "group":
-      return "border border-blue-300 bg-blue-50 dark:border-blue-700 dark:bg-blue-900/20";
+      return "border border-categorical-1 bg-categorical-1/10";
     case "multi":
-      return "border border-dashed border-amber-400 bg-amber-100 dark:border-amber-600 dark:bg-amber-800/20";
+      return "border border-dashed border-categorical-4 bg-categorical-4/20";
     case "attribute":
-      return "border border-dashed border-violet-300 bg-violet-50 dark:border-violet-700 dark:bg-violet-900/20";
+      return "border border-dashed border-categorical-5 bg-categorical-5/10";
     default:
       return "border border-dashed border-border/40 bg-transparent";
   }
@@ -44,15 +49,31 @@ function getModeStyles(mode: SelectionMode): string {
 export function VehicleContextChip(): ReactNode {
   const [isOpen, setIsOpen] = useState(false);
   const isDesktop = useMediaQuery("(min-width: 768px)");
-  const { hasHydrated, selectionMode, label, ariaLabel, clearAllSelection } = useVehicleContext();
+  const { hasHydrated, selectionMode, label, ariaLabel, clearAllSelection, vehicles, vehiclesQuery } =
+    useVehicleContext();
 
   // RF-24: skeleton estático enquanto o store não hidratou — nunca exibe `none` transitório.
   if (!hasHydrated) {
+    return <Skeleton className="h-11 min-w-[80px] w-32 rounded-lg" />;
+  }
+
+  // @spec SPEC-20260721-001 RF-05 — sem veículo cadastrado, o seletor vira CTA
+  // "Adicionar veículo" em vez de abrir um Dialog/Sheet sem nada para listar.
+  const hasNoVehicles =
+    selectionMode === "none" && vehiclesQuery.isSuccess && (vehicles?.length ?? 0) === 0;
+
+  if (hasNoVehicles) {
     return (
-      <div
-        aria-hidden
-        className="h-11 min-w-[80px] w-32 animate-pulse rounded-lg bg-muted"
-      />
+      <Link
+        href="/vehicles/new"
+        aria-label={CONTEXT_LABELS.addVehicleCta}
+        className={`flex h-11 max-w-[160px] items-center gap-1.5 rounded-lg px-2.5 text-sm transition-colors duration-200 hover:ring-1 hover:ring-border/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${getModeStyles("none")}`}
+      >
+        <span aria-hidden className="shrink-0 leading-none">
+          +
+        </span>
+        <span className="truncate">{CONTEXT_LABELS.addVehicleCta}</span>
+      </Link>
     );
   }
 
@@ -87,7 +108,7 @@ export function VehicleContextChip(): ReactNode {
               event.stopPropagation();
               clearAllSelection();
             }}
-            className="shrink-0 rounded-full p-[10px] -m-[10px] text-neutral-500 hover:text-neutral-800"
+            className="shrink-0 rounded-full p-[10px] -m-[10px] text-muted-foreground hover:text-foreground"
           >
             <span aria-hidden>×</span>
           </button>

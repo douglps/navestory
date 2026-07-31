@@ -6,10 +6,14 @@ Domínio responsável pelos tokens visuais, componentes de UI compartilhados em 
 
 | Spec | Título | Status |
 |------|--------|--------|
-| [SPEC-20260525-001](SPEC-20260525-001.md) | Design System — Novos Componentes UI | `approved` (v0.3, 2026-07-19) — implementação (T8.1) não iniciada |
+| [SPEC-20260525-001](SPEC-20260525-001.md) | Design System — Novos Componentes UI | `approved` (v0.3, 2026-07-19) — T8.1 concluída (rodadas 1–11, 2026-07-19): todos os 14 componentes de `packages/ui` implementados com testes (`jest-axe` incluso). Remanescem migrações de consumidores (duplicatas inline em telas existentes e componentes sem consumidor ainda — Steps/DateRangePicker/FileUpload/Breadcrumb aguardam feature de fase posterior); ver `matrices/rastreabilidade.md` §SPEC-20260525-001 para o inventário completo. |
 | [SPEC-20260721-001](SPEC-20260721-001-design-system-fundamentos.md) | Design System — Fundamentos de Marca, Tokens de Cor, Tema e Componentes de Navegação Global | `approved` (2026-07-21) |
 | [SPEC-20260722-001](SPEC-20260722-001-design-system-v2-direcao-criativa.md) | Design System v2 — Direção Criativa, Gramática de Cor e Estrutura de Documentação | `approved` (2026-07-22) |
-| [SPEC-20260722-002](SPEC-20260722-002-canvas-quente-light-mode.md) | Design System — Canvas Quente Sutil no Light Mode | `approved` (2026-07-22) |
+| [SPEC-20260722-002](SPEC-20260722-002-canvas-quente-light-mode.md) | Design System — Canvas Quente Sutil no Light Mode | `deprecated` (superseded_by SPEC-20260729-001) |
+| [SPEC-20260729-001](SPEC-20260729-001-adocao-direcao-prata.md) | Adoção da Direção Prata como Identidade de Marca | `approved` (2026-07-29) |
+| [SPEC-20260729-002](SPEC-20260729-002-prata-fase-2-categoricos-urgencia-varredura.md) | Prata Fase 2 — Paleta Categórica, Escala de Urgência e Varredura de Cor Hardcoded | `approved` (2026-07-29) |
+| [SPEC-20260729-003](SPEC-20260729-003-formularios-input-textarea-checkbox-switch.md) | Fecho de Formulários — `Input`/`Textarea`/`Checkbox`/`Switch` e Migração de Consumidores Restantes | `approved` (2026-07-30) |
+| [SPEC-20260730-001](SPEC-20260730-001-padronizacao-showcase-badge-skeleton-container-tooltip.md) | Padronização do Showcase Prata — `Badge`/`Skeleton`/`Container`/`Tooltip` | `approved` (2026-07-30) |
 
 ## Documentos de Referência
 
@@ -18,7 +22,10 @@ Domínio responsável pelos tokens visuais, componentes de UI compartilhados em 
 | [INVENTARIO-DESIGN-SYSTEM.md](INVENTARIO-DESIGN-SYSTEM.md) | Estado atual dos tokens e componentes implementados em `packages/ui`; fonte para recriar Figma Variables |
 | [PESQUISA-FUNDAMENTOS-DESIGN-SYSTEM.md](PESQUISA-FUNDAMENTOS-DESIGN-SYSTEM.md) | Pesquisa de metodologia, paleta OKLCH, dark/light mode, StatusBadge, NavBadge, Command Palette — racional técnico das decisões de produto de 2026-07-21 |
 | [PROMPT-FIGMA-MAKE.md](PROMPT-FIGMA-MAKE.md) | Prompts de apoio para geração de artefatos no Figma Make |
+| [PLANO-MIGRACAO-CONSUMIDORES.md](PLANO-MIGRACAO-CONSUMIDORES.md) | Checklist de execução para migrar telas consumidoras aos componentes de `packages/ui` (`Alert`, `EmptyState`, `Combobox`, `Table`, e — desde a Rodada 5/SPEC-20260729-003 — `Input`, `Textarea`, `Checkbox`, `Button`) |
+| [PLANO-MIGRACAO-SHOWCASE-INFRA.md](PLANO-MIGRACAO-SHOWCASE-INFRA.md) | Checklist de execução para o showcase parar de duplicar paleta/markup (`directions.ts`, specimens estáticos) e passar a consumir os tokens/componentes reais de `prata`, com automação de contraste e visual regression |
 | [`/Design.md`](../../Design.md) | Documento AI-agent-facing na raiz do repo — tokens + racional qualitativo, segue a estrutura de seções de R-DS-02 |
+| [PROPOSTA-BRAND-DESIGN-SYSTEM-2026-07-30.md](PROPOSTA-BRAND-DESIGN-SYSTEM-2026-07-30.md) | **Aprovado (2026-07-30)** — direção "Azul-Índigo" substitui "Prata"; definição completa de brand + design system (tipografia, arquitetura de tokens, estados de componente, elevação, iconografia, motion, acessibilidade, voz de marca, governança). Formalização em ADR/spec pendente — ver "Plano de Adoção" no próprio documento |
 
 ## Regras de Domínio Relacionadas
 
@@ -28,7 +35,12 @@ Domínio responsável pelos tokens visuais, componentes de UI compartilhados em 
 | R-DS-02 | Documentação de design system segue estrutura obrigatória de seções (Foundations, Tokens, Componentes, Padrões, Acessibilidade, Content/Voice, Governança) |
 | R-DS-03 | Cor semântica comunica status real; `gold` é o único elemento decorativo; nenhuma paleta multicolor sem significado |
 | R-DS-04 | `rounded-full` reservado a badge/tag/filtro; ações de interface usam raio ≤ `rounded-md` |
-| R-DS-05 | Proporção cromática de referência: ~70% neutro / ~15% primary / ~10% semântico / ~5% gold |
+| R-DS-05 | Proporção cromática de referência: ~60% neutro / ~30% estrutural (primary/border) / ~10% acento saturado (gold + danger) |
+| R-DS-06 | `danger`/`finance-outgoing` usa terracota dessaturado (nunca vermelho puro); nunca aplicado como fundo sólido direto sobre `background`/`card` |
+| R-DS-07 | Paleta categórica (`--categorical-1..5`) é exclusiva para dados sem status real (gráficos multi-série, indicadores de modo/contexto) — nunca comunica status |
+| R-DS-08 | Escala de urgência/intensidade por cor usa no máximo 4 níveis (ISO 11064-4), sempre acompanhada de label textual/numérico |
+| R-DS-09 | Todo campo de texto/número usa `Input`/`Textarea`, checkbox usa `Checkbox`, botão usa `Button`, `<select>` usa `Combobox` — nunca elemento HTML nativo sem estilo |
+| R-DS-10 | Badge de status usa `Badge`, placeholder de carregamento usa `Skeleton`, wrapper `<main>` usa `Container`, tooltip usa `Tooltip` (Radix) — nunca `title=` nativo |
 | C-DS-01 | Contraste WCAG AA (4.5:1 normal / 3:1 grande) obrigatório em todo texto, ambos os temas |
 
 Ver `specs/RULES.md` para a definição completa com versão e histórico.
@@ -36,3 +48,8 @@ Ver `specs/RULES.md` para a definição completa com versão e histórico.
 ## Implementação
 
 Componentes em `packages/ui/src/components/`. Tokens em `packages/ui/src/tokens/`.
+
+## Governança
+
+- **Componente/variante novo exige specimen real no showcase** — não apenas tipos/props documentados. O specimen importa o componente de `@nave/ui` (props reais, inclusive estados `loading`/`error`/vazio quando existirem), nunca uma recriação visual em markup solto. Ver `specs/design-system/PLANO-MIGRACAO-SHOWCASE-INFRA.md` Rodadas 2/3 como referência de formato — mesma lógica de "matriz de rastreabilidade não fica pendurada" já aplicada a specs (registrado também em `specs/AGENTS.md`).
+- **Cor hardcoded (`#hex`/`oklch(...)` fora dos tokens) é bloqueada em CI**, não apenas revisada manualmente — ver `SPEC-20260729-002` RF-04 e `specs/design-system/PLANO-MIGRACAO-SHOWCASE-INFRA.md` Rodada 6 para as exceções documentadas.

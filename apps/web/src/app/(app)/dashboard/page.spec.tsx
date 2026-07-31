@@ -4,8 +4,10 @@ import { QueryProvider } from "@/lib/query/providers";
 import { useDashboardStore } from "@/lib/stores/use-dashboard-store";
 import DashboardPage from "./page";
 
+const pushMock = vi.fn();
 vi.mock("next/navigation", () => ({
   usePathname: () => "/dashboard",
+  useRouter: () => ({ push: pushMock }),
 }));
 
 // jsdom não implementa scrollIntoView (RF-DA-05 depende dele).
@@ -88,10 +90,8 @@ describe("DashboardPage", () => {
     renderPage();
 
     await waitFor(() => expect(screen.getByText(/Bem-vindo à Nave/)).toBeInTheDocument());
-    expect(screen.getByRole("link", { name: /Cadastrar veículo/ })).toHaveAttribute(
-      "href",
-      "/vehicles/new",
-    );
+    screen.getByRole("button", { name: "Cadastrar veículo" }).click();
+    expect(pushMock).toHaveBeenCalledWith("/vehicles/new");
     expect(screen.queryByText("Gastos do mês")).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Exportar CSV" })).not.toBeInTheDocument();
   });

@@ -1,4 +1,4 @@
-import { Inject, Injectable, NotFoundException } from "@nestjs/common";
+import { Inject, Injectable, InternalServerErrorException, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import {
   DEFAULT_EXPENSE_CATEGORIES,
@@ -6,11 +6,13 @@ import {
   type DocumentStatus,
   type FinesStatusResponse,
   type FleetAlert,
+  type FleetChartsResponse,
   type FleetHealthEntry,
   type FleetKpiCatalog,
   type FleetKpis,
   type KpiResult,
   type KpiSeriesValue,
+  type MonthlySeriesPoint,
   type VehicleCard,
   type VehicleDocumentsStatus,
   type VehicleHistoryItem,
@@ -209,6 +211,8 @@ function resolveVehicle(row: ExpenseExportRow): { plate: string; model: string |
  */
 @Injectable()
 export class DashboardService {
+  private readonly logger = new Logger(DashboardService.name);
+
   constructor(
     @Inject(SUPABASE_ADMIN_CLIENT) private readonly supabaseAdmin: SupabaseClient,
     private readonly configService: ConfigService,
@@ -286,7 +290,8 @@ export class DashboardService {
     });
 
     if (error) {
-      throw new NotFoundException("Não foi possível calcular a saúde da frota");
+      this.logger.error("Falha ao calcular saúde da frota", error.message);
+      throw new InternalServerErrorException("Não foi possível calcular a saúde da frota");
     }
     return (data ?? []) as FleetHealthEntry[];
   }
@@ -297,8 +302,17 @@ export class DashboardService {
    * (IPVA/Seguro/CRLV), reconciliados com `vehicle_recurring_costs.paid_at` do ano corrente (mesma
    * reconciliação de RF-DB-06) — documento pago não gera alerta. Lista final ordenada por urgência
    * (mais vencido primeiro) — o frontend recorta os 3 primeiros e monta o link "ver todos (+N)".
+   *
+   * `options.includeUpcomingDocuments` é opt-in: sem ele, o comportamento é idêntico ao aprovado em
+   * RF-DA-01 (só documentos já vencidos). Com ele, documentos a vencer em até
+   * `DOCUMENT_ATTENTION_DAYS` também entram, como `type: "document_upcoming"` — usado hoje só pelo
+   * protótipo `/dashboard/concept` para montar uma timeline, não pela `FleetAlertBar` de produção.
    */
-  async getAlerts(accessToken: string, userId: string): Promise<FleetAlert[]> {
+  async getAlerts(
+    accessToken: string,
+    userId: string,
+    options?: { includeUpcomingDocuments?: boolean },
+  ): Promise<FleetAlert[]> {
     const client = this.clientForUser(accessToken);
     const tz = await this.resolveUserTimezone(accessToken, userId);
     const today = new Date();
@@ -313,11 +327,12 @@ export class DashboardService {
         .in("status", ["scheduled", "in_progress"])
         .lt("scheduled_date", exclusiveDayUpperBoundUtc(toCalendarDay(horizon, tz)))
         .order("scheduled_date", { ascending: true }),
-      this.getDocumentOverdueAlerts(client, userId, today, tz),
+      this.getDocumentOverdueAlerts(client, userId, today, tz, options?.includeUpcomingDocuments ?? false),
     ]);
 
     if (maintenanceResult.error) {
-      throw new NotFoundException("Não foi possível carregar os alertas da frota");
+      this.logger.error("Falha ao carregar alertas de manutenção", maintenanceResult.error.message);
+      throw new InternalServerErrorException("Não foi possível carregar os alertas da frota");
     }
 
     const maintenanceAlerts = ((maintenanceResult.data ?? []) as MaintenanceAlertRow[]).map((row) => {
@@ -340,15 +355,19 @@ export class DashboardService {
 
   /**
    * @spec SPEC-20260531-001 RF-DA-01, RF-DB-06, CA-S3-02
-   * Só documentos vencidos entram na barra de alertas (não "a vencer") — RF-DA-01 lista
-   * explicitamente "documentos vencidos", diferente do badge "Atenção" da seção Docs (RF-DB-06,
-   * horizonte de 30 dias, escopo de exibição, não de alerta).
+   * Por default, só documentos vencidos entram na barra de alertas (não "a vencer") — RF-DA-01
+   * lista explicitamente "documentos vencidos", diferente do badge "Atenção" da seção Docs
+   * (RF-DB-06, horizonte de 30 dias, escopo de exibição, não de alerta). `includeUpcoming` reaproveita
+   * esse mesmo horizonte de 30 dias (`DOCUMENT_ATTENTION_DAYS`) para emitir também
+   * `type: "document_upcoming"` quando o chamador pedir explicitamente — RF-DA-01 continua valendo
+   * sem a flag.
    */
   private async getDocumentOverdueAlerts(
     client: SupabaseClient,
     userId: string,
     today: Date,
     tz: string,
+    includeUpcoming: boolean,
   ): Promise<FleetAlert[]> {
     const [vehiclesResult, paidDocuments] = await Promise.all([
       client
@@ -360,7 +379,8 @@ export class DashboardService {
     ]);
 
     if (vehiclesResult.error) {
-      throw new NotFoundException("Não foi possível carregar os alertas da frota");
+      this.logger.error("Falha ao carregar veículos para alertas de documentos", vehiclesResult.error.message);
+      throw new InternalServerErrorException("Não foi possível carregar os alertas da frota");
     }
 
     const alerts: FleetAlert[] = [];
@@ -373,19 +393,22 @@ export class DashboardService {
         if (!dueDate) continue;
 
         const daysUntilDue = daysUntil(dueDate, today, tz);
-        if (daysUntilDue >= 0) continue;
+        const isOverdue = daysUntilDue < 0;
+        const isUpcoming = !isOverdue && daysUntilDue <= DOCUMENT_ATTENTION_DAYS;
+        if (!isOverdue && !(includeUpcoming && isUpcoming)) continue;
 
         // eslint-disable-next-line security/detect-object-injection -- field é keyof fixo, união de 3 literais
         const costType = DOCUMENT_FIELD_TO_COST_TYPE[field];
         if (paidDocuments.has(`${vehicle.id}:${costType}`)) continue;
 
+        // eslint-disable-next-line security/detect-object-injection -- field é keyof fixo, união de 3 literais
+        const label = DOCUMENT_LABEL[field];
         alerts.push({
           id: `document:${vehicle.id}:${costType}`,
-          type: "document_overdue",
+          type: isOverdue ? "document_overdue" : "document_upcoming",
           vehicle_id: vehicle.id,
           vehicle_plate: vehicle.plate,
-          // eslint-disable-next-line security/detect-object-injection -- field é keyof fixo, união de 3 literais
-          description: `${DOCUMENT_LABEL[field]} vencido`,
+          description: isOverdue ? `${label} vencido` : `${label} vence em breve`,
           due_date: dueDate,
           days_until_due: daysUntilDue,
         });
@@ -408,7 +431,8 @@ export class DashboardService {
       .is("deleted_at", null);
 
     if (error) {
-      throw new NotFoundException("Não foi possível carregar os alertas da frota");
+      this.logger.error("Falha ao carregar documentos pagos", error.message);
+      throw new InternalServerErrorException("Não foi possível carregar os alertas da frota");
     }
 
     return new Set(
@@ -747,7 +771,8 @@ export class DashboardService {
       .order("plate", { ascending: true });
 
     if (error) {
-      throw new NotFoundException("Não foi possível carregar os veículos da frota");
+      this.logger.error("Falha ao carregar veículos da frota", error.message);
+      throw new InternalServerErrorException("Não foi possível carregar os veículos da frota");
     }
 
     const today = new Date();
@@ -872,6 +897,142 @@ export class DashboardService {
         p_group_vehicle_ids: groupIds && groupIds.length > 0 ? groupIds : null,
       },
     );
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    return ((data ?? []) as CategorySpendingRpcRow[]).map((row) => ({
+      category: row.category,
+      label: categoryLabel(row.category),
+      total_amount: round2(row.total_amount),
+      count: row.expense_count,
+    }));
+  }
+
+  /**
+   * @spec SPEC-20260721-002 RF-08, RNF-05
+   * Os 3 gráficos inline de frota, cada um numa query/RPC independente — falha em um não afeta
+   * os demais (mesmo padrão de isolamento de `getFleetKpiCatalog`, aqui via `Promise.all` porque
+   * nenhum dos três tem fallback "sem dado" que valha a pena distinguir de erro real).
+   */
+  async getFleetCharts(accessToken: string, userId: string): Promise<FleetChartsResponse> {
+    const client = this.clientForUser(accessToken);
+
+    const [costPerKm, fuelLiters, categoryBreakdown] = await Promise.all([
+      this.getCostPerKmChartSeries(client, userId),
+      this.getFuelLitersChartSeries(client, userId),
+      this.getFullCategoryBreakdown(client),
+    ]);
+
+    return { cost_per_km: costPerKm, fuel_liters: fuelLiters, category_breakdown: categoryBreakdown };
+  }
+
+  /**
+   * @spec SPEC-20260721-002 RF-08
+   * Série de 6 meses de custo/km agregado da frota, para o `CostPerKmChart`. Reaproveita a mesma
+   * RPC `get_vehicle_cost_per_km` de `getCostPerKmSeries` (KPI com sparkline), mas com o rótulo do
+   * mês explícito em vez de apenas o array de valores — formato de consumo diferente (gráfico vs.
+   * sparkline de KpiCard), por isso é um método dedicado em vez de reaproveitar o retorno direto.
+   */
+  private async getCostPerKmChartSeries(
+    client: SupabaseClient,
+    userId: string,
+  ): Promise<MonthlySeriesPoint[]> {
+    const { data: vehiclesData, error: vehiclesError } = await client
+      .from("vehicles")
+      .select("id")
+      .eq("user_id", userId)
+      .is("deleted_at", null);
+
+    if (vehiclesError) {
+      throw new Error(vehiclesError.message);
+    }
+
+    const vehicleIds = ((vehiclesData ?? []) as { id: string }[]).map((vehicle) => vehicle.id);
+    const months = recentMonthStarts(KPI_SERIES_MONTHS);
+
+    return Promise.all(
+      months.map(async (month) => {
+        if (vehicleIds.length === 0) return { month: monthKey(month), value: 0 };
+
+        const results = await Promise.all(
+          vehicleIds.map((id) =>
+            client.rpc("get_vehicle_cost_per_km", { p_vehicle_id: id, p_month_start: toDateString(month) }),
+          ),
+        );
+
+        let spent = 0;
+        let km = 0;
+        for (const result of results) {
+          if (result.error) {
+            throw new Error(result.error.message);
+          }
+          const row = ((result.data ?? []) as { total_spent: number | null; total_km: number | null }[])[0];
+          if (!row) continue;
+          spent += row.total_spent ?? 0;
+          km += row.total_km ?? 0;
+        }
+
+        return { month: monthKey(month), value: km > 0 ? round2(spent / km) : 0 };
+      }),
+    );
+  }
+
+  /**
+   * @spec SPEC-20260721-002 RF-08
+   * Volume de combustível abastecido por mês (soma de `expenses.liters`), não eficiência km/L —
+   * ver nota em `FleetChartsResponse` (`@nave/validators`) sobre por que km/L não agrega
+   * significativamente numa frota mista. Uma única query cobre os 6 meses (mesmo padrão de
+   * `getExpensesMonthSeries`), sem RPC dedicada.
+   */
+  private async getFuelLitersChartSeries(
+    client: SupabaseClient,
+    userId: string,
+  ): Promise<MonthlySeriesPoint[]> {
+    const months = recentMonthStarts(KPI_SERIES_MONTHS);
+    const rangeStart = toDateString(months[0]!);
+    const rangeEnd = lastDayOfMonth(monthKey(months[months.length - 1]!));
+
+    const { data, error } = await client
+      .from("expenses")
+      .select("occurred_at, liters")
+      .eq("user_id", userId)
+      .eq("category", "fuel")
+      .is("deleted_at", null)
+      .not("liters", "is", null)
+      .gte("occurred_at", rangeStart)
+      .lt("occurred_at", exclusiveDayUpperBoundUtc(rangeEnd));
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    const buckets = new Map<string, number>();
+    for (const month of months) buckets.set(monthKey(month), 0);
+
+    for (const row of (data ?? []) as { occurred_at: string; liters: number }[]) {
+      const key = row.occurred_at.slice(0, 7);
+      if (!buckets.has(key)) continue;
+      buckets.set(key, buckets.get(key)! + row.liters);
+    }
+
+    return months.map((month) => ({ month: monthKey(month), value: round2(buckets.get(monthKey(month))!) }));
+  }
+
+  /**
+   * @spec SPEC-20260721-002 RF-08
+   * Breakdown completo de categorias do mês corrente (frota inteira, sem filtro de veículo/grupo)
+   * para o `ExpenseCategoryPie` — reaproveita `get_category_spending_highlights` com `p_limit`
+   * alto o bastante para nunca truncar o catálogo real de categorias (ver migration
+   * `20260722130000_fleet_charts.sql`), em vez de duplicar a RPC usada por `getSpendingHighlights`.
+   */
+  private async getFullCategoryBreakdown(client: SupabaseClient): Promise<CategorySummaryItem[]> {
+    const { data, error } = await client.rpc("get_category_spending_highlights", {
+      p_vehicle_id: null,
+      p_group_vehicle_ids: null,
+      p_limit: 50,
+    });
 
     if (error) {
       throw new Error(error.message);

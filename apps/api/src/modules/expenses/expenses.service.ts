@@ -3,6 +3,7 @@ import {
   ForbiddenException,
   Inject,
   Injectable,
+  InternalServerErrorException,
   Logger,
   NotFoundException,
 } from "@nestjs/common";
@@ -366,7 +367,8 @@ export class ExpensesService {
       .limit(200);
 
     if (error) {
-      throw new NotFoundException("Não foi possível listar os fornecedores");
+      this.logger.error("Falha ao listar fornecedores", error.message);
+      throw new InternalServerErrorException("Não foi possível listar os fornecedores");
     }
 
     const seen = new Set<string>();
@@ -404,7 +406,11 @@ export class ExpensesService {
       .is("deleted_at", null)
       .maybeSingle();
 
-    if (vehicleError || !vehicle) {
+    if (vehicleError) {
+      this.logger.error("Falha ao verificar veículo antes de criar despesa", vehicleError.message);
+      throw new InternalServerErrorException("Não foi possível verificar o veículo");
+    }
+    if (!vehicle) {
       throw new NotFoundException("Veículo não encontrado");
     }
 
@@ -430,7 +436,8 @@ export class ExpensesService {
       .single();
 
     if (error || !data) {
-      throw new NotFoundException("Não foi possível criar a despesa");
+      this.logger.error("Falha ao criar despesa", error?.message);
+      throw new InternalServerErrorException("Não foi possível criar a despesa");
     }
 
     void this.auditService.log({
@@ -492,7 +499,8 @@ export class ExpensesService {
       .range(from, to);
 
     if (error) {
-      throw new NotFoundException("Não foi possível listar as despesas");
+      this.logger.error("Falha ao listar despesas", error.message);
+      throw new InternalServerErrorException("Não foi possível listar as despesas");
     }
 
     const total = count ?? 0;
@@ -514,7 +522,11 @@ export class ExpensesService {
       .is("deleted_at", null)
       .maybeSingle();
 
-    if (error || !data) {
+    if (error) {
+      this.logger.error("Falha ao buscar despesa", error.message);
+      throw new InternalServerErrorException("Não foi possível buscar a despesa");
+    }
+    if (!data) {
       throw new NotFoundException("Despesa não encontrada");
     }
     return data as Expense;
@@ -562,7 +574,11 @@ export class ExpensesService {
       .select(EXPENSE_COLUMNS)
       .maybeSingle();
 
-    if (error || !data) {
+    if (error) {
+      this.logger.error("Falha ao atualizar despesa", error.message);
+      throw new InternalServerErrorException("Não foi possível atualizar a despesa");
+    }
+    if (!data) {
       throw new NotFoundException("Despesa não encontrada");
     }
 
@@ -599,7 +615,8 @@ export class ExpensesService {
       .is("deleted_at", null);
 
     if (error) {
-      throw new NotFoundException("Não foi possível remover a despesa");
+      this.logger.error("Falha ao remover despesa", error.message);
+      throw new InternalServerErrorException("Não foi possível remover a despesa");
     }
 
     void this.auditService.log({
@@ -626,7 +643,8 @@ export class ExpensesService {
     const { data, error } = await (query.limit ? builder.limit(query.limit) : builder);
 
     if (error) {
-      throw new NotFoundException("Não foi possível carregar as próximas despesas");
+      this.logger.error("Falha ao carregar próximas despesas", error.message);
+      throw new InternalServerErrorException("Não foi possível carregar as próximas despesas");
     }
     return (data ?? []) as UpcomingCostItem[];
   }
@@ -656,7 +674,8 @@ export class ExpensesService {
 
     const { data, error } = await builder;
     if (error) {
-      throw new NotFoundException("Não foi possível calcular os KPIs financeiros");
+      this.logger.error("Falha ao calcular KPIs financeiros", error.message);
+      throw new InternalServerErrorException("Não foi possível calcular os KPIs financeiros");
     }
     return round2(((data ?? []) as { amount: number }[]).reduce((sum, row) => sum + row.amount, 0));
   }
@@ -752,7 +771,8 @@ export class ExpensesService {
       .single();
 
     if (error || !data) {
-      throw new NotFoundException("Não foi possível vincular a despesa ao ledger");
+      this.logger.error("Falha ao vincular despesa ao ledger", error?.message);
+      throw new InternalServerErrorException("Não foi possível vincular a despesa ao ledger");
     }
 
     void this.auditService.log({
@@ -784,7 +804,8 @@ export class ExpensesService {
       .is("deleted_at", null);
 
     if (error) {
-      throw new NotFoundException("Não foi possível remover a despesa vinculada");
+      this.logger.error("Falha ao remover despesa vinculada", error.message);
+      throw new InternalServerErrorException("Não foi possível remover a despesa vinculada");
     }
   }
 

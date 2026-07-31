@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import type { UpcomingCostItem } from "@nave/validators";
+import { EmptyState } from "@nave/ui";
 import { apiClient } from "@/lib/http/api-client";
 
 const HORIZON_DAYS = 7;
@@ -65,7 +66,7 @@ export function UpcomingCostsWidget(): ReactNode {
       </div>
 
       {items.length === 0 ? (
-        <p className="text-sm text-muted-foreground">Nenhum compromisso nos próximos 7 dias.</p>
+        <EmptyState size="sm" title="Nenhum compromisso nos próximos 7 dias." />
       ) : (
         <ul className="flex flex-col gap-2">
           {items.map((item) => {

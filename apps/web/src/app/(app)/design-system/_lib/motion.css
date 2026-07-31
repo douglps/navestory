@@ -1,0 +1,54 @@
+/**
+ * Polyfill de demonstração — escopo local a /design-system, nunca em globals.css.
+ *
+ * `packages/ui/src/components/dialog.tsx` e `tooltip.tsx` já emitem as classes
+ * `animate-in`/`animate-out`/`fade-in`/`fade-out`/`duration-150` (Tailwind v4, sem o plugin
+ * `tailwindcss-animate`, que não está instalado no projeto) — hoje essas classes não geram
+ * nenhuma regra CSS e a transição de entrada/saída de Dialog/Tooltip é inerte em produção.
+ *
+ * Este arquivo NÃO edita os componentes de produção: apenas fornece, para as mesmas classes
+ * já presentes no DOM, uma regra CSS pura que as anima de verdade — escopada por
+ * `body.ds-motion-demo` (classe que a rota /design-system adiciona ao <body> só enquanto
+ * montada, via useEffect, porque Dialog/Tooltip fazem portal para document.body). Fora desta
+ * rota, a classe nunca existe e nada muda no resto do app.
+ *
+ * A correção real (instalar `tailwindcss-animate` ou autorar essas utilities via `@utility`
+ * do Tailwind v4 em `apps/web/tailwind.config.ts`/`globals.css`) é trabalho do Plano de
+ * Adoção da proposta aprovada — fora do escopo deste showcase.
+ */
+
+body.ds-motion-demo [data-state="open"].fade-in,
+body.ds-motion-demo [data-state="delayed-open"].fade-in {
+  animation: ds-fade-in 150ms ease-out both;
+}
+
+body.ds-motion-demo [data-state="closed"].fade-out {
+  animation: ds-fade-out 150ms ease-in both;
+}
+
+/* Simulação local de `prefers-reduced-motion: reduce` — não é a media query real do SO,
+   é um toggle didático dentro do showcase (proposta §9: reduced-motion desativa decorativo). */
+body.ds-motion-demo.ds-reduced-motion [data-state],
+body.ds-motion-demo.ds-reduced-motion .animate-pulse,
+body.ds-motion-demo.ds-reduced-motion .animate-spin {
+  animation: none !important;
+  transition: none !important;
+}
+
+@keyframes ds-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes ds-fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}

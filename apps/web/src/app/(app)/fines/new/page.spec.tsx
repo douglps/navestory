@@ -1,0 +1,149 @@
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { QueryProvider } from "@/lib/query/providers";
+import { useDashboardStore } from "@/lib/stores/use-dashboard-store";
+import NewFinePage from "./page";
+
+const pushMock = vi.fn();
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push: pushMock }),
+}));
+
+vi.mock("@/lib/http/api-client", async () => {
+  const actual = await vi.importActual<typeof import("@/lib/http/api-client")>(
+    "@/lib/http/api-client",
+  );
+  return { ...actual, apiClient: vi.fn() };
+});
+
+import { apiClient } from "@/lib/http/api-client";
+
+const VEHICLE_ID = "11111111-1111-4111-8111-111111111111";
+const vehicles = [{ id: VEHICLE_ID, plate: "ABC1234", make: "Fiat", model: "Uno", nickname: null }];
+
+/** Digita dígito por dígito num CurrencyInput/OdometerInput (estilo caixa eletrônico). */
+function typeDigits(input: HTMLElement, digits: string): void {
+  for (const digit of digits) {
+    fireEvent.keyDown(input, { key: digit });
+  }
+}
+
+/** Abre o Combobox pelo aria-label e seleciona a opção com o texto informado. */
+async function selectCombobox(label: string, optionText: string): Promise<void> {
+  await userEvent.click(screen.getByLabelText(label));
+  await userEvent.click(await screen.findByRole("option", { name: optionText }));
+}
+
+/** Aguarda a lista de veículos carregar (Combobox sai do estado "Carregando..."). */
+async function waitForVehiclesLoaded(): Promise<void> {
+  await waitFor(() => expect(screen.getByLabelText("Veículo *")).not.toHaveTextContent("Carregando"));
+}
+
+function mockLookups(overrides: Record<string, unknown> = {}) {
+  vi.mocked(apiClient).mockImplementation((path: string) => {
+    if (path === "/vehicles") return Promise.resolve(overrides.vehicles ?? vehicles) as never;
+    return Promise.resolve({ id: "f1" }) as never;
+  });
+}
+
+describe("NewFinePage", () => {
+  beforeEach(() => {
+    localStorage.clear();
+    useDashboardStore.getState().clearAllSelection();
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  function renderPage() {
+    return render(
+      <QueryProvider>
+        <NewFinePage />
+      </QueryProvider>,
+    );
+  }
+
+  async function fillValidForm() {
+    await waitForVehiclesLoaded();
+    await selectCombobox("Veículo *", "Fiat Uno");
+    fireEvent.change(screen.getByLabelText("Descrição *"), {
+      target: { value: "Excesso de velocidade" },
+    });
+    typeDigits(screen.getByLabelText("Valor (R$) *"), "19523");
+    fireEvent.change(screen.getByLabelText("Data da infração *"), {
+      target: { value: "2026-07-01" },
+    });
+  }
+
+  it("registra a multa e redireciona para /fines (RF-06, CA-08)", async () => {
+    mockLookups();
+    renderPage();
+
+    await fillValidForm();
+    fireEvent.click(screen.getByRole("button", { name: "Registrar" }));
+
+    await waitFor(() => expect(pushMock).toHaveBeenCalledWith("/fines"));
+    expect(apiClient).toHaveBeenCalledWith(
+      "/fines",
+      expect.objectContaining({
+        method: "POST",
+        body: expect.objectContaining({
+          vehicle_id: VEHICLE_ID,
+          description: "Excesso de velocidade",
+          amount: 195.23,
+          occurred_at: "2026-07-01",
+        }),
+      }),
+    );
+  });
+
+  it("bloqueia envio quando valor com desconto é maior que o valor original (CA-09)", async () => {
+    mockLookups();
+    renderPage();
+
+    await fillValidForm();
+    fireEvent.click(screen.getByRole("button", { name: "Detalhes da infração (opcional)" }));
+    typeDigits(screen.getByLabelText("Valor com desconto"), "99999");
+    fireEvent.click(screen.getByRole("button", { name: "Registrar" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Valor com desconto não pode ser maior que o valor original",
+    );
+    expect(pushMock).not.toHaveBeenCalled();
+  });
+
+  it("exibe empty state com CTA quando não há veículos cadastrados (R-FORM-07, CA-16)", async () => {
+    mockLookups({ vehicles: [] });
+    renderPage();
+
+    expect(await screen.findByText("Nenhum veículo cadastrado")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Cadastrar veículo" }));
+    expect(pushMock).toHaveBeenCalledWith("/vehicles/new");
+  });
+
+  it("pede confirmação ao cancelar com o formulário sujo (CA-10, R-FORM-05)", async () => {
+    const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(false);
+    mockLookups();
+    renderPage();
+
+    await fillValidForm();
+    fireEvent.click(screen.getByRole("button", { name: "Cancelar" }));
+
+    expect(confirmSpy).toHaveBeenCalledWith("Descartar alterações?");
+    expect(pushMock).not.toHaveBeenCalled();
+  });
+
+  it("cancela sem confirmação quando o formulário está limpo", async () => {
+    const confirmSpy = vi.spyOn(window, "confirm");
+    mockLookups();
+    renderPage();
+
+    await waitForVehiclesLoaded();
+    fireEvent.click(screen.getByRole("button", { name: "Cancelar" }));
+
+    expect(confirmSpy).not.toHaveBeenCalled();
+    expect(pushMock).toHaveBeenCalledWith("/fines");
+  });
+});

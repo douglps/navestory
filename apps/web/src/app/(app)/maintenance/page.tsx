@@ -3,6 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { Alert, Badge, Container, EmptyState, type BadgeProps } from "@nave/ui";
 import { apiClient } from "@/lib/http/api-client";
 import { useVehicleContext } from "@/lib/context/use-vehicle-context";
 import { formatDateInTz } from "@/lib/datetime-tz";
@@ -41,11 +42,11 @@ const STATUS_LABEL: Record<Maintenance["status"], string> = {
   cancelled: "Cancelada",
 };
 
-const STATUS_CLASS: Record<Maintenance["status"], string> = {
-  scheduled: "border-sky-400 bg-sky-50 text-sky-700",
-  in_progress: "border-amber-400 bg-amber-50 text-amber-700",
-  completed: "border-green-500 bg-green-50 text-green-700",
-  cancelled: "border-muted text-muted-foreground",
+const STATUS_VARIANT: Record<Maintenance["status"], NonNullable<BadgeProps["variant"]>> = {
+  scheduled: "info",
+  in_progress: "warning",
+  completed: "success",
+  cancelled: "neutral",
 };
 
 /**
@@ -81,16 +82,16 @@ export default function MaintenancePage(): ReactNode {
       : maintenances;
 
   return (
-    <main className="mx-auto flex max-w-2xl flex-col gap-4 p-8">
+    <Container size="2xl">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold">Manutenções</h1>
         <Link href="/maintenance/new">Nova manutenção</Link>
       </div>
 
       {isLoading && <p>Carregando...</p>}
-      {isError && <p role="alert">Não foi possível carregar as manutenções.</p>}
+      {isError && <Alert variant="error" description="Não foi possível carregar as manutenções." />}
       {!isLoading && !isError && visibleMaintenances?.length === 0 && (
-        <p>Nenhuma manutenção agendada ainda.</p>
+        <EmptyState size="sm" title="Nenhuma manutenção agendada ainda." />
       )}
 
       <ul className="flex flex-col gap-2">
@@ -107,16 +108,14 @@ export default function MaintenancePage(): ReactNode {
               </div>
               <div className="flex items-center gap-2">
                 {maintenance.cost != null && <span>{currency(maintenance.cost)}</span>}
-                <span
-                  className={`rounded border px-1.5 py-0.5 text-xs ${STATUS_CLASS[maintenance.status]}`}
-                >
+                <Badge variant={STATUS_VARIANT[maintenance.status]}>
                   {STATUS_LABEL[maintenance.status]}
-                </span>
+                </Badge>
               </div>
             </Link>
           </li>
         ))}
       </ul>
-    </main>
+    </Container>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { createVehicleInputSchema, type CreateVehicleInput } from "@nave/validators";
+import { Alert, Button, Combobox, Container, Input } from "@nave/ui";
 import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent, type ReactNode } from "react";
@@ -57,11 +58,11 @@ export default function NewVehiclePage(): ReactNode {
   }
 
   return (
-    <main className="mx-auto flex max-w-sm flex-col gap-4 p-8">
+    <Container size="sm">
       <h1 className="text-xl font-semibold">Cadastrar veículo</h1>
       <form onSubmit={handleSubmit} className="flex flex-col gap-3">
         <label htmlFor="plate">Placa</label>
-        <input
+        <Input
           id="plate"
           value={plate}
           onChange={(event) => setPlate(event.target.value)}
@@ -69,10 +70,10 @@ export default function NewVehiclePage(): ReactNode {
         />
 
         <label htmlFor="make">Marca</label>
-        <input id="make" value={make} onChange={(event) => setMake(event.target.value)} required />
+        <Input id="make" value={make} onChange={(event) => setMake(event.target.value)} required />
 
         <label htmlFor="model">Modelo</label>
-        <input
+        <Input
           id="model"
           value={model}
           onChange={(event) => setModel(event.target.value)}
@@ -80,7 +81,7 @@ export default function NewVehiclePage(): ReactNode {
         />
 
         <label htmlFor="year">Ano</label>
-        <input
+        <Input
           id="year"
           type="number"
           value={year}
@@ -88,28 +89,26 @@ export default function NewVehiclePage(): ReactNode {
           required
         />
 
-        <label htmlFor="vehicle_type">Tipo</label>
-        <select
-          id="vehicle_type"
+        <span className="text-sm font-medium">Tipo</span>
+        <Combobox
+          aria-label="Tipo"
+          options={VEHICLE_TYPES.map((type) => ({ value: type.value, label: type.label }))}
           value={vehicleType}
-          onChange={(event) =>
-            setVehicleType(event.target.value as CreateVehicleInput["vehicle_type"])
+          onValueChange={(value) =>
+            setVehicleType(value as CreateVehicleInput["vehicle_type"])
           }
-        >
-          {VEHICLE_TYPES.map((type) => (
-            <option key={type.value} value={type.value}>
-              {type.label}
-            </option>
-          ))}
-        </select>
+          placeholder="Selecione um tipo"
+          searchPlaceholder="Buscar tipo..."
+          emptyMessage="Nenhum tipo encontrado"
+        />
 
-        {fieldError && <p role="alert">{fieldError}</p>}
-        {mutation.isError && <p role="alert">Não foi possível cadastrar o veículo.</p>}
+        {fieldError && <Alert variant="error" description={fieldError} />}
+        {mutation.isError && <Alert variant="error" description="Não foi possível cadastrar o veículo." />}
 
-        <button type="submit" disabled={mutation.isPending}>
+        <Button type="submit" disabled={mutation.isPending}>
           {mutation.isPending ? "Salvando..." : "Cadastrar"}
-        </button>
+        </Button>
       </form>
-    </main>
+    </Container>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { Alert, Button } from "@nave/ui";
+import { Alert, Button, Container } from "@nave/ui";
 import { useMutation } from "@tanstack/react-query";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, type ReactNode } from "react";
@@ -58,7 +58,7 @@ function RestoreAccountContent(): ReactNode {
       : "Não foi possível restaurar sua conta agora. Tente novamente ou entre em contato com o suporte.";
 
   return (
-    <main className="mx-auto flex max-w-md flex-col gap-4 p-8">
+    <Container size="md">
       <h1 className="text-xl font-semibold">Sua conta está marcada para exclusão</h1>
 
       <Alert
@@ -98,6 +98,6 @@ function RestoreAccountContent(): ReactNode {
       >
         Continuar com a exclusão
       </Button>
-    </main>
+    </Container>
   );
 }

@@ -20,7 +20,7 @@ as $$
   from public.expenses e
   where e.user_id = auth.uid()
     and e.deleted_at is null
-    and e.date >= date_trunc('month', current_date)::date
+    and e.occurred_at >= date_trunc('month', current_date)::date
     and (p_vehicle_id is null or e.vehicle_id = p_vehicle_id)
     and (p_group_vehicle_ids is null or e.vehicle_id = any(p_group_vehicle_ids))
   group by e.category

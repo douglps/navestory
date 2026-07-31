@@ -1,8 +1,13 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { QueryProvider } from "@/lib/query/providers";
 import { useDashboardStore } from "@/lib/stores/use-dashboard-store";
 import AnalyticsPage from "./page";
+
+const pushMock = vi.fn();
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push: pushMock }),
+}));
 
 vi.mock("@/lib/http/api-client", async () => {
   const actual = await vi.importActual<typeof import("@/lib/http/api-client")>(
@@ -103,7 +108,7 @@ describe("AnalyticsPage", () => {
     mockApi({ vehicles: [] });
     renderPage();
 
-    expect(await screen.findByText("Nenhum veículo cadastrado ainda.")).toBeInTheDocument();
+    expect(await screen.findByText("Nenhum veículo cadastrado")).toBeInTheDocument();
   });
 
   it("mostra erro quando o carregamento falha", async () => {
@@ -121,7 +126,7 @@ describe("AnalyticsPage", () => {
     mockApi();
     renderPage();
 
-    expect(await screen.findByDisplayValue("Fiat Uno")).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByLabelText("Veículo")).toHaveTextContent("Fiat Uno"));
   });
 
   it("exibe as top 5 anomalias do veículo selecionado (RF-03, RF-09)", async () => {

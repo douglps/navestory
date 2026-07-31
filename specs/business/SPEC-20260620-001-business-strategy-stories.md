@@ -4,7 +4,7 @@ title: "Business Strategy Stories — Regras de Negócio e Crescimento"
 status: draft
 date: 2026-06-20
 author: Douglas Lopes (lps.doug@protonmail.com)
-rules: [R-BIZ-01, R-BIZ-02, R-BIZ-03, R-BIZ-04, R-BIZ-05, R-BIZ-06, R-BIZ-07, R-BIZ-08, R-BIZ-09, R-BIZ-10, R-BIZ-11, R-BIZ-12, R-BIZ-13, R-BIZ-14, R-BIZ-15, S1, S2, S4, C1, C2]
+rules: [R-BIZ-01, R-BIZ-02, R-BIZ-03, R-BIZ-04, R-BIZ-05, R-BIZ-06, R-BIZ-07, R-BIZ-08, R-BIZ-09, R-BIZ-10, R-BIZ-11, R-BIZ-12, R-BIZ-13, R-BIZ-14, R-BIZ-15, R-BIZ-16, S1, S2, S4, C1, C2]
 security: [S1, S2, S4]
 camadas: [frontend, backend, database, security]
 ---
@@ -339,3 +339,11 @@ camadas: [frontend, backend, database, security]
 | **Pós-beta (Fase 2)** | BS-PLN-01 a 06, BS-MON-01 a 08, BS-VLT-01 a 06, BS-BLK-03 a 05, BS-FLW-04, BS-ONB-01 a 06, BS-TRM-01 a 03, BS-ADM-01 a 08 | Gateway de pagamento, email transacional, tabela `monthly_summaries`, cron de consolidação, tabelas `feature_flags`/`feature_overrides`, tela `/admin/features` |
 | **Crescimento (Fase 3)** | BS-RET-01 a 07, BS-GRW-01 a 05, BS-EXP-01 a 03, BS-SUP-01 a 05, BS-SEC-05 a 06, BS-INFRA-01 a 02 | Analytics, push notifications, OAuth, simulação de custos |
 | **Enterprise (Fase 4)** | BS-ACL-06 a 07, BS-EXP-04, BS-PLN-05 (Frota expandido com API) | Multi-tenant workspace, API pública (pós simulação BS-INFRA-01) |
+
+---
+
+## Nota de Revisão
+
+| Data | Origem | O que foi revisado |
+|------|--------|-------------------|
+| 2026-07-30 | Comparação com projeto de referência `C:\Dev\Antigravity\Nave-SaaS-main` | Conteúdo verificado como idêntico entre os dois repositórios — grace period proporcional (BS-MON-06), win-back (BS-MON-07) e dados gerais (seção 2.4) já estavam presentes nesta spec com o mesmo nível de detalhe. Ação realizada: (1) adicionado `R-BIZ-16` ao frontmatter `rules:` — regra criada em `specs/RULES.md` para formalizar a estrutura de desconto win-back como ID estável citável, que existia apenas no corpo da spec sem ID de regra próprio; (2) estendido `R-BIZ-11` em `specs/RULES.md` com a notação explícita da fórmula `max(min_faixa, min(365, tempo_assinante_dias * 0.5))`, que estava em BS-MON-06 mas ausente na regra. |

@@ -31,7 +31,7 @@ export function IosInstallBanner(): ReactNode {
   return (
     <div
       role="status"
-      className="fixed bottom-4 left-4 z-[150] flex items-center gap-3 rounded-md border border-neutral-200 bg-white px-4 py-3 text-sm shadow-lg dark:border-neutral-700 dark:bg-neutral-900"
+      className="fixed bottom-4 left-4 z-[150] flex items-center gap-3 rounded-md border border-border bg-card px-4 py-3 text-sm shadow-lg"
     >
       <span>
         Instale o Nave: toque em 📤 Compartilhar e depois em &quot;Adicionar à Tela de
@@ -41,7 +41,7 @@ export function IosInstallBanner(): ReactNode {
         type="button"
         aria-label="Dispensar"
         onClick={dismiss}
-        className="text-neutral-500 hover:text-neutral-800 dark:text-neutral-400 dark:hover:text-neutral-100"
+        className="text-muted-foreground hover:text-foreground"
       >
         ×
       </button>

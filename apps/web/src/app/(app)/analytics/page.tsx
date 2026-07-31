@@ -10,7 +10,7 @@ import type {
   SeasonalHeatmapCell,
   VehicleTco,
 } from "@nave/validators";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
 import {
   Area,
@@ -24,10 +24,12 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { Alert, ChartWrapper, Combobox, Container, EmptyState } from "@nave/ui";
 import { apiClient } from "@/lib/http/api-client";
 import { useDashboardStore } from "@/lib/stores/use-dashboard-store";
 import { TcoBreakdownChart } from "@/components/charts/tco-breakdown-chart";
 import { FuelTrendChart } from "@/components/charts/fuel-trend-chart";
+import { CHART_CATEGORY_COLORS } from "@/lib/chart-colors";
 
 interface Vehicle {
   id: string;
@@ -48,73 +50,62 @@ function currency(value: number): string {
 
 /**
  * @spec SPEC-20260622-001 RF-01, RF-13, R-ANA-04
+ * @spec SPEC-20260525-001 §5.2 — migrado para `ChartWrapper` de `packages/ui`, consolidando o
+ * header/empty state que antes era duplicado manualmente (ver matrices/rastreabilidade.md).
  */
 function TcoSection({ tco }: { tco: VehicleTco | undefined }): ReactNode {
   if (!tco) return null;
 
-  if (tco.total === 0) {
-    return (
-      <section aria-label="Custo total de propriedade" className="rounded border p-4">
-        <h2 className="font-semibold">TCO — Custo Total de Propriedade</h2>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Registre despesas para ver o custo total de propriedade.
-        </p>
-      </section>
-    );
-  }
-
   return (
-    <section aria-label="Custo total de propriedade" className="flex flex-col gap-3 rounded border p-4">
-      <h2 className="font-semibold">TCO — Custo Total de Propriedade</h2>
+    <section aria-label="Custo total de propriedade">
+      <ChartWrapper
+        title="TCO — Custo Total de Propriedade"
+        isEmpty={tco.total === 0}
+        emptyMessage="Registre despesas para ver o custo total de propriedade."
+      >
+        <div className="flex flex-col gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <div className="rounded border p-3">
+              <p className="text-sm text-muted-foreground">Total</p>
+              <p className="text-lg font-semibold">{currency(tco.total)}</p>
+            </div>
+            <div className="rounded border p-3">
+              <p className="text-sm text-muted-foreground">Custo/km</p>
+              <p className="text-lg font-semibold">
+                {tco.cost_per_km == null ? "—" : currency(tco.cost_per_km)}
+              </p>
+            </div>
+            <div className="rounded border p-3">
+              <p className="text-sm text-muted-foreground">Custo/mês</p>
+              <p className="text-lg font-semibold">
+                {tco.cost_per_month == null ? "—" : currency(tco.cost_per_month)}
+              </p>
+            </div>
+          </div>
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <div className="rounded border p-3">
-          <p className="text-sm text-muted-foreground">Total</p>
-          <p className="text-lg font-semibold">{currency(tco.total)}</p>
+          <TcoBreakdownChart breakdown={tco.breakdown} />
         </div>
-        <div className="rounded border p-3">
-          <p className="text-sm text-muted-foreground">Custo/km</p>
-          <p className="text-lg font-semibold">
-            {tco.cost_per_km == null ? "—" : currency(tco.cost_per_km)}
-          </p>
-        </div>
-        <div className="rounded border p-3">
-          <p className="text-sm text-muted-foreground">Custo/mês</p>
-          <p className="text-lg font-semibold">
-            {tco.cost_per_month == null ? "—" : currency(tco.cost_per_month)}
-          </p>
-        </div>
-      </div>
-
-      <TcoBreakdownChart breakdown={tco.breakdown} />
+      </ChartWrapper>
     </section>
   );
 }
 
 /**
  * @spec SPEC-20260622-001 RF-02, RF-13, R-ANA-01, R-FUEL-02, R-FUEL-03
+ * @spec SPEC-20260525-001 §5.2 — migrado para `ChartWrapper` de `packages/ui`.
  */
 function FuelTrendSection({ points }: { points: FuelTrendPoint[] | undefined }): ReactNode {
   if (!points) return null;
 
-  if (points.length === 0) {
-    return (
-      <section aria-label="Tendência de consumo de combustível" className="rounded border p-4">
-        <h2 className="font-semibold">Combustível</h2>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Registre abastecimentos com tanque cheio para ver a tendência de consumo.
-        </p>
-      </section>
-    );
-  }
-
   return (
-    <section
-      aria-label="Tendência de consumo de combustível"
-      className="flex flex-col gap-3 rounded border p-4"
-    >
-      <h2 className="font-semibold">Combustível — Tendência de km/L</h2>
-      <FuelTrendChart points={points} />
+    <section aria-label="Tendência de consumo de combustível">
+      <ChartWrapper
+        title="Combustível — Tendência de km/L"
+        isEmpty={points.length === 0}
+        emptyMessage="Registre abastecimentos com tanque cheio para ver a tendência de consumo."
+      >
+        <FuelTrendChart points={points} />
+      </ChartWrapper>
     </section>
   );
 }
@@ -141,10 +132,11 @@ function AnomaliesSection({ anomalies }: { anomalies: ExpenseAnomaly[] | undefin
   if (anomalies.length === 0) {
     return (
       <section aria-label="Despesas anômalas" className="rounded border p-4">
-        <h2 className="font-semibold">Anomalias</h2>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Mais registros são necessários para detectar anomalias.
-        </p>
+        <EmptyState
+          size="sm"
+          title="Anomalias"
+          description="Mais registros são necessários para detectar anomalias."
+        />
       </section>
     );
   }
@@ -156,17 +148,12 @@ function AnomaliesSection({ anomalies }: { anomalies: ExpenseAnomaly[] | undefin
       <h2 className="font-semibold">Anomalias — Despesas fora do padrão</h2>
       <ul className="flex flex-col gap-2">
         {top5.map((anomaly) => (
-          <li
-            key={anomaly.expense_id}
-            role="alert"
-            className="rounded border border-amber-300 bg-amber-50 p-3 text-sm dark:border-amber-800 dark:bg-amber-950"
-          >
-            <p className="font-medium">
-              {categoryLabel(anomaly.category)} — {currency(anomaly.amount)} em {anomaly.date}
-            </p>
-            <p className="text-muted-foreground">
-              {anomaly.z_score.toFixed(1)}σ acima da média ({currency(anomaly.avg_amount)})
-            </p>
+          <li key={anomaly.expense_id}>
+            <Alert
+              variant="warning"
+              title={`${categoryLabel(anomaly.category)} — ${currency(anomaly.amount)} em ${anomaly.date}`}
+              description={`${anomaly.z_score.toFixed(1)}σ acima da média (${currency(anomaly.avg_amount)})`}
+            />
           </li>
         ))}
       </ul>
@@ -178,18 +165,18 @@ function AnomaliesSection({ anomalies }: { anomalies: ExpenseAnomaly[] | undefin
  * @spec SPEC-20260622-001 RF-04, RF-10, RF-13, R-ANA-05
  */
 function BenchmarkSection({ entries }: { entries: FleetBenchmarkEntry[] | undefined }): ReactNode {
+  const router = useRouter();
   if (!entries) return null;
 
   if (entries.length < 2) {
     return (
       <section aria-label="Comparativo de eficiência da frota" className="rounded border p-4">
-        <h2 className="font-semibold">Benchmarking</h2>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Adicione pelo menos 2 veículos para comparar eficiência.
-        </p>
-        <Link href="/vehicles/new" className="mt-2 inline-block text-sm text-blue-600 underline">
-          Adicionar Veículo →
-        </Link>
+        <EmptyState
+          size="sm"
+          title="Benchmarking"
+          description="Adicione pelo menos 2 veículos para comparar eficiência."
+          action={{ label: "Adicionar veículo", onClick: () => router.push("/vehicles/new") }}
+        />
       </section>
     );
   }
@@ -209,11 +196,11 @@ function BenchmarkSection({ entries }: { entries: FleetBenchmarkEntry[] | undefi
       <div aria-hidden="true" className="h-64">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={chartData} layout="vertical">
-            <CartesianGrid strokeDasharray="3 3" />
+            <CartesianGrid strokeDasharray="3 3" stroke="oklch(var(--chart-grid))" />
             <XAxis type="number" />
             <YAxis type="category" dataKey="name" width={100} />
             <Tooltip formatter={(value) => currency(Number(value))} />
-            <Bar dataKey="cost_per_km" fill="#2563eb" />
+            <Bar dataKey="cost_per_km" fill={CHART_CATEGORY_COLORS[0]} />
           </BarChart>
         </ResponsiveContainer>
       </div>
@@ -262,10 +249,11 @@ function ForecastSection({ points }: { points: MonthlyForecastPoint[] | undefine
   if (!hasForecast) {
     return (
       <section aria-label="Projeção de custos" className="rounded border p-4">
-        <h2 className="font-semibold">Projeção</h2>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Projeções requerem pelo menos 6 meses de dados.
-        </p>
+        <EmptyState
+          size="sm"
+          title="Projeção"
+          description="Projeções requerem pelo menos 6 meses de dados."
+        />
       </section>
     );
   }
@@ -283,7 +271,7 @@ function ForecastSection({ points }: { points: MonthlyForecastPoint[] | undefine
       <div aria-hidden="true" className="h-64">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={chartData}>
-            <CartesianGrid strokeDasharray="3 3" />
+            <CartesianGrid strokeDasharray="3 3" stroke="oklch(var(--chart-grid))" />
             <XAxis dataKey="month" />
             <YAxis />
             <Tooltip formatter={(value) => currency(Number(value))} />
@@ -292,10 +280,10 @@ function ForecastSection({ points }: { points: MonthlyForecastPoint[] | undefine
               dataKey="band"
               name="Banda de confiança"
               stroke="none"
-              fill="#93c5fd"
-              fillOpacity={0.4}
+              fill={CHART_CATEGORY_COLORS[0]}
+              fillOpacity={0.2}
             />
-            <Line type="monotone" dataKey="amount" name="Projeção" stroke="#2563eb" dot={false} />
+            <Line type="monotone" dataKey="amount" name="Projeção" stroke={CHART_CATEGORY_COLORS[0]} dot={false} />
           </AreaChart>
         </ResponsiveContainer>
       </div>
@@ -339,10 +327,11 @@ function SeasonalitySection({ cells }: { cells: SeasonalHeatmapCell[] | undefine
   if (cells.length === 0) {
     return (
       <section aria-label="Sazonalidade de gastos" className="rounded border p-4">
-        <h2 className="font-semibold">Sazonalidade</h2>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Análise sazonal requer pelo menos 6 meses de registros.
-        </p>
+        <EmptyState
+          size="sm"
+          title="Sazonalidade"
+          description="Análise sazonal requer pelo menos 6 meses de registros."
+        />
       </section>
     );
   }
@@ -422,10 +411,11 @@ function InsightsSection({ insights }: { insights: AnalyticsInsight[] | undefine
   if (insights.length === 0) {
     return (
       <section aria-label="Insights" className="rounded border p-4">
-        <h2 className="font-semibold">Insights</h2>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Continue registrando para receber recomendações personalizadas.
-        </p>
+        <EmptyState
+          size="sm"
+          title="Insights"
+          description="Continue registrando para receber recomendações personalizadas."
+        />
       </section>
     );
   }
@@ -457,7 +447,7 @@ function ExportButton({ vehicleId }: { vehicleId: string }): ReactNode {
     <a
       href={exportUrl}
       download={`analytics-${new Date().toISOString().slice(0, 10)}.csv`}
-      className="text-sm text-blue-600 underline"
+      className="text-sm text-primary underline"
     >
       Exportar
     </a>
@@ -470,6 +460,7 @@ function ExportButton({ vehicleId }: { vehicleId: string }): ReactNode {
  * combustível, anomalias e benchmarking das fases anteriores, completando RF-13/RF-15.
  */
 export default function AnalyticsPage(): ReactNode {
+  const router = useRouter();
   const storeActiveVehicleId = useDashboardStore((state) => state.activeVehicleId);
   const [selectedVehicleId, setSelectedVehicleId] = useState<string>("");
 
@@ -566,29 +557,37 @@ export default function AnalyticsPage(): ReactNode {
   });
 
   return (
-    <main className="mx-auto flex max-w-3xl flex-col gap-4 p-8">
+    <Container size="3xl">
       <div className="flex items-center justify-between gap-4">
         <h1 className="text-xl font-semibold">Analytics</h1>
         <div className="flex items-center gap-4">
-          <label className="flex items-center gap-2 text-sm">
-            Veículo
-            <select
+          <div className="flex items-center gap-2 text-sm">
+            <span>Veículo</span>
+            <Combobox
+              aria-label="Veículo"
+              options={(vehicles ?? []).map((vehicle) => ({
+                value: vehicle.id,
+                label: vehicleLabel(vehicle),
+              }))}
               value={selectedVehicleId}
-              onChange={(event) => setSelectedVehicleId(event.target.value)}
-              className="rounded border px-2 py-1"
-            >
-              {(vehicles ?? []).map((vehicle) => (
-                <option key={vehicle.id} value={vehicle.id}>
-                  {vehicleLabel(vehicle)}
-                </option>
-              ))}
-            </select>
-          </label>
+              onValueChange={setSelectedVehicleId}
+              placeholder="Selecione um veículo"
+              searchPlaceholder="Buscar veículo..."
+              emptyMessage="Nenhum veículo encontrado"
+              className="w-56"
+            />
+          </div>
           {selectedVehicleId && <ExportButton vehicleId={selectedVehicleId} />}
         </div>
       </div>
 
-      {!selectedVehicleId && <p>Nenhum veículo cadastrado ainda.</p>}
+      {!selectedVehicleId && (
+        <EmptyState
+          title="Nenhum veículo cadastrado"
+          description="Cadastre um veículo para ver as análises da frota."
+          action={{ label: "Cadastrar veículo", onClick: () => router.push("/vehicles/new") }}
+        />
+      )}
 
       {(isTcoLoading ||
         isFuelLoading ||
@@ -603,7 +602,9 @@ export default function AnalyticsPage(): ReactNode {
         isBenchmarkError ||
         isForecastError ||
         isSeasonalError ||
-        isInsightsError) && <p role="alert">Não foi possível carregar os dados de analytics.</p>}
+        isInsightsError) && (
+        <Alert variant="error" description="Não foi possível carregar os dados de analytics." />
+      )}
 
       {!isTcoError && <TcoSection tco={tco} />}
       {!isFuelError && <FuelTrendSection points={fuelTrend} />}
@@ -612,6 +613,6 @@ export default function AnalyticsPage(): ReactNode {
       {!isForecastError && <ForecastSection points={forecast} />}
       {!isSeasonalError && <SeasonalitySection cells={seasonal} />}
       {!isInsightsError && <InsightsSection insights={insights} />}
-    </main>
+    </Container>
   );
 }

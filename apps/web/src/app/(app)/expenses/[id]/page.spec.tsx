@@ -24,26 +24,58 @@ function typeDigits(input: HTMLElement, digits: string): void {
   }
 }
 
+const VEHICLE_ID = "11111111-1111-4111-8111-111111111111";
+const baseExpense = {
+  id: "e1",
+  vehicle_id: VEHICLE_ID,
+  category: "fuel",
+  amount: 150,
+  occurred_at: "2026-07-14T00:00:00.000Z",
+  description: null,
+  odometer_km: 50_000,
+  liters: null,
+  fuel_type: null,
+  full_tank: null,
+  supplier: null,
+  is_readonly: false,
+};
+
+interface MockOverrides {
+  expense?: Record<string, unknown>;
+  preferences?: Record<string, unknown>;
+  patchResponse?: Record<string, unknown>;
+  patchError?: Error;
+  templateResponse?: unknown;
+}
+
+function mockApi(overrides: MockOverrides = {}) {
+  vi.mocked(apiClient).mockImplementation((path: string, options?: { method?: string }) => {
+    const method = options?.method ?? "GET";
+    if (path === "/expenses/e1" && method === "GET") {
+      return Promise.resolve(overrides.expense ?? baseExpense) as never;
+    }
+    if (path === "/preferences") {
+      return Promise.resolve(overrides.preferences ?? { timezone: "UTC" }) as never;
+    }
+    if (path === "/expenses/suppliers") return Promise.resolve({ data: [] }) as never;
+    if (path === "/expenses/e1?strict=true" && method === "PATCH") {
+      if (overrides.patchError) return Promise.reject(overrides.patchError) as never;
+      return Promise.resolve(overrides.patchResponse ?? baseExpense) as never;
+    }
+    if (path === "/expenses/e1" && method === "DELETE") return Promise.resolve(undefined) as never;
+    if (path === "/expense-templates" && method === "POST") {
+      return Promise.resolve(
+        overrides.templateResponse ?? { data: { id: "t1", name: "Abastecimento Semanal" } },
+      ) as never;
+    }
+    return Promise.reject(new Error(`unexpected call: ${method} ${path}`));
+  });
+}
+
 describe("ExpenseDetailPage", () => {
   afterEach(() => {
     vi.clearAllMocks();
   });
-
-  const VEHICLE_ID = "11111111-1111-4111-8111-111111111111";
-  const expense = {
-    id: "e1",
-    vehicle_id: VEHICLE_ID,
-    category: "fuel",
-    amount: 150,
-    date: "2026-07-14",
-    description: null,
-    odometer_km: 50_000,
-    liters: null,
-    fuel_type: null,
-    full_tank: null,
-    supplier: null,
-    is_readonly: false,
-  };
 
   function renderPage() {
     return render(
@@ -54,17 +86,17 @@ describe("ExpenseDetailPage", () => {
   }
 
   it("mostra 404 quando a despesa não é encontrada (CA-08)", async () => {
-    vi.mocked(apiClient).mockRejectedValue(new Error("not found"));
+    vi.mocked(apiClient).mockImplementation((path: string) => {
+      if (path === "/expenses/e1") return Promise.reject(new Error("not found")) as never;
+      return Promise.resolve({ timezone: "UTC" }) as never;
+    });
     renderPage();
 
     expect(await screen.findByRole("alert")).toHaveTextContent("Despesa não encontrada.");
   });
 
   it("atualiza campos parciais da despesa (RF-05, CA-13)", async () => {
-    vi.mocked(apiClient)
-      .mockResolvedValueOnce(expense)
-      .mockResolvedValueOnce({ data: [] })
-      .mockResolvedValueOnce({ ...expense, amount: 200 });
+    mockApi({ patchResponse: { ...baseExpense, amount: 200 } });
     renderPage();
 
     const amountInput = await screen.findByLabelText("Valor (R$) *");
@@ -82,10 +114,7 @@ describe("ExpenseDetailPage", () => {
 
   it("remove a despesa após confirmação e redireciona (RF-06, CA-11)", async () => {
     vi.spyOn(window, "confirm").mockReturnValue(true);
-    vi.mocked(apiClient)
-      .mockResolvedValueOnce(expense)
-      .mockResolvedValueOnce({ data: [] })
-      .mockResolvedValueOnce(undefined);
+    mockApi();
     renderPage();
 
     fireEvent.click(await screen.findByRole("button", { name: "Remover despesa" }));
@@ -95,9 +124,7 @@ describe("ExpenseDetailPage", () => {
   });
 
   it("bloqueia edição e remoção quando a despesa é readonly (RF-07, R-LED-01)", async () => {
-    vi.mocked(apiClient)
-      .mockResolvedValueOnce({ ...expense, is_readonly: true })
-      .mockResolvedValueOnce({ data: [] });
+    mockApi({ expense: { ...baseExpense, is_readonly: true } });
     renderPage();
 
     expect(await screen.findByRole("button", { name: "Remover despesa" })).toBeDisabled();
@@ -105,10 +132,7 @@ describe("ExpenseDetailPage", () => {
   });
 
   it("salva a despesa como modelo (SPEC-20260601-003 RF-06, CA-10)", async () => {
-    vi.mocked(apiClient)
-      .mockResolvedValueOnce(expense)
-      .mockResolvedValueOnce({ data: [] })
-      .mockResolvedValueOnce({ data: { id: "t1", name: "Abastecimento Semanal" } });
+    mockApi();
     renderPage();
 
     fireEvent.click(await screen.findByRole("button", { name: "Salvar como modelo" }));
@@ -138,22 +162,20 @@ describe("ExpenseDetailPage", () => {
    * @spec SPEC-20260612-002 RF-02
    */
   it("altera o ano mantendo mês e dia (RF-02)", async () => {
-    vi.mocked(apiClient).mockResolvedValueOnce(expense).mockResolvedValueOnce({ data: [] });
+    mockApi();
     renderPage();
 
-    await screen.findByLabelText("Data *");
+    await screen.findByLabelText("Data e hora *");
     fireEvent.change(screen.getByLabelText("Ano"), { target: { value: "2020" } });
 
-    expect(screen.getByLabelText("Data *")).toHaveValue("2020-07-14");
+    expect(screen.getByLabelText("Data e hora *")).toHaveValue("2020-07-14T00:00");
   });
 
   /**
    * @spec SPEC-20260612-001 RF-05.3
    */
   it("exibe a linha-resumo quando amount/liters/price_per_liter estão consistentes", async () => {
-    vi.mocked(apiClient)
-      .mockResolvedValueOnce({ ...expense, amount: 50, liters: 10 })
-      .mockResolvedValueOnce({ data: [] });
+    mockApi({ expense: { ...baseExpense, amount: 50, liters: 10 } });
     renderPage();
 
     const priceInput = await screen.findByLabelText("Valor por litro");
@@ -169,10 +191,9 @@ describe("ExpenseDetailPage", () => {
     const { ApiError } = await vi.importActual<typeof import("@/lib/http/api-client")>(
       "@/lib/http/api-client",
     );
-    vi.mocked(apiClient)
-      .mockResolvedValueOnce(expense)
-      .mockResolvedValueOnce({ data: [] })
-      .mockRejectedValueOnce(new ApiError("Odômetro inválido: informe um valor igual ou maior.", 400));
+    mockApi({
+      patchError: new ApiError("Odômetro inválido: informe um valor igual ou maior.", 400),
+    });
     renderPage();
 
     await screen.findByLabelText("Valor (R$) *");
@@ -186,7 +207,7 @@ describe("ExpenseDetailPage", () => {
    */
   it("pede confirmação ao cancelar com alterações não salvas", async () => {
     const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(false);
-    vi.mocked(apiClient).mockResolvedValueOnce(expense).mockResolvedValueOnce({ data: [] });
+    mockApi();
     renderPage();
 
     const amountInput = await screen.findByLabelText("Valor (R$) *");
@@ -202,7 +223,7 @@ describe("ExpenseDetailPage", () => {
    */
   it("cancela sem confirmação quando não há alterações", async () => {
     const confirmSpy = vi.spyOn(window, "confirm");
-    vi.mocked(apiClient).mockResolvedValueOnce(expense).mockResolvedValueOnce({ data: [] });
+    mockApi();
     renderPage();
 
     await screen.findByLabelText("Valor (R$) *");

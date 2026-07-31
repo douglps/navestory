@@ -60,7 +60,14 @@ describe("ExpensesPage", () => {
   it("lista as despesas com veículo resolvido (RF-11)", async () => {
     mockApi({
       expenses: [
-        { id: "e1", vehicle_id: "v1", category: "fuel", amount: 150, date: "2026-07-14", description: null },
+        {
+          id: "e1",
+          vehicle_id: "v1",
+          category: "fuel",
+          amount: 150,
+          occurred_at: "2026-07-14",
+          description: null,
+        },
       ],
       vehicles: [{ id: "v1", plate: "ABC1234", make: "Fiat", model: "Uno", nickname: null }],
     });
@@ -94,7 +101,8 @@ describe("ExpensesPage", () => {
     renderPage();
 
     expect(await screen.findByText("R$ 100,00")).toBeInTheDocument();
-    expect(await screen.findByText(/↑ 100.0%/)).toBeInTheDocument();
+    expect(await screen.findByText("↑")).toBeInTheDocument();
+    expect(await screen.findByText("100%")).toBeInTheDocument();
   });
 
   it("mostra 'nenhum gasto previsto' quando upcoming_30_days_count = 0 (RF-06)", async () => {
@@ -141,8 +149,22 @@ describe("ExpensesPage", () => {
     mockApi({
       vehicles: [{ id: "v1", plate: "ABC1234", make: "Fiat", model: "Uno", nickname: null }],
       byVehicle: [
-        { id: "e1", vehicle_id: "v1", category: "fuel", amount: 100, date: "2026-07-01", description: null },
-        { id: "e2", vehicle_id: "v1", category: "toll", amount: 50, date: "2026-07-02", description: null },
+        {
+          id: "e1",
+          vehicle_id: "v1",
+          category: "fuel",
+          amount: 100,
+          occurred_at: "2026-07-01",
+          description: null,
+        },
+        {
+          id: "e2",
+          vehicle_id: "v1",
+          category: "toll",
+          amount: 50,
+          occurred_at: "2026-07-02",
+          description: null,
+        },
       ],
     });
     renderPage();

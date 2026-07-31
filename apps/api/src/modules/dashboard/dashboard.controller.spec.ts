@@ -14,6 +14,7 @@ describe("DashboardController", () => {
       getVehicleCards: jest.fn().mockResolvedValue([]),
       getSpendingHighlights: jest.fn().mockResolvedValue([]),
       getFinesStatus: jest.fn().mockResolvedValue({ status: "none", count: 0 }),
+      getFleetCharts: jest.fn().mockResolvedValue({ cost_per_km: [], fuel_liters: [], category_breakdown: [] }),
       ...overrides,
     } as unknown as DashboardService;
     return { controller: new DashboardController(dashboardService), dashboardService };
@@ -85,9 +86,21 @@ describe("DashboardController", () => {
   it("getAlerts extrai o token e devolve { data } (RF-DA-01)", async () => {
     const { controller, dashboardService } = createController();
 
-    await controller.getAlerts(req, "u1");
+    await controller.getAlerts(req, "u1", {});
 
-    expect(dashboardService.getAlerts).toHaveBeenCalledWith("token-123", "u1");
+    expect(dashboardService.getAlerts).toHaveBeenCalledWith("token-123", "u1", {
+      includeUpcomingDocuments: undefined,
+    });
+  });
+
+  it("getAlerts repassa include_upcoming=true como includeUpcomingDocuments (opt-in)", async () => {
+    const { controller, dashboardService } = createController();
+
+    await controller.getAlerts(req, "u1", { include_upcoming: true });
+
+    expect(dashboardService.getAlerts).toHaveBeenCalledWith("token-123", "u1", {
+      includeUpcomingDocuments: true,
+    });
   });
 
   it("getFleetKpis repassa o vehicle_id da query para 'próxima manutenção' (RF-DA-03)", async () => {
@@ -144,6 +157,27 @@ describe("DashboardController", () => {
     expect(result).toEqual({ data: { status: "overdue", count: 3 } });
   });
 
+  it("getFleetCharts extrai o token e devolve { data } (RF-08)", async () => {
+    const { controller, dashboardService } = createController({
+      getFleetCharts: jest.fn().mockResolvedValue({
+        cost_per_km: [{ month: "2026-07", value: 0.5 }],
+        fuel_liters: [{ month: "2026-07", value: 40 }],
+        category_breakdown: [{ category: "fuel", label: "Combustível", total_amount: 100, count: 2 }],
+      }),
+    });
+
+    const result = await controller.getFleetCharts(req, "u1");
+
+    expect(dashboardService.getFleetCharts).toHaveBeenCalledWith("token-123", "u1");
+    expect(result).toEqual({
+      data: {
+        cost_per_km: [{ month: "2026-07", value: 0.5 }],
+        fuel_liters: [{ month: "2026-07", value: 40 }],
+        category_breakdown: [{ category: "fuel", label: "Combustível", total_amount: 100, count: 2 }],
+      },
+    });
+  });
+
   it("usa o cookie de sessão quando não há header Authorization", async () => {
     const { controller, dashboardService } = createController();
     const reqComCookie = {
@@ -151,8 +185,10 @@ describe("DashboardController", () => {
       cookies: { nave_access_token: "cookie-token" },
     } as unknown as Request;
 
-    await controller.getAlerts(reqComCookie, "u1");
+    await controller.getAlerts(reqComCookie, "u1", {});
 
-    expect(dashboardService.getAlerts).toHaveBeenCalledWith("cookie-token", "u1");
+    expect(dashboardService.getAlerts).toHaveBeenCalledWith("cookie-token", "u1", {
+      includeUpcomingDocuments: undefined,
+    });
   });
 });

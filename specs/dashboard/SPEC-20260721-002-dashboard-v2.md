@@ -1,7 +1,7 @@
 ---
 id: SPEC-20260721-002
 title: "Dashboard v2 — KPI Cards com Sparkline, VehicleHealthScore, Tokens de Superfície, Gráficos Inline e Widget Próximos 7 Dias"
-status: draft
+status: approved
 date: 2026-07-21
 author: Douglas Lopes (lps.doug@protonmail.com)
 rules: [R-TZ-01, R-ANA-04, R-BIZ-12, P6]
@@ -11,7 +11,7 @@ camadas: [frontend, design]
 
 # SPEC-20260721-002: Dashboard v2 — KPI Cards com Sparkline, VehicleHealthScore, Tokens de Superfície, Gráficos Inline e Widget Próximos 7 Dias
 
-**Status:** draft
+**Status:** approved
 **Criada em:** 2026-07-21
 **Autor:** Douglas Lopes (lps.doug@protonmail.com)
 
@@ -155,4 +155,5 @@ Esta spec é majoritariamente de UI/apresentação — nenhuma regra de domínio
 
 | Data | O que mudou | Por quê |
 |------|-------------|---------|
-| | | |
+| 2026-07-22 | Spec promovida de `draft` para `approved`. | RF-01 a RF-07 e RF-09 já implementados e registrados em `matrices/rastreabilidade.md` (código com `@spec` apontando para esta spec desde 2026-07-21/22), configurando desvio de gate de sincronia enquanto a spec seguia `draft`. RF-05 (estado "desabilitado plano Grátis", R-BIZ-12), RF-06 (validação visual 360–375px) e RF-07 (teste dedicado do cabeçalho de data) seguem com pendências pontuais, marcadas 🔶 na matriz — não bloqueiam a aprovação, pois o gate exige apenas a linha existir, não que código/teste estejam completos. RF-08 (gráficos inline de frota) permanece ⏳ bloqueado por decisão de backend não tomada; ganhou linha própria na matriz nesta rodada para satisfazer o gate. |
+| 2026-07-22 | RF-08 (gráficos inline de frota) implementado. Decisão de backend: endpoint próprio `GET /dashboard/fleet-charts`, desacoplado de `fleet-kpis`/`kpi-catalog` (RNF-05) — reaproveita `get_vehicle_cost_per_km` (já existente) para o custo/km e estende `get_category_spending_highlights` com `p_limit` opcional (default 3, preserva o contrato de `spending-highlights`) para o breakdown completo de categorias. `fuel_liters` mostra volume de combustível (litros/mês), não eficiência km/L, por decisão registrada em `FleetChartsResponse` (`@nave/validators`): eficiência por veículo já existe em `GET /analytics/fuel-trend/:vehicleId` e não agrega de forma significativa numa frota mista de veículos com odômetros distintos. | Mudança pequena — implementa um RF já especificado nesta spec (US-08), sem alterar critérios de aceite existentes. Decisão registrada aqui e em `matrices/rastreabilidade.md` conforme pedido do usuário para destravar o único item ⏳ desta spec. |

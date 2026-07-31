@@ -53,7 +53,9 @@ export function useVehicleContext(options: { needsLists?: boolean } = {}) {
   const setActiveGroup = useDashboardStore((state) => state.setActiveGroup);
   const clearAllSelection = useDashboardStore((state) => state.clearAllSelection);
 
-  const needsVehicleList = selectionMode === "single" || needsLists;
+  // Modo "none" também precisa da lista para o VehicleContextChip detectar
+  // frota vazia e trocar o seletor por um CTA "Adicionar veículo" (RF-05).
+  const needsVehicleList = selectionMode === "single" || selectionMode === "none" || needsLists;
   const needsGroupList = selectionMode === "group" || needsLists;
 
   const vehiclesQuery = useQuery({

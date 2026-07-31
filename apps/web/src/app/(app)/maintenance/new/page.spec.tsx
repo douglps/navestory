@@ -1,4 +1,5 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { QueryProvider } from "@/lib/query/providers";
 import { useDashboardStore } from "@/lib/stores/use-dashboard-store";
@@ -28,6 +29,18 @@ function mockLookups() {
   });
 }
 
+/** Abre o Combobox pelo aria-label e seleciona a opção com o texto informado. */
+async function selectCombobox(label: string, optionText: string): Promise<void> {
+  const user = userEvent.setup();
+  await user.click(screen.getByLabelText(label));
+  await user.click(await screen.findByRole("option", { name: optionText }));
+}
+
+/** Aguarda a lista de veículos carregar (Combobox sai do estado "Carregando..."). */
+async function waitForVehiclesLoaded(): Promise<void> {
+  await waitFor(() => expect(screen.getByLabelText("Veículo *")).not.toHaveTextContent("Carregando"));
+}
+
 describe("NewMaintenancePage", () => {
   beforeEach(() => {
     localStorage.clear();
@@ -50,13 +63,13 @@ describe("NewMaintenancePage", () => {
     mockLookups();
     renderPage();
 
-    await screen.findByText("Fiat Uno");
-    fireEvent.change(screen.getByLabelText("Veículo *"), { target: { value: VEHICLE_ID } });
+    await waitForVehiclesLoaded();
+    await selectCombobox("Veículo *", "Fiat Uno");
     fireEvent.change(screen.getByLabelText("Descrição *"), {
       target: { value: "Troca de óleo" },
     });
-    fireEvent.change(screen.getByLabelText("Data agendada *"), {
-      target: { value: "2026-08-01" },
+    fireEvent.change(screen.getByLabelText("Data e hora agendada *"), {
+      target: { value: "2026-08-01T10:00" },
     });
     fireEvent.click(screen.getByRole("button", { name: "Agendar" }));
 
@@ -68,7 +81,7 @@ describe("NewMaintenancePage", () => {
         body: expect.objectContaining({
           vehicle_id: VEHICLE_ID,
           description: "Troca de óleo",
-          scheduled_date: "2026-08-01",
+          scheduled_date: "2026-08-01T10:00:00.000Z",
         }),
       }),
     );
@@ -88,10 +101,10 @@ describe("NewMaintenancePage", () => {
     mockLookups();
     renderPage();
 
-    await screen.findByText("Fiat Uno");
-    fireEvent.change(screen.getByLabelText("Veículo *"), { target: { value: VEHICLE_ID } });
-    fireEvent.change(screen.getByLabelText("Data agendada *"), {
-      target: { value: "2026-08-01" },
+    await waitForVehiclesLoaded();
+    await selectCombobox("Veículo *", "Fiat Uno");
+    fireEvent.change(screen.getByLabelText("Data e hora agendada *"), {
+      target: { value: "2026-08-01T10:00" },
     });
     const form = screen.getByRole("button", { name: "Agendar" }).closest("form")!;
     fireEvent.submit(form);
@@ -107,9 +120,9 @@ describe("NewMaintenancePage", () => {
     mockLookups();
     renderPage();
 
-    await screen.findByText("Fiat Uno");
+    await waitForVehiclesLoaded();
     await screen.findByText(/Herdado do contexto em foco/);
-    expect(screen.getByLabelText("Veículo *")).toHaveValue(VEHICLE_ID);
+    expect(screen.getByLabelText("Veículo *")).toHaveTextContent("Fiat Uno");
   });
 
   /**
@@ -119,8 +132,8 @@ describe("NewMaintenancePage", () => {
     mockLookups();
     renderPage();
 
-    await screen.findByText("Fiat Uno");
-    fireEvent.change(screen.getByLabelText("Veículo *"), { target: { value: VEHICLE_ID } });
+    await waitForVehiclesLoaded();
+    await selectCombobox("Veículo *", "Fiat Uno");
 
     expect(await screen.findByText(/Selecionado manualmente/)).toBeInTheDocument();
   });

@@ -3,7 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { NavBadge } from "@nave/ui";
+import { NavBadge, Skeleton } from "@nave/ui";
 import type { CategorySummaryItem, FinesStatusResponse } from "@nave/validators";
 import { apiClient } from "@/lib/http/api-client";
 import { useDashboardStore } from "@/lib/stores/use-dashboard-store";
@@ -111,11 +111,7 @@ export function FinancialSubheader(): ReactNode {
       <div className="flex flex-1 items-center gap-2 overflow-hidden">
         {isLoadingHighlights
           ? Array.from({ length: CHIP_SKELETON_COUNT }, (_, index) => (
-              <span
-                key={index}
-                aria-hidden="true"
-                className="h-6 w-20 shrink-0 animate-pulse rounded-[6px] bg-muted"
-              />
+              <Skeleton key={index} className="h-6 w-20 shrink-0 rounded-[6px]" />
             ))
           : highlights?.map((item) => (
               <Link

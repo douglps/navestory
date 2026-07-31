@@ -184,6 +184,9 @@ Ao subir a versão de uma regra (`vN → vN+1`): registrar a linha de histórico
 | `data-engineer`    | Projetar/revisar pipelines ETL/ELT, orquestração, transformação e confiabilidade do fluxo de dados |
 | `data-architect`   | Modelar domínios de dado e decidir arquitetura de armazenamento de longo prazo (relacional, warehouse, lake) |
 | `data-steward`     | Governança de dados: classificação, política de acesso/retenção, conformidade LGPD e qualidade de dado |
+| `growth-marketer`  | Estratégia de marketing: análise de mercado, métricas de crescimento (CAC, LTV, ROI, conversão), pesquisa de concorrência, canais e precificação |
+| `ad-creative`      | Publicidade: copywriting, storytelling, tom de voz, conceito de campanha e planejamento de mídia |
+| `brand-designer`   | Identidade visual de marca (logo, paleta, tipografia, brand guidelines) construída do zero — distinto do `design-system`, que cuida de componentes de produto |
 
 > Ao criar uma spec nova, o `spec-writer` preenche automaticamente o frontmatter com `rules:` e `security:` conforme o `RULES.md` do projeto.
 

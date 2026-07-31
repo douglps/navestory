@@ -6,6 +6,7 @@ import { UserId } from "../../common/decorators/user-id.decorator";
 import { SupabaseAuthGuard } from "../../common/guards/supabase-auth.guard";
 import { ZodValidationPipe } from "../../common/pipes/zod-validation.pipe";
 import { DashboardService } from "./dashboard.service";
+import { alertsDtoSchema, type AlertsDto } from "./dto/alerts.dto";
 import { categorySummaryDtoSchema, type CategorySummaryDto } from "./dto/category-summary.dto";
 import { exportExpensesDtoSchema, type ExportExpensesDto } from "./dto/export-expenses.dto";
 import { fleetKpisDtoSchema, type FleetKpisDto } from "./dto/fleet-kpis.dto";
@@ -62,9 +63,15 @@ export class DashboardController {
   @Get("alerts")
   @ApiOperation({ summary: "Alertas críticos da frota, ordenados por urgência (RF-DA-01)" })
   @ApiResponse({ status: 200, description: "Lista de alertas de manutenção vencida/próxima" })
-  async getAlerts(@Req() req: Request, @UserId() userId: string) {
+  async getAlerts(
+    @Req() req: Request,
+    @UserId() userId: string,
+    @Query(new ZodValidationPipe(alertsDtoSchema)) query: AlertsDto,
+  ) {
     const accessToken = this.extractAccessToken(req);
-    const data = await this.dashboardService.getAlerts(accessToken, userId);
+    const data = await this.dashboardService.getAlerts(accessToken, userId, {
+      includeUpcomingDocuments: query.include_upcoming,
+    });
     return { data };
   }
 
@@ -132,6 +139,17 @@ export class DashboardController {
       query.vehicleId,
       query.groupIds,
     );
+    return { data };
+  }
+
+  @Get("fleet-charts")
+  @ApiOperation({
+    summary: "Gráficos inline de frota: custo/km, volume de combustível e categorias (RF-08)",
+  })
+  @ApiResponse({ status: 200, description: "{ cost_per_km, fuel_liters, category_breakdown }" })
+  async getFleetCharts(@Req() req: Request, @UserId() userId: string) {
+    const accessToken = this.extractAccessToken(req);
+    const data = await this.dashboardService.getFleetCharts(accessToken, userId);
     return { data };
   }
 

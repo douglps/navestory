@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { cn } from "../lib/cn";
 import { Card } from "./card";
+import { Skeleton } from "./skeleton";
 
 /**
  * @spec SPEC-20260525-001 §5.1
@@ -12,22 +13,22 @@ import { Card } from "./card";
 export type KpiCardVariant = "success" | "danger" | "warning" | "info" | "neutral";
 
 /**
- * @spec SPEC-20260721-001 RF-02, RNF-02 — os tons "solid" (success/danger/warning/info) são
- * calibrados para contraste AA sobre o `-pastel` da própria família (ver comentário em
- * `tokens/colors.ts`), não sobre `--card`/`--background`. Usá-los como `text-{variant}` direto
- * no texto da tendência falha AA (ex: warning ~2.1:1, info ~4.2:1 sobre `--card`). Por isso o
- * chip usa `bg-{variant}-pastel` + `text-foreground` — mesmo padrão de `Alert`/`Toast`.
+ * @spec SPEC-20260721-001 RF-02, RNF-02 — os tons "solid" (success/danger/warning/info) falham
+ * contraste AA de texto sobre `--card`/`--background` (ex: warning ~1.8:1, info ~3.7:1). Por
+ * isso a cor semântica fica só na seta (↑↓→) — elemento gráfico pequeno, exige apenas 3:1
+ * não-textual (WCAG 1.4.11), que todas as variantes cumprem — e o número/`%` usa
+ * `text-foreground`, sempre legível independente da variante.
  */
-function variantChipClass(variant: KpiCardVariant): string {
+function variantArrowClass(variant: KpiCardVariant): string {
   switch (variant) {
     case "success":
-      return "bg-success-pastel text-foreground";
+      return "text-success";
     case "danger":
-      return "bg-danger-pastel text-foreground";
+      return "text-danger";
     case "warning":
-      return "bg-warning-pastel text-foreground";
+      return "text-warning";
     case "info":
-      return "bg-info-pastel text-foreground";
+      return "text-info";
     case "neutral":
     default:
       return "text-muted-foreground";
@@ -92,13 +93,13 @@ function Sparkline({ values, variant, ariaLabel }: SparklineProps): ReactNode {
 
 function KpiCardSkeleton(): ReactNode {
   return (
-    <Card padding="sm" className="min-w-[150px] max-w-[220px] animate-pulse">
+    <Card padding="sm" className="min-w-[150px] max-w-[220px]">
       <div className="flex items-center justify-between">
-        <div className="h-4 w-16 rounded bg-muted" />
-        <div className="h-4 w-4 rounded bg-muted" />
+        <Skeleton className="h-4 w-16" />
+        <Skeleton className="h-4 w-4" />
       </div>
-      <div className="mt-3 h-6 w-20 rounded bg-muted" />
-      <div className="mt-3 h-6 w-full rounded bg-muted" />
+      <Skeleton className="mt-3 h-6 w-20" />
+      <Skeleton className="mt-3 h-6 w-full" />
     </Card>
   );
 }
@@ -157,16 +158,11 @@ export function KpiCard({
       </p>
 
       {trend && (
-        <p className="mt-1 flex flex-wrap items-center gap-1 text-sm">
-          <span
-            className={cn(
-              "rounded px-1 font-medium",
-              resolvedVariant === "neutral" ? "" : "py-0.5",
-              variantChipClass(resolvedVariant),
-            )}
-          >
-            {trend.value > 0 ? "↑" : trend.value < 0 ? "↓" : "→"} {Math.abs(trend.value)}%
+        <p className="mt-1 flex flex-wrap items-center gap-1 text-sm font-medium">
+          <span className={variantArrowClass(resolvedVariant)}>
+            {trend.value > 0 ? "↑" : trend.value < 0 ? "↓" : "→"}
           </span>
+          <span className="text-foreground">{Math.abs(trend.value)}%</span>
           {trend.label && <span className="text-muted-foreground">{trend.label}</span>}
         </p>
       )}

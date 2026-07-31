@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState, type ReactNode } from "react";
-import { Tabs } from "@nave/ui";
+import { Alert, Button, Container, EmptyState, KpiCard, Tabs } from "@nave/ui";
 import { apiClient } from "@/lib/http/api-client";
 import { useVehicleContext } from "@/lib/context/use-vehicle-context";
 import { formatDateInTz } from "@/lib/datetime-tz";
@@ -67,13 +67,18 @@ function daysUntil(dueDate: string): number {
   return Math.round((due.getTime() - today.getTime()) / 86_400_000);
 }
 
+/**
+ * @spec SPEC-20260729-002 RF-03, R-DS-08 — 4 níveis codificados por cor + label numérico
+ * (nunca só cor): vencido=danger, ≤7d=urgency-hot (terracota mais vívido, "aja agora"),
+ * ≤30d=warning, ≤60d=info. Os dois níveis "âmbar" anteriores (≤14d/≤30d) foram fundidos —
+ * ISO 11064-4 recomenda no máximo 4 níveis de urgência codificados por cor.
+ */
 function urgencyBadge(dueDate: string): { className: string; label: string } {
   const days = daysUntil(dueDate);
-  if (days < 0) return { className: "border-red-600 bg-red-50 text-red-700", label: "Vencido" };
-  if (days <= 7) return { className: "border-red-400 bg-red-50/60 text-red-700", label: `${days}d` };
-  if (days <= 14) return { className: "border-amber-500 bg-amber-50 text-amber-700", label: `${days}d` };
-  if (days <= 30) return { className: "border-amber-400 bg-amber-50/60 text-amber-700", label: `${days}d` };
-  if (days <= 60) return { className: "border-sky-400 bg-sky-50/60 text-sky-700", label: `${days}d` };
+  if (days < 0) return { className: "border-danger bg-danger-pastel text-foreground", label: "Vencido" };
+  if (days <= 7) return { className: "border-urgency-hot bg-urgency-hot-pastel text-foreground", label: `${days}d` };
+  if (days <= 30) return { className: "border-warning bg-warning-pastel text-foreground", label: `${days}d` };
+  if (days <= 60) return { className: "border-info bg-info-pastel text-foreground", label: `${days}d` };
   return { className: "border-muted text-muted-foreground", label: `${days}d` };
 }
 
@@ -84,47 +89,30 @@ const SOURCE_TYPE_LABEL: Record<UpcomingCostItem["source_type"], string> = {
   expense: "Despesa",
 };
 
-function DeltaBadge({ deltaPercent }: { deltaPercent: number | null }): ReactNode {
-  if (deltaPercent === null) return null;
-  const isIncrease = deltaPercent > 0;
-  const className = isIncrease
-    ? "bg-red-100 text-red-700"
-    : "bg-green-100 text-green-700";
-  const arrow = isIncrease ? "↑" : "↓";
-  return (
-    <span className={`rounded px-1.5 py-0.5 text-xs font-medium ${className}`}>
-      {arrow} {Math.abs(deltaPercent).toFixed(1)}%
-    </span>
-  );
-}
-
 /**
  * @spec SPEC-20260608-002 RF-04
+ * @spec SPEC-20260525-001 §5.1 — migrado do padrão ad hoc (`rounded border p-3`) para o
+ * `KpiCard` de `packages/ui`, ver matrices/rastreabilidade.md.
  */
 function KpiCards({ kpis }: { kpis: ExpenseKpis | undefined }): ReactNode {
   if (!kpis) return null;
   return (
-    <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-      <div className="rounded border p-3">
-        <p className="text-sm text-muted-foreground">Total este mês</p>
-        <div className="flex items-center gap-2">
-          <p className="text-lg font-semibold">{currency(kpis.total_this_month)}</p>
-          <DeltaBadge deltaPercent={kpis.delta_percent} />
-        </div>
-      </div>
-      <div className="rounded border p-3">
-        <p className="text-sm text-muted-foreground">Próximos 30 dias</p>
-        <p className="text-lg font-semibold">{currency(kpis.upcoming_30_days_total)}</p>
+    <div className="flex flex-wrap gap-3">
+      <KpiCard
+        title="Total este mês"
+        value={currency(kpis.total_this_month)}
+        trend={kpis.delta_percent === null ? undefined : { value: kpis.delta_percent }}
+        reverseTrend
+      />
+      <div className="flex flex-col gap-1">
+        <KpiCard title="Próximos 30 dias" value={currency(kpis.upcoming_30_days_total)} />
         <p className="text-xs text-muted-foreground">
           {kpis.upcoming_30_days_count === 0
             ? "nenhum gasto previsto"
             : `${kpis.upcoming_30_days_count} ${kpis.upcoming_30_days_count === 1 ? "item" : "itens"} nos próximos 30 dias`}
         </p>
       </div>
-      <div className="rounded border p-3">
-        <p className="text-sm text-muted-foreground">Total histórico</p>
-        <p className="text-lg font-semibold">{currency(kpis.total_all_time)}</p>
-      </div>
+      <KpiCard title="Total histórico" value={currency(kpis.total_all_time)} />
     </div>
   );
 }
@@ -132,13 +120,14 @@ function KpiCards({ kpis }: { kpis: ExpenseKpis | undefined }): ReactNode {
 /**
  * @spec SPEC-20260608-001 RF-04, RF-06
  * @spec SPEC-20260608-003 RF-01, RF-03
- * Botão "Ver" fica sempre desabilitado: `/maintenance` e `/fines` ainda não têm tela própria no
- * frontend (Fase 4 e T3.6, respectivamente) e `/settings` (Documentos) é Sprint 4 — mesma técnica
- * que a spec já previa para `recurring_cost` ("Em breve"), estendida aqui às três origens.
+ * @spec SPEC-20260722-005 RF-09
+ * Botão "Ver" habilitado para `expense` e, desde SPEC-20260722-005, `fine` (tela `/fines/[id]`
+ * já existe). `/maintenance` e `/settings` (Documentos) ainda não têm tela própria — mesma
+ * técnica que a spec original previa para `recurring_cost` ("Em breve").
  */
 function UpcomingCostsTab({ items }: { items: UpcomingCostItem[] | undefined }): ReactNode {
   if (!items || items.length === 0) {
-    return <p>Nenhuma despesa prevista no horizonte selecionado.</p>;
+    return <EmptyState size="sm" title="Nenhuma despesa prevista no horizonte selecionado." />;
   }
   return (
     <ul className="flex flex-col gap-2">
@@ -168,10 +157,14 @@ function UpcomingCostsTab({ items }: { items: UpcomingCostItem[] | undefined }):
                 <Link href={`/expenses/${item.source_id}`} className="text-sm">
                   Ver
                 </Link>
-              ) : (
-                <button type="button" disabled title="Em breve" className="text-sm text-muted-foreground">
+              ) : item.source_type === "fine" ? (
+                <Link href={`/fines/${item.source_id}`} className="text-sm">
                   Ver
-                </button>
+                </Link>
+              ) : (
+                <Button type="button" variant="ghost" size="sm" disabled title="Em breve">
+                  Ver
+                </Button>
               )}
             </div>
           </li>
@@ -222,7 +215,7 @@ function ByVehicleTab({
   tz: string | null | undefined;
 }): ReactNode {
   if (!expenses || expenses.length === 0) {
-    return <p>Nenhuma despesa no período.</p>;
+    return <EmptyState size="sm" title="Nenhuma despesa no período." />;
   }
   const groups = groupByVehicle(expenses, vehicleById);
   const total = groups.reduce((sum, group) => sum + group.subtotal, 0);
@@ -275,7 +268,7 @@ function ByVehicleTab({
  */
 export default function ExpensesPage(): ReactNode {
   return (
-    <Suspense fallback={<main className="mx-auto flex max-w-2xl flex-col gap-4 p-8">Carregando...</main>}>
+    <Suspense fallback={<Container size="2xl">Carregando...</Container>}>
       <ExpensesPageContent />
     </Suspense>
   );
@@ -359,7 +352,7 @@ function ExpensesPageContent(): ReactNode {
     : allExpenses;
 
   return (
-    <main className="mx-auto flex max-w-2xl flex-col gap-4 p-8">
+    <Container size="2xl">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold">Despesas</h1>
         <div className="flex items-center gap-3">
@@ -391,9 +384,9 @@ function ExpensesPageContent(): ReactNode {
       {activeTab === "lista" && (
         <>
           {isLoading && <p>Carregando...</p>}
-          {isError && <p role="alert">Não foi possível carregar as despesas.</p>}
+          {isError && <Alert variant="error" description="Não foi possível carregar as despesas." />}
           {!isLoading && !isError && visibleExpenses?.length === 0 && (
-            <p>Nenhuma despesa registrada ainda.</p>
+            <EmptyState size="sm" title="Nenhuma despesa registrada ainda." />
           )}
 
           <ul className="flex flex-col gap-2">
@@ -416,6 +409,6 @@ function ExpensesPageContent(): ReactNode {
       {activeTab === "por-veiculo" && (
         <ByVehicleTab expenses={visibleAllExpenses} vehicleById={vehicleById} tz={tz} />
       )}
-    </main>
+    </Container>
   );
 }

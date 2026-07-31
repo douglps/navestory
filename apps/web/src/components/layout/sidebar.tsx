@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, type ReactNode } from "react";
+import { Tooltip } from "@nave/ui";
 import { logout } from "@/lib/auth/logout";
 import { useMediaQuery } from "@/lib/hooks/use-media-query";
 import { useDashboardStore, type SelectionMode } from "@/lib/stores/use-dashboard-store";
@@ -24,12 +25,13 @@ const NAV_ITEMS: NavItem[] = [
 ];
 
 // @spec SPEC-20260603-001 RF-16 — cor do dot passivo por modo de contexto ativo.
+// @spec SPEC-20260729-002 RF-02 — mesmo mapeamento categórico de `vehicle-context-chip.tsx`.
 const DOT_COLOR_BY_MODE: Record<SelectionMode, string> = {
   none: "bg-muted-foreground/30",
-  single: "bg-amber-400",
-  group: "bg-blue-400",
-  multi: "bg-amber-500",
-  attribute: "bg-violet-400",
+  single: "bg-categorical-4",
+  group: "bg-categorical-1",
+  multi: "bg-categorical-4",
+  attribute: "bg-categorical-5",
 };
 
 // @spec SPEC-20260722-003 RF-14 — id referenciado pelo aria-controls do hamburger no header.
@@ -159,33 +161,47 @@ export function Sidebar(): ReactNode {
         />
 
         <ul className="flex w-full flex-col gap-1">
-          {NAV_ITEMS.map((item) => (
-            <li key={item.href}>
+          {NAV_ITEMS.map((item) => {
+            const link = (
               <Link
                 href={item.href}
-                title={effectiveCollapsed ? item.label : undefined}
                 className={`flex min-h-[44px] items-center rounded-md px-2 text-sm text-foreground hover:bg-muted md:min-h-0 md:py-1.5 ${
                   isCollapsed ? "md:justify-center md:text-center" : ""
                 }`}
               >
                 {effectiveCollapsed ? item.label.slice(0, 1) : item.label}
               </Link>
-            </li>
-          ))}
+            );
+            return (
+              <li key={item.href}>
+                {effectiveCollapsed ? <Tooltip content={item.label} side="right">{link}</Tooltip> : link}
+              </li>
+            );
+          })}
         </ul>
 
         {/* @spec SPEC-20260602-001 RF-19, SPEC-20260603-001 RF-17 — logout já limpa o
             contexto global (clearAllSelection() + sessionStorage) via logout() */}
-        <button
-          type="button"
-          onClick={() => void logout()}
-          title={effectiveCollapsed ? "Sair" : undefined}
-          className={`mt-auto flex min-h-[44px] w-full items-center rounded-md px-2 text-left text-sm text-foreground hover:bg-muted md:min-h-0 md:py-1.5 ${
-            isCollapsed ? "md:justify-center md:text-center" : ""
-          }`}
-        >
-          {effectiveCollapsed ? "⏻" : "Sair"}
-        </button>
+        {(() => {
+          const logoutButton = (
+            <button
+              type="button"
+              onClick={() => void logout()}
+              className={`mt-auto flex min-h-[44px] w-full items-center rounded-md px-2 text-left text-sm text-foreground hover:bg-muted md:min-h-0 md:py-1.5 ${
+                isCollapsed ? "md:justify-center md:text-center" : ""
+              }`}
+            >
+              {effectiveCollapsed ? "⏻" : "Sair"}
+            </button>
+          );
+          return effectiveCollapsed ? (
+            <Tooltip content="Sair" side="right">
+              {logoutButton}
+            </Tooltip>
+          ) : (
+            logoutButton
+          );
+        })()}
       </nav>
     </>
   );

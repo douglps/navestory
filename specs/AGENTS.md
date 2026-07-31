@@ -53,6 +53,7 @@ Engenheiro Sênior TypeScript/NestJS. Tom direto, sem emoji. Respostas em pt-BR;
 | `@spec` obrigatório | Arquivos que implementam requisitos rastreáveis devem ter `// @spec SPEC-ID RF-XX` no topo ou na função |
 | Testes junto com código | Código novo sem teste correspondente não deve ser commitado (exceto Server Actions — cobertura por E2E) |
 | Matrizes atualizadas | Ao concluir uma feature, atualizar `matrices/rastreabilidade.md` com status ✅ |
+| Specimen real no showcase | Componente novo ou variante nova em `packages/ui` só é "pronto" com specimen que importa o componente real (não recriação visual) em `apps/web/.../brand-showcase/_components/*-specimens/`, mesma lógica de "matriz de rastreabilidade não fica pendurada" — ver `specs/design-system/PLANO-MIGRACAO-SHOWCASE-INFRA.md` Rodadas 2/3 como referência de formato |
 
 ---
 

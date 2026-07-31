@@ -36,9 +36,13 @@ export function datetimeLocalToIso(value: string, tz: string): string {
   return new Date(asUtcGuess.getTime() - offsetMinutes * 60_000).toISOString();
 }
 
-/** ISO 8601 (qualquer offset) -> valor de `datetime-local` no fuso `tz`. */
+/**
+ * ISO 8601 (qualquer offset) -> valor de `datetime-local` no fuso `tz`.
+ * `toLocaleString("sv", ...)` separa data e hora com espaço ("YYYY-MM-DD HH:mm"), não com "T" —
+ * substituído explicitamente para casar com o formato exigido por `<input type="datetime-local">`.
+ */
 export function isoToDatetimeLocal(iso: string, tz: string): string {
-  return new Date(iso).toLocaleString("sv", { timeZone: tz }).slice(0, 16);
+  return new Date(iso).toLocaleString("sv", { timeZone: tz }).replace(" ", "T").slice(0, 16);
 }
 
 /** Hora corrente no fuso `tz`, já no formato esperado por `datetime-local` (RF-FE-03/RF-FE-04). */

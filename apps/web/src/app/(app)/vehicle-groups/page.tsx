@@ -3,6 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { Alert, Container, EmptyState } from "@nave/ui";
 import { apiClient } from "@/lib/http/api-client";
 
 interface VehicleGroup {
@@ -23,16 +24,16 @@ export default function VehicleGroupsPage(): ReactNode {
   });
 
   return (
-    <main className="mx-auto flex max-w-2xl flex-col gap-4 p-8">
+    <Container size="2xl">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold">Grupos de veículos</h1>
         <Link href="/vehicle-groups/new">Novo grupo</Link>
       </div>
 
       {isLoading && <p>Carregando...</p>}
-      {isError && <p role="alert">Não foi possível carregar os grupos.</p>}
+      {isError && <Alert variant="error" description="Não foi possível carregar os grupos." />}
       {!isLoading && !isError && groups?.length === 0 && (
-        <p>Você ainda não criou nenhum grupo.</p>
+        <EmptyState size="sm" title="Você ainda não criou nenhum grupo." />
       )}
 
       <ul className="flex flex-col gap-2">
@@ -49,6 +50,6 @@ export default function VehicleGroupsPage(): ReactNode {
           </li>
         ))}
       </ul>
-    </main>
+    </Container>
   );
 }

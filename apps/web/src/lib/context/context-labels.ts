@@ -10,6 +10,7 @@ export const CONTEXT_LABELS = {
   fleetFilter: "Filtro de frota",
   viewAllFleet: "Ver toda a frota",
   selectVehiclePrompt: "Selecionar veículo",
+  addVehicleCta: "Adicionar veículo",
 } as const;
 
 export const VEHICLE_TYPE_ICONS: Record<string, string> = {

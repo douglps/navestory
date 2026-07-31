@@ -50,6 +50,16 @@ jobs:
           DIFF_BASE: ${{ github.event_name == 'pull_request' && format('origin/{0}', github.base_ref) || github.event.before }}
         run: node scripts/check-test-pairing.mjs
 
+  hardcoded-colors-gate:
+    # @spec SPEC-20260729-002 RF-04 — formaliza como CI a varredura manual de cor hardcoded
+    # (PLANO-MIGRACAO-SHOWCASE-INFRA.md Rodada 6)
+    name: Gate de cor hardcoded fora dos tokens
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - run: node scripts/check-hardcoded-colors.mjs
+
   integration-test:
     name: Integration test (Supabase local — CT-006, CT-007)
     runs-on: ubuntu-latest

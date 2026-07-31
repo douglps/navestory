@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { useState, type ReactNode } from "react";
 import type { FuelTrendPoint, RecurringCost, VehicleHistoryItem, VehicleTco } from "@nave/validators";
-import { Tabs } from "@nave/ui";
+import { Alert, ChartWrapper, EmptyState, Tabs } from "@nave/ui";
 import { apiClient } from "@/lib/http/api-client";
 import { useMediaQuery } from "@/lib/hooks/use-media-query";
 import { TcoBreakdownChart } from "@/components/charts/tco-breakdown-chart";
@@ -72,12 +72,7 @@ function StickyFocusChip({ label, onClear }: { label: string; onClear: () => voi
  * @spec SPEC-20260531-001 RF-DB-08
  */
 function NoActiveVehicleEmptyState(): ReactNode {
-  return (
-    <div className="flex flex-col items-center gap-2 rounded border p-8 text-center text-sm text-muted-foreground">
-      <span aria-hidden className="text-2xl">↑</span>
-      <p>Selecione um veículo acima para ver a análise detalhada</p>
-    </div>
-  );
+  return <EmptyState icon="↑" title="Selecione um veículo acima para ver a análise detalhada" />;
 }
 
 /**
@@ -85,6 +80,7 @@ function NoActiveVehicleEmptyState(): ReactNode {
  * Reaproveita GET /analytics/tco/:vehicleId (T6.1) — breakdown por ciclo de odômetro ativo, não
  * por período de calendário (decisão de escopo v1.3 desta spec, ver changelog).
  */
+/** @spec SPEC-20260525-001 §5.2 — migrado para `ChartWrapper` de `packages/ui`. */
 function ExpensesSection({ vehicleId }: { vehicleId: string }): ReactNode {
   const { data, isLoading, isError } = useQuery({
     queryKey: ["analytics", "tco", vehicleId],
@@ -92,28 +88,28 @@ function ExpensesSection({ vehicleId }: { vehicleId: string }): ReactNode {
     retry: false,
   });
 
-  if (isLoading) return <p className="text-sm text-muted-foreground">Carregando despesas…</p>;
   if (isError) {
     return (
-      <p role="alert" className="text-sm text-muted-foreground">
-        Não foi possível carregar as despesas deste veículo. Tente novamente.
-      </p>
-    );
-  }
-  if (!data || data.total === 0) {
-    return (
-      <p className="text-sm text-muted-foreground">
-        Registre despesas deste veículo para ver o gráfico por categoria.
-      </p>
+      <Alert variant="error" description="Não foi possível carregar as despesas deste veículo. Tente novamente." />
     );
   }
 
-  return <TcoBreakdownChart breakdown={data.breakdown} />;
+  return (
+    <ChartWrapper
+      title="Despesas por Categoria"
+      loading={isLoading}
+      isEmpty={!data || data.total === 0}
+      emptyMessage="Registre despesas deste veículo para ver o gráfico por categoria."
+    >
+      {data && <TcoBreakdownChart breakdown={data.breakdown} />}
+    </ChartWrapper>
+  );
 }
 
 /**
  * @spec SPEC-20260531-001 RF-DB-05
  * Reaproveita GET /analytics/fuel-trend/:vehicleId (T6.1).
+ * @spec SPEC-20260525-001 §5.2 — migrado para `ChartWrapper` de `packages/ui`.
  */
 function FuelSection({ vehicleId }: { vehicleId: string }): ReactNode {
   const { data, isLoading, isError } = useQuery({
@@ -122,23 +118,22 @@ function FuelSection({ vehicleId }: { vehicleId: string }): ReactNode {
     retry: false,
   });
 
-  if (isLoading) return <p className="text-sm text-muted-foreground">Carregando consumo…</p>;
   if (isError) {
     return (
-      <p role="alert" className="text-sm text-muted-foreground">
-        Não foi possível carregar o consumo deste veículo. Tente novamente.
-      </p>
-    );
-  }
-  if (!data || data.length === 0) {
-    return (
-      <p className="text-sm text-muted-foreground">
-        Registre abastecimentos com tanque cheio para ver a tendência de consumo.
-      </p>
+      <Alert variant="error" description="Não foi possível carregar o consumo deste veículo. Tente novamente." />
     );
   }
 
-  return <FuelTrendChart points={data} />;
+  return (
+    <ChartWrapper
+      title="Tendência de Consumo (km/L)"
+      loading={isLoading}
+      isEmpty={!data || data.length === 0}
+      emptyMessage="Registre abastecimentos com tanque cheio para ver a tendência de consumo."
+    >
+      {data && <FuelTrendChart points={data} />}
+    </ChartWrapper>
+  );
 }
 
 const DOC_LABEL: Record<"ipva" | "insurance" | "crlv", string> = {
@@ -150,9 +145,9 @@ const DOC_LABEL: Record<"ipva" | "insurance" | "crlv", string> = {
 const STATUS_BADGE: Record<"ok" | "attention" | "overdue" | "unknown" | "paid", { label: string; className: string } | null> = {
   ok: null,
   unknown: null,
-  attention: { label: "Atenção", className: "border-amber-400 bg-amber-50 text-amber-700" },
-  overdue: { label: "Vencido", className: "border-red-400 bg-red-50 text-red-700" },
-  paid: { label: "Pago", className: "border-green-400 bg-green-50 text-green-700" },
+  attention: { label: "Atenção", className: "border-warning bg-warning-pastel text-foreground" },
+  overdue: { label: "Vencido", className: "border-danger bg-danger-pastel text-foreground" },
+  paid: { label: "Pago", className: "border-success bg-success-pastel text-foreground" },
 };
 
 /**
@@ -188,9 +183,10 @@ function DocsSection({
   return (
     <div className="flex flex-col gap-2">
       {isError && (
-        <p role="alert" className="text-sm text-muted-foreground">
-          Não foi possível confirmar pagamentos recentes — status abaixo pode estar desatualizado.
-        </p>
+        <Alert
+          variant="warning"
+          description="Não foi possível confirmar pagamentos recentes — status abaixo pode estar desatualizado."
+        />
       )}
       {rows.map(({ key, status }) => {
         // eslint-disable-next-line security/detect-object-injection -- status é DocumentStatus | "paid", união fixa
@@ -227,13 +223,11 @@ function HistorySection({ vehicleId }: { vehicleId: string }): ReactNode {
   if (isLoading) return <p className="text-sm text-muted-foreground">Carregando histórico…</p>;
   if (isError) {
     return (
-      <p role="alert" className="text-sm text-muted-foreground">
-        Não foi possível carregar o histórico deste veículo. Tente novamente.
-      </p>
+      <Alert variant="error" description="Não foi possível carregar o histórico deste veículo. Tente novamente." />
     );
   }
   if (!data || data.length === 0) {
-    return <p className="text-sm text-muted-foreground">Nenhum registro ainda para este veículo.</p>;
+    return <EmptyState size="sm" title="Nenhum registro ainda para este veículo." />;
   }
 
   return (

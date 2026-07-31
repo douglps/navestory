@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import type { VehicleTco } from "@nave/validators";
+import { CHART_CATEGORY_COLORS } from "@/lib/chart-colors";
 
 function currency(value: number): string {
   return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -38,11 +39,11 @@ export function TcoBreakdownChart({ breakdown }: { breakdown: VehicleTco["breakd
       <div aria-hidden="true" className="h-64">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data}>
-            <CartesianGrid strokeDasharray="3 3" />
+            <CartesianGrid strokeDasharray="3 3" stroke="oklch(var(--chart-grid))" />
             <XAxis dataKey="category" />
             <YAxis />
             <Tooltip formatter={(value) => currency(Number(value))} />
-            <Bar dataKey="amount" fill="#2563eb" />
+            <Bar dataKey="amount" fill={CHART_CATEGORY_COLORS[0]} />
           </BarChart>
         </ResponsiveContainer>
       </div>

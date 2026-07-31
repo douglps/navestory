@@ -1,6 +1,6 @@
 "use client";
 
-import { Alert } from "@nave/ui";
+import { Alert, Button, Checkbox, Container, Input } from "@nave/ui";
 import { useMutation } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -70,7 +70,7 @@ function LoginForm(): ReactNode {
   const showAccountDeletedNotice = searchParams.get("message") === "conta_excluida";
 
   return (
-    <main className="mx-auto flex max-w-sm flex-col gap-4 p-8">
+    <Container size="sm">
       <h1 className="text-xl font-semibold">Entrar</h1>
 
       {showAccountDeletedNotice && (
@@ -82,7 +82,7 @@ function LoginForm(): ReactNode {
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-3">
         <label htmlFor="email">E-mail</label>
-        <input
+        <Input
           id="email"
           type="email"
           value={email}
@@ -100,8 +100,7 @@ function LoginForm(): ReactNode {
         />
 
         <label className="flex items-center gap-2">
-          <input
-            type="checkbox"
+          <Checkbox
             checked={rememberMe}
             onChange={(event) => setRememberMe(event.target.checked)}
           />
@@ -109,16 +108,19 @@ function LoginForm(): ReactNode {
         </label>
 
         {mutation.isError && (
-          <p role="alert" className="text-sm text-red-600">
-            {isLocked
-              ? "Conta temporariamente bloqueada por excesso de tentativas. Tente novamente mais tarde."
-              : "E-mail ou senha inválidos."}
-          </p>
+          <Alert
+            variant="error"
+            description={
+              isLocked
+                ? "Conta temporariamente bloqueada por excesso de tentativas. Tente novamente mais tarde."
+                : "E-mail ou senha inválidos."
+            }
+          />
         )}
 
-        <button type="submit" disabled={mutation.isPending}>
+        <Button type="submit" disabled={mutation.isPending}>
           {mutation.isPending ? "Entrando..." : "Entrar"}
-        </button>
+        </Button>
 
         <Link href="/recover-password" className="text-sm underline">
           Esqueci minha senha
@@ -133,6 +135,6 @@ function LoginForm(): ReactNode {
       </p>
 
       <LegalFooter />
-    </main>
+    </Container>
   );
 }

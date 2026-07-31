@@ -1,10 +1,10 @@
 ---
 id: SPEC-20260716-003
 title: "Testes E2E com Playwright"
-status: draft
+status: approved
 date: 2026-07-16
 author: Douglas Lopes (lps.doug@protonmail.com)
-rules: [R1, R2, R-CTX-07, R-ODO-01]
+rules: [R1, R2, R-CTX-07, R-ODO-01, C-DS-01]
 security: [S1]
 camadas: [frontend, qa]
 ---
@@ -70,6 +70,7 @@ mocks não são suficientes.
 | RF-E2E-09 | **Autenticação — cookie de sessão inválido/corrompido:** navegar para rota privada com um cookie `nave_access_token` presente mas inválido (não apenas ausente, diferente de RF-E2E-01) → verificar redirect para `/login` | S1, CT-006 | Média |
 | RF-E2E-10 | **Contexto de veículo — usuário sem veículos cadastrados:** com um usuário de teste sem nenhum veículo, abrir o Dialog/Sheet de seleção via chip → verificar que é exibido um estado vazio apropriado (não erro JS/tela em branco) | R-CTX-07 | Média |
 | RF-E2E-11 | **Contexto de veículo — busca sem resultado no dialog:** com o Dialog aberto, buscar por uma placa/nome inexistente → verificar que é exibido um estado de "nenhum resultado" (não erro JS, não trava a UI) | R-CTX-07 | Baixa |
+| RF-E2E-12 | **Visual regression leve:** `toHaveScreenshot` das páginas de maior tráfego (`dashboard`, `expenses`, `fines`), light e dark mode via `page.emulateMedia({ colorScheme })`, tolerância `maxDiffPixelRatio: 0.01`; falha bloqueia merge (mesmo mecanismo de falha do restante da suíte, RF-CI-06). Baseline versionada junto do teste, atualizada intencionalmente via `--update-snapshots` quando a mudança visual é esperada — não do showcase, que não é produto | C-DS-01 | Média |
 
 ### Dados de Teste E2E (RF-DATA)
 
@@ -147,7 +148,10 @@ O objetivo é evitar duplicação de esforço e manter a pirâmide correta (5% E
 - Testes E2E de fluxos de manutenção, multas e grupos de veículos — nenhuma tela está finalizada; adicionados em spec futura quando as telas existirem
 - Testes em múltiplos browsers além de chromium na configuração inicial (firefox e webkit podem ser habilitados em revisão posterior)
 - Testes de performance (Lighthouse, Web Vitals) — escopo de spec separada
-- Testes visuais (snapshot/screenshot diff) — fora da pirâmide atual
+- ~~Testes visuais (snapshot/screenshot diff) — fora da pirâmide atual~~ — escopo ampliado em
+  2026-07-30 (ver Histórico de Revisões v1.6 e RF-E2E-12): visual regression leve das páginas de
+  maior tráfego passou a reaproveitar esta mesma suíte, decisão registrada em
+  `specs/design-system/PLANO-MIGRACAO-SHOWCASE-INFRA.md` Rodada 5
 - Fila de sincronização offline e comportamentos de Service Worker — cobertos por `SPEC-20260712-001` (PWA), que terá sua própria estratégia de teste
 
 ---
@@ -231,3 +235,5 @@ real. Não remover nem modificar os testes de integração existentes ao adicion
 | 2026-07-20 | 1.2 | Divergências entre implementação e texto corrigidas: RF-DATA-02 e RF-CI-04 passam a citar `E2E_TEST_VEHICLE_PLATE`, `E2E_VEHICLE_A_PLATE` e `E2E_VEHICLE_B_PLATE` (já usados pelo código e pelo CI, mas ausentes do texto); RF-CI-05 corrigido de `playwright-report/` para `e2e/reports/`, refletindo o `outputFolder` real do reporter (RF-CFG-02) — bug de caminho no artifact do CI também corrigido em `.github/workflows/ci.yml`. Correção pequena — sem mudança de status | Douglas Lopes (lps.doug@protonmail.com) |
 | 2026-07-20 | 1.3 | Revisão de auditoria: RF-CFG-02 corrigido para `retries: 1` (era `3`), alinhado ao código após correção de B-03 (sleep fixo removido em `vehicle-context-chip.page.ts`) e à política de zero-flakiness (RNF-02); adicionada nota de "Decisão de estratégia" em Ambiente E2E em CI explicitando a escolha consciente por stack local em vez de staging externo. Correção pequena — sem mudança de status | Douglas Lopes (lps.doug@protonmail.com) |
 | 2026-07-20 | 1.4 | Adicionados RF-E2E-08 a RF-E2E-11 e CA-10 a CA-12: suíte E2E cobria só caminho feliz (login válido, troca de contexto bem-sucedida); nova rodada fecha os casos de erro simétricos (login inválido, cookie corrompido, sem veículos, busca sem resultado), identificados em auditoria de cobertura de caminho infeliz. Ainda `draft` | Douglas Lopes (lps.doug@protonmail.com) |
+| 2026-07-22 | 1.5 | Spec promovida de `draft` para `approved`. Configuração (RF-CFG-01 a 08), Page Objects, os 11 fluxos E2E (RF-E2E-01 a 11), dados de teste (RF-DATA-01 a 03) e integração com CI (RF-CI-01 a 06) estão implementados no código (ver `matrices/rastreabilidade.md`) — mesmo padrão já aplicado a `SPEC-20260716-002` (Observabilidade): código pronto, execução fim-a-fim pendente apenas de dependência externa (os 6 GitHub Secrets de ambiente E2E, registrados em `important/PENDENCIAS-E-PROCESSOS.md`), não de trabalho de implementação em aberto. CA-01 a CA-12 continuam não verificáveis até os secrets serem provisionados e o job `e2e` rodar de fato em CI — isso não bloqueia a aprovação, mesmo critério já usado para `SPEC-20260716-001`/`SPEC-20260716-002` | Douglas Lopes (lps.doug@protonmail.com) |
+| 2026-07-30 | 1.6 | Escopo ampliado: "Testes visuais (snapshot/screenshot diff)" sai de Fora de Escopo, adicionado `RF-E2E-12` (visual regression leve de `dashboard`/`expenses`/`fines`, light/dark, `maxDiffPixelRatio: 0.01`) e `C-DS-01` a `rules` do frontmatter. Decisão tomada na Rodada 5 de `specs/design-system/PLANO-MIGRACAO-SHOWCASE-INFRA.md`: reaproveitar esta suíte já configurada em vez de ferramenta dedicada (Chromatic/Percy), mantendo o escopo leve pedido por Douglas. Código criado em `apps/web/e2e/tests/visual-regression.spec.ts`. **Pendência aberta:** a baseline de PNGs (`visual-regression.spec.ts-snapshots/`) ainda não existe — depende de uma execução real contra a stack local/CI (`--update-snapshots`), que esta sessão não tinha como disparar (sem credenciais `E2E_USER_EMAIL`/`E2E_USER_PASSWORD` locais nem acesso para rodar o workflow de CI); CA-01 a CA-12 permanecem no mesmo estado "não verificável sem secrets" já registrado na v1.5, agora também cobrindo RF-E2E-12 | Douglas Lopes (lps.doug@protonmail.com) |

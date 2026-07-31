@@ -1,7 +1,10 @@
 # Matriz de Permissões — Nave SaaS
 
-> Última atualização: 2026-07-13 (rev. 8)
-> Responsável: doc-keeper — Fase 1 implementada: guards `/admin` reconciliados com `SupabaseAuthGuard + RolesGuard/@Roles('admin')` (substituem referência ao `AdminGuard` único que não existe como classe); rotas `/auth/recover-password` e `/auth/reset-password` adicionadas; ALERTA órfão de middleware SSR removido e substituído por nota de fechamento confirmando `apps/web/middleware.ts` implementado e testado; rev. 7 anterior preservada
+> Última atualização: 2026-07-31 (rev. 9)
+> Responsável: doc-keeper — rev. 9: Dashboard expandido com 6 endpoints de T5.1/SPEC-20260721-002
+> (fleet-health, alerts, vehicle-cards, vehicle-history, kpi-catalog, fleet-charts); POST
+> /users/me/restore adicionado (SPEC-20260719-002); seção Preferências criada (SPEC-20260603-004 /
+> SPEC-20260612-003). Rev. 8 anterior: guards `/admin` reconciliados, rev-password adicionadas.
 
 ---
 
@@ -152,6 +155,12 @@
 | `/dashboard/stats` | GET | ❌ | 🔒 | ✅ | `user_id = auth.uid()` | Resumo mensal de despesas e manutenções |
 | `/dashboard/export` | GET | ❌ | 🔒 | ✅ | `user_id = auth.uid()` | CSV; throttle 10 req/5min; parâmetro `period` obrigatório |
 | `/dashboard/monitor` | GET | ❌ | 🔒 | ✅ | `user_id = auth.uid()` (aplicado via RLS + redirect programático) | Server Component; exibe audit log do próprio usuário; `force-dynamic`; redirect `/login` se não autenticado |
+| `/dashboard/fleet-health` | GET | ❌ | 🔒 | ✅ | `user_id = auth.uid()` | Executa RPC `calculate_fleet_health`; persiste `vehicles.health_score` como efeito colateral (R-HS-08, R-HS-09); retorna score de frota + scores individuais |
+| `/dashboard/alerts` | GET | ❌ | 🔒 | ✅ | `user_id = auth.uid()` | Alertas de documentos vencidos/a vencer, multas pendentes e manutenções; ResponseDTO em `alerts.dto.ts` |
+| `/dashboard/vehicle-cards` | GET | ❌ | 🔒 | ✅ | `user_id = auth.uid()` | Cards de veículo com score de saúde, flags e indicador de odômetro faltante em abastecimento |
+| `/dashboard/vehicle-history` | GET | ❌ | 🔒 | ✅ | `user_id = auth.uid()` | Parâmetro `vehicle_id` obrigatório; retorna últimas 20 despesas + manutenções combinadas; reaproveitada por VehicleSpotlight (SPEC-20260531-001 RF-DB-04/RF-DB-05) |
+| `/dashboard/kpi-catalog` | GET | ❌ | 🔒 | ✅ | `user_id = auth.uid()` | Computa os 8 KPIs do catálogo via `Promise.allSettled` (falha isolada por métrica); filtra pelos `dashboard_kpi_ids` de `user_preferences`; inclui sparkline + delta com supressão por amostra pequena (R-KPI-01, R-KPI-02) |
+| `/dashboard/fleet-charts` | GET | ❌ | 🔒 | ✅ | `user_id = auth.uid()` | Séries mensais de custo/km, volume de combustível e breakdown de categorias para gráficos inline da frota; reaproveitado por `FleetChartsSection` no frontend (SPEC-20260721-002 RF-08) |
 
 ---
 
@@ -161,7 +170,26 @@
 |----------|--------|-----------|------|-------|------------|-----------|
 | `/users/me` | GET | ❌ | ✅ | ✅ | Retorna apenas o próprio perfil | — |
 | `/users/me` | PATCH | ❌ | ✅ | ✅ | Atualiza apenas o próprio perfil | — |
-| `/users/me` | DELETE | ❌ | ⚠️✅ | ✅ | Exige `{ confirm: true }` | Soft delete + anonimização + revogação de JWT |
+| `/users/me` | DELETE | ❌ | ⚠️✅ | ✅ | Exige `{ confirm: true }` | Soft delete (`profiles.deleted_at = now()`) + audit log `ACCOUNT_DELETION_REQUESTED`; hard delete após 30 dias (SPEC-20260719-002, C1) |
+| `/users/me/restore` | POST | ❌ | 🔒 | ✅ | `user_id` do JWT de conta com `deleted_at IS NOT NULL` | Protegida por `SoftDeletedUserGuard` (aceita JWT de conta soft-deleted); zera `deleted_at`; audit log `ACCOUNT_RESTORED`; retorna 200 (restaurada) ou 409 (conta não estava deletada) |
+
+---
+
+## Preferências (`/preferences`) — SPEC-20260603-004, SPEC-20260612-003
+
+> Gerencia as preferências de exibição e comportamento do usuário autenticado: campos exibidos no
+> chip de contexto de veículo (`vehicle_chip_fields`), rascunho automático de formulários
+> (`auto_draft_enabled`) e KPIs ativos no dashboard (`dashboard_kpi_ids`). Persiste via upsert em
+> `user_preferences`. Garantido por `SupabaseAuthGuard`.
+
+| Endpoint | Método | anonymous | user | admin | Isolamento | Observação |
+|----------|--------|-----------|------|-------|------------|-----------|
+| `/preferences` | GET | ❌ | 🔒 | ✅ | `user_id = auth.uid()` | Retorna `vehicle_chip_fields`, `auto_draft_enabled`, `dashboard_kpi_ids` com fallback para defaults quando a linha ainda não existe |
+| `/preferences` | PATCH | ❌ | 🔒 | ✅ | `user_id = auth.uid()` | Upsert parcial — campos omitidos não são alterados; valida `dashboard_kpi_ids` (1–6 IDs do catálogo canônico, R-KPI-01); valida `vehicle_chip_fields` via `chipFieldsSchema` |
+
+> **Nota:** Os campos de preferências são armazenados em `user_preferences` (RLS owner-only — ver
+> tabela de RLS abaixo). A coluna `dashboard_kpi_ids text[]` foi adicionada via migration
+> `supabase/migrations/20260721150000_dashboard_kpi_preferences.sql` (SPEC-20260721-002 RF-01).
 
 ---
 

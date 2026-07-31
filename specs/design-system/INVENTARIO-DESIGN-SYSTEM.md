@@ -3,7 +3,7 @@
 **Propósito:** documento de apoio para recriar no Figma o design system já implementado em código.
 **Fonte de verdade:** `packages/ui/src/` — o Figma deve espelhar o código, não o contrário.
 **Spec de referência:** `specs/design-system/SPEC-20260525-001.md` (aprovada v0.3, 2026-07-19)
-**Última atualização:** 2026-07-20
+**Última atualização:** 2026-07-30 — `Badge`/`Skeleton`/`Container`/`Tooltip` novos (`SPEC-20260730-001`), padronizam o design system conforme o brand showcase Prata (Rodada 6, `PLANO-MIGRACAO-CONSUMIDORES.md`)
 
 ---
 
@@ -19,47 +19,46 @@ Os valores são canais OKLCH no formato `"L C H"` (sem a função `oklch()` em v
 
 | Nome do token | Variável CSS | Valor OKLCH | Uso |
 |---|---|---|---|
-| `background` | `--background` | `oklch(98.5% 0.004 80)` | Fundo da página — canvas quente sutil desde SPEC-20260722-002 RF-01 (era `98.5% 0 0`; chroma no eixo b+, mesma família de matiz do `--warning` H=85, mantida <0.01 para não competir com o âmbar de alerta) |
-| `foreground` | `--foreground` | `oklch(15% 0 0)` | Texto sobre background |
-| `card` | `--card` | `oklch(97% 0.004 80)` | Fundo de cartões/panels — mesmo ajuste de SPEC-20260722-002 RF-01 (era `97% 0 0`) |
-| `cardForeground` | `--card-foreground` | `oklch(15% 0 0)` | Texto dentro de cartões |
-| `border` | `--border` | `oklch(90% 0.004 80)` | Bordas, divisores, linhas de tabela — mesmo ajuste de SPEC-20260722-002 RF-01 (era `90% 0 0`) |
-| `muted` | `--muted` | `oklch(97% 0.004 80)` | Fundo de elementos secundários (hover, zebra) — mesmo ajuste de SPEC-20260722-002 RF-01 (era `97% 0 0`) |
-| `mutedForeground` | `--muted-foreground` | `oklch(42% 0 0)` | Texto auxiliar, placeholders, labels secundários — L=42% desde SPEC-20260721-001 RF-02 (era 45%, garante AA 4.5:1). Permanece acromático — só as superfícies neutras ganharam o undertone quente, não o texto |
+| `background` | `--background` | `oklch(97.2% 0.003 248)` | Fundo da página — direção Prata desde SPEC-20260729-001 RF-01 (canvas frio azul-prata-cinza, substitui o canvas quente de SPEC-20260722-002, agora deprecated) |
+| `foreground` | `--foreground` | `oklch(20.4% 0.011 261)` | Texto sobre background |
+| `card` | `--card` | `oklch(92.6% 0.007 248)` | Fundo de cartões/panels |
+| `cardForeground` | `--card-foreground` | `oklch(20.4% 0.011 261)` | Texto dentro de cartões |
+| `border` | `--border` | `oklch(88.5% 0.007 248)` | Bordas, divisores, linhas de tabela |
+| `muted` | `--muted` | `oklch(92.6% 0.007 248)` | Fundo de elementos secundários (hover, zebra) |
+| `mutedForeground` | `--muted-foreground` | `oklch(50.4% 0.021 246)` | Texto auxiliar, placeholders, labels secundários — L=50.4% desde SPEC-20260729-001 (era 42%; o teto de L≤42% de SPEC-20260721-001 RF-02 era calibração do par acromático anterior, não o requisito em si — C-DS-01 exige razão ≥4.5:1, atingida ~5.2:1 light / ~6.8:1 dark) |
 
-#### Marca (Paleta Steel & Sapphire)
+#### Marca (Paleta Prata — SPEC-20260729-001, ADR-009)
 
 | Nome do token | Variável CSS | Valor OKLCH | Uso |
 |---|---|---|---|
-| `primary` | `--primary` | `oklch(55.6% 0.15 260)` | Azul royal — CTAs, links, anel de foco, borda ativa de tabs |
-| `primaryForeground` | `--primary-foreground` | `oklch(98.5% 0 0)` | Texto sobre primary (branco) |
-| `secondary` | `--secondary` | `oklch(55.6% 0.15 200)` | Azul-teal (mesmo L/C, matiz 200) |
-| `secondaryForeground` | `--secondary-foreground` | `oklch(98.5% 0 0)` | Texto sobre secondary |
-| `accent` | `--accent` | `oklch(55.6% 0.15 140)` | Verde (mesmo L/C, matiz 140) |
+| `primary` | `--primary` | `oklch(35.3% 0.093 259)` | Azul tecnológico (acorde azul-prata-cinza, Heller) — CTAs, links, anel de foco, borda ativa de tabs |
+| `primaryForeground` | `--primary-foreground` | `oklch(97.2% 0.003 248)` | Texto sobre primary (= `background`, par validado em `contrastExpectations` da direção Prata) |
+| `secondary` | `--secondary` | `oklch(75% 0.03 255)` | Tom estrutural derivado (mesma família de matiz de `primary`, chroma reduzida) — não é parte literal da paleta Prata; sem consumidor em `packages/ui` hoje |
+| `secondaryForeground` | `--secondary-foreground` | `oklch(20.4% 0.011 261)` | Texto sobre secondary |
+| `accent` | `--accent` | `oklch(55.6% 0.15 140)` | Verde — inalterado, sem consumidor em `packages/ui`; fora de escopo da adoção de Prata (R-DS-03 já reserva destaque decorativo só a `gold`) |
 | `accentForeground` | `--accent-foreground` | `oklch(15% 0 0)` | Texto escuro sobre accent |
 
-> Nota: primary/secondary/accent compartilham exatamente o mesmo L (55,6%) e C (0,15), diferindo apenas no matiz (H). Essa regularidade é proposital e deve ser preservada no Figma — use o mesmo lightness e chroma ao criar variações.
-
-#### Marca — Dourado (SPEC-20260721-001 RF-01, decisão F-1)
+#### Marca — Dourado (direção Prata, SPEC-20260729-001)
 
 | Nome do token | Variável CSS | Valor OKLCH | Uso |
 |---|---|---|---|
-| `gold` | `--gold` | `oklch(68% 0.18 82)` | Acento de destaque, badge de status premium — nunca texto pequeno sobre fundo claro (contraste ~2.1:1, falha AA) |
-| `goldForeground` | `--gold-foreground` | `oklch(15% 0 0)` | Texto sobre fundo `--gold` |
+| `gold` | `--gold` | `oklch(67.4% 0.122 86)` | Acento de destaque, badge de status premium — nunca texto pequeno sobre fundo claro, nunca fundo de CTA principal, nunca ao lado de elemento prateado de mesmo peso (regra heráldica) |
+| `goldForeground` | `--gold-foreground` | `oklch(20.4% 0.011 261)` | Texto sobre fundo `--gold` — fixo, não inverte em dark mode (ouro permanece claro/quente nos dois temas; ver bug corrigido no showcase Prata antes desta adoção) |
 
-#### Dark Mode (SPEC-20260721-001 RF-01, RF-02, RF-03)
+#### Dark Mode (SPEC-20260721-001 RF-01, RF-02, RF-03; SPEC-20260729-001 RF-01)
 
-Aplicado via classe `.dark` no `<html>` (`next-themes`, `defaultTheme="system"` + `enableSystem`). Só os tokens abaixo têm override — os demais herdam do `:root` (ver "Fora de Escopo" em SPEC-20260721-001: recalibração completa da paleta em dark fica para spec futura).
+Aplicado via classe `.dark` no `<html>` (`next-themes`, `defaultTheme="system"` + `enableSystem`). `secondary` ganhou override porque a direção Prata define seu dark explicitamente; `accent`/`success`/`warning`/`danger`/`info` em dark seguem fora de escopo.
 
 | Nome do token | Valor OKLCH (dark) |
 |---|---|
-| `background` | `oklch(14% 0.02 258)` |
-| `foreground` | `oklch(93% 0.005 260)` |
-| `card` / `cardForeground` | `oklch(19% 0.02 258)` / `oklch(93% 0.005 260)` |
-| `border` | `oklch(28% 0.02 258)` |
-| `muted` / `mutedForeground` | `oklch(24% 0.015 258)` / `oklch(62% 0.01 260)` |
-| `primary` | `oklch(62% 0.22 258)` |
-| `gold` / `goldForeground` | `oklch(74% 0.15 82)` / `oklch(12% 0 0)` |
+| `background` | `oklch(20.4% 0.011 261)` |
+| `foreground` | `oklch(95.1% 0.005 258)` |
+| `card` / `cardForeground` | `oklch(27.5% 0.016 260)` / `oklch(95.1% 0.005 258)` |
+| `border` | `oklch(34% 0.016 260)` |
+| `muted` / `mutedForeground` | `oklch(32.5% 0.016 260)` / `oklch(75.9% 0.018 248)` |
+| `primary` | `oklch(68% 0.11 254)` — chroma reforçada por SPEC-20260729-002 (era `70.7% 0.038 250`, fiel ao hex literal do showcase mas discreto demais como cor de botão/link real) |
+| `secondary` / `secondaryForeground` | `oklch(30% 0.03 255)` / `oklch(95.1% 0.005 258)` |
+| `gold` / `goldForeground` | `oklch(82.9% 0.12 91)` / `oklch(20.4% 0.011 261)` |
 
 #### Semânticos — Sólidos (ícone, borda, texto)
 
@@ -69,8 +68,8 @@ Aplicado via classe `.dark` no `<html>` (`next-themes`, `defaultTheme="system"` 
 | `successForeground` | `--success-foreground` | `oklch(98.5% 0 0)` | Texto sobre success |
 | `warning` | `--warning` | `oklch(75% 0.16 85)` | Âmbar — borda, texto e ícone de aviso |
 | `warningForeground` | `--warning-foreground` | `oklch(15% 0 0)` | Texto escuro sobre warning |
-| `danger` | `--danger` | `oklch(57.7% 0.2 25)` | Vermelho — borda, texto e ícone de erro/destrutivo |
-| `dangerForeground` | `--danger-foreground` | `oklch(98.5% 0 0)` | Texto sobre danger |
+| `danger` | `--danger` | `oklch(56.3% 0.14 32)` | Terracota dessaturado (direção Prata, R-DS-06) — borda, texto e ícone de erro/destrutivo. Substitui o vermelho saturado anterior (era `57.7% 0.2 25`); sem override dark, mesmo tom nos dois temas (nunca direto sobre `background`/`card`, só sobre `dangerPastel`) |
+| `dangerForeground` | `--danger-foreground` | `oklch(97.2% 0.003 248)` | Texto sobre danger |
 | `info` | `--info` | `oklch(55.6% 0.15 240)` | Azul-info (matiz 240, leve em relação ao primary 260) |
 | `infoForeground` | `--info-foreground` | `oklch(98.5% 0 0)` | Texto sobre info |
 
@@ -80,10 +79,41 @@ Aplicado via classe `.dark` no `<html>` (`next-themes`, `defaultTheme="system"` 
 |---|---|---|---|
 | `successPastel` | `--success-pastel` | `oklch(92% 0.12 150)` | Fundo do Alert/Toast de sucesso |
 | `warningPastel` | `--warning-pastel` | `oklch(92% 0.15 85)` | Fundo do Alert/Toast de aviso |
-| `dangerPastel` | `--danger-pastel` | `oklch(92% 0.08 25)` | Fundo do Alert/Toast de erro |
+| `dangerPastel` | `--danger-pastel` | `oklch(92% 0.06 32)` | Fundo do Alert/Toast de erro — matiz atualizado para o terracota (era `92% 0.08 25`) |
 | `infoPastel` | `--info-pastel` | `oklch(92% 0.08 240)` | Fundo do Alert/Toast de info |
 
 > Nota sobre os pastéis: todos têm L=92%, o que garante que são fundos claros com contraste legível. O C varia ligeiramente para compensar a percepção de saturação diferente por matiz.
+
+#### Paleta Categórica (SPEC-20260729-002, ADR-010) — substitui `--chart-1..5`
+
+Reservada exclusivamente para dados sem status real (R-DS-07): gráficos multi-série (`apps/web/src/lib/chart-colors.ts`) e indicadores de modo/contexto (ex: seletor de veículo). Hues fundamentados em Okabe-Ito (Color Universal Design) + ColorBrewer, distinguíveis sob deuteranopia/protanopia por matiz + luminosidade combinados.
+
+| Nome do token | Variável CSS | Valor OKLCH (light) | Valor OKLCH (dark) | Uso |
+|---|---|---|---|---|
+| `categorical-1` | `--categorical-1` | `oklch(50% 0.17 258)` | `oklch(65% 0.17 258)` | Azure — série 1 de gráfico; modo `group` do contexto de veículo |
+| `categorical-2` | `--categorical-2` | `oklch(64% 0.14 195)` | `oklch(72% 0.13 195)` | Teal — série 2 de gráfico |
+| `categorical-3` | `--categorical-3` | `oklch(56% 0.11 132)` | `oklch(66% 0.1 132)` | Olive — série 3 de gráfico |
+| `categorical-4` | `--categorical-4` | `oklch(72% 0.12 72)` | `oklch(80% 0.1 72)` | Sand — série 4 de gráfico; modos `single`/`multi` do contexto de veículo (diferenciados por borda sólida/tracejada) |
+| `categorical-5` | `--categorical-5` | `oklch(55% 0.14 315)` | `oklch(68% 0.13 315)` | Plum — série 5 de gráfico; modo `attribute` do contexto de veículo |
+| `chart-grid` | `--chart-grid` | `oklch(88.5% 0.007 248)` | `oklch(34% 0.016 260)` | Linha de grade de gráfico (Recharts `CartesianGrid`), realinhado à família Prata |
+
+#### Escala de Urgência (SPEC-20260729-002, ADR-010, R-DS-08)
+
+Máximo 4 níveis codificados por cor, sempre com label textual/numérico. Só um par de token é novo — os demais níveis reaproveitam `danger`/`warning`/`info`.
+
+| Nome do token | Variável CSS | Valor OKLCH (light) | Valor OKLCH (dark) | Uso |
+|---|---|---|---|---|
+| `urgencyHot` | `--urgency-hot` | `oklch(62% 0.18 32)` | `oklch(62% 0.18 32)` | Terracota mais vívido — nível "≤7 dias" da escada de vencimento de despesas |
+| `urgencyHotPastel` | `--urgency-hot-pastel` | `oklch(93% 0.07 32)` | `oklch(27% 0.09 32)` | Fundo do badge de urgência "≤7 dias" |
+
+#### Superfícies e Financeiro Realinhados (SPEC-20260721-002 origem, SPEC-20260729-002 realinhamento)
+
+| Nome do token | Variável CSS | Valor OKLCH (light) | Valor OKLCH (dark) | Uso |
+|---|---|---|---|---|
+| `surface` | `--surface` | `oklch(95% 0.003 248)` | `oklch(23% 0.014 260)` | Fundo de `.glass-card` (era acromático puro `L% 0 0`) |
+| `surfaceElevated` | `--surface-elevated` | `oklch(98.5% 0.003 248)` | `oklch(28% 0.016 260)` | Camada elevada do glass-card |
+| `onSurface` / `onSurfaceMuted` / `onSurfaceSubtle` | `--on-surface` / `--on-surface-muted` / `--on-surface-subtle` | `oklch(20.4% 0.011 261)` / `oklch(50.4% 0.021 246)` / `oklch(63% 0.015 246)` | `oklch(95.1% 0.005 258)` / `oklch(75.9% 0.018 248)` / `oklch(58% 0.014 250)` | Texto sobre `.glass-card`/`.kicker` (`UpcomingCostsWidget`) |
+| `financeOutgoing` | `--finance-outgoing` | `oklch(58% 0.17 32)` | `oklch(62% 0.16 32)` | Cor semântica para valores monetários de saída — realinhada ao terracota (era `57.7% 0.2 25`, vermelho pré-Prata) |
 
 ---
 
@@ -117,7 +147,7 @@ Arquivo-fonte: `packages/ui/src/tokens/radius.ts`
 
 ## 2. Componentes
 
-Total: **16 componentes** exportados em `packages/ui/src/index.ts`, agrupados por função.
+Total: **24 componentes** exportados em `packages/ui/src/index.ts`, agrupados por função.
 
 ### 2.1 Base
 
@@ -157,6 +187,109 @@ Primitivo: HTML `<div>` com CVA
 **Aparência fixa:** `rounded-lg border border-border bg-card text-card-foreground shadow-sm`
 
 > Usado como container base por KpiCard e ChartWrapper — nunca duplicar esse visual inline.
+
+---
+
+#### Input
+
+Arquivo: `packages/ui/src/components/input.tsx`
+Primitivo: HTML `<input>` nativo com `forwardRef`
+
+| Prop | Notas |
+|---|---|
+| `error` | booleano — troca `border-border` por `border-danger` e marca `aria-invalid` |
+| `className` | mesclado via `cn()` sobre a classe-base (`inputBaseClass`, também exportada e reaproveitada por `Textarea`, `CurrencyInput`/`OdometerInput` e `PasswordInput`) |
+
+**Aparência fixa:** `h-10 w-full rounded-md border border-border bg-background px-3 py-2 text-sm focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-50`.
+
+> @spec SPEC-20260729-003 — criado para fechar a lacuna de `<input>`/`<button>` sem estilo nas
+> telas de formulário (ver Rodada 5 de `PLANO-MIGRACAO-CONSUMIDORES.md`).
+
+---
+
+#### Textarea
+
+Arquivo: `packages/ui/src/components/textarea.tsx`
+Primitivo: HTML `<textarea>` nativo com `forwardRef`
+
+Mesma classe-base do `Input` (`inputBaseClass`), com `min-h-[80px]` no lugar de `h-10`. Mesma prop `error`.
+
+---
+
+#### Checkbox
+
+Arquivo: `packages/ui/src/components/checkbox.tsx`
+Primitivo: `<input type="checkbox">` nativo com `accent-primary`
+
+Sem dependência Radix nova — nenhum consumidor atual precisa de estado indeterminado. `h-4 w-4 rounded border-border accent-primary`, com anel de foco tokenizado.
+
+---
+
+#### Switch
+
+Arquivo: `packages/ui/src/components/switch.tsx`
+Primitivo: `<button role="switch">` nativo (sem Radix)
+
+| Prop | Notas |
+|---|---|
+| `checked` / `onCheckedChange` | Controlado, sem prop `onChange` nativa |
+
+Track `bg-primary` (ligado) / `bg-muted` (desligado), thumb `bg-background` com `translate-x`. Ainda sem consumidor real em `apps/web` — ver tabela "Sem ação por ora" do plano de migração.
+
+---
+
+#### Badge
+
+Arquivo: `packages/ui/src/components/badge.tsx`
+Primitivo: `<span>` com CVA
+
+| Prop | Notas |
+|---|---|
+| `variant` | `success`/`warning`/`danger`/`info` (`border-{variant} bg-{variant}-pastel text-foreground`), `neutral` (`border-muted text-muted-foreground`, sem fundo) |
+
+**Aparência fixa:** `inline-flex items-center rounded-md border px-1.5 py-0.5 text-xs font-medium`.
+
+> @spec SPEC-20260730-001 — substitui o padrão `border-{semantic} bg-{semantic}-pastel` que já
+> convergia em ~10 arquivos (fines, atividades, manutenção, saúde de veículo). **Não** cobre
+> indicadores que tingem uma linha/card inteiro por urgência (`UpcomingCostsWidget`,
+> `FleetAlertBar`) — esse é um padrão distinto, fora do escopo de `Badge`.
+
+---
+
+#### Skeleton
+
+Arquivo: `packages/ui/src/components/skeleton.tsx`
+Primitivo: `<div aria-hidden="true">`
+
+Sem props além de `className`/`HTMLAttributes<HTMLDivElement>` — cada consumidor define `h-*`/`w-*`. Classe-base `animate-pulse rounded-md bg-muted`. Usado internamente por `KpiCard` (`KpiCardSkeleton`) e `ChartWrapper` (estado `loading`), além de 3 consumidores em `apps/web`.
+
+---
+
+#### Container
+
+Arquivo: `packages/ui/src/components/container.tsx`
+Primitivo: `<main>` com CVA
+
+| Prop | Notas |
+|---|---|
+| `size` | `sm`/`md`/`2xl`/`3xl`/`4xl`/`5xl` (`max-w-*`), default `sm` |
+| `gap` | `4`/`8` (`gap-4`/`gap-8`), default `4` |
+
+**Aparência fixa:** `mx-auto flex w-full flex-col p-8`. Substitui o wrapper `<main className="mx-auto flex max-w-{size} flex-col gap-{n} p-8">` idêntico em 32 ocorrências através de quase toda rota `page.tsx` — `className` extra permite casos como `pb-24` (clearance do dock mobile em `atividades`/`dashboard`).
+
+---
+
+#### Tooltip
+
+Arquivo: `packages/ui/src/components/tooltip.tsx`
+Primitivo: `@radix-ui/react-tooltip`
+
+| Prop | Notas |
+|---|---|
+| `content` | Conteúdo do tooltip (`ReactNode`) |
+| `side` | `top`/`right`/`bottom`/`left`, default `top` |
+
+**Trigger:** `asChild`, clona o elemento filho sem wrapper extra. **Aparência do conteúdo:** `rounded-md border border-border bg-card px-2 py-1 text-xs text-card-foreground shadow-md`, com seta (`Arrow`). Substitui `title=` nativo do navegador (sem estilo, sem controle de posição).
 
 ---
 
@@ -500,20 +633,22 @@ Helpers exportados para conversão: `digitsToCurrencyDisplay`, `digitsToOdometer
 ```
 Colors/
   Neutral/
-    background        → oklch(98.5% 0.004 80)
-    foreground        → oklch(15% 0 0)
-    card              → oklch(97% 0.004 80)
-    card-foreground   → oklch(15% 0 0)
-    border            → oklch(90% 0.004 80)
-    muted             → oklch(97% 0.004 80)
-    muted-foreground  → oklch(42% 0 0)
-  Brand/
-    primary           → oklch(55.6% 0.15 260)
-    primary-foreground→ oklch(98.5% 0 0)
-    secondary         → oklch(55.6% 0.15 200)
-    secondary-foreground → oklch(98.5% 0 0)
+    background        → oklch(97.2% 0.003 248)
+    foreground        → oklch(20.4% 0.011 261)
+    card              → oklch(92.6% 0.007 248)
+    card-foreground   → oklch(20.4% 0.011 261)
+    border            → oklch(88.5% 0.007 248)
+    muted             → oklch(92.6% 0.007 248)
+    muted-foreground  → oklch(50.4% 0.021 246)
+  Brand/ (direção Prata — SPEC-20260729-001)
+    primary           → oklch(35.3% 0.093 259)
+    primary-foreground→ oklch(97.2% 0.003 248)
+    secondary         → oklch(75% 0.03 255)
+    secondary-foreground → oklch(20.4% 0.011 261)
     accent            → oklch(55.6% 0.15 140)
     accent-foreground → oklch(15% 0 0)
+    gold              → oklch(67.4% 0.122 86)
+    gold-foreground   → oklch(20.4% 0.011 261)
   Semantic/
     success           → oklch(60% 0.15 150)
     success-foreground→ oklch(98.5% 0 0)
@@ -521,12 +656,28 @@ Colors/
     warning           → oklch(75% 0.16 85)
     warning-foreground→ oklch(15% 0 0)
     warning-pastel    → oklch(92% 0.15 85)
-    danger            → oklch(57.7% 0.2 25)
-    danger-foreground → oklch(98.5% 0 0)
-    danger-pastel     → oklch(92% 0.08 25)
+    danger            → oklch(56.3% 0.14 32)
+    danger-foreground → oklch(97.2% 0.003 248)
+    danger-pastel     → oklch(92% 0.06 32)
     info              → oklch(55.6% 0.15 240)
     info-foreground   → oklch(98.5% 0 0)
     info-pastel       → oklch(92% 0.08 240)
+    urgency-hot        → oklch(62% 0.18 32)
+    urgency-hot-pastel → oklch(93% 0.07 32)
+  Categorical/ (SPEC-20260729-002 — dados sem status real, ver R-DS-07)
+    categorical-1     → oklch(50% 0.17 258)
+    categorical-2     → oklch(64% 0.14 195)
+    categorical-3     → oklch(56% 0.11 132)
+    categorical-4     → oklch(72% 0.12 72)
+    categorical-5     → oklch(55% 0.14 315)
+    chart-grid        → oklch(88.5% 0.007 248)
+  Surface/ (SPEC-20260721-002, realinhado por SPEC-20260729-002)
+    surface           → oklch(95% 0.003 248)
+    surface-elevated  → oklch(98.5% 0.003 248)
+    on-surface        → oklch(20.4% 0.011 261)
+    on-surface-muted  → oklch(50.4% 0.021 246)
+    on-surface-subtle → oklch(63% 0.015 246)
+    finance-outgoing  → oklch(58% 0.17 32)
 ```
 
 > O Figma suporta cores no formato OKLCH a partir de 2024. Use a notação `oklch(L% C H)` diretamente no seletor de cor — se a versão do Figma não aceitar, converta para P3 ou sRGB pelo conversor oklch.evilmartians.io.
@@ -584,6 +735,14 @@ Seguindo a mesma prioridade da spec de implementação:
 | 15 | **ChartWrapper** (normal/loading/empty) | Gráficos |
 | 16 | **Breadcrumb** (com/sem collapse) | Navegação hierárquica |
 | 17 | **Dialog** (com/sem footer × com/sem dismiss) | Modais |
+| 18 | **Input** (normal/focus/error/disabled) | Presente em quase todo formulário de escrita (adicionado na Rodada 5, `SPEC-20260729-003`) |
+| 19 | **Textarea** (normal/focus/error/disabled) | Mesma prioridade do Input — campos multi-linha |
+| 20 | **Checkbox** (marcado/desmarcado/disabled) | Formulários de seleção múltipla e termos |
+| 21 | **Switch** (ligado/desligado/disabled) | Sem consumidor real ainda — baixa prioridade |
+| 22 | **Skeleton** (dimensões variáveis) | Já duplicado 5x, incluindo dentro de KpiCard/ChartWrapper (adicionado na Rodada 6, `SPEC-20260730-001`) |
+| 23 | **Badge** (5 variantes) | Padrão convergente em ~10 arquivos de status |
+| 24 | **Container** (6 tamanhos × 2 gaps) | Wrapper de página, 32 ocorrências idênticas |
+| 25 | **Tooltip** (fechado/aberto, 4 lados) | Poucos consumidores reais (3), baixa prioridade |
 
 ---
 
@@ -623,4 +782,5 @@ Os componentes interativos usam primitivos Radix UI como base lógica. No Figma,
 | Dialog | `@radix-ui/react-dialog` |
 | DateRangePicker | `<input type="date">` nativo |
 | FileUpload | `<input type="file">` nativo |
+| Tooltip | `@radix-ui/react-tooltip` |
 | Demais | HTML nativo / CVA |

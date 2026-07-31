@@ -9,33 +9,36 @@
  */
 @layer base {
   :root {
-    /* @spec SPEC-20260722-002 RF-01 — canvas quente sutil (light mode): chroma no eixo b+
-     * (H=80) abaixo de 0.01, mesma família de matiz do --warning (H=85) mas sem competir
-     * perceptualmente com ele. L inalterada em relação aos valores anteriores. */
-    --background: 98.5% 0.004 80;
-    --foreground: 15% 0 0;
+    /* @spec SPEC-20260729-001 RF-01 — direção Prata: acorde azul-prata-cinza frio, substitui
+     * o canvas quente de SPEC-20260722-002 (H=80→248, deprecated/superseded_by esta spec). */
+    --background: 97.2% 0.003 248;
+    --foreground: 20.4% 0.011 261;
 
-    --card: 97% 0.004 80;
-    --card-foreground: 15% 0 0;
+    --card: 92.6% 0.007 248;
+    --card-foreground: 20.4% 0.011 261;
 
-    --border: 90% 0.004 80;
+    --border: 88.5% 0.007 248;
 
-    --muted: 97% 0.004 80;
-    /* @spec SPEC-20260721-001 RF-02 — L=42% (era 45%), garante AA (4.5:1) sobre --background */
-    --muted-foreground: 42% 0 0;
+    --muted: 92.6% 0.007 248;
+    /* @spec SPEC-20260729-001 — L=50.4% (era 42%): C-DS-01 exige razão ≥4.5:1, não um teto de
+     * L fixo; este tom (`ink-muted` de Prata) atinge ~5.2:1 sobre o novo --background. */
+    --muted-foreground: 50.4% 0.021 246;
 
-    --primary: 55.6% 0.15 260;
-    --primary-foreground: 98.5% 0 0;
+    --primary: 35.3% 0.093 259;
+    --primary-foreground: 97.2% 0.003 248;
 
-    --secondary: 55.6% 0.15 200;
-    --secondary-foreground: 98.5% 0 0;
+    /* @spec SPEC-20260729-001 — tom estrutural derivado, mesma família de --primary; sem
+     * consumidor hoje, ver colors.ts para o racional completo. */
+    --secondary: 75% 0.03 255;
+    --secondary-foreground: 20.4% 0.011 261;
 
     --accent: 55.6% 0.15 140;
     --accent-foreground: 15% 0 0;
 
-    /* @spec SPEC-20260721-001 RF-01 — dourado de marca, distinto de --warning (F-1) */
-    --gold: 68% 0.18 82;
-    --gold-foreground: 15% 0 0;
+    /* @spec SPEC-20260729-001 RF-01 — dourado de Prata; --gold-foreground é grafite fixo, não
+     * inverte em dark mode (ver colors.ts para o bug que essa fixação corrige). */
+    --gold: 67.4% 0.122 86;
+    --gold-foreground: 20.4% 0.011 261;
 
     --success: 60% 0.15 150;
     --success-foreground: 98.5% 0 0;
@@ -45,35 +48,56 @@
     --warning-foreground: 15% 0 0;
     --warning-pastel: 92% 0.15 85;
 
-    --danger: 57.7% 0.2 25;
-    --danger-foreground: 98.5% 0 0;
-    --danger-pastel: 92% 0.08 25;
+    /* @spec SPEC-20260729-001 — terracota dessaturado de Prata, substitui o vermelho saturado
+     * anterior (H=25→32, C=0.2→0.14); sem override dark, ver colors.ts. */
+    --danger: 56.3% 0.14 32;
+    --danger-foreground: 97.2% 0.003 248;
+    --danger-pastel: 92% 0.06 32;
 
     --info: 55.6% 0.15 240;
     --info-foreground: 98.5% 0 0;
     --info-pastel: 92% 0.08 240;
 
     /*
-     * @spec SPEC-20260721-002 RF-04 — tokens de superfície da aplicação (distintos dos
-     * primitivos de marca acima). Vivem em globals.css, não em packages/ui/tokens/colors.ts,
-     * por serem semântica de "camada da UI" e não paleta de marca (ver Notas Técnicas da spec).
+     * @spec SPEC-20260721-002 RF-04
+     * @spec SPEC-20260729-002 RF-01 — realinhado à direção Prata (era acromático puro `L% 0 0`)
+     * Tokens de superfície da aplicação (distintos dos primitivos de marca acima). Vivem em
+     * globals.css, não em packages/ui/tokens/colors.ts, por serem semântica de "camada da UI"
+     * e não paleta de marca (ver Notas Técnicas da spec original).
      */
-    --surface: 96% 0 0;
-    --surface-elevated: 100% 0 0;
-    --on-surface: 15% 0 0;
-    --on-surface-muted: 42% 0 0;
-    --on-surface-subtle: 60% 0 0;
+    --surface: 95% 0.003 248;
+    --surface-elevated: 98.5% 0.003 248;
+    --on-surface: 20.4% 0.011 261;
+    --on-surface-muted: 50.4% 0.021 246;
+    --on-surface-subtle: 63% 0.015 246;
 
-    /* @spec SPEC-20260721-002 RF-04 — paleta de gráficos, consumida por RF-08 (condicional) */
-    --chart-1: 55.6% 0.15 260;
-    --chart-2: 60% 0.15 150;
-    --chart-3: 75% 0.16 85;
-    --chart-4: 55.6% 0.15 200;
-    --chart-5: 57.7% 0.2 25;
-    --chart-grid: 90% 0 0;
+    /*
+     * @spec SPEC-20260729-002 RF-02 — paleta categórica (substitui --chart-1..5), reaproveitada
+     * por gráficos multi-série e por indicadores de "modo/contexto" sem status real (nunca para
+     * status real — isso continua em success/warning/danger/info). Fundamentada em Okabe-Ito
+     * (Color Universal Design) + ColorBrewer, adaptada à família de matiz Prata — distinguível
+     * sob deuteranopia/protanopia por combinação de matiz + luminosidade, não só matiz.
+     */
+    --categorical-1: 50% 0.17 258; /* Azure */
+    --categorical-2: 64% 0.14 195; /* Teal */
+    --categorical-3: 56% 0.11 132; /* Olive */
+    --categorical-4: 72% 0.12 72; /* Sand */
+    --categorical-5: 55% 0.14 315; /* Plum */
+    --chart-grid: 88.5% 0.007 248;
 
-    /* @spec SPEC-20260721-002 RF-04 — cor semântica para valores monetários de saída */
-    --finance-outgoing: 57.7% 0.2 25;
+    /*
+     * @spec SPEC-20260729-002 RF-03 — escala de urgência (vencimento de despesa), 4 níveis
+     * codificados por cor + label textual/numérico (nunca só cor, R-DS-08): vencido usa
+     * `--danger` diretamente; `--urgency-hot` é um terracota mais vívido (mesmo H=32) para o
+     * nível "ainda dá tempo, aja agora" (≤7 dias) — os demais níveis reaproveitam
+     * `--warning`/`--info` já existentes.
+     */
+    --urgency-hot: 62% 0.18 32;
+    --urgency-hot-pastel: 93% 0.07 32;
+
+    /* @spec SPEC-20260721-002 RF-04, realinhado por SPEC-20260729-002 — cor semântica para
+     * valores monetários de saída; mesmo H=32 de --danger/--urgency-hot (terracota Prata). */
+    --finance-outgoing: 58% 0.17 32;
 
     --radius-sm: 0.25rem;
     --radius-md: 0.375rem;
@@ -84,44 +108,57 @@
 
   /*
    * @spec SPEC-20260721-001 RF-01, RF-03
+   * @spec SPEC-20260729-001 RF-01 — dark mode da direção Prata (valores validados no showcase)
    * Overrides de dark mode aplicados via classe `.dark` no <html> (next-themes,
-   * `defaultTheme="system"` + `enableSystem`, F-2). Só os tokens necessários para o tema
-   * funcionar de forma legível (neutros, primary, gold) — recalibração completa da paleta
-   * de marca em dark (secondary/accent/success/warning/danger/info) fica fora do escopo
-   * desta spec, ver "Fora de Escopo" em SPEC-20260721-001.
+   * `defaultTheme="system"` + `enableSystem`, F-2). `secondary` ganhou override porque Prata
+   * define seu dark explicitamente; `accent`/`success`/`warning`/`info` em dark seguem fora
+   * de escopo — ver "Fora de Escopo" em SPEC-20260729-001.
    */
   .dark {
-    --background: 14% 0.02 258;
-    --foreground: 93% 0.005 260;
+    --background: 20.4% 0.011 261;
+    --foreground: 95.1% 0.005 258;
 
-    --card: 19% 0.02 258;
-    --card-foreground: 93% 0.005 260;
+    --card: 27.5% 0.016 260;
+    --card-foreground: 95.1% 0.005 258;
 
-    --border: 28% 0.02 258;
+    --border: 34% 0.016 260;
 
-    --muted: 24% 0.015 258;
-    --muted-foreground: 62% 0.01 260;
+    --muted: 32.5% 0.016 260;
+    --muted-foreground: 75.9% 0.018 248;
 
-    --primary: 62% 0.22 258;
+    /* @spec SPEC-20260729-002 — chroma reforçada (era 0.038, fiel ao valor literal do showcase
+     * Prata) para funcionar melhor como cor de botão/link real em dark mode; mesmo H (~254,
+     * meio do range entre o H=250 do dark original e o H=259 do light). */
+    --primary: 68% 0.11 254;
 
-    --gold: 74% 0.15 82;
-    --gold-foreground: 12% 0 0;
+    --secondary: 30% 0.03 255;
+    --secondary-foreground: 95.1% 0.005 258;
 
-    /* @spec SPEC-20260721-002 RF-04 — par dark dos tokens de superfície (RNF-03) */
-    --surface: 17% 0.02 258;
-    --surface-elevated: 22% 0.02 258;
-    --on-surface: 93% 0.005 260;
-    --on-surface-muted: 62% 0.01 260;
-    --on-surface-subtle: 50% 0.01 260;
+    --gold: 82.9% 0.12 91;
+    --gold-foreground: 20.4% 0.011 261;
 
-    --chart-1: 62% 0.22 258;
-    --chart-2: 65% 0.15 150;
-    --chart-3: 78% 0.16 85;
-    --chart-4: 62% 0.15 200;
-    --chart-5: 65% 0.2 25;
-    --chart-grid: 28% 0.02 258;
+    /* @spec SPEC-20260721-002 RF-04, RNF-03
+     * @spec SPEC-20260729-002 RF-01 — realinhado à direção Prata */
+    --surface: 23% 0.014 260;
+    --surface-elevated: 28% 0.016 260;
+    --on-surface: 95.1% 0.005 258;
+    --on-surface-muted: 75.9% 0.018 248;
+    --on-surface-subtle: 58% 0.014 250;
 
-    --finance-outgoing: 65% 0.2 25;
+    /* @spec SPEC-20260729-002 RF-02 */
+    --categorical-1: 65% 0.17 258;
+    --categorical-2: 72% 0.13 195;
+    --categorical-3: 66% 0.1 132;
+    --categorical-4: 80% 0.1 72;
+    --categorical-5: 68% 0.13 315;
+    --chart-grid: 34% 0.016 260;
+
+    /* @spec SPEC-20260729-002 RF-03 — mesmo tom nos dois temas (Heller: vermelho/terracota
+     * nunca direto sobre o fundo escuro — o badge usa sempre o próprio -pastel como fundo) */
+    --urgency-hot: 62% 0.18 32;
+    --urgency-hot-pastel: 27% 0.09 32;
+
+    --finance-outgoing: 62% 0.16 32;
   }
 }
 

@@ -1,4 +1,5 @@
 import { fireEvent, render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { VehicleHealthCard, type HealthFlag, type VehicleCardData } from "./VehicleHealthCard";
 
@@ -68,7 +69,7 @@ describe("VehicleHealthCard", () => {
     expect(screen.getByRole("img", { name: /Saúde: 20 de 100 — Crítico/ })).toBeInTheDocument();
   });
 
-  it("RF-SH-03: tooltip detalha os flags retornados pela RPC sem recalcular pesos", () => {
+  it("RF-SH-03: tooltip detalha os flags retornados pela RPC sem recalcular pesos", async () => {
     const flags: HealthFlag[] = [
       { type: "maintenance_overdue", count: 1 },
       { type: "insurance_expiring", days: 15 },
@@ -77,9 +78,11 @@ describe("VehicleHealthCard", () => {
       <VehicleHealthCard vehicle={vehicle()} score={50} flags={flags} isActive={false} onSelect={vi.fn()} />,
     );
 
-    const title = screen.getByTitle(/Saúde: 50\/100/).getAttribute("title");
-    expect(title).toContain("1 manutenção(ões) vencida(s)");
-    expect(title).toContain("Seguro vence em 15 dias");
+    await userEvent.hover(screen.getByRole("img", { name: /Saúde: 50 de 100/ }));
+
+    const tooltip = await screen.findByText(/Saúde: 50\/100/);
+    expect(tooltip.textContent).toContain("1 manutenção(ões) vencida(s)");
+    expect(tooltip.textContent).toContain("Seguro vence em 15 dias");
   });
 
   it("RF-DA-04: exibe badges apenas para documentos em atenção ou vencidos", () => {

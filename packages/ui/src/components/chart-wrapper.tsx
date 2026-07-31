@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { cn } from "../lib/cn";
 import { Card } from "./card";
+import { Skeleton } from "./skeleton";
 
 /**
  * @spec SPEC-20260525-001 §5.2
@@ -41,7 +42,7 @@ export function ChartWrapper({
 
       {loading ? (
         <div role="status" aria-label="Carregando gráfico" className="flex h-64 items-center justify-center">
-          <div className="h-48 w-full animate-pulse rounded-md bg-muted" />
+          <Skeleton className="h-48 w-full" />
         </div>
       ) : isEmpty ? (
         <div className="flex h-64 items-center justify-center text-sm text-muted-foreground">

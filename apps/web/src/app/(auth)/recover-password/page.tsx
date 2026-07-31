@@ -1,5 +1,6 @@
 "use client";
 
+import { Button, Container, Input } from "@nave/ui";
 import { useMutation } from "@tanstack/react-query";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useState, type FormEvent, type ReactNode } from "react";
@@ -38,11 +39,11 @@ function RecoverPasswordForm(): ReactNode {
   }
 
   return (
-    <main className="mx-auto flex max-w-sm flex-col gap-4 p-8">
+    <Container size="sm">
       <h1 className="text-xl font-semibold">Recuperar senha</h1>
       <form onSubmit={handleSubmit} className="flex flex-col gap-3">
         <label htmlFor="email">E-mail</label>
-        <input
+        <Input
           id="email"
           type="email"
           value={email}
@@ -51,15 +52,15 @@ function RecoverPasswordForm(): ReactNode {
         />
 
         {mutation.isSuccess && (
-          <p role="status" className="text-sm text-green-700">
+          <p role="status" className="rounded-md bg-success-pastel p-3 text-sm text-foreground">
             Se o e-mail existir, enviaremos instruções de redefinição.
           </p>
         )}
 
-        <button type="submit" disabled={mutation.isPending}>
+        <Button type="submit" disabled={mutation.isPending}>
           {mutation.isPending ? "Enviando..." : "Enviar instruções"}
-        </button>
+        </Button>
       </form>
-    </main>
+    </Container>
   );
 }

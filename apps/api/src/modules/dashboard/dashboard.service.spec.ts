@@ -216,7 +216,7 @@ describe("DashboardService", () => {
       expect(result).toEqual([]);
     });
 
-    it("lança NotFoundException quando a RPC falha", async () => {
+    it("lança 500 quando a RPC falha", async () => {
       const rpc = jest.fn().mockResolvedValue({ data: null, error: { message: "boom" } });
       (createUserScopedClient as jest.Mock).mockReturnValue({ rpc });
       const service = createService();
@@ -265,7 +265,7 @@ describe("DashboardService", () => {
       expect(alerts[1]).toMatchObject({ type: "maintenance_upcoming", vehicle_plate: "DEF5678" });
     });
 
-    it("lança NotFoundException quando a query falha", async () => {
+    it("lança 500 quando a query falha", async () => {
       const from = mockFrom({
         maintenances: { data: null, error: { message: "boom" } },
         vehicles: { data: [], error: null },
@@ -340,6 +340,67 @@ describe("DashboardService", () => {
       const service = createService();
 
       const alerts = await service.getAlerts("token", "u1");
+
+      expect(alerts).toHaveLength(0);
+    });
+
+    it("com includeUpcomingDocuments: true, inclui documento a vencer dentro de 30 dias como document_upcoming", async () => {
+      const today = new Date();
+      const futureIpva = toDateString(addDays(today, 10));
+
+      const from = mockFrom({
+        maintenances: { data: [], error: null },
+        vehicles: {
+          data: [
+            {
+              id: "v1",
+              plate: "GHI9012",
+              ipva_due_date: futureIpva,
+              insurance_expires_at: null,
+              crlv_expires_at: null,
+            },
+          ],
+          error: null,
+        },
+        vehicle_recurring_costs: { data: [], error: null },
+      });
+      (createUserScopedClient as jest.Mock).mockReturnValue({ from });
+      const service = createService();
+
+      const alerts = await service.getAlerts("token", "u1", { includeUpcomingDocuments: true });
+
+      expect(alerts).toHaveLength(1);
+      expect(alerts[0]).toMatchObject({
+        type: "document_upcoming",
+        vehicle_plate: "GHI9012",
+        description: "IPVA vence em breve",
+      });
+    });
+
+    it("mesmo com includeUpcomingDocuments: true, ignora documento fora do horizonte de 30 dias", async () => {
+      const today = new Date();
+      const farFuture = toDateString(addDays(today, 45));
+
+      const from = mockFrom({
+        maintenances: { data: [], error: null },
+        vehicles: {
+          data: [
+            {
+              id: "v1",
+              plate: "GHI9012",
+              ipva_due_date: farFuture,
+              insurance_expires_at: null,
+              crlv_expires_at: null,
+            },
+          ],
+          error: null,
+        },
+        vehicle_recurring_costs: { data: [], error: null },
+      });
+      (createUserScopedClient as jest.Mock).mockReturnValue({ from });
+      const service = createService();
+
+      const alerts = await service.getAlerts("token", "u1", { includeUpcomingDocuments: true });
 
       expect(alerts).toHaveLength(0);
     });
@@ -479,7 +540,7 @@ describe("DashboardService", () => {
       expect(cards[1]?.documents).toEqual({ ipva: "unknown", insurance: "unknown", crlv: "unknown" });
     });
 
-    it("lança NotFoundException quando a query de veículos falha", async () => {
+    it("lança 500 quando a query de veículos falha", async () => {
       const from = mockFrom({ vehicles: { data: null, error: { message: "boom" } } });
       (createUserScopedClient as jest.Mock).mockReturnValue({ from });
       const service = createService();
@@ -596,7 +657,7 @@ describe("DashboardService", () => {
   });
 
   describe("getAlerts — falhas de alertas de documento", () => {
-    it("lança NotFoundException quando a query de veículos (documentos) falha", async () => {
+    it("lança 500 quando a query de veículos (documentos) falha", async () => {
       const from = mockFrom({
         maintenances: { data: [], error: null },
         vehicles: { data: null, error: { message: "boom" } },
@@ -610,7 +671,7 @@ describe("DashboardService", () => {
       );
     });
 
-    it("lança NotFoundException quando a query de custos recorrentes pagos falha", async () => {
+    it("lança 500 quando a query de custos recorrentes pagos falha", async () => {
       const from = mockFrom({
         maintenances: { data: [], error: null },
         vehicles: { data: [], error: null },
@@ -1367,6 +1428,69 @@ describe("DashboardService", () => {
       const service = createService();
 
       await expect(service.getFinesStatus("token", "u1")).rejects.toThrow("boom");
+    });
+  });
+
+  describe("getFleetCharts (RF-08)", () => {
+    const currentMonth = new Date().toISOString().slice(0, 7);
+
+    function buildChartsRpcMock(overrides: Partial<Record<string, { data: unknown; error: unknown }>> = {}) {
+      return jest.fn((fn: string) => {
+        if (fn === "get_vehicle_cost_per_km") {
+          return Promise.resolve(
+            overrides.get_vehicle_cost_per_km ?? { data: [{ total_spent: 100, total_km: 200 }], error: null },
+          );
+        }
+        if (fn === "get_category_spending_highlights") {
+          return Promise.resolve(
+            overrides.get_category_spending_highlights ?? {
+              data: [{ category: "fuel", total_amount: 300, expense_count: 4 }],
+              error: null,
+            },
+          );
+        }
+        return Promise.resolve({ data: null, error: { message: `rpc desconhecida: ${fn}` } });
+      });
+    }
+
+    it("agrega custo/km, litros de combustível e breakdown de categorias (RNF-05 — independentes)", async () => {
+      const from = mockFrom({
+        vehicles: { data: [{ id: "v1" }], error: null },
+        expenses: {
+          data: [{ occurred_at: `${currentMonth}-10`, liters: 40 }],
+          error: null,
+        },
+      });
+      const rpc = buildChartsRpcMock();
+      (createUserScopedClient as jest.Mock).mockReturnValue({ from, rpc });
+      const service = createService();
+
+      const result = await service.getFleetCharts("token", "u1");
+
+      expect(result.cost_per_km[result.cost_per_km.length - 1]).toEqual({ month: currentMonth, value: 0.5 });
+      expect(result.fuel_liters[result.fuel_liters.length - 1]).toEqual({ month: currentMonth, value: 40 });
+      expect(result.category_breakdown).toEqual([
+        { category: "fuel", label: "Combustível", total_amount: 300, count: 4 },
+      ]);
+      expect(rpc).toHaveBeenCalledWith("get_category_spending_highlights", {
+        p_vehicle_id: null,
+        p_group_vehicle_ids: null,
+        p_limit: 50,
+      });
+    });
+
+    it("cost_per_km fica 0 quando a frota não tem veículos", async () => {
+      const from = mockFrom({
+        vehicles: { data: [], error: null },
+        expenses: { data: [], error: null },
+      });
+      const rpc = buildChartsRpcMock();
+      (createUserScopedClient as jest.Mock).mockReturnValue({ from, rpc });
+      const service = createService();
+
+      const result = await service.getFleetCharts("token", "u1");
+
+      expect(result.cost_per_km.every((point: { value: number }) => point.value === 0)).toBe(true);
     });
   });
 });

@@ -113,6 +113,26 @@ describe("VehicleContextChip", () => {
     await waitFor(() => expect(screen.getByRole("dialog")).toBeInTheDocument());
   });
 
+  it("RF-05 (SPEC-20260721-001): sem veículo cadastrado, exibe CTA 'Adicionar veículo' em vez do seletor", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn((url: string) => {
+        const path = url.replace("/api/backend", "");
+        const data = path === "/vehicles" ? [] : GROUPS;
+        return Promise.resolve({
+          ok: true,
+          status: 200,
+          json: () => Promise.resolve({ data }),
+        });
+      }),
+    );
+    renderChip();
+
+    const cta = await screen.findByRole("link", { name: "Adicionar veículo" });
+    expect(cta).toHaveAttribute("href", "/vehicles/new");
+    expect(screen.queryByRole("button", { name: /Sem contexto/ })).not.toBeInTheDocument();
+  });
+
   it("RF-11: em mobile, clicar no chip abre o Sheet (vaul)", async () => {
     isDesktopMock.mockReturnValue(false);
     renderChip();

@@ -71,13 +71,21 @@ const config: Config = {
           muted: "oklch(var(--on-surface-muted) / <alpha-value>)",
           subtle: "oklch(var(--on-surface-subtle) / <alpha-value>)",
         },
+        // @spec SPEC-20260729-002 RF-02 — substitui `chart.1..5`; ver globals.css para o racional
+        categorical: {
+          1: "oklch(var(--categorical-1) / <alpha-value>)",
+          2: "oklch(var(--categorical-2) / <alpha-value>)",
+          3: "oklch(var(--categorical-3) / <alpha-value>)",
+          4: "oklch(var(--categorical-4) / <alpha-value>)",
+          5: "oklch(var(--categorical-5) / <alpha-value>)",
+        },
         chart: {
-          1: "oklch(var(--chart-1) / <alpha-value>)",
-          2: "oklch(var(--chart-2) / <alpha-value>)",
-          3: "oklch(var(--chart-3) / <alpha-value>)",
-          4: "oklch(var(--chart-4) / <alpha-value>)",
-          5: "oklch(var(--chart-5) / <alpha-value>)",
           grid: "oklch(var(--chart-grid) / <alpha-value>)",
+        },
+        // @spec SPEC-20260729-002 RF-03
+        urgency: {
+          hot: "oklch(var(--urgency-hot) / <alpha-value>)",
+          "hot-pastel": "oklch(var(--urgency-hot-pastel) / <alpha-value>)",
         },
         finance: {
           outgoing: "oklch(var(--finance-outgoing) / <alpha-value>)",

@@ -1,6 +1,6 @@
 "use client";
 
-import { Card } from "@nave/ui";
+import { Alert, Card, Container } from "@nave/ui";
 import { useQuery } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { apiClient } from "@/lib/http/api-client";
@@ -29,14 +29,14 @@ export default function AccountSettingsPage(): ReactNode {
   if (isLoading) return <main className="p-8">Carregando...</main>;
   if (isError || !profile) {
     return (
-      <main className="p-8" role="alert">
-        Não foi possível carregar as informações da conta.
+      <main className="p-8">
+        <Alert variant="error" description="Não foi possível carregar as informações da conta." />
       </main>
     );
   }
 
   return (
-    <main className="mx-auto flex max-w-2xl flex-col gap-8 p-8">
+    <Container size="2xl" gap={8}>
       <h1 className="text-xl font-semibold">Minha conta</h1>
 
       <Card className="flex flex-col gap-1 p-6">
@@ -56,6 +56,6 @@ export default function AccountSettingsPage(): ReactNode {
           <DeleteAccountDialog />
         </div>
       </Card>
-    </main>
+    </Container>
   );
 }

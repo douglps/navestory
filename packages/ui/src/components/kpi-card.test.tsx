@@ -12,18 +12,27 @@ describe("KpiCard", () => {
     expect(screen.getByText("R$")).toBeInTheDocument();
   });
 
+  // @spec SPEC-20260722-001 RF-03 — tabular-nums garante alinhamento vertical de dígitos entre KpiCards
+  it("aplica tabular-nums ao valor principal", () => {
+    render(<KpiCard title="Combustível" value="4.820" unit="R$" />);
+
+    expect(screen.getByText("4.820")).toHaveClass("tabular-nums");
+  });
+
   it("renderiza a tendência com seta de alta quando trend positivo sem reverseTrend", () => {
     render(<KpiCard title="Receita" value="100" trend={{ value: 12, label: "vs mês anterior" }} />);
 
-    expect(screen.getByText(/↑ 12%/)).toBeInTheDocument();
+    expect(screen.getByText("↑")).toBeInTheDocument();
+    expect(screen.getByText("12%")).toBeInTheDocument();
     expect(screen.getByText("vs mês anterior")).toBeInTheDocument();
   });
 
-  it("aplica cor de perigo quando reverseTrend e trend positivo (custo subindo)", () => {
+  it("aplica cor de perigo à seta (sem fundo) quando reverseTrend e trend positivo (custo subindo)", () => {
     render(<KpiCard title="Custo" value="500" trend={{ value: 8 }} reverseTrend />);
 
-    const trendText = screen.getByText(/↑ 8%/);
-    expect(trendText).toHaveClass("bg-danger-pastel", "text-foreground");
+    expect(screen.getByText("↑")).toHaveClass("text-danger");
+    expect(screen.getByText("8%")).toHaveClass("text-foreground");
+    expect(screen.getByText("8%")).not.toHaveClass("bg-danger-pastel");
   });
 
   it("renderiza sparkline com role=img e aria-label quando há histórico suficiente", () => {
@@ -41,12 +50,11 @@ describe("KpiCard", () => {
   it("usa cor e seta neutra quando trend é zero", () => {
     render(<KpiCard title="Combustível" value="4.820" trend={{ value: 0 }} />);
 
-    const trendText = screen.getByText(/→ 0%/);
-    expect(trendText).toHaveClass("text-muted-foreground");
-    expect(trendText).not.toHaveClass("bg-success-pastel", "bg-danger-pastel", "bg-warning-pastel", "bg-info-pastel");
+    expect(screen.getByText("→")).toHaveClass("text-muted-foreground");
+    expect(screen.getByText("0%")).toHaveClass("text-foreground");
   });
 
-  it("aplica variant explícito 'warning' ao texto e à sparkline", () => {
+  it("aplica variant explícito 'warning' à seta e à sparkline, sem fundo no número", () => {
     render(
       <KpiCard
         title="Combustível"
@@ -57,14 +65,15 @@ describe("KpiCard", () => {
       />,
     );
 
-    expect(screen.getByText(/↑ 5%/)).toHaveClass("bg-warning-pastel", "text-foreground");
+    expect(screen.getByText("↑")).toHaveClass("text-warning");
+    expect(screen.getByText("5%")).toHaveClass("text-foreground");
     expect(screen.getByRole("img").querySelector("polyline")).toHaveAttribute(
       "stroke",
       "oklch(var(--warning))",
     );
   });
 
-  it("aplica variant explícito 'info' ao texto e à sparkline", () => {
+  it("aplica variant explícito 'info' à seta e à sparkline, sem fundo no número", () => {
     render(
       <KpiCard
         title="Combustível"
@@ -75,7 +84,8 @@ describe("KpiCard", () => {
       />,
     );
 
-    expect(screen.getByText(/↑ 5%/)).toHaveClass("bg-info-pastel", "text-foreground");
+    expect(screen.getByText("↑")).toHaveClass("text-info");
+    expect(screen.getByText("5%")).toHaveClass("text-foreground");
     expect(screen.getByRole("img").querySelector("polyline")).toHaveAttribute(
       "stroke",
       "oklch(var(--info))",
@@ -123,8 +133,8 @@ describe("KpiCard", () => {
     expect(await axe(container)).toHaveNoViolations();
   });
 
-  // @spec SPEC-20260721-001 RNF-02 — cobre os variants que falhavam AA quando o texto usava
-  // text-{variant} direto sobre --card (warning ~2.1:1, info ~4.2:1, success ~3.4:1).
+  // @spec SPEC-20260721-001 RNF-02 — cobre os variants; a cor semântica fica só na seta
+  // (elemento gráfico, 3:1 não-textual), o número usa text-foreground para não falhar AA.
   it.each(["warning", "success", "info", "danger"] as const)(
     "não tem violações de acessibilidade com variant '%s'",
     async (variant) => {

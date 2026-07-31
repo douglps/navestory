@@ -3,6 +3,20 @@
 import { createOdometerCycleInputSchema } from "@nave/validators";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
+import {
+  Alert,
+  Button,
+  Container,
+  EmptyState,
+  Input,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+  Textarea,
+} from "@nave/ui";
 import { apiClient } from "@/lib/http/api-client";
 
 interface OdometerCycle {
@@ -72,53 +86,58 @@ export default function OdometerCyclesPage({
   }
 
   if (vehicleId === null || isLoading) return <main className="p-8">Carregando...</main>;
-  if (isError) return <main className="p-8" role="alert">Não foi possível carregar os ciclos de odômetro.</main>;
+  if (isError)
+    return (
+      <main className="p-8">
+        <Alert variant="error" description="Não foi possível carregar os ciclos de odômetro." />
+      </main>
+    );
 
   return (
-    <main className="mx-auto flex max-w-2xl flex-col gap-4 p-8">
+    <Container size="2xl">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold">Ciclos de odômetro</h1>
-        <button type="button" onClick={() => setIsModalOpen(true)}>
+        <Button type="button" variant="outline" onClick={() => setIsModalOpen(true)}>
           Reiniciar odômetro
-        </button>
+        </Button>
       </div>
 
       {cycles?.length === 0 && (
-        <p>
-          Nenhum reinício de odômetro registrado. Se o odômetro do veículo foi zerado (troca de
-          painel, revenda, etc.), registre um novo ciclo para manter seus analytics precisos.
-        </p>
+        <EmptyState
+          title="Nenhum reinício de odômetro registrado"
+          description="Se o odômetro do veículo foi zerado (troca de painel, revenda, etc.), registre um novo ciclo para manter seus analytics precisos."
+        />
       )}
 
       {cycles && cycles.length > 0 && (
-        <table>
-          <thead>
-            <tr>
-              <th>Ciclo</th>
-              <th>Início</th>
-              <th>Valor inicial (km)</th>
-              <th>Máximo anterior (km)</th>
-              <th>Motivo</th>
-            </tr>
-          </thead>
-          <tbody>
-            {cycles.map((cycle) => (
-              <tr key={cycle.id}>
-                <td>{cycle.cycle_number}</td>
-                <td>{new Date(cycle.started_at).toLocaleDateString("pt-BR")}</td>
-                <td>{cycle.starting_value}</td>
-                <td>{cycle.previous_cycle_max ?? "—"}</td>
-                <td>{cycle.reason}</td>
-              </tr>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Ciclo</TableHead>
+              <TableHead>Início</TableHead>
+              <TableHead>Valor inicial (km)</TableHead>
+              <TableHead>Máximo anterior (km)</TableHead>
+              <TableHead>Motivo</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {cycles.map((cycle, index) => (
+              <TableRow key={cycle.id} striped={index % 2 === 1}>
+                <TableCell>{cycle.cycle_number}</TableCell>
+                <TableCell>{new Date(cycle.started_at).toLocaleDateString("pt-BR")}</TableCell>
+                <TableCell>{cycle.starting_value}</TableCell>
+                <TableCell>{cycle.previous_cycle_max ?? "—"}</TableCell>
+                <TableCell>{cycle.reason}</TableCell>
+              </TableRow>
             ))}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       )}
 
       {isModalOpen && (
         <form onSubmit={handleSubmit} className="flex flex-col gap-3" role="dialog">
           <label htmlFor="starting_value">Valor inicial (km)</label>
-          <input
+          <Input
             id="starting_value"
             type="number"
             min={0}
@@ -127,26 +146,28 @@ export default function OdometerCyclesPage({
           />
 
           <label htmlFor="reason">Motivo</label>
-          <textarea
+          <Textarea
             id="reason"
             value={reason}
             onChange={(event) => setReason(event.target.value)}
             required
           />
 
-          {fieldError && <p role="alert">{fieldError}</p>}
-          {mutation.isError && <p role="alert">Não foi possível registrar o novo ciclo.</p>}
+          {fieldError && <Alert variant="error" description={fieldError} />}
+          {mutation.isError && (
+            <Alert variant="error" description="Não foi possível registrar o novo ciclo." />
+          )}
 
           <div className="flex gap-2">
-            <button type="submit" disabled={mutation.isPending}>
+            <Button type="submit" disabled={mutation.isPending}>
               {mutation.isPending ? "Salvando..." : "Confirmar"}
-            </button>
-            <button type="button" onClick={() => setIsModalOpen(false)}>
+            </Button>
+            <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)}>
               Cancelar
-            </button>
+            </Button>
           </div>
         </form>
       )}
-    </main>
+    </Container>
   );
 }

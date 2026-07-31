@@ -46,6 +46,12 @@ describe("Table", () => {
     expect(screen.getByText("R$ 350")).toHaveClass("align-top");
   });
 
+  // @spec SPEC-20260722-001 RF-03 — tabular-nums em toda célula: alinha dígitos em colunas de valor/km
+  it("célula usa tabular-nums para alinhar dígitos entre linhas", () => {
+    renderTable();
+    expect(screen.getByText("R$ 350")).toHaveClass("tabular-nums");
+  });
+
   it("não tem violações de acessibilidade", async () => {
     const { container } = renderTable();
     expect(await axe(container)).toHaveNoViolations();

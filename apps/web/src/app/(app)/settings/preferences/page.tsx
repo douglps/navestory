@@ -11,6 +11,7 @@ import {
 } from "@nave/validators";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState, type ReactNode } from "react";
+import { Alert, Button, Checkbox, Container, Input } from "@nave/ui";
 import { apiClient } from "@/lib/http/api-client";
 import { formatChipPreview } from "@/lib/vehicle-chip";
 
@@ -218,18 +219,24 @@ export default function PreferencesPage(): ReactNode {
   }
 
   if (isLoading) return <main className="p-8">Carregando...</main>;
-  if (isError) return <main className="p-8" role="alert">Não foi possível carregar as preferências.</main>;
+  if (isError)
+    return (
+      <main className="p-8">
+        <Alert variant="error" description="Não foi possível carregar as preferências." />
+      </main>
+    );
 
   return (
-    <main className="mx-auto flex max-w-2xl flex-col gap-8 p-8">
+    <Container size="2xl" gap={8}>
       <h1 className="text-xl font-semibold">Preferências</h1>
 
-      {mutation.isError && <p role="alert">Não foi possível salvar as preferências.</p>}
+      {mutation.isError && (
+        <Alert variant="error" description="Não foi possível salvar as preferências." />
+      )}
 
       <section className="flex flex-col gap-2">
         <label className="flex items-center gap-2">
-          <input
-            type="checkbox"
+          <Checkbox
             checked={autoDraftEnabled}
             onChange={(event) => handleToggleDraft(event.target.checked)}
           />
@@ -241,12 +248,12 @@ export default function PreferencesPage(): ReactNode {
         </p>
 
         <div className="flex items-center gap-2">
-          <button type="button" onClick={handleSaveDraft} disabled={!isDraftDirty || mutation.isPending}>
+          <Button type="button" onClick={handleSaveDraft} disabled={!isDraftDirty || mutation.isPending}>
             {mutation.isPending ? "Salvando..." : "Salvar"}
-          </button>
-          <button type="button" onClick={handleCancelDraft} disabled={!isDraftDirty}>
+          </Button>
+          <Button type="button" variant="outline" onClick={handleCancelDraft} disabled={!isDraftDirty}>
             Cancelar
-          </button>
+          </Button>
           {draftSaveState === "saved" && !isDraftDirty && <span>✓ Salvo</span>}
         </div>
       </section>
@@ -259,13 +266,12 @@ export default function PreferencesPage(): ReactNode {
 
         <div className="flex flex-col gap-1">
           <label className="flex items-center gap-2 text-muted-foreground">
-            <input type="checkbox" checked disabled />
+            <Checkbox checked disabled />
             Placa (obrigatório)
           </label>
           {OPTIONAL_CHIP_FIELDS.map((field) => (
             <label key={field} className="flex items-center gap-2">
-              <input
-                type="checkbox"
+              <Checkbox
                 checked={chipFields.includes(field)}
                 onChange={(event) => handleToggleChipField(field, event.target.checked)}
               />
@@ -280,45 +286,49 @@ export default function PreferencesPage(): ReactNode {
             {chipFields.map((field, index) => (
               <li key={field} className="flex items-center gap-2">
                 <span>{chipFieldLabel(field)}</span>
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
+                  size="sm"
                   aria-label={`Mover ${chipFieldLabel(field)} para cima`}
                   onClick={() => handleMoveChipField(index, -1)}
                   disabled={index === 0}
                 >
                   ↑
-                </button>
-                <button
+                </Button>
+                <Button
                   type="button"
+                  variant="ghost"
+                  size="sm"
                   aria-label={`Mover ${chipFieldLabel(field)} para baixo`}
                   onClick={() => handleMoveChipField(index, 1)}
                   disabled={index === chipFields.length - 1}
                 >
                   ↓
-                </button>
+                </Button>
               </li>
             ))}
           </ul>
         </div>
 
-        <div className="rounded border px-3 py-2" data-testid="chip-preview">
+        <div className="rounded-md border border-border px-3 py-2" data-testid="chip-preview">
           <span className="text-xs text-muted-foreground">Prévia:</span>{" "}
           {formatChipPreview(chipFields, PREVIEW_VEHICLE)}
         </div>
 
-        {chipError && <p role="alert">{chipError}</p>}
+        {chipError && <Alert variant="error" description={chipError} />}
 
         <div className="flex items-center gap-2">
-          <button
+          <Button
             type="button"
             onClick={handleSaveChipFields}
             disabled={!isChipDirty || mutation.isPending}
           >
             {mutation.isPending ? "Salvando..." : "Salvar"}
-          </button>
-          <button type="button" onClick={handleCancelChipFields} disabled={!isChipDirty}>
+          </Button>
+          <Button type="button" variant="outline" onClick={handleCancelChipFields} disabled={!isChipDirty}>
             Cancelar
-          </button>
+          </Button>
           {chipSaveState === "saved" && !isChipDirty && <span>✓ Salvo</span>}
         </div>
       </section>
@@ -336,7 +346,7 @@ export default function PreferencesPage(): ReactNode {
         </span>
 
         <label htmlFor="timezone">Selecionar fuso</label>
-        <input
+        <Input
           id="timezone"
           list="timezone-options"
           value={timezone}
@@ -349,18 +359,18 @@ export default function PreferencesPage(): ReactNode {
           ))}
         </datalist>
 
-        {tzError && <p role="alert">{tzError}</p>}
+        {tzError && <Alert variant="error" description={tzError} />}
 
         <div className="flex items-center gap-2">
-          <button type="button" onClick={handleSaveTimezone} disabled={!isTzDirty || mutation.isPending}>
+          <Button type="button" onClick={handleSaveTimezone} disabled={!isTzDirty || mutation.isPending}>
             {mutation.isPending ? "Salvando..." : "Salvar"}
-          </button>
-          <button type="button" onClick={handleCancelTimezone} disabled={!isTzDirty}>
+          </Button>
+          <Button type="button" variant="outline" onClick={handleCancelTimezone} disabled={!isTzDirty}>
             Cancelar
-          </button>
+          </Button>
           {tzSaveState === "saved" && !isTzDirty && <span>✓ Salvo</span>}
         </div>
       </section>
-    </main>
+    </Container>
   );
 }

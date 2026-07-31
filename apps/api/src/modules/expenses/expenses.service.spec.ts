@@ -1,4 +1,9 @@
-import { BadRequestException, ForbiddenException, NotFoundException } from "@nestjs/common";
+import {
+  BadRequestException,
+  ForbiddenException,
+  InternalServerErrorException,
+  NotFoundException,
+} from "@nestjs/common";
 import type { ConfigService } from "@nestjs/config";
 import type { AuditService } from "../../shared/audit/audit.service";
 import { ExpensesService } from "./expenses.service";
@@ -125,7 +130,7 @@ describe("ExpensesService", () => {
     expect(result.meta).toEqual({ total: 2, page: 1, limit: 20, has_next: false });
   });
 
-  it("create lança 404 quando o insert falha", async () => {
+  it("create lança 500 quando o insert falha", async () => {
     mockClient({
       vehicles: { data: { id: "veh1" }, error: null },
       expenses: { data: null, error: { message: "boom" } },
@@ -133,7 +138,7 @@ describe("ExpensesService", () => {
     const service = createService();
 
     await expect(service.create("token", "u1", createDto as never)).rejects.toBeInstanceOf(
-      NotFoundException,
+      InternalServerErrorException,
     );
   });
 
@@ -158,13 +163,13 @@ describe("ExpensesService", () => {
     expect(builders.get("expenses")!.lt).toHaveBeenCalledWith("occurred_at", "2026-02-01T00:00:00.000Z");
   });
 
-  it("findAll lança 404 quando a query falha", async () => {
+  it("findAll lança 500 quando a query falha", async () => {
     mockClient({ expenses: { data: null, error: { message: "boom" }, count: 0 } });
     const service = createService();
 
     await expect(
       service.findAll("token", "u1", { page: 1, limit: 20 } as never),
-    ).rejects.toBeInstanceOf(NotFoundException);
+    ).rejects.toBeInstanceOf(InternalServerErrorException);
   });
 
   it("findOne lança 404 quando a despesa não existe ou não pertence ao usuário (CA-08)", async () => {
@@ -197,7 +202,7 @@ describe("ExpensesService", () => {
     ).rejects.toBeInstanceOf(ForbiddenException);
   });
 
-  it("update lança 404 quando o update falha", async () => {
+  it("update lança 500 quando o update falha", async () => {
     mockClient({
       expenses: [
         { data: { id: "e1", is_readonly: false, amount: 100 }, error: null },
@@ -208,7 +213,7 @@ describe("ExpensesService", () => {
 
     await expect(
       service.update("token", "u1", "e1", { amount: 200 } as never),
-    ).rejects.toBeInstanceOf(NotFoundException);
+    ).rejects.toBeInstanceOf(InternalServerErrorException);
   });
 
   it("remove lança 403 quando a despesa é readonly (RF-07, CA-10, R-LED-01)", async () => {
@@ -220,7 +225,7 @@ describe("ExpensesService", () => {
     await expect(service.remove("token", "u1", "e1")).rejects.toBeInstanceOf(ForbiddenException);
   });
 
-  it("remove lança 404 quando o soft-delete falha", async () => {
+  it("remove lança 500 quando o soft-delete falha", async () => {
     mockClient({
       expenses: [
         { data: { id: "e1", is_readonly: false }, error: null },
@@ -229,7 +234,9 @@ describe("ExpensesService", () => {
     });
     const service = createService();
 
-    await expect(service.remove("token", "u1", "e1")).rejects.toBeInstanceOf(NotFoundException);
+    await expect(service.remove("token", "u1", "e1")).rejects.toBeInstanceOf(
+      InternalServerErrorException,
+    );
   });
 
   it("remove aplica soft-delete quando a despesa é editável (RF-06, CA-11)", async () => {
@@ -763,11 +770,13 @@ describe("ExpensesService", () => {
       expect(suppliers).toEqual(["Shell Av. Paulista", "Ipiranga Centro"]);
     });
 
-    it("lança 404 quando a query falha", async () => {
+    it("lança 500 quando a query falha", async () => {
       mockClient({ expenses: { data: null, error: { message: "boom" } } });
       const service = createService();
 
-      await expect(service.listSuppliers("token", "u1")).rejects.toBeInstanceOf(NotFoundException);
+      await expect(service.listSuppliers("token", "u1")).rejects.toBeInstanceOf(
+        InternalServerErrorException,
+      );
     });
   });
 
@@ -806,7 +815,7 @@ describe("ExpensesService", () => {
       });
     });
 
-    it("lança 404 quando o RPC falha", async () => {
+    it("lança 500 quando o RPC falha", async () => {
       const client = {
         rpc: jest.fn().mockResolvedValue({ data: null, error: { message: "boom" } }),
       };
@@ -815,7 +824,7 @@ describe("ExpensesService", () => {
 
       await expect(
         service.getUpcomingCosts("token", { horizon_days: 30 } as never),
-      ).rejects.toBeInstanceOf(NotFoundException);
+      ).rejects.toBeInstanceOf(InternalServerErrorException);
     });
 
     it("SPEC-20260721-002 RF-09, P6: aplica .limit() no builder do RPC quando informado", async () => {
@@ -913,7 +922,7 @@ describe("ExpensesService", () => {
       expect(builder.eq).toHaveBeenCalledWith("vehicle_id", "veh1");
     });
 
-    it("lança 404 quando o cálculo de um dos totais falha", async () => {
+    it("lança 500 quando o cálculo de um dos totais falha", async () => {
       const builder: Record<string, unknown> = {};
       builder.select = jest.fn().mockReturnValue(builder);
       builder.eq = jest.fn().mockReturnValue(builder);
@@ -927,7 +936,7 @@ describe("ExpensesService", () => {
       const service = createService();
 
       await expect(service.getKpis("token", "u1", {} as never)).rejects.toBeInstanceOf(
-        NotFoundException,
+        InternalServerErrorException,
       );
     });
   });
@@ -988,7 +997,7 @@ describe("ExpensesService", () => {
       expect(builders.get("expenses")!.insert).not.toHaveBeenCalled();
     });
 
-    it("lança 404 quando o insert do vínculo com o ledger falha", async () => {
+    it("lança 500 quando o insert do vínculo com o ledger falha", async () => {
       mockClient({
         expenses: [
           { data: null, error: null },
@@ -1006,16 +1015,16 @@ describe("ExpensesService", () => {
           amount: 195.23,
           date: "2026-07-01",
         }),
-      ).rejects.toBeInstanceOf(NotFoundException);
+      ).rejects.toBeInstanceOf(InternalServerErrorException);
     });
 
-    it("softDeleteBySource lança 404 quando o soft-delete falha", async () => {
+    it("softDeleteBySource lança 500 quando o soft-delete falha", async () => {
       mockClient({ expenses: { error: { message: "boom" } } });
       const service = createService();
 
       await expect(
         service.softDeleteBySource("token", "u1", "recurring_cost", "rc1"),
-      ).rejects.toBeInstanceOf(NotFoundException);
+      ).rejects.toBeInstanceOf(InternalServerErrorException);
     });
 
     it("R-HUB-01: softDeleteBySource aplica soft-delete filtrando por source_type/source_id", async () => {

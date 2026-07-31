@@ -4,6 +4,7 @@ import { updateVehicleInputSchema, type UpdateVehicleInput } from "@nave/validat
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
+import { Alert, Button, Container, Input } from "@nave/ui";
 import { apiClient } from "@/lib/http/api-client";
 
 interface Vehicle {
@@ -89,38 +90,47 @@ export default function VehicleDetailPage({
   }
 
   if (id === null || isLoading) return <main className="p-8">Carregando...</main>;
-  if (isError || !vehicle) return <main className="p-8" role="alert">Veículo não encontrado.</main>;
+  if (isError || !vehicle)
+    return (
+      <main className="p-8">
+        <Alert variant="error" description="Veículo não encontrado." />
+      </main>
+    );
 
   return (
-    <main className="mx-auto flex max-w-sm flex-col gap-4 p-8">
+    <Container size="sm">
       <h1 className="text-xl font-semibold">
         {vehicle.make} {vehicle.model} — {vehicle.plate}
       </h1>
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-3">
         <label htmlFor="nickname">Apelido</label>
-        <input
+        <Input
           id="nickname"
           value={nickname}
           onChange={(event) => setNickname(event.target.value)}
         />
 
         <label htmlFor="color">Cor</label>
-        <input id="color" value={color} onChange={(event) => setColor(event.target.value)} />
+        <Input id="color" value={color} onChange={(event) => setColor(event.target.value)} />
 
-        {fieldError && <p role="alert">{fieldError}</p>}
-        {updateMutation.isError && <p role="alert">Não foi possível atualizar o veículo.</p>}
+        {fieldError && <Alert variant="error" description={fieldError} />}
+        {updateMutation.isError && (
+          <Alert variant="error" description="Não foi possível atualizar o veículo." />
+        )}
         {updateMutation.isSuccess && <p>Veículo atualizado.</p>}
 
-        <button type="submit" disabled={updateMutation.isPending}>
+        <Button type="submit" disabled={updateMutation.isPending}>
           {updateMutation.isPending ? "Salvando..." : "Salvar"}
-        </button>
+        </Button>
       </form>
 
-      <button type="button" onClick={handleDelete} disabled={deleteMutation.isPending}>
+      <Button type="button" variant="destructive" onClick={handleDelete} disabled={deleteMutation.isPending}>
         {deleteMutation.isPending ? "Removendo..." : "Remover veículo"}
-      </button>
-      {deleteMutation.isError && <p role="alert">Não foi possível remover o veículo.</p>}
-    </main>
+      </Button>
+      {deleteMutation.isError && (
+        <Alert variant="error" description="Não foi possível remover o veículo." />
+      )}
+    </Container>
   );
 }

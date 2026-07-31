@@ -46,7 +46,7 @@ export function ConnectivityIndicator(): ReactNode {
     <span
       role="status"
       aria-live="polite"
-      className="ml-auto flex h-8 items-center rounded-lg border border-amber-300 bg-amber-50 px-2.5 text-xs font-medium text-amber-900 dark:border-amber-700 dark:bg-amber-900/20 dark:text-amber-200"
+      className="ml-auto flex h-8 items-center rounded-lg border border-warning bg-warning-pastel px-2.5 text-xs font-medium text-foreground"
     >
       Offline{ageLabel ? ` · Atualizado ${ageLabel}` : ""}
     </span>

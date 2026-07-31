@@ -1,5 +1,5 @@
 import type { ConfigService } from "@nestjs/config";
-import { NotFoundException } from "@nestjs/common";
+import { InternalServerErrorException } from "@nestjs/common";
 import { PreferencesService } from "./preferences.service";
 
 jest.mock("../../shared/supabase/create-user-scoped-client", () => ({
@@ -37,6 +37,7 @@ describe("PreferencesService", () => {
       auto_draft_enabled: false,
       vehicle_chip_fields: ["make", "plate", "model"],
       dashboard_kpi_ids: ["expenses_month", "urgent_maintenance", "cost_per_km", "next_maintenance"],
+      timezone: null,
     });
   });
 
@@ -57,6 +58,7 @@ describe("PreferencesService", () => {
       auto_draft_enabled: true,
       vehicle_chip_fields: ["plate"],
       dashboard_kpi_ids: ["expenses_month", "urgent_maintenance", "cost_per_km", "next_maintenance"],
+      timezone: null,
     });
   });
 
@@ -99,7 +101,7 @@ describe("PreferencesService", () => {
     expect(result).toEqual({ dashboard_kpi_ids: ["fleet_health", "total_vehicles"] });
   });
 
-  it("findOne lança 404 em erro do Supabase", async () => {
+  it("findOne lança 500 em erro do Supabase", async () => {
     const builder: Record<string, unknown> = {};
     builder.select = jest.fn().mockReturnValue(builder);
     builder.eq = jest.fn().mockReturnValue(builder);
@@ -107,7 +109,7 @@ describe("PreferencesService", () => {
     mockClient(builder);
     const service = createService();
 
-    await expect(service.findOne("token", "u1")).rejects.toBeInstanceOf(NotFoundException);
+    await expect(service.findOne("token", "u1")).rejects.toBeInstanceOf(InternalServerErrorException);
   });
 
   it("upsert persiste e é idempotente por user_id (RF-01.3, R-PREF-01)", async () => {
@@ -149,7 +151,7 @@ describe("PreferencesService", () => {
     expect(result).toEqual({ auto_draft_enabled: false, vehicle_chip_fields: ["plate"] });
   });
 
-  it("upsert lança 404 em erro do Supabase", async () => {
+  it("upsert lança 500 em erro do Supabase", async () => {
     const builder: Record<string, unknown> = {};
     builder.upsert = jest.fn().mockReturnValue(builder);
     builder.select = jest.fn().mockReturnValue(builder);
@@ -159,6 +161,6 @@ describe("PreferencesService", () => {
 
     await expect(
       service.upsert("token", "u1", { auto_draft_enabled: true }),
-    ).rejects.toBeInstanceOf(NotFoundException);
+    ).rejects.toBeInstanceOf(InternalServerErrorException);
   });
 });

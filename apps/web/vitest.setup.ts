@@ -31,3 +31,18 @@ Element.prototype.getBoundingClientRect = (): DOMRect => ({
     return this;
   },
 });
+
+// jsdom não implementa Pointer Capture; `@radix-ui/react-popover`/`cmdk` (Combobox de @nave/ui)
+// dependem deles em runtime (mesmo stub usado em packages/ui/vitest.setup.ts).
+if (!Element.prototype.hasPointerCapture) {
+  Element.prototype.hasPointerCapture = (): boolean => false;
+}
+if (!Element.prototype.setPointerCapture) {
+  Element.prototype.setPointerCapture = (): void => {};
+}
+if (!Element.prototype.releasePointerCapture) {
+  Element.prototype.releasePointerCapture = (): void => {};
+}
+if (!Element.prototype.scrollIntoView) {
+  Element.prototype.scrollIntoView = (): void => {};
+}

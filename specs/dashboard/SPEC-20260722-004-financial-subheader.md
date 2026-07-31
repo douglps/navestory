@@ -224,4 +224,4 @@ A tela de listagem de multas não existe no frontend do Nave. Decisão do usuár
 
 | Data | O que mudou | Por quê |
 |------|-------------|---------|
-| | | |
+| 2026-07-22 | Débito técnico resolvido: a tela `/fines` foi criada e implementada (SPEC-20260722-005). O link "Multas" do subheader não resulta mais em 404. Seções "Ausência de tela `/fines`" e a linha de Dependências correspondente tornam-se históricas — mantidas para registro, sem impacto no comportamento atual. | Fechamento da SPEC-20260722-005, que criou `/fines`, `/fines/new` e `/fines/[id]` no frontend. |

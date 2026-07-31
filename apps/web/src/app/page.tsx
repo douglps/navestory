@@ -12,7 +12,7 @@ export default function LandingPage(): ReactNode {
     <main className="mx-auto flex min-h-screen max-w-sm flex-col items-center justify-center gap-6 p-8 text-center">
       <div className="flex flex-col gap-2">
         <h1 className="text-3xl font-semibold">Nave</h1>
-        <p className="text-sm text-gray-600">Gestão inteligente de veículos e frota.</p>
+        <p className="text-sm text-muted-foreground">Gestão inteligente de veículos e frota.</p>
       </div>
 
       <div className="flex w-full flex-col gap-3">

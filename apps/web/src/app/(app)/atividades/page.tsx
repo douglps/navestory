@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { Badge, Container, EmptyState, Tooltip, type BadgeProps } from "@nave/ui";
 import { apiClient } from "@/lib/http/api-client";
 
 interface AuditLogRow {
@@ -46,11 +47,12 @@ function actionLabel(action: string, tableName: string): string {
 
 /**
  * @spec SPEC-20260602-005 RF-14
+ * @spec SPEC-20260730-001 — migrado para variant de `Badge` de `@nave/ui`.
  */
-function actionBadgeClassName(action: string): string {
-  if (action.endsWith("_DELETED")) return "border-red-600 bg-red-50 text-red-700";
-  if (action.endsWith("_UPDATED")) return "border-amber-500 bg-amber-50 text-amber-700";
-  return "border-emerald-600 bg-emerald-50 text-emerald-700";
+function actionBadgeVariant(action: string): NonNullable<BadgeProps["variant"]> {
+  if (action.endsWith("_DELETED")) return "danger";
+  if (action.endsWith("_UPDATED")) return "warning";
+  return "success";
 }
 
 /**
@@ -94,20 +96,6 @@ function KpiTile({ label, value }: { label: string; value: number }): ReactNode 
 }
 
 /**
- * @spec SPEC-20260602-005 RF-15
- */
-function EmptyState(): ReactNode {
-  return (
-    <div className="flex flex-col items-center gap-2 rounded border p-8 text-center">
-      <span aria-hidden className="text-2xl">
-        🛡️
-      </span>
-      <p className="text-sm text-muted-foreground">Nenhuma operação registrada ainda.</p>
-    </div>
-  );
-}
-
-/**
  * @spec SPEC-20260602-005
  * Página client component consumindo `apiClient` (TanStack Query) — a spec original previa
  * Server Component com `force-dynamic`, mas o padrão real do projeto usa exclusivamente client
@@ -127,7 +115,7 @@ export default function AtividadesPage(): ReactNode {
   const manutencoes = logs?.filter((log) => log.table_name === "maintenances").length ?? 0;
 
   return (
-    <main className="mx-auto flex max-w-4xl flex-col gap-4 p-8 pb-24">
+    <Container size="4xl" className="pb-24">
       <h1 className="text-xl font-semibold">Histórico de Atividades</h1>
       <p className="text-sm text-muted-foreground">
         Últimas {total} operações registradas na sua conta, para acompanhamento pessoal.
@@ -144,7 +132,9 @@ export default function AtividadesPage(): ReactNode {
 
       {isLoading && <p className="text-sm text-muted-foreground">Carregando…</p>}
 
-      {!isLoading && (!logs || logs.length === 0) && <EmptyState />}
+      {!isLoading && (!logs || logs.length === 0) && (
+        <EmptyState icon="🛡️" title="Nenhuma operação registrada ainda." />
+      )}
 
       {logs && logs.length > 0 && (
         <div className="overflow-x-auto rounded border">
@@ -162,15 +152,15 @@ export default function AtividadesPage(): ReactNode {
                 const domain = domainInfo(log.table_name);
                 return (
                   <tr key={log.id} className="border-b last:border-0">
-                    <td className="p-2 text-muted-foreground" title={new Date(log.created_at).toLocaleString("pt-BR")}>
-                      {relativeTime(log.created_at)}
+                    <td className="p-2 text-muted-foreground">
+                      <Tooltip content={new Date(log.created_at).toLocaleString("pt-BR")}>
+                        <span>{relativeTime(log.created_at)}</span>
+                      </Tooltip>
                     </td>
                     <td className="p-2">
-                      <span
-                        className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${actionBadgeClassName(log.action)}`}
-                      >
+                      <Badge variant={actionBadgeVariant(log.action)}>
                         {actionLabel(log.action, log.table_name)}
-                      </span>
+                      </Badge>
                     </td>
                     <td className="p-2">
                       <span aria-hidden className="mr-1">
@@ -190,6 +180,6 @@ export default function AtividadesPage(): ReactNode {
           </table>
         </div>
       )}
-    </main>
+    </Container>
   );
 }

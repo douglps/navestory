@@ -154,6 +154,58 @@
 > necessidade de tocar código de produção. Referências atualizadas em `specs/README.md` e
 > `specs/TESTS_SPEC.md`; achado identificado pelo agente `doc-keeper` durante o fechamento de T5.1.
 
+> **ATUALIZAÇÃO — 2026-07-22 (rev. 56) — SPEC-20260722-005 aprovada e implementada**
+> Spec do frontend de multas (`/fines`, `/fines/new`, `/fines/[id]`) criada em `draft` (rev. 55) e
+> aprovada/implementada no mesmo dia. Backend (SPEC-20260607-001) já estava completamente
+> implementado. Dois débitos técnicos fechados: RF-08 (link "Multas" no subheader, que resultava
+> em 404) e RF-09 (botão "Ver" habilitado para `source_type='fine'` em `UpcomingCostsTab`). A linha
+> `Sprint 2, G-07` de SPEC-20260607-001 aponta para esta spec. Todas as 9 entradas marcadas ✅;
+> RF-08/RF-09 sem teste automatizado dedicado (fechamento verificado por inspeção).
+
+> **ATUALIZAÇÃO — 2026-07-30 (rev. 58) — SPEC-20260730-001 criada (draft): Score de Saúde de Veículo e Frota**
+> Spec nova em `specs/vehicles/SPEC-20260730-001-vehicle-health-score.md`. Formaliza o algoritmo
+> de cálculo já implementado nas funções SQL `calculate_vehicle_health`/`calculate_fleet_health`
+> (R-HS-01 a R-HS-10 adicionadas ao `specs/RULES.md`). Backend e RPC de banco já implementados
+> (🔶); exibição em `/vehicles` e `/vehicles/[id]` ainda ⏳. `specs/TEST_DECISIONS.md` criado
+> com entrada `pendente` recomendando testes unit + integration + component para a feature.
+> Entrada adicionada nesta matriz (acima de "Requisitos do PRD sem Spec").
+> **Decisão de Douglas em 2026-07-31:** `aprovado`, escopo restrito a `unit` (cálculo de score/flags);
+> integration/component ficam sem teste dedicado nesta rodada — ver `specs/TEST_DECISIONS.md`.
+
+> **ATUALIZAÇÃO — 2026-07-30 (rev. 57) — SPEC-20260602-003 reorganizada para `specs/vehicle-groups/`**
+> Reorganização estrutural sem alteração de requisitos. A spec de Grupos de Veículos vivia em
+> `specs/vehicles/SPEC-20260602-003.md` desde sua criação retroativa (2026-06-02). Movida para
+> `specs/vehicle-groups/SPEC-20260602-003.md` para conformidade com a convenção "um domínio, uma
+> pasta". O ID permanece `SPEC-20260602-003`; anotações `@spec SPEC-20260602-003` no código não
+> foram alteradas. Links em `specs/RULES.md` (R-GRP-01 a R-GRP-04) atualizados para o novo caminho.
+> Histórias de usuário em formato BDD adicionadas à spec (v1.2). `specs/README.md` atualizado:
+> nova linha "Grupos de Veículos" apontando para `vehicle-groups/`; linha "Veículos" corrigida
+> (SPEC-20260711-001 estava ausente; SPEC-20260602-003 removida). Seção da matriz abaixo
+> (`## SPEC-20260602-003`) permanece inalterada — o ID é estável e as entradas de código/teste
+> continuam corretas.
+
+> **ATUALIZAÇÃO — 2026-07-29 (rev. 56) — SPEC-20260729-002 criada e aprovada (ADR-010)**
+> Fecha os dois itens de "Fora de Escopo" de `SPEC-20260729-001`: paleta categórica
+> (`--categorical-1..5`, substitui `--chart-1..5`) fundamentada em Okabe-Ito/ColorBrewer,
+> reaproveitada por gráficos e pelo indicador de contexto de veículo; escala de urgência de
+> vencimento colapsada de 5 para 4 níveis (ISO 11064-4), novo par `--urgency-hot`/`-pastel`;
+> `--surface*`/`--finance-outgoing`/`--primary` (dark) realinhados à direção Prata; varredura de
+> cor hardcoded (badges de status, chrome estrutural, banners PWA, manifest/theme-color) migrada
+> para tokens. `R-DS-07`/`R-DS-08` criadas em `specs/RULES.md`. `tsc`/`vitest`/`pnpm build`
+> validados sem regressão (141+329 testes). Ver ADR-010 para o racional completo.
+
+> **ATUALIZAÇÃO — 2026-07-29 (rev. 55) — SPEC-20260729-001 criada e aprovada (ADR-009)**
+> Adoção da direção Prata (showcase de marca) como identidade de marca de produção, substituindo
+> "Steel & Sapphire". Tokens `background`/`foreground`/`card`/`border`/`muted`/`primary`/`secondary`/
+> `gold`/`danger` (+`-foreground`/`-pastel`) remapeados para OKLCH da paleta Prata em
+> `packages/ui/src/tokens/colors.ts` e `apps/web/src/app/globals.css`, light e dark. `R-DS-05`
+> revisada v1→v2 (60-30-10, era 70/15/10/5); `R-DS-06` criada (terracota único tom de `danger`,
+> nunca sobre fundo direto do tema). `SPEC-20260722-002` (canvas quente) marcada `deprecated`,
+> `superseded_by: SPEC-20260729-001`. Suítes `vitest` completas de `packages/ui` (141 testes,
+> incl. `jest-axe`) e `apps/web` (329 testes) rodadas após a migração — ambas passam sem
+> alteração de asserção. `secondary` ganhou valor derivado (mesma família de `primary`) sem
+> consumidor em código hoje — risco de regressão zero. Ver ADR-009 para racional e trade-offs.
+
 > **ATUALIZAÇÃO — 2026-07-22 (rev. 54) — SPEC-20260722-002 criada e aprovada**
 > Canvas quente sutil aplicado ao light mode: `background`/`card`/`border`/`muted` ganharam
 > chroma 0.004 no eixo b+ (matiz 80), L inalterada, em `packages/ui/src/tokens/colors.ts` e
@@ -202,6 +254,24 @@
 > Ambos os arquivos compilam sem erros (`tsc --noEmit`). `playwright test --list` reconhece
 > 11 testes em 3 arquivos (de 7 para 11, +4). CA-10, CA-11 e CA-12 da spec cobertos.
 > Novo GitHub Secret necessário: `E2E_USER_NO_VEHICLES_EMAIL` (para RF-E2E-10).
+
+> **ATUALIZAÇÃO — 2026-07-31 (rev. 59) — auditoria de sincronia (doc-keeper)**
+> Auditoria do working tree (14 specs novas/modificadas via git status) contra as matrizes.
+> Resultado: todas as specs já tinham entradas correspondentes (revs. 55–58 cobriam integralmente).
+> Atualizações executadas nesta rodada:
+> - `matrices/permissoes.md` (rev. 9): seção Dashboard expandida com 6 endpoints implementados
+>   após T5.1/T5.3b/SPEC-20260721-002 mas ausentes da matriz (`/dashboard/fleet-health`,
+>   `/dashboard/alerts`, `/dashboard/vehicle-cards`, `/dashboard/vehicle-history`,
+>   `/dashboard/kpi-catalog`, `/dashboard/fleet-charts`); `POST /users/me/restore` adicionado
+>   à seção Usuários (SPEC-20260719-002); nova seção `## Preferências (/preferences)` para os
+>   endpoints GET/PATCH do PreferencesModule (SPEC-20260603-004/SPEC-20260612-003).
+> - `matrices/rastreabilidade.md` (esta): linha `expenses` em "Cobertura de Testes por Módulo"
+>   atualizada de ⏳ para 🔶 — `expenses.service.spec.ts` confirmado como existente (M em git
+>   status + referenciado como ✅ em SPEC-20260721-002 RF-09/P6); `expenses.controller.spec.ts`
+>   e `supabase-expense.repository.spec.ts` permanecem ⏳ (não verificados nesta rodada).
+> **Obs. interna:** `R-DS-09` referenciado em SPEC-20260729-003 localizado em `specs/RULES.md`
+> linha 79 (linha longa, omitida por ferramentas de busca com limite de caracteres — confirmado
+> por leitura direta). Nenhuma regra de frontmatter sem par em RULES.md encontrada nesta auditoria.
 
 ---
 
@@ -1430,6 +1500,49 @@ que o artefato ainda não existe no repositório.
 
 ## SPEC-20260525-001 — Design System: Novos Componentes UI (aprovado, v0.3)
 
+> **ATUALIZAÇÃO — 2026-07-22 — migração de consumidores (Alert, EmptyState)**
+> Rodadas 1–3 de `specs/design-system/PLANO-MIGRACAO-CONSUMIDORES.md` concluídas: `Alert` e
+> `EmptyState` substituíram o padrão ad hoc (`<p role="alert">`, `<div role="alert" className="rounded
+> border border-amber-300 bg-amber-50 ...">`, blocos manuais de "sem dados") em todas as telas de
+> formulário, listagem/detalhe e componentes compartilhados do app — cerca de 40 arquivos entre
+> `apps/web/src/app/(app)`, `apps/web/src/app/(auth)` e `apps/web/src/components/{dashboard,layout}`.
+> Exceções mantidas ad hoc por não caberem na API dos componentes (documentadas linha a linha no
+> plano): alertas com duas ações simultâneas (link + botão, ex. aviso de despesa duplicada e de
+> e-mail já cadastrado), badges compactos embutidos em cards densos (`VehicleHealthCard.tsx`), e
+> listas de busca estreitas onde o box centralizado do `EmptyState` não cabe
+> (`vehicle-switcher-content.tsx`). `Combobox` (3 telas) segue pendente — Rodada 4 do plano, ainda
+> não iniciada. Suíte completa de `apps/web`: 62 arquivos, 321 testes, todos passando.
+>
+> **ATUALIZAÇÃO — 2026-07-22 — migração de consumidores (KpiCard, ChartWrapper)**
+> Duas das migrações pendentes de §10 concluídas: `KpiCard` substituiu o padrão ad hoc
+> (`rounded border p-3` + `DeltaBadge` local) em `expenses/page.tsx` (`DashboardKpiGrid.tsx`
+> já usava `KpiCard` desde antes); `ChartWrapper` substituiu o header/empty state manual em
+> `analytics/page.tsx` (`TcoSection`, `FuelTrendSection`) e `VehicleSpotlight.tsx`
+> (`ExpensesSection`, `FuelSection`). `TcoBreakdownChart`/`FuelTrendChart` continuam existindo
+> como o corpo do gráfico, agora children do `ChartWrapper`. Teste de
+> `expenses/page.spec.tsx` ajustado: formato do percentual de tendência mudou de "100.0%"
+> (formatação ad hoc antiga com `toFixed(1)`) para "100%" (formato nativo do `KpiCard`, sem
+> casa decimal forçada) — comportamento consciente da padronização, não regressão.
+> `EmptyState`, `Alert` e `Combobox` seguem com migração de consumidor pendente (fora do
+> escopo desta rodada).
+>
+> **ATUALIZAÇÃO — 2026-07-22 — migração de consumidores (Combobox, Rodada 4 — plano encerrado)**
+> Última migração pendente de §10 concluída: `Combobox` substituiu o `<select>` nativo nas 3
+> telas que o usavam — `expenses/new/page.tsx` (Veículo, Categoria, Tipo de combustível),
+> `maintenance/new/page.tsx` (Veículo) e `expenses/[id]/page.tsx` (Tipo de combustível). Como
+> `Combobox` não expõe `id`/`htmlFor` (o trigger é um `<button role="combobox">`), o rótulo
+> visual passou de `<label htmlFor>` para `<span>` + prop `aria-label` no `Combobox` — mesmo
+> padrão já usado no grupo tri-state "Tanque cheio?" dessas telas; evita a violação de
+> `jsx-a11y/label-has-associated-control`. `Combobox` de Veículo ganhou `loading={vehiclesLoading}`
+> (estado "Carregando..." observável, usado pelos testes para aguardar o fetch antes de abrir o
+> dropdown). Testes reescritos: `fireEvent.change` em `<select>` virou abrir o trigger via
+> `userEvent.click` + clicar na opção (`role="option"` do `cmdk`); asserções `toHaveValue` no
+> campo selecionado viraram `toHaveTextContent` no trigger. `apps/web/vitest.setup.ts` ganhou os
+> mesmos stubs de Pointer Capture/`scrollIntoView` que `packages/ui/vitest.setup.ts` já tinha
+> para Radix Popover/`cmdk` em jsdom. `specs/design-system/PLANO-MIGRACAO-CONSUMIDORES.md` fica
+> só com a lista "Sem ação por ora" (componentes greenfield aguardando feature futura). Suíte
+> completa de `apps/web`: 62 arquivos, 321 testes, todos passando.
+
 > Define tokens + 14 componentes (3 de base + 11 originais) para o dashboard mobile-first.
 > Status: approved (2026-07-19). Revisada em 2 rodadas antes da aprovação (estudo
 > pré-implementação, ver IMPACTO-038 e seu adendo v0.3). **T8.1, rodada 1 (2026-07-19):**
@@ -1496,17 +1609,25 @@ que o artefato ainda não existe no repositório.
 | `Button` | `packages/ui/src/components/button.tsx` | Greenfield (pré-requisito) | ✅ (`button.test.tsx`, jest-axe) |
 | `Card` | `packages/ui/src/components/card.tsx` | Greenfield (pré-requisito) | ✅ (`card.test.tsx`, jest-axe) |
 | `Table` | `packages/ui/src/components/table.tsx` | Greenfield (pré-requisito) | ✅ (`table.test.tsx`, jest-axe) |
-| `EmptyState` | `packages/ui/src/components/empty-state.tsx` | Migração (6 duplicatas) | ✅ (`empty-state.test.tsx`, jest-axe) — componente pronto; migração das telas consumidoras ⏳ |
-| `Alert` | `packages/ui/src/components/alert.tsx` | Migração (padrão ad hoc em ~30 arquivos) | ✅ (`alert.test.tsx`, jest-axe) — componente pronto; migração das telas consumidoras ⏳ |
-| `KpiCard` (vertical + sparkline) | `packages/ui/src/components/kpi-card.tsx` | Migração (`FleetKpis.tsx`, `expenses/page.tsx`) | ✅ (`kpi-card.test.tsx`, jest-axe) — componente pronto; migração das telas consumidoras ⏳ |
+| `EmptyState` | `packages/ui/src/components/empty-state.tsx` | Migração (6 duplicatas) | ✅ (`empty-state.test.tsx`, jest-axe) — telas consumidoras migradas (2026-07-22, ver `specs/design-system/PLANO-MIGRACAO-CONSUMIDORES.md`, Rodadas 1–3); poucas exceções ad hoc documentadas no plano (layouts onde o box centralizado não cabe) |
+| `Alert` | `packages/ui/src/components/alert.tsx` | Migração (padrão ad hoc em ~30 arquivos) | ✅ (`alert.test.tsx`, jest-axe) — telas consumidoras migradas (2026-07-22, ver `specs/design-system/PLANO-MIGRACAO-CONSUMIDORES.md`, Rodadas 1–3); exceções ad hoc documentadas no plano (alertas com 2 ações, badges compactos dentro de cards densos) |
+| `KpiCard` (vertical + sparkline) | `packages/ui/src/components/kpi-card.tsx` | Migração (`FleetKpis.tsx`, `expenses/page.tsx`) | ✅ (`kpi-card.test.tsx`, jest-axe) — `DashboardKpiGrid.tsx` (`/dashboard`) e `KpiCards` de `expenses/page.tsx` migrados (2026-07-22); duplicata ad hoc `DeltaBadge` removida |
 | `Toast` | `packages/ui/src/components/toast.tsx` | Migração (3 componentes ad hoc no `ui-store`) | ✅ (`toast.test.tsx`, jest-axe) — componente pronto; migração dos 3 toasts ad hoc (`ContextStaleToast`, `ServiceWorkerUpdateToast`, `OfflineWriteBlockedToast`) para a fila única concluída na mesma tarefa |
-| `Combobox` | `packages/ui/src/components/combobox.tsx` | Greenfield (substitui `<select>` nativo) | ✅ (`combobox.test.tsx`, jest-axe) — componente pronto; migração das telas consumidoras (`expenses/new`, `maintenance/new`, `expenses/[id]`) ⏳ |
+| `Combobox` | `packages/ui/src/components/combobox.tsx` | Greenfield (substitui `<select>` nativo) | ✅ (`combobox.test.tsx`, jest-axe) — telas consumidoras migradas (2026-07-22, ver `specs/design-system/PLANO-MIGRACAO-CONSUMIDORES.md`, Rodada 4): `expenses/new`, `maintenance/new`, `expenses/[id]` |
 | `Tabs` | `packages/ui/src/components/tabs.tsx` | Migração (`expenses/page.tsx`, `VehicleSpotlight.tsx`) | ✅ (`tabs.test.tsx`, jest-axe) — componente pronto; `expenses/page.tsx` e `VehicleSpotlight.tsx` migrados na mesma rodada |
 | `Steps` (horizontal) | `packages/ui/src/components/steps.tsx` | Greenfield | ✅ (`steps.test.tsx`, jest-axe) — componente pronto; sem consumidor ainda (aguarda wizard de cadastro de veículo, fora do escopo desta spec) |
 | `DateRangePicker` | `packages/ui/src/components/date-range-picker.tsx` | Greenfield | ✅ (`date-range-picker.test.tsx`, jest-axe) — componente pronto; sem consumidor ainda (aguarda filtros de relatório, fase posterior) |
 | `FileUpload` | `packages/ui/src/components/file-upload.tsx` | Greenfield, sem consumidor imediato | ✅ (`file-upload.test.tsx`, jest-axe) — componente pronto; sem consumidor (aguarda feature de anexos, fora do escopo desta spec) |
-| `ChartWrapper` | `packages/ui/src/components/chart-wrapper.tsx` | Migração (lógica duplicada em `charts/`) | ✅ (`chart-wrapper.test.tsx`, jest-axe) — componente pronto; migração de `TcoBreakdownChart`/`FuelTrendChart` (`apps/web/src/components/charts/`) para usá-lo como container ⏳ |
+| `ChartWrapper` | `packages/ui/src/components/chart-wrapper.tsx` | Migração (lógica duplicada em `charts/`) | ✅ (`chart-wrapper.test.tsx`, jest-axe) — `analytics/page.tsx` (`TcoSection`, `FuelTrendSection`) e `VehicleSpotlight.tsx` (`ExpensesSection`, `FuelSection`) migrados (2026-07-22), consolidando header/loading/empty state; `TcoBreakdownChart`/`FuelTrendChart` seguem como o corpo do gráfico (children) |
 | `Breadcrumb` | `packages/ui/src/components/breadcrumb.tsx` | Greenfield | ✅ (`breadcrumb.test.tsx`, jest-axe) — componente pronto; sem consumidor ainda (navegação hoje é só via sidebar) |
+| `Input` | `packages/ui/src/components/input.tsx` | Greenfield (`SPEC-20260729-003`) — substitui `<input>` sem estilo | ✅ (`input.test.tsx`, jest-axe) — telas consumidoras migradas (2026-07-30, ver `PLANO-MIGRACAO-CONSUMIDORES.md`, Rodada 5): ~20 arquivos de formulário + autenticação |
+| `Textarea` | `packages/ui/src/components/textarea.tsx` | Greenfield (`SPEC-20260729-003`) | ✅ (`textarea.test.tsx`, jest-axe) — consumidor: `settings/vehicles/[vehicleId]/odometer-cycles/page.tsx` (campo "Motivo") |
+| `Checkbox` | `packages/ui/src/components/checkbox.tsx` | Greenfield (`SPEC-20260729-003`) | ✅ (`checkbox.test.tsx`, jest-axe) — consumidores: `vehicle-groups/*`, `settings/preferences`, `login`, `register`, `KpiPicker.tsx` |
+| `Switch` | `packages/ui/src/components/switch.tsx` | Greenfield (`SPEC-20260729-003`) | ✅ (`switch.test.tsx`, jest-axe) — componente pronto; sem consumidor ainda (telas atuais usam `Checkbox`) |
+| `Badge` | `packages/ui/src/components/badge.tsx` | Migração (padrão ad hoc convergente em ~10 arquivos, `SPEC-20260730-001`) | ✅ (`badge.test.tsx`, jest-axe) — 5 arquivos migrados (2026-07-30): `status-badge.ts`, `fines/page.tsx`, `fines/[id]/page.tsx`, `atividades/page.tsx`, `maintenance/page.tsx`, `VehicleHealthCard.tsx`; 3 casos avaliados e mantidos ad hoc (tingem linha/card inteiro, não pill isolado) |
+| `Skeleton` | `packages/ui/src/components/skeleton.tsx` | Migração (duplicado 5x, incluindo dentro do próprio `packages/ui`; `SPEC-20260730-001`) | ✅ (`skeleton.test.tsx`, jest-axe) — `kpi-card.tsx`/`chart-wrapper.tsx` refatorados internamente; 3 consumidores em `apps/web` migrados (2026-07-30) |
+| `Container` | `packages/ui/src/components/container.tsx` | Migração (32 ocorrências idênticas, `SPEC-20260730-001`) | ✅ (`container.test.tsx`, jest-axe) — 28 arquivos `page.tsx` migrados (2026-07-30) |
+| `Tooltip` | `packages/ui/src/components/tooltip.tsx` | Migração (substitui `title=` nativo, `SPEC-20260730-001`) | ✅ (`tooltip.test.tsx`, jest-axe) — 3 arquivos migrados (2026-07-30): `sidebar.tsx`, `VehicleHealthCard.tsx`, `atividades/page.tsx` |
 
 ---
 
@@ -1544,13 +1665,14 @@ que o artefato ainda não existe no repositório.
 
 | Req | Descrição | Código | Teste | Status |
 |-----|-----------|--------|-------|--------|
-| RF-05 | Seletor de veículo visível no header (reaproveita `VehicleContextChip`); seleção propaga filtro para `/expenses` e `/maintenance` | `apps/web/src/components/layout/header.tsx`, `apps/web/src/app/(app)/expenses/page.tsx`, `apps/web/src/app/(app)/maintenance/page.tsx` | `apps/web/src/app/(app)/expenses/page.spec.tsx`, `apps/web/src/app/(app)/maintenance/page.spec.tsx` (cobertura pré-existente; sem caso novo dedicado ao filtro) | ⚠️ parcial — `/fines` não existe como rota, filtro não se aplica a ela; CTA "Adicionar veículo" quando lista vazia não implementado |
+| RF-05 | Seletor de veículo visível no header (reaproveita `VehicleContextChip`); seleção propaga filtro para `/expenses` e `/maintenance`; sem veículo cadastrado (modo `none` + lista vazia), exibe CTA "Adicionar veículo" (`/vehicles/new`) em vez do seletor/Dialog vazio | `apps/web/src/components/layout/header.tsx`, `apps/web/src/components/layout/vehicle-context-chip.tsx`, `apps/web/src/lib/context/use-vehicle-context.ts` (lista de veículos agora também buscada em modo `none`), `apps/web/src/lib/context/context-labels.ts` (`addVehicleCta`), `apps/web/src/app/(app)/expenses/page.tsx`, `apps/web/src/app/(app)/maintenance/page.tsx` | `apps/web/src/components/layout/vehicle-context-chip.spec.tsx` (caso novo dedicado ao CTA), `apps/web/src/app/(app)/expenses/page.spec.tsx`, `apps/web/src/app/(app)/maintenance/page.spec.tsx` (cobertura pré-existente do filtro) | ⚠️ parcial — `/fines` não existe como rota, filtro não se aplica a ela |
 
-### Command Palette de Busca Global (RF-06)
+### Command Palette de Busca Global (RF-06, RNF-03)
 
 | Req | Descrição | Código | Teste | Status |
 |-----|-----------|--------|-------|--------|
-| RF-06 | `CommandPalette` ativada por `Ctrl+K`/`⌘K`: campo de busca focado ao abrir; resultados cruzando veículos, despesas e multas; navegação por teclado (setas, Enter, Esc) | `packages/ui/src/components/command-palette.tsx`, `apps/web/src/components/layout/command-palette-trigger.tsx` | `packages/ui/src/components/command-palette.test.tsx` | ⚠️ parcial — busca cruza veículos/despesas/manutenções (não multas, rota inexistente); sem lazy-load dedicado (RNF-03 não verificado) |
+| RF-06 | `CommandPalette` ativada por `Ctrl+K`/`⌘K`: campo de busca focado ao abrir; resultados cruzando veículos, despesas, manutenções e multas (`/fines`, habilitada por `SPEC-20260722-005`); navegação por teclado (setas, Enter, Esc) | `packages/ui/src/components/command-palette.tsx`, `apps/web/src/components/layout/command-palette-trigger.tsx` | `packages/ui/src/components/command-palette.test.tsx`, `apps/web/src/components/layout/command-palette-trigger.spec.tsx` (abertura via botão/`Ctrl+K`, busca cruzando as 4 categorias, navegação ao selecionar multa, query <2 chars, "nenhum resultado", RNF-03) | ✅ |
+| RNF-03 | `CommandPalette` não bloqueia renderização inicial do shell: `next/dynamic` (`ssr: false`) sobre `import("@nave/ui")`, montado só após a 1ª abertura (`hasOpenedOnce`) — nem o clique no botão nem o `Ctrl+K` fazem fetch do chunk antes da 1ª interação | `apps/web/src/components/layout/command-palette-trigger.tsx` | `apps/web/src/components/layout/command-palette-trigger.spec.tsx` (caso "RNF-03: não monta o CommandPalette antes da primeira abertura") | ✅ Verificado com `pnpm build`: chunk `cmdk`/`CommandPalette` isolado (~44,8 kB gzip), ausente de todo `build-manifest.json` de rota — não é carregado eagerly |
 
 ### Contraste WCAG AA em Componentes de `packages/ui` (RNF-02)
 
@@ -1579,7 +1701,7 @@ que o artefato ainda não existe no repositório.
 
 | Req | Descrição | Código | Teste | Status |
 |-----|-----------|--------|-------|--------|
-| RF-03 | `tabular-nums` aplicado ao valor principal de `KpiCard` e a toda `TableCell` | `packages/ui/src/components/kpi-card.tsx`, `packages/ui/src/components/table.tsx` | Cobertura visual existente (`kpi-card.test.tsx`, `table` sem spec dedicada) — sem novo caso automatizado nesta rodada; classe CSS não altera snapshot de acessibilidade | ⚠️ parcial — mudança puramente visual, sem teste dedicado que assert a classe `tabular-nums` |
+| RF-03 | `tabular-nums` aplicado ao valor principal de `KpiCard` e a toda `TableCell` | `packages/ui/src/components/kpi-card.tsx`, `packages/ui/src/components/table.tsx` | `kpi-card.test.tsx` ("aplica tabular-nums ao valor principal"), `table.test.tsx` ("célula usa tabular-nums para alinhar dígitos entre linhas") — ambos assertam a classe via `toHaveClass("tabular-nums")` (2026-07-23) | ✅ |
 
 ### Auditoria de Não-Regressão (RNF-01, RNF-02)
 
@@ -1590,7 +1712,11 @@ que o artefato ainda não existe no repositório.
 
 ---
 
-## SPEC-20260722-002 — Design System: Canvas Quente Sutil no Light Mode (approved)
+## SPEC-20260722-002 — Design System: Canvas Quente Sutil no Light Mode (deprecated — superseded_by SPEC-20260729-001)
+
+> **Depreciada em 2026-07-29**: a adoção da direção Prata (`SPEC-20260729-001`) reverte o canvas
+> quente — Prata usa um canvas frio (azul-prata-cinza). `background`/`card`/`border`/`muted`
+> voltam a ter matiz definido pela paleta de marca, não mais um undertone independente.
 
 > Implementa item que estava explicitamente "Fora de Escopo" em SPEC-20260722-001 (canvas
 > levemente quente inspirado na análise do Notion), agora liberado pelo usuário. Chroma sutil
@@ -1606,7 +1732,136 @@ que o artefato ainda não existe no repositório.
 
 ---
 
-## SPEC-20260721-002 — Dashboard v2: KPI Cards, VehicleHealthScore, Tokens de Superfície e Widget Próximos 7 Dias (draft)
+## SPEC-20260729-001 — Design System: Adoção da Direção Prata como Identidade de Marca (approved)
+
+> Substitui "Steel & Sapphire" pela direção Prata (construída sobre pesquisa empírica de Eva
+> Heller). Ver [ADR-009](../docs/architecture/decisions/ADR-009-adocao-direcao-prata.md) para o
+> racional completo. Decisão e implementação ocorreram na mesma sessão, a pedido do usuário.
+
+### Migração de Tokens e Regras (RF-01 a RF-03)
+
+| Req | Descrição | Código | Teste | Status |
+|-----|-----------|--------|-------|--------|
+| RF-01 | Tokens de marca (`background`/`foreground`/`card`/`border`/`muted`/`primary`/`secondary`/`gold`/`danger` + `-foreground`/`-pastel`) substituídos pelos valores OKLCH da direção Prata, light e dark | `packages/ui/src/tokens/colors.ts`, `apps/web/src/app/globals.css` | Suíte `vitest` completa de `packages/ui` (141 testes, incl. `jest-axe`) e `apps/web` (329 testes) — ambas passam sem alteração de asserção | ✅ |
+| RF-02 | `R-DS-05` revisada (v1→v2, 60-30-10) e `R-DS-06` (terracota único tom de `danger`) criada em `specs/RULES.md` | `specs/RULES.md` | — (documentação) | ✅ |
+| RF-03 | `SPEC-20260722-002` marcada `deprecated`, `superseded_by: SPEC-20260729-001` | `specs/design-system/SPEC-20260722-002-canvas-quente-light-mode.md` | — (documentação) | ✅ |
+
+### Auditoria de Não-Regressão (RNF-01, RNF-02)
+
+| Req | Descrição | Código | Teste | Status |
+|-----|-----------|--------|-------|--------|
+| RNF-01 | Nenhuma regressão em `packages/ui`/`apps/web` | — | Suítes completas rodadas após a migração — 141/141 e 329/329 passando | ✅ |
+| RNF-02 | Contraste AA preservado (`mutedForeground` acima do teto de L=42% documentado, mas dentro da razão exigida por `C-DS-01`) | `packages/ui/src/tokens/colors.ts` | Validação analítica via `contrastExpectations` da direção Prata (~5.2:1 light, ~6.8:1 dark) + ausência de regressão em `jest-axe` | ✅ |
+
+---
+
+## SPEC-20260729-002 — Design System: Prata Fase 2 (Paleta Categórica, Escala de Urgência, Varredura de Cor Hardcoded) (approved)
+
+> Fecha os dois itens de "Fora de Escopo" de `SPEC-20260729-001`. Paleta categórica e escala de
+> urgência fundamentadas pelo agente `design-system` (Okabe-Ito, ColorBrewer, ISO 11064-4) — ver
+> [ADR-010](../docs/architecture/decisions/ADR-010-paleta-categorica-e-escala-urgencia.md).
+
+### Tokens Novos e Realinhamento (RF-01 a RF-03)
+
+| Req | Descrição | Código | Teste | Status |
+|-----|-----------|--------|-------|--------|
+| RF-01 | `--surface`/`--surface-elevated`/`--on-surface*` realinhados à família de matiz Prata; `--primary` dark ganha chroma reforçada (0.038→0.11) | `apps/web/src/app/globals.css`, `packages/ui/src/tokens/colors.ts` | Suíte `vitest` completa (ver RNF-01) | ✅ |
+| RF-02 | `--categorical-1..5` (substitui `--chart-1..5`) em `globals.css`/`tailwind.config.ts`; `apps/web/src/lib/chart-colors.ts` criado; migrados `FleetCharts.tsx`, `analytics/page.tsx`, `tco-breakdown-chart.tsx`, `fuel-trend-chart.tsx`, `vehicle-context-chip.tsx`, `sidebar.tsx` (+ `sidebar.spec.tsx` assertion) | arquivos citados | `sidebar.spec.tsx` ("RF-16: exibe o dot passivo..." — assertion `bg-categorical-4`); demais cobertos por specs pré-existentes que passaram sem alteração | ✅ |
+| RF-03 | `--urgency-hot`/`--urgency-hot-pastel` criados; `urgencyBadge()` em `expenses/page.tsx` migrado para 4 níveis; `--finance-outgoing` realinhado (H=25→32) | `apps/web/src/app/globals.css`, `apps/web/src/app/(app)/expenses/page.tsx` | Coberto por `expenses/page.spec.tsx` pré-existente (sem asserção de classe de cor — passou sem alteração) | ✅ |
+
+### Varredura de Cor Hardcoded (RF-04 a RF-06)
+
+| Req | Descrição | Código | Teste | Status |
+|-----|-----------|--------|-------|--------|
+| RF-04 | Badges de status semântico migrados 1:1 para tokens (`bg-{variant}-pastel text-foreground`, padrão `Alert`/`KpiCard`); helper compartilhado criado para fines | `atividades/page.tsx`, `maintenance/page.tsx`, `fines/page.tsx`, `fines/[id]/page.tsx`, `apps/web/src/lib/fines/status-badge.ts`, `VehicleSpotlight.tsx` | Cobertos por specs pré-existentes, sem asserção de classe de cor afetada | ✅ |
+| RF-05 | Chrome estrutural migrado (`bg-white`/`border-neutral-*` → `bg-card`/`border-border`/`text-muted-foreground`) | `vehicle-context-dialog.tsx`, `vehicle-context-sheet.tsx`, `vehicle-switcher-content.tsx`, `install-prompt-banner.tsx`, `ios-install-banner.tsx`, `connectivity-indicator.tsx`, `offline/page.tsx` (migrado para `Button` de `@nave/ui`), `expenses/new`, `maintenance/new`, `fines/new` (hints "herdado do contexto"), `register/page.tsx`, `recover-password/page.tsx`, `page.tsx` (landing), `password-input.tsx` | Nenhum teste com asserção de classe hardcoded encontrado (grep confirmado antes da migração) | ✅ |
+| RF-06 | `manifest.ts`/`layout.tsx` recalculados para hex Prata (`#1B3A6B`/`#F4F6F8`, era `#3b70ca`/`#fafafa`); comentário de exceção do `gold` em `colors.ts` passou a citar os dois protótipos (`dashboard/concept` e `dashboard/concept/design-system-v2`) | `apps/web/src/app/manifest.ts`, `apps/web/src/app/layout.tsx`, `packages/ui/src/tokens/colors.ts` | — (documentação/meta tags) | ✅ |
+
+### Auditoria de Não-Regressão (RNF-01, RNF-02)
+
+| Req | Descrição | Código | Teste | Status |
+|-----|-----------|--------|-------|--------|
+| RNF-01 | Nenhuma regressão | — | `tsc --noEmit` limpo (`packages/ui`, `apps/web`); `vitest` completo — `packages/ui` 141/141, `apps/web` 329/329; `pnpm build` sem erros | ✅ |
+| RNF-02 | Nenhum consumidor órfão de `--chart-1..5` | — | `grep -rn "chart-1\|chart-2\|chart-3\|chart-4\|chart-5"` no repo — só o comentário histórico em `globals.css` | ✅ |
+
+> **2026-07-30 — RF-04 a RF-06 ganham enforcement automático:** a varredura era manual até aqui.
+> `scripts/check-hardcoded-colors.mjs` (job `hardcoded-colors-gate` em `.github/workflows/ci.yml`,
+> `pnpm check:hardcoded-colors`) bloqueia hex/`oklch()` literal novo fora dos tokens — decisão da
+> Rodada 6 de `specs/design-system/PLANO-MIGRACAO-SHOWCASE-INFRA.md`. Rodar o script contra o
+> estado atual encontrou e corrigiu 2 violações reais fora do escopo desta spec (showcase:
+> `comparar/page.tsx`, `prata-glass-section/index.tsx` — ver changelog do plano).
+
+---
+
+## SPEC-20260729-003 — Design System: Fecho de Formulários (Input, Textarea, Checkbox, Switch) (approved)
+
+> Fecha a lacuna que `SPEC-20260525-001`/`PLANO-MIGRACAO-CONSUMIDORES.md` (Rodadas 1–4) deixaram:
+> `<input>`/`<button>`/`<select>` sem estilo em ~25 arquivos de formulário/autenticação, mesmo após
+> a adoção de Prata. Ver `specs/design-system/PLANO-MIGRACAO-CONSUMIDORES.md` §Rodada 5.
+
+### Componentes Novos (RF-01 a RF-03)
+
+| Req | Descrição | Código | Teste | Status |
+|-----|-----------|--------|-------|--------|
+| RF-01 | `Input`/`Textarea` criados, classe-base `inputBaseClass` exportada | `packages/ui/src/components/input.tsx`, `textarea.tsx` | `input.test.tsx` (5), `textarea.test.tsx` (4), incl. `jest-axe` | ✅ |
+| RF-02 | `Checkbox`/`Switch` criados, sem dependência Radix nova | `packages/ui/src/components/checkbox.tsx`, `switch.tsx` | `checkbox.test.tsx` (3), `switch.test.tsx` (4), incl. `jest-axe` | ✅ |
+| RF-03 | `CurrencyInput`/`OdometerInput` aceitam `className` e usam `inputBaseClass` | `packages/ui/src/components/masked-input.tsx` | `masked-input.spec.tsx` (9, pré-existente, sem alteração de asserção) | ✅ |
+
+### Migração de Consumidores (RF-04 a RF-06)
+
+| Req | Descrição | Código | Teste | Status |
+|-----|-----------|--------|-------|--------|
+| RF-04 | Formulários de escrita migrados: `expenses/{new,[id]}`, `maintenance/{new,[id]}`, `vehicles/{new,[id],[id]/odometer}`, `vehicle-groups/{new,[id]}`, `fines/{new,[id]}`, `settings/preferences`, `settings/vehicles/[vehicleId]/odometer-cycles` | arquivos citados em `apps/web/src/app/(app)/` | Specs pré-existentes de cada tela, mais `maintenance/[id]/page.spec.tsx` ajustado (select→Combobox) | ✅ |
+| RF-05 | Autenticação migrada: `login`, `register`, `recover-password`, `reset-password`, `password-input.tsx` | arquivos citados em `apps/web/src/app/(auth)/` | Specs pré-existentes, sem alteração de asserção | ✅ |
+| RF-06 | Ajustes finos: `KpiPicker.tsx`, select de veículo em `analytics`/`dashboard`, botões de `expenses`/`fines` (listagem), `delete-account-dialog.tsx` | arquivos citados | `analytics/page.spec.tsx` ajustado (`findByDisplayValue`→`waitFor`+`toHaveTextContent`) | ✅ |
+
+### Auditoria de Não-Regressão (RNF-01, RNF-02)
+
+| Req | Descrição | Código | Teste | Status |
+|-----|-----------|--------|-------|--------|
+| RNF-01 | Nenhuma regressão | — | `tsc --noEmit` limpo; `vitest` completo — `packages/ui` 157/157 (141+16), `apps/web` 329/329 | ✅ |
+| RNF-02 | Zero `<input>`/`<button>`/`<select>`/`<textarea>` sem estilo fora de exceções | — | `grep` confirmando ocorrências restantes só em `brand-showcase/` e `dashboard/concept/*`, mais controles de forma customizada documentados (swatch de cor, FAB do dock, hambúrguer) | ✅ |
+
+---
+
+## SPEC-20260730-001 — Design System: Padronização do Showcase Prata (Badge, Skeleton, Container, Tooltip) (approved)
+
+> Constrói os componentes do showcase Prata que têm consumidor real hoje (dos 9 avaliados, só
+> 4 — o resto fica em "sem ação por ora"). Ver `specs/design-system/PLANO-MIGRACAO-CONSUMIDORES.md`
+> §Rodada 6.
+
+### Componentes Novos (RF-01 a RF-04)
+
+| Req | Descrição | Código | Teste | Status |
+|-----|-----------|--------|-------|--------|
+| RF-01 | `Badge` criado (5 variantes) | `packages/ui/src/components/badge.tsx` | `badge.test.tsx` (7, incl. `jest-axe`) | ✅ |
+| RF-02 | `Skeleton` criado; `kpi-card.tsx`/`chart-wrapper.tsx` refatorados para compor `Skeleton` | `packages/ui/src/components/skeleton.tsx`, `kpi-card.tsx`, `chart-wrapper.tsx` | `skeleton.test.tsx` (3, incl. `jest-axe`); `kpi-card.test.tsx`/`chart-wrapper.test.tsx` pré-existentes sem alteração de asserção | ✅ |
+| RF-03 | `Container` criado (6 tamanhos × 2 gaps) | `packages/ui/src/components/container.tsx` | `container.test.tsx` (10, incl. `jest-axe`) | ✅ |
+| RF-04 | `Tooltip` criado sobre `@radix-ui/react-tooltip` (nova dependência) | `packages/ui/src/components/tooltip.tsx`, `packages/ui/package.json` | `tooltip.test.tsx` (2, incl. `jest-axe`) | ✅ |
+
+### Migração de Consumidores (RF-05 a RF-08)
+
+| Req | Descrição | Código | Teste | Status |
+|-----|-----------|--------|-------|--------|
+| RF-05 | Badge migrado: `status-badge.ts` (`FINE_STATUS_BADGE_CLASS`→`FINE_STATUS_BADGE_VARIANT`), `fines/page.tsx`, `fines/[id]/page.tsx`, `atividades/page.tsx`, `maintenance/page.tsx`, `VehicleHealthCard.tsx` (`DocumentBadge`) | arquivos citados | Specs pré-existentes, sem alteração de asserção | ✅ |
+| RF-06 | Skeleton migrado: `financial-subheader.tsx`, `vehicle-context-chip.tsx`, `vehicle-switcher-content.tsx` | arquivos citados | Specs pré-existentes (`vehicle-switcher-content.tsx` sem spec) | ✅ |
+| RF-07 | Container migrado: 28 arquivos `page.tsx` de `(app)/` e `(auth)/` (32 ocorrências) | arquivos citados | Specs pré-existentes de cada tela | ✅ |
+| RF-08 | Tooltip migrado: `sidebar.tsx`, `VehicleHealthCard.tsx`, `atividades/page.tsx` | arquivos citados | `VehicleHealthCard.spec.tsx` ajustado (`getByTitle`→`userEvent.hover`+`findByText`) | ✅ |
+
+### Auditoria de Não-Regressão (RNF-01, RNF-02)
+
+| Req | Descrição | Código | Teste | Status |
+|-----|-----------|--------|-------|--------|
+| RNF-01 | Nenhuma regressão | — | `tsc --noEmit` limpo; `vitest` completo — `packages/ui` 179/179 (157+22), `apps/web` 329/329 | ✅ |
+| RNF-02 | Zero `animate-pulse`/`<main className="mx-auto flex max-w-`/badge pill inline fora de exceções | — | `grep` confirmando ocorrências restantes só em `brand-showcase/`, `dashboard/concept/*`, e os 3 casos de tingimento de linha inteira (não-badge, documentados) | ✅ |
+
+---
+
+## SPEC-20260721-002 — Dashboard v2: KPI Cards, VehicleHealthScore, Tokens de Superfície e Widget Próximos 7 Dias (approved)
+
+> **Promovida de `draft` para `approved` em 2026-07-22**: RF-01 a RF-09 implementados
+> (RF-05/RF-06/RF-07 com pendências pontuais marcadas 🔶 abaixo); RF-08 desbloqueado e
+> implementado na mesma data, após decisão de arquitetura de backend (ver linha própria abaixo).
 
 > RF-01 foi revisado em 2026-07-21 (edição direta, spec ainda `draft`): em vez de 4 KPIs fixos,
 > virou um catálogo curado de 8 métricas com preset editável por usuário (`user_preferences.dashboard_kpi_ids`),
@@ -1620,7 +1875,8 @@ que o artefato ainda não existe no repositório.
 > atualização da matriz — linhas adicionadas abaixo para fechar o gate de sincronia. RF-07 foi
 > revisado em 2026-07-22: a saudação personalizada foi removida do escopo (decisão do usuário),
 > ficando só a data abreviada; spec, STORIES.md e esta matriz atualizados na mesma rodada.
-> RF-08 permanece bloqueado (decisão de backend não tomada nesta rodada).
+> RF-08 desbloqueado em 2026-07-22: `GET /dashboard/fleet-charts` criado (endpoint próprio,
+> desacoplado de `fleet-kpis`/`kpi-catalog` — RNF-05), ver linha própria abaixo.
 > RF-09 concluído em 2026-07-22: `UpcomingCostsWidget` lista os itens individuais (antes só o
 > agregado existia). Teto de 10 itens (P6) aplicado via `.limit()` no builder do RPC
 > (`upcomingCostsQuerySchema.limit`, PostgREST) — nunca cortado em memória no frontend.
@@ -1646,6 +1902,7 @@ que o artefato ainda não existe no repositório.
 | RF-04 | Tokens `--surface`, `--surface-elevated`, `--on-surface`, `--on-surface-muted`, `--on-surface-subtle`, `--chart-1..5`, `--chart-grid`, `--finance-outgoing` + classes `.glass-card`/`.kicker`, com par light/dark | `apps/web/src/app/globals.css` | — (tokens CSS; sem harness de teste visual) | ✅ |
 | RF-05 | `ExportControls` reposicionado após a Zona B (última seção antes do footer); estados loading (`fetch` + `Blob`, botão desabilitado) e erro (mensagem inline `role="alert"`, sem `alert()` do browser) | `apps/web/src/app/(app)/dashboard/page.tsx` (`ExportControls`) | — (sem spec dedicado; verificado por leitura de código) | 🔶 estado "desabilitado plano Grátis" (R-BIZ-12) não implementado — depende do mesmo gap de dado de plano do usuário citado em RF-07 |
 | RF-06 | Grid de veículos `grid-cols-2 sm:grid-cols-3 lg:grid-cols-4` (era `grid-cols-1 sm:grid-cols-2 lg:grid-cols-3`) | `apps/web/src/app/(app)/dashboard/page.tsx` (`VehicleGrid`) | — (sem teste de layout dedicado; validação visual manual pendente em breakpoint 360–375px) | 🔶 |
+| RF-08 | Gráficos inline de frota — decisão tomada em 2026-07-22: novo endpoint `GET /dashboard/fleet-charts` (não reaproveita `fleet-kpis`/`kpi-catalog`, RNF-05), reaproveitando `get_vehicle_cost_per_km` (custo/km) e estendendo `get_category_spending_highlights` com `p_limit` opcional (categorias). `fuel_liters` é volume de combustível (soma de `expenses.liters`) por mês, não eficiência km/L — métrica por veículo já existe em `GET /analytics/fuel-trend/:vehicleId` e não agrega de forma significativa numa frota mista (decisão registrada em `FleetChartsResponse`, `@nave/validators`) | `apps/api/src/modules/dashboard/dashboard.controller.ts` (`getFleetCharts`), `dashboard.service.ts` (`getFleetCharts`, `getCostPerKmChartSeries`, `getFuelLitersChartSeries`, `getFullCategoryBreakdown`), `packages/validators/src/dashboard.schemas.ts` (`FleetChartsResponse`, `MonthlySeriesPoint`), `supabase/migrations/20260722130000_fleet_charts.sql`, `apps/web/src/components/dashboard/FleetCharts.tsx` (`CostPerKmChart`, `FuelConsumptionChart`, `ExpenseCategoryPie`, `FleetChartsSection`) | `apps/api/src/modules/dashboard/dashboard.service.spec.ts`, `dashboard.controller.spec.ts`, `apps/web/src/components/dashboard/FleetCharts.spec.tsx` | ✅ |
 
 ### Cabeçalho de Data Abreviada (RF-07 — revisado em 2026-07-22)
 
@@ -2102,13 +2359,42 @@ que o artefato ainda não existe no repositório.
 | S1, S2 | `SupabaseAuthGuard` + RLS (`auth.uid()`) em todas as rotas | `fines.controller.ts` | `fines.controller.spec.ts` | ✅ |
 | — | `amount_with_discount` ≤ `amount` (Regras de Negócio) | `fines.service.ts` (`create`, `update`) | `fines.service.spec.ts` | ✅ |
 | R-LED-02, R-LED-03, R-HUB-01, R-HUB-02 | Vinculação automática ao ledger via `ExpensesService.createFromSource`/`softDeleteBySource` | `fines.service.ts` (`create`, `update`, `remove`) | `fines.service.spec.ts` | ✅ |
-| Sprint 2, G-07 | Tela `/fines` no frontend | — | — | ⏳ |
+| Sprint 2, G-07 | Tela `/fines` no frontend — implementada em SPEC-20260722-005 | — | — | ✅ → ver SPEC-20260722-005 |
 
 ### Validators (`packages/validators`)
 
 | Req | Descrição | Código | Teste | Status |
 |-----|-----------|--------|-------|--------|
 | RF-01, RF-05 | `createFineInputSchema`/`updateFineInputSchema`/`FINE_STATUS_TRANSITIONS` | `packages/validators/src/fine.schemas.ts` | `packages/validators/src/fine.schemas.spec.ts` | ✅ |
+
+---
+
+## SPEC-20260722-005 — Tela /fines — Frontend do Módulo de Multas (approved)
+
+> **Implementado em 2026-07-22.** Fecha dois débitos técnicos registrados no mesmo dia: (1) link
+> "Multas" no `FinancialSubheader` apontava para `/fines`, que resultava em 404; (2) botão "Ver" na
+> tab "Próximas" de `/expenses` estava desabilitado para `source_type='fine'`. Backend
+> (SPEC-20260607-001) já estava completamente implementado — esta spec é exclusivamente frontend.
+> Camadas: `frontend`. Regras: R5, S1, S2, R-CTX-01, R-CTX-06, R-TZ-01, R-FORM-01..07,
+> R-SAN-01/02/04, R-DS-03/04, R-SUB-03/04.
+> KPIs calculados client-side a partir do array de `GET /fines` (RNF-03, sem endpoint dedicado).
+> Ações de status inline usam `FINE_STATUS_TRANSITIONS` tanto na listagem quanto no detalhe.
+> `security/detect-object-injection` suprimido com `eslint-disable` pontual (mesmo padrão já usado
+> em `maintenance/[id]/page.tsx`) onde o índice vem de um subconjunto fixo de `FineStatus`.
+
+### Frontend (`apps/web`)
+
+| Req | Descrição | Código | Teste | Status |
+|-----|-----------|--------|-------|--------|
+| RF-01 | KpiCards em `/fines`: total pendente (`pending`/`appealing`), multas vencidas (`pending` + `due_date < hoje`), total pago no ano (`paid` + `paid_at` no ano corrente) — calculados client-side | `apps/web/src/app/(app)/fines/page.tsx` (`computeKpis`) | `apps/web/src/app/(app)/fines/page.spec.tsx` | ✅ |
+| RF-02 | Filtro client-side por `activeVehicleId` quando `selectionMode === 'single'` (padrão de `expenses/page.tsx`) | `apps/web/src/app/(app)/fines/page.tsx` | — (mesmo padrão não testado isoladamente em `expenses/page.spec.tsx`) | ✅ |
+| RF-03 | Tabs "Lista" e "Em aberto" (`Tabs` de `@nave/ui`, variante `underline`); tab "Em aberto" filtra `status IN ('pending', 'appealing')` | `apps/web/src/app/(app)/fines/page.tsx` | `apps/web/src/app/(app)/fines/page.spec.tsx` (CA-04) | ✅ |
+| RF-04 | Ações de status inline na listagem respeitando `FINE_STATUS_TRANSITIONS`; estados terminais (`paid`/`cancelled`) sem controles de ação | `apps/web/src/app/(app)/fines/page.tsx` (`StatusActions`) | `apps/web/src/app/(app)/fines/page.spec.tsx` (CA-05, CA-06, CA-07) | ✅ |
+| RF-05 | Empty state com CTA "Registrar multa" → `/fines/new`; sem veículos → CTA para cadastrar veículo (R-FORM-07) | `apps/web/src/app/(app)/fines/page.tsx`, `apps/web/src/app/(app)/fines/new/page.tsx` | `apps/web/src/app/(app)/fines/page.spec.tsx` (CA-03), `apps/web/src/app/(app)/fines/new/page.spec.tsx` (CA-16) | ✅ |
+| RF-06 | Rota `/fines/new`: formulário de página própria com campos obrigatórios (vehicle_id, description, amount, occurred_at) + seção colapsável de campos opcionais; valida `createFineInputSchema`; redireciona para `/fines` em sucesso (R-FORM-04) | `apps/web/src/app/(app)/fines/new/page.tsx` | `apps/web/src/app/(app)/fines/new/page.spec.tsx` (CA-08, CA-09, CA-10) | ✅ |
+| RF-07 | Rota `/fines/[id]`: detalhe com todos os campos da entidade `Fine` + edição via `updateFineInputSchema` + ações de status (mesmas de RF-04); `invalidateQueries` sem redirect em sucesso | `apps/web/src/app/(app)/fines/[id]/page.tsx` | `apps/web/src/app/(app)/fines/[id]/page.spec.tsx` (CA-11, CA-12, CA-13) | ✅ |
+| RF-08 | Fechamento de dívida técnica: link "Multas" em `financial-subheader.tsx` → `/fines` (rota criada por esta spec encerra o 404 aceito em 2026-07-22) | `apps/web/src/components/layout/financial-subheader.tsx` (sem alteração — já correto), rota `apps/web/src/app/(app)/fines/page.tsx` | — (fechamento verificado por inspeção; sem teste de navegação E2E dedicado) | ✅ |
+| RF-09 | Fechamento de dívida técnica: botão "Ver" para `source_type='fine'` em `UpcomingCostsTab` (`expenses/page.tsx`) habilitado como link → `/fines/:source_id` | `apps/web/src/app/(app)/expenses/page.tsx` (`UpcomingCostsTab`) | — (sem teste dedicado; `expenses/page.spec.tsx` não cobre este ramo do ternário) | ✅ |
 
 ---
 
@@ -2282,11 +2568,16 @@ que o artefato ainda não existe no repositório.
 
 ---
 
-## SPEC-20260716-003 — Testes E2E com Playwright (draft)
+## SPEC-20260716-003 — Testes E2E com Playwright (approved)
 
 > Define configuração do Playwright em `apps/web/e2e/`, suíte mínima de testes E2E para fluxos
 > críticos (autenticação, avisos de odômetro/duplicata, troca de contexto de veículo) e integração
 > com CI. Regras: R1, R2, R-CTX-07. Segurança: S1. Camadas: frontend, qa.
+> **Promovida de `draft` para `approved` em 2026-07-22** (changelog v1.5 da spec): todos os RFs
+> de configuração, Page Objects, os 11 fluxos E2E, dados de teste e integração com CI têm código
+> implementado (linhas 🔶 abaixo). Pendência real é só a dependência externa dos 6 GitHub Secrets
+> de ambiente E2E — mesmo padrão de aprovação já usado em `SPEC-20260716-001`/`SPEC-20260716-002`
+> (código pronto, config externa fora do repositório).
 > **Implementação iniciada em 2026-07-20:** configuração completa (RF-CFG-01 a RF-CFG-08),
 > Page Objects (LoginPage, DashboardPage, ExpenseFormPage, VehicleContextChipPage),
 > fluxos RF-E2E-01 a RF-E2E-07 e job `e2e` no CI implementados. RF-E2E-04 corrigida no
@@ -2303,6 +2594,11 @@ que o artefato ainda não existe no repositório.
 > RF-CI-04 — já usadas pelo código mas ausentes do texto original. Pendência de
 > provisionamento dos 6 GitHub Secrets registrada em `important/PENDENCIAS-E-PROCESSOS.md`.
 > Execução real da suíte em CI e os critérios de aceite CA-01 a CA-09 continuam em aberto.
+> **2026-07-30 (v1.6):** escopo ampliado para incluir visual regression leve (`RF-E2E-12`),
+> reaproveitando esta suíte em vez de ferramenta dedicada — decisão da Rodada 5 de
+> `specs/design-system/PLANO-MIGRACAO-SHOWCASE-INFRA.md`. Código implementado em
+> `apps/web/e2e/tests/visual-regression.spec.ts`; baseline PNG não gerada nesta sessão por
+> falta de acesso a credenciais/stack local para rodar `--update-snapshots`.
 
 ### Configuração do Playwright (RF-CFG)
 
@@ -2341,6 +2637,7 @@ que o artefato ainda não existe no repositório.
 | RF-E2E-09 | Cookie `nave_access_token` presente mas inválido em rota privada → redirect para `/login` (S1, CT-006) | `apps/web/middleware.ts` | `apps/web/e2e/tests/auth.spec.ts` | 🔶 implementado; aguarda secrets |
 | RF-E2E-10 | Usuário sem veículos: Dialog de contexto exibe "Nenhum veículo encontrado" e "Nenhum grupo encontrado" sem erro JS (R-CTX-07) | `apps/web/src/components/layout/vehicle-switcher-content.tsx` | `apps/web/e2e/tests/vehicle-context.spec.ts` | ⏸️ skip até `E2E_USER_NO_VEHICLES_EMAIL` ser provisionado como GitHub Secret e seed correspondente ser adicionado a `apps/api/scripts/seed-e2e.mjs` |
 | RF-E2E-11 | Busca sem resultado no Dialog de contexto: estado vazio exibido, Dialog continua respondendo após limpar busca (R-CTX-07) | `apps/web/src/components/layout/vehicle-switcher-content.tsx` | `apps/web/e2e/tests/vehicle-context.spec.ts` | 🔶 implementado; não depende de dado especial |
+| RF-E2E-12 | Visual regression leve — `toHaveScreenshot` de `dashboard`/`expenses`/`fines`, light/dark via `emulateMedia`, `maxDiffPixelRatio: 0.01` (C-DS-01) — escopo adicionado em `SPEC-20260716-003` v1.6, ver `specs/design-system/PLANO-MIGRACAO-SHOWCASE-INFRA.md` Rodada 5 | `apps/web/src/app/(app)/{dashboard,expenses,fines}/page.tsx` | `apps/web/e2e/tests/visual-regression.spec.ts` | 🔶 implementado; baseline PNG ainda não gerada (requer execução real com `--update-snapshots`, aguarda secrets/stack local — mesma pendência de RF-DATA-01) |
 
 ### Dados de Teste E2E (RF-DATA)
 
@@ -2519,6 +2816,86 @@ RNF-04 (foco preso no drawer + retorno ao hamburger ao fechar) implementado em `
 
 ---
 
+## SPEC-20260730-001 — Score de Saúde de Veículo e Frota (draft)
+
+> Formaliza o algoritmo de cálculo de score (R-HS-01 a R-HS-10) já implementado nas funções
+> SQL `calculate_vehicle_health`/`calculate_fleet_health`. Estende a exibição do score para a
+> lista de veículos (`/vehicles`) e para a ficha individual (`/vehicles/[id]`). O consumo no
+> dashboard (VehicleHealthCard, semáforo, tooltip) é coberto por SPEC-20260531-001 RF-SH-01 a
+> RF-SH-04 e não é re-especificado aqui. Nenhuma migration necessária — toda infraestrutura de
+> banco já existe.
+>
+> **2026-07-30 (criação):** Spec em `draft`. Código das funções SQL e do backend já implementado;
+> exibição em `/vehicles` e `/vehicles/[id]` ainda pendente de implementação no frontend.
+
+### Algoritmo de Cálculo — RPC Postgres (RF-01 a RF-08, R-HS-01 a R-HS-09)
+
+| Req | Descrição | Código | Teste | Status |
+|-----|-----------|--------|-------|--------|
+| RF-01 | Score parte de 100, piso 0; cálculo exclusivo da RPC `calculate_vehicle_health(p_vehicle_id)` (R-HS-01) | `supabase/migrations/20260712172020_analytics_functions.sql`, `20260712172220_fix_fleet_health_double_call.sql` | — | 🔶 |
+| RF-02 | Penalidade de manutenções pendentes: -5/item, máx -20 (R-HS-02) | `supabase/migrations/20260712172020_analytics_functions.sql` | — | 🔶 |
+| RF-03 | Penalidade adicional de manutenções vencidas: -15/item, máx -30, cumulativo com RF-02 (R-HS-03) | `supabase/migrations/20260712172020_analytics_functions.sql` | — | 🔶 |
+| RF-04 | Penalidade de documentos a vencer ≤30 dias: -10/doc (IPVA, Seguro, CRLV independentes); NULL ignorado (R-HS-04) | `supabase/migrations/20260712172020_analytics_functions.sql` | — | 🔶 |
+| RF-05 | Penalidade de alerta por km: `odometer >= next_maintenance_km - 1000` → -5 (R-HS-05) | `supabase/migrations/20260712172020_analytics_functions.sql` | — | 🔶 |
+| RF-06 | Penalidade de multas pendentes: -5/item, máx -15 (R-HS-06) | `supabase/migrations/20260712172020_analytics_functions.sql` | — | 🔶 |
+| RF-07 | RPC persiste `vehicles.health_score` como efeito colateral; coluna write-only pela RPC (R-HS-08, R-HS-09) | `supabase/migrations/20260712172020_analytics_functions.sql` | — | 🔶 |
+| RF-08 | `calculate_fleet_health` delega a `calculate_vehicle_health` por veículo; score de frota = média aritmética (R-HS-09) | `supabase/migrations/20260712172220_fix_fleet_health_double_call.sql` | — | 🔶 |
+
+### Flags Emitidas (RF-09, RF-10, R-HS-10)
+
+| Req | Descrição | Código | Teste | Status |
+|-----|-----------|--------|-------|--------|
+| RF-09 | Tipos canônicos: `maintenance_overdue` (count), `ipva_expiring`/`insurance_expiring`/`crlv_expiring` (days), `km_alert` (km_until), `fines_pending` (count) | `supabase/migrations/20260712172020_analytics_functions.sql` | — | 🔶 |
+| RF-10 | Pendentes não vencidas não emitem flag visual (R-HS-10) | `supabase/migrations/20260712172020_analytics_functions.sql` | — | 🔶 |
+
+### Semáforo (RF-11, RF-12, R-HS-07)
+
+| Req | Descrição | Código | Teste | Status |
+|-----|-----------|--------|-------|--------|
+| RF-11 | Mapeamento canônico: 70-100 success "Em dia", 40-69 warning "Atenção", 0-39 danger "Crítico" (R-HS-07) | `packages/ui/src/components/vehicle-health-score.tsx` | `packages/ui/src/components/vehicle-health-score.test.tsx` | ✅ |
+| RF-12 | Score `undefined` exibe estado neutro "Calculando" sem erro | `packages/ui/src/components/vehicle-health-score.tsx` | `packages/ui/src/components/vehicle-health-score.test.tsx` | ✅ |
+
+### Frontend — Lista de Veículos `/vehicles` (RF-13 a RF-16)
+
+| Req | Descrição | Código | Teste | Status |
+|-----|-----------|--------|-------|--------|
+| RF-13 | `VehicleHealthScore` exibido para cada veículo na listagem; score lido de `vehicles.health_score` (campo persistido pela última chamada à RPC) | — | — | ⏳ |
+| RF-14 | Listagem chama `calculate_fleet_health` via `GET /dashboard/fleet-health` ao carregar para atualizar os scores | `apps/api/src/modules/dashboard/dashboard.controller.ts`, `dashboard.service.ts` (`getFleetHealth`) | `apps/api/src/modules/dashboard/dashboard.service.spec.ts`, `dashboard.controller.spec.ts` | ⏳ frontend; backend ✅ |
+| RF-15 | Ordenação padrão por score ascendente (pior primeiro) | — | — | ⏳ |
+| RF-16 | Falha da RPC de health não bloqueia a listagem; fallback para `undefined`/estado neutro | — | — | ⏳ |
+
+### Frontend — Detalhe do Veículo `/vehicles/[id]` (RF-17 a RF-20)
+
+| Req | Descrição | Código | Teste | Status |
+|-----|-----------|--------|-------|--------|
+| RF-17 | Seção "Saúde do Veículo" com `VehicleHealthScore` + lista de flags em linguagem humana | — | — | ⏳ |
+| RF-18 | Flags vazio → "Nenhum problema identificado" em vez de lista vazia | — | — | ⏳ |
+| RF-19 | Página chama `calculate_vehicle_health(vehicle_id)` ao carregar para atualizar score individual | — | — | ⏳ |
+| RF-20 | Links de ação por tipo de flag (manutenção vencida → `/maintenance`, docs → seção de docs, multas → `/fines`, km → `/maintenance/new`) | — | — | ⏳ |
+
+---
+
+## SPEC-20260730-002 — Melhorias de UX do Shell (draft)
+
+> Hold-to-confirm no logout da sidebar (1.000 ms + barra de progresso, R-NAV-05), dropdown de avatar no header com nome/email/link-settings/logout (R-NAV-08), persistência de `isSidebarCollapsed` em `sessionStorage` via `zustand persist` (R-NAV-06) e reestruturação do layout para header full-width com sidebar in-flow em desktop (R-NAV-07). Camadas: frontend. Regras: R-NAV-01, R-NAV-02, R-NAV-04, R-NAV-05, R-NAV-06, R-NAV-07, R-NAV-08. Segurança: S1.
+>
+> **2026-07-30 (criação):** Spec em `draft`. Nenhum dos requisitos implementado ainda.
+
+| Req | Descrição | Código | Teste | Status |
+|-----|-----------|--------|-------|--------|
+| RF-01 | Hold-to-confirm no botão "Sair" da sidebar (1.000 ms) substituindo clique simples | — | — | ⏳ |
+| RF-02 | Barra de progresso visual durante o hold; reset visual ao cancelar | — | — | ⏳ |
+| RF-03 | Eventos `onMouseDown`/`onTouchStart` (início) e `onMouseUp`/`onMouseLeave`/`onTouchEnd` (cancelamento); `logout()` invocado somente no callback interno de conclusão do timer | — | — | ⏳ |
+| RF-04 | Componente `AvatarDropdown` no header: avatar (iniciais como fallback), nome, email, link `/settings/account`, botão "Sair" (clique simples) | — | — | ⏳ |
+| RF-05 | Dados de nome/email do `AvatarDropdown` obtidos via cache TanStack Query existente (sem nova chamada de API) | — | — | ⏳ |
+| RF-06 | `persist` do Zustand adicionado ao `useUIStore` (`sessionStorage`, key `"nave-ui-state"`, `partialize` apenas `isSidebarCollapsed`) | — | — | ⏳ |
+| RF-07 | `logout()` remove `"nave-ui-state"` do `sessionStorage` junto com `"nave-dashboard-context"` | — | — | ⏳ |
+| RF-08 | Layout shell reestruturado para `flex-col` com `Header` como irmão de `flex` row (sidebar + conteúdo); elimina `md:pl-16`/`md:pl-64` | — | — | ⏳ |
+| RF-09 | Sidebar: `md:static md:inset-auto` em desktop; `fixed inset-y-0 left-0` em mobile (R-NAV-01 preservada) | — | — | ⏳ |
+| RF-10 | `FinancialSubheader` sem ajuste adicional — continua dentro do `flex-1` de conteúdo | — | — | ⏳ |
+
+---
+
 ## Requisitos do PRD sem Spec (Fase 2 / Backlog)
 
 | Req PRD | Descrição | Fase |
@@ -2538,9 +2915,14 @@ RNF-04 (foco preso no drawer + retorno ao hamburger ao fechar) implementado em `
 
 ## Cobertura de Testes por Módulo
 
-> Atualizado em 2026-07-13 com o resultado da Fase 1 (T1.1–T1.5). Módulos implementados na
-> Fase 1 têm cobertura real (Jest em `apps/api`, Vitest em `apps/web`). Demais módulos permanecem
-> no plano de cobertura esperado para quando a implementação iniciar.
+> Atualizado em 2026-07-13 (Fase 1). Auditoria parcial em 2026-07-31 (rev. 59): linha `expenses`
+> atualizada para 🔶. Auditoria complementar em 2026-07-31 (rev. 60): linhas `vehicles` e
+> `maintenance` corrigidas para 🔶 (arquivos de teste confirmados via Glob) e o nome do módulo
+> `maintenance` → `maintenances` (plural, conforme código real). Nenhum dos dois módulos usa
+> repository separado (`supabase-*.repository.ts`), então essas entradas foram removidas da
+> expectativa. Módulos marcados ⏳ refletem a ausência de confirmação de cobertura — não
+> necessariamente a ausência de implementação; usar as seções de spec individuais acima para o
+> estado preciso por requisito.
 
 | Módulo | Arquivo de teste | Status |
 |--------|-----------------|--------|
@@ -2558,9 +2940,9 @@ RNF-04 (foco preso no drawer + retorno ao hamburger ao fechar) implementado em `
 | `web/form-draft-guard` | `apps/web/src/components/form-draft-guard.spec.ts` | ✅ (Vitest, 91%+) |
 | `web/password-input` | `apps/web/src/components/password-input.spec.ts` | ✅ (Vitest, 91%+) |
 | `integration/rls` | `apps/api/test/integration/rls.int-spec.ts` (CT-007) | ✅ (Jest + supabase local) |
-| `vehicles` | `vehicles.service.spec.ts`, `vehicles.controller.spec.ts`, `license-plate.vo.spec.ts`, `supabase-vehicle.repository.spec.ts` | ⏳ |
-| `expenses` | `expenses.service.spec.ts`, `expenses.controller.spec.ts`, `supabase-expense.repository.spec.ts` | ⏳ |
-| `maintenance` | `maintenance.service.spec.ts`, `maintenance.controller.spec.ts`, `supabase-maintenance.repository.spec.ts` | ⏳ |
+| `vehicles` | `apps/api/src/modules/vehicles/vehicles.service.spec.ts`, `vehicles.controller.spec.ts`, `value-objects/license-plate.vo.spec.ts` | 🔶 (os 3 arquivos confirmados por auditoria em 2026-07-31, rev. 60; módulo não usa padrão de repository separado, então não há `supabase-vehicle.repository.spec.ts` a esperar) |
+| `expenses` | `apps/api/src/modules/expenses/expenses.service.spec.ts` | 🔶 (service spec confirmado — cobre `getUpcomingCosts` e métodos de suporte; `expenses.controller.spec.ts` ainda ⏳; módulo não usa repository separado) |
+| `maintenances` | `apps/api/src/modules/maintenances/maintenances.service.spec.ts`, `maintenances.controller.spec.ts` | 🔶 (nome do módulo é `maintenances`, plural — corrigido nesta auditoria; ambos os arquivos confirmados em 2026-07-31, rev. 60; módulo não usa repository separado) |
 | `dashboard` | **Backend:** `apps/api/src/modules/dashboard/dashboard.service.spec.ts`, `dashboard.controller.spec.ts` (Jest) — **Frontend:** `apps/web/src/components/dashboard/FleetAlertBar.spec.tsx`, `VehicleHealthCard.spec.tsx`; `apps/web/src/app/(app)/dashboard/page.spec.tsx`; `apps/web/src/lib/stores/use-dashboard-store.spec.ts`; `apps/web/src/components/layout/action-dock.spec.tsx` (Vitest) | ✅ (Sprint 1, T5.1, 2026-07-15) |
 | `fines` | `apps/api/src/modules/fines/fines.service.spec.ts`, `fines.controller.spec.ts` | ✅ (Jest) |
 | `recurring-costs` | `apps/api/src/modules/recurring-costs/recurring-costs.service.spec.ts`, `.controller.spec.ts` | ✅ (Jest) |
@@ -2574,4 +2956,4 @@ RNF-04 (foco preso no drawer + retorno ao hamburger ao fechar) implementado em `
 | `validators/recurring-costs` | `packages/validators/src/recurring-cost.schemas.spec.ts` | ✅ (Vitest) |
 | `web/expenses-new` | `apps/web/src/app/(app)/expenses/new/page.spec.tsx` | ✅ (Vitest — cobre SPEC-20260720-002 RF-01 a RF-06 e R-FORM-04/05/07, 2026-07-20) |
 | Edge Functions | Testes de integração via Supabase CLI | ⏳ (Fase 2) |
-| E2E (Playwright) | `apps/web/e2e/tests/auth.spec.ts`, `expense-warnings.spec.ts`, `vehicle-context.spec.ts` | 🔶 (SPEC-20260716-003 — arquivos existem; suíte não executada; aguarda GitHub Secrets provisionados) |
+| E2E (Playwright) | `apps/web/e2e/tests/auth.spec.ts`, `expense-warnings.spec.ts`, `vehicle-context.spec.ts`, `visual-regression.spec.ts` | 🔶 (SPEC-20260716-003 — arquivos existem; suíte não executada; aguarda GitHub Secrets provisionados; `visual-regression.spec.ts` também aguarda baseline PNG) |

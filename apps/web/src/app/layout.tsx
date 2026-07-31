@@ -19,8 +19,10 @@ export const metadata: Metadata = {
   },
 };
 
+// @spec SPEC-20260729-002 — recalculado para a direção Prata (era o azul pré-Prata #3b70ca);
+// mesmo hex do primary light usado em manifest.ts.
 export const viewport: Viewport = {
-  themeColor: "#3b70ca",
+  themeColor: "#1B3A6B",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }): ReactNode {

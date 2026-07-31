@@ -10,6 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  Input,
 } from "@nave/ui";
 import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
@@ -69,7 +70,7 @@ export function DeleteAccountDialog(): ReactNode {
           <label htmlFor="delete-account-confirmation" className="text-sm font-medium">
             Para confirmar, digite <strong>{CONFIRMATION_WORD}</strong> no campo abaixo:
           </label>
-          <input
+          <Input
             id="delete-account-confirmation"
             type="text"
             placeholder={CONFIRMATION_WORD}
@@ -82,7 +83,6 @@ export function DeleteAccountDialog(): ReactNode {
             spellCheck="false"
             data-1p-ignore
             data-lpignore="true"
-            className="rounded-md border border-border bg-background px-3 py-2 text-sm"
           />
         </div>
 

@@ -8,6 +8,7 @@ import {
   type VehicleSummary,
 } from "@/lib/context/use-vehicle-context";
 import { useOnlineStatus } from "@/lib/hooks/use-online-status";
+import { Alert, Skeleton } from "@nave/ui";
 
 const ERROR_RETRY_TIMEOUT_MS = 8000;
 
@@ -104,12 +105,7 @@ export function VehicleSwitcherContent({ onClose }: VehicleSwitcherContentProps)
   return (
     <div className="flex flex-col gap-3">
       {!isOnline && (
-        <div
-          role="status"
-          className="rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-800"
-        >
-          Sem conexão — dados podem estar desatualizados
-        </div>
+        <Alert variant="warning" description="Sem conexão — dados podem estar desatualizados" />
       )}
 
       <input
@@ -119,30 +115,23 @@ export function VehicleSwitcherContent({ onClose }: VehicleSwitcherContentProps)
         onChange={(event) => setQuery(event.target.value)}
         placeholder="Buscar veículo ou grupo..."
         aria-label="Buscar veículo ou grupo"
-        className="w-full rounded-md border border-neutral-200 px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-primary"
+        className="w-full rounded-md border border-border px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-primary"
       />
 
       {isLoading && (
         <div className="flex flex-col gap-2" aria-hidden>
           {[0, 1, 2].map((index) => (
-            <div key={index} className="h-9 w-full animate-pulse rounded-md bg-muted" />
+            <Skeleton key={index} className="h-9 w-full" />
           ))}
         </div>
       )}
 
       {isError && (
-        <div className="flex flex-col items-center gap-2 rounded-md border border-red-200 bg-red-50 px-3 py-4 text-sm text-red-700">
-          <span>Não foi possível carregar veículos e grupos.</span>
-          {showRetry && (
-            <button
-              type="button"
-              onClick={handleRetry}
-              className="rounded-md border border-red-300 px-3 py-1 text-xs font-medium hover:bg-red-100"
-            >
-              Tentar novamente
-            </button>
-          )}
-        </div>
+        <Alert
+          variant="error"
+          description="Não foi possível carregar veículos e grupos."
+          action={showRetry ? { label: "Tentar novamente", onClick: handleRetry } : undefined}
+        />
       )}
 
       {!isLoading && !isError && (
@@ -151,18 +140,18 @@ export function VehicleSwitcherContent({ onClose }: VehicleSwitcherContentProps)
           style={{ overscrollBehavior: "contain" }}
         >
           <div className="flex flex-col gap-1">
-            <span className="text-[9px] font-medium uppercase tracking-wide text-neutral-500">
+            <span className="text-[9px] font-medium uppercase tracking-wide text-muted-foreground">
               Veículos
             </span>
             {filteredVehicles.length === 0 && (
-              <span className="px-2 py-1 text-xs text-neutral-400">Nenhum veículo encontrado</span>
+              <span className="px-2 py-1 text-xs text-muted-foreground">Nenhum veículo encontrado</span>
             )}
             {filteredVehicles.map((vehicle) => (
               <button
                 key={vehicle.id}
                 type="button"
                 onClick={() => handleSelectVehicle(vehicle.id)}
-                className="rounded-md px-2 py-2 text-left text-sm hover:bg-neutral-100"
+                className="rounded-md px-2 py-2 text-left text-sm hover:bg-muted"
               >
                 {VEHICLE_TYPE_ICONS[vehicle.vehicle_type] ?? "🚗"} {vehicle.plate} ·{" "}
                 {vehicle.model ?? vehicle.make}
@@ -171,18 +160,18 @@ export function VehicleSwitcherContent({ onClose }: VehicleSwitcherContentProps)
           </div>
 
           <div className="flex flex-col gap-1">
-            <span className="text-[9px] font-medium uppercase tracking-wide text-neutral-500">
+            <span className="text-[9px] font-medium uppercase tracking-wide text-muted-foreground">
               Grupos
             </span>
             {filteredGroups.length === 0 && (
-              <span className="px-2 py-1 text-xs text-neutral-400">Nenhum grupo encontrado</span>
+              <span className="px-2 py-1 text-xs text-muted-foreground">Nenhum grupo encontrado</span>
             )}
             {filteredGroups.map((group) => (
               <button
                 key={group.id}
                 type="button"
                 onClick={() => handleSelectGroup(group.id)}
-                className="rounded-md px-2 py-2 text-left text-sm hover:bg-neutral-100"
+                className="rounded-md px-2 py-2 text-left text-sm hover:bg-muted"
               >
                 ⬡ {group.name} · {group.member_count} membros
               </button>

@@ -7,7 +7,8 @@ Domínio responsável pela experiência de navegação em múltiplos tamanhos de
 | ID | Título | Status |
 |----|--------|--------|
 | [SPEC-20260722-003](SPEC-20260722-003-shell-mobile-first.md) | Shell Mobile-First e Migração Tailwind v3 → v4 | approved |
+| [SPEC-20260730-002](SPEC-20260730-002-shell-ux-improvements.md) | Melhorias de UX do Shell — Hold-to-Confirm Logout, Avatar Dropdown e Sidebar Persistente com Header Full-Width | draft |
 
 ## Regras de domínio aplicáveis
 
-Ver `specs/RULES.md` — seção **Regras de Navegação / Shell (R-NAV)**: R-NAV-01, R-NAV-02, R-NAV-03, R-NAV-04.
+Ver `specs/RULES.md` — seção **Regras de Navegação / Shell (R-NAV)**: R-NAV-01, R-NAV-02, R-NAV-03, R-NAV-04, R-NAV-05, R-NAV-06, R-NAV-07, R-NAV-08.

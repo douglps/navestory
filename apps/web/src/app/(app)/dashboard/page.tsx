@@ -1,14 +1,17 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { DEFAULT_DASHBOARD_KPI_IDS, type FleetKpiCatalog, type KpiCatalogId } from "@nave/validators";
+import { Alert, Button, Combobox, Container, EmptyState, Input } from "@nave/ui";
 import { apiClient } from "@/lib/http/api-client";
 import { ActionDock } from "@/components/layout/action-dock";
 import { SystemFooter } from "@/components/layout/system-footer";
 import { DashboardKpiGrid } from "@/components/dashboard/DashboardKpiGrid";
 import { FleetAlertBar, type FleetAlertItem } from "@/components/dashboard/FleetAlertBar";
+import { FleetChartsSection } from "@/components/dashboard/FleetCharts";
 import { KpiPicker } from "@/components/dashboard/KpiPicker";
 import { UpcomingCostsWidget } from "@/components/dashboard/UpcomingCostsWidget";
 import {
@@ -110,30 +113,33 @@ function ExportControls({ vehicles }: { vehicles: VehicleCardData[] | undefined 
       <div className="flex flex-wrap items-end gap-3">
         <label className="flex flex-col gap-1">
           <span>Mês</span>
-          <input type="month" value={period} onChange={(event) => setPeriod(event.target.value)} />
+          <Input type="month" value={period} onChange={(event) => setPeriod(event.target.value)} />
         </label>
 
-        <label className="flex flex-col gap-1">
+        <div className="flex flex-col gap-1">
           <span>Veículo</span>
-          <select value={vehicleId} onChange={(event) => setVehicleId(event.target.value)}>
-            <option value="">Todos os veículos</option>
-            {vehicles?.map((vehicle) => (
-              <option key={vehicle.id} value={vehicle.id}>
-                {vehicleLabel(vehicle)}
-              </option>
-            ))}
-          </select>
-        </label>
+          <Combobox
+            aria-label="Veículo"
+            options={[
+              { value: "", label: "Todos os veículos" },
+              ...(vehicles ?? []).map((vehicle) => ({ value: vehicle.id, label: vehicleLabel(vehicle) })),
+            ]}
+            value={vehicleId}
+            onValueChange={setVehicleId}
+            placeholder="Todos os veículos"
+            searchPlaceholder="Buscar veículo..."
+            emptyMessage="Nenhum veículo encontrado"
+            className="w-56"
+          />
+        </div>
 
-        <button type="button" onClick={handleExport} disabled={status === "loading"}>
+        <Button type="button" variant="outline" onClick={handleExport} disabled={status === "loading"}>
           {status === "loading" ? "Exportando…" : "Exportar CSV"}
-        </button>
+        </Button>
       </div>
 
       {status === "error" && (
-        <p role="alert" className="text-sm text-danger">
-          Não foi possível exportar. Tente novamente.
-        </p>
+        <Alert variant="error" description="Não foi possível exportar. Tente novamente." />
       )}
     </div>
   );
@@ -143,17 +149,14 @@ function ExportControls({ vehicles }: { vehicles: VehicleCardData[] | undefined 
  * @spec SPEC-20260531-001 RF-DA-09
  */
 function NoVehiclesEmptyState(): ReactNode {
+  const router = useRouter();
   return (
-    <div className="flex flex-col items-center gap-2 rounded border p-8 text-center">
-      <p className="text-lg font-medium">Bem-vindo à Nave 🚗</p>
-      <p className="text-sm text-muted-foreground">
-        Cadastre seu primeiro veículo para começar a acompanhar despesas, manutenções e a saúde da
-        sua frota.
-      </p>
-      <Link href="/vehicles/new" className="underline">
-        Cadastrar veículo →
-      </Link>
-    </div>
+    <EmptyState
+      icon="🚗"
+      title="Bem-vindo à Nave"
+      description="Cadastre seu primeiro veículo para começar a acompanhar despesas, manutenções e a saúde da sua frota."
+      action={{ label: "Cadastrar veículo", onClick: () => router.push("/vehicles/new") }}
+    />
   );
 }
 
@@ -203,9 +206,9 @@ function VehicleGrid({
         ))}
       </div>
       {needsPagination && !showAll && (
-        <button type="button" onClick={() => setShowAll(true)} className="self-start text-sm underline">
+        <Button type="button" variant="ghost" size="sm" onClick={() => setShowAll(true)} className="self-start">
           ver mais ({ordered.length - GRID_INITIAL_PAGE_SIZE})
-        </button>
+        </Button>
       )}
     </div>
   );
@@ -291,7 +294,7 @@ export default function DashboardPage(): ReactNode {
   const hasNoVehicles = vehicles?.length === 0;
 
   return (
-    <main className="mx-auto flex max-w-5xl flex-col gap-4 p-8 pb-24">
+    <Container size="5xl" className="pb-24">
       <div className="flex items-center justify-between">
         <DashboardDateHeader />
         {/*
@@ -330,12 +333,14 @@ export default function DashboardPage(): ReactNode {
 
           <UpcomingCostsWidget />
 
+          <FleetChartsSection />
+
           <ExportControls vehicles={vehicles} />
         </>
       )}
 
       <ActionDock />
       <SystemFooter />
-    </main>
+    </Container>
   );
 }

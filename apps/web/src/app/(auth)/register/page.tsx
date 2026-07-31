@@ -1,6 +1,7 @@
 "use client";
 
 import { registerInputSchema } from "@nave/validators";
+import { Alert, Button, Checkbox, Container, Input } from "@nave/ui";
 import { useMutation } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -53,11 +54,11 @@ export default function RegisterPage(): ReactNode {
   }
 
   return (
-    <main className="mx-auto flex max-w-sm flex-col gap-4 p-8">
+    <Container size="sm">
       <h1 className="text-xl font-semibold">Criar conta</h1>
       <form onSubmit={handleSubmit} className="flex flex-col gap-3">
         <label htmlFor="name">Nome</label>
-        <input
+        <Input
           id="name"
           value={name}
           onChange={(event) => setName(event.target.value)}
@@ -65,7 +66,7 @@ export default function RegisterPage(): ReactNode {
         />
 
         <label htmlFor="email">E-mail</label>
-        <input
+        <Input
           id="email"
           type="email"
           value={email}
@@ -83,14 +84,10 @@ export default function RegisterPage(): ReactNode {
           required
         />
 
-        {fieldError && (
-          <p role="alert" className="text-sm text-red-600">
-            {fieldError}
-          </p>
-        )}
+        {fieldError && <Alert variant="error" description={fieldError} />}
 
         {emailAlreadyExists && (
-          <div role="alert" aria-live="polite" className="rounded bg-yellow-100 p-3 text-sm">
+          <div role="alert" aria-live="polite" className="rounded-md bg-warning-pastel p-3 text-sm text-foreground">
             <p>Este e-mail já está cadastrado.</p>
             <div className="mt-2 flex gap-2">
               <Link href="/login" className="underline">
@@ -104,15 +101,12 @@ export default function RegisterPage(): ReactNode {
         )}
 
         {mutation.isError && !emailAlreadyExists && (
-          <p role="alert" className="text-sm text-red-600">
-            Não foi possível criar a conta. Tente novamente.
-          </p>
+          <Alert variant="error" description="Não foi possível criar a conta. Tente novamente." />
         )}
 
         {/* @spec SPEC-20260720-001 RF-06, US-03 */}
         <label className="flex items-start gap-2 text-sm">
-          <input
-            type="checkbox"
+          <Checkbox
             checked={acceptedTerms}
             onChange={(event) => setAcceptedTerms(event.target.checked)}
             required
@@ -129,12 +123,12 @@ export default function RegisterPage(): ReactNode {
           </span>
         </label>
 
-        <button type="submit" disabled={mutation.isPending || !acceptedTerms}>
+        <Button type="submit" disabled={mutation.isPending || !acceptedTerms}>
           {mutation.isPending ? "Criando Conta..." : "Criar conta"}
-        </button>
+        </Button>
       </form>
 
       <LegalFooter />
-    </main>
+    </Container>
   );
 }

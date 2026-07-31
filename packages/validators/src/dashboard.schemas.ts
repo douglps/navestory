@@ -26,11 +26,17 @@ export interface FleetHealthEntry {
   flags: Array<{ type: string; [key: string]: unknown }>;
 }
 
-/** @spec SPEC-20260531-001 RF-DA-01, CA-S3-02 */
+/**
+ * @spec SPEC-20260531-001 RF-DA-01, CA-S3-02
+ * `document_upcoming` (documento a vencer, ainda não vencido) só é emitido quando o chamador passa
+ * `include_upcoming=true` em `GET /dashboard/alerts` (ver `alertsQuerySchema`) — o comportamento
+ * default de RF-DA-01 (só documentos já vencidos) não muda.
+ */
 export type FleetAlertType =
   | "maintenance_overdue"
   | "maintenance_upcoming"
-  | "document_overdue";
+  | "document_overdue"
+  | "document_upcoming";
 
 export interface FleetAlert {
   id: string;
@@ -41,6 +47,17 @@ export interface FleetAlert {
   due_date: string;
   days_until_due: number;
 }
+
+/**
+ * @spec SPEC-20260531-001 RF-DA-01
+ * Flag opt-in — sem ela, `GET /dashboard/alerts` mantém o comportamento aprovado (só documentos
+ * vencidos). Usada hoje só pelo protótipo `/dashboard/concept` para montar uma timeline de
+ * próximos eventos; não é (ainda) consumida pela `FleetAlertBar` de produção.
+ */
+export const alertsQuerySchema = z.object({
+  include_upcoming: z.coerce.boolean().optional(),
+});
+export type AlertsQuery = z.infer<typeof alertsQuerySchema>;
 
 /**
  * Cada KPI pode falhar isoladamente sem derrubar os demais (RF-DA-03, CA-S1-05.1).
@@ -183,3 +200,30 @@ export const finesStatusResponseSchema = z.object({
   count: z.number().int().min(0),
 });
 export type FinesStatusResponse = z.infer<typeof finesStatusResponseSchema>;
+
+/**
+ * @spec SPEC-20260721-002 RF-08
+ * Ponto de série mensal genérico, reaproveitado pelos dois gráficos de frota que são agregados
+ * por mês (custo/km e volume de combustível) — mesmo formato que `KpiSeriesValue.history_6mo`,
+ * mas com o rótulo do mês explícito (`month`) porque aqui o dado é consumido por um gráfico, não
+ * por um KpiCard com sparkline.
+ */
+export interface MonthlySeriesPoint {
+  month: string;
+  value: number;
+}
+
+/**
+ * @spec SPEC-20260721-002 RF-08
+ * Os 3 gráficos inline de frota (US-08). Endpoint próprio (`GET /dashboard/fleet-charts`),
+ * desacoplado de `fleet-kpis`/`kpi-catalog` (RNF-05 — RF-08 não deve bloquear os demais RFs desta
+ * spec). `fuel_liters` é volume de combustível abastecido por mês (soma de `expenses.liters`),
+ * não eficiência km/L — métrica de eficiência por veículo já existe em
+ * `GET /analytics/fuel-trend/:vehicleId` e não agrega de forma significativa entre veículos
+ * diferentes de uma frota mista (decisão registrada no changelog da spec).
+ */
+export interface FleetChartsResponse {
+  cost_per_km: MonthlySeriesPoint[];
+  fuel_liters: MonthlySeriesPoint[];
+  category_breakdown: CategorySummaryItem[];
+}

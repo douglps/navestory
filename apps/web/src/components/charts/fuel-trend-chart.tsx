@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { Area, AreaChart, CartesianGrid, Line, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import type { FuelTrendPoint } from "@nave/validators";
+import { CHART_CATEGORY_COLORS } from "@/lib/chart-colors";
 
 /**
  * @spec SPEC-20260622-001 RF-02, RF-13, R-ANA-01, R-FUEL-02, R-FUEL-03
@@ -26,7 +27,7 @@ export function FuelTrendChart({ points }: { points: FuelTrendPoint[] }): ReactN
       <div aria-hidden="true" className="h-64">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={chartData}>
-            <CartesianGrid strokeDasharray="3 3" />
+            <CartesianGrid strokeDasharray="3 3" stroke="oklch(var(--chart-grid))" />
             <XAxis dataKey="date" />
             <YAxis />
             <Tooltip />
@@ -34,8 +35,8 @@ export function FuelTrendChart({ points }: { points: FuelTrendPoint[] }): ReactN
               type="monotone"
               dataKey="km_per_liter"
               name="km/L"
-              stroke="#2563eb"
-              fill="#2563eb"
+              stroke={CHART_CATEGORY_COLORS[0]}
+              fill={CHART_CATEGORY_COLORS[0]}
               fillOpacity={0.15}
               connectNulls
             />
@@ -43,7 +44,7 @@ export function FuelTrendChart({ points }: { points: FuelTrendPoint[] }): ReactN
               type="monotone"
               dataKey="rolling_avg_kpl"
               name="Média móvel (5)"
-              stroke="#16a34a"
+              stroke={CHART_CATEGORY_COLORS[1]}
               dot={false}
               connectNulls
             />

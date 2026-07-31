@@ -1,4 +1,5 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { QueryProvider } from "@/lib/query/providers";
 import { useDashboardStore } from "@/lib/stores/use-dashboard-store";
@@ -42,6 +43,18 @@ function typeDigits(input: HTMLElement, digits: string): void {
   }
 }
 
+/** Abre o Combobox pelo aria-label e seleciona a opção com o texto informado. */
+async function selectCombobox(label: string, optionText: string): Promise<void> {
+  const user = userEvent.setup();
+  await user.click(screen.getByLabelText(label));
+  await user.click(await screen.findByRole("option", { name: optionText }));
+}
+
+/** Aguarda a lista de veículos carregar (Combobox sai do estado "Carregando..."). */
+async function waitForVehiclesLoaded(): Promise<void> {
+  await waitFor(() => expect(screen.getByLabelText("Veículo *")).not.toHaveTextContent("Carregando"));
+}
+
 function mockLookups(options?: { templates?: typeof templates }) {
   vi.mocked(apiClient).mockImplementation((path: string) => {
     if (path === "/vehicles") return Promise.resolve(vehicles) as never;
@@ -73,11 +86,13 @@ describe("NewExpensePage", () => {
   }
 
   async function fillValidForm() {
-    await screen.findByText("Fiat Uno");
-    fireEvent.change(screen.getByLabelText("Veículo *"), { target: { value: VEHICLE_ID } });
-    fireEvent.change(screen.getByLabelText("Categoria *"), { target: { value: "fuel" } });
+    await waitForVehiclesLoaded();
+    await selectCombobox("Veículo *", "Fiat Uno");
+    await selectCombobox("Categoria *", "Combustível");
     typeDigits(screen.getByLabelText("Valor (R$) *"), "15000");
-    fireEvent.change(screen.getByLabelText("Data *"), { target: { value: "2026-07-14" } });
+    fireEvent.change(screen.getByLabelText("Data e hora *"), {
+      target: { value: "2026-07-14T10:00" },
+    });
     typeDigits(screen.getByLabelText("Odômetro (km) *"), "50000");
   }
 
@@ -133,8 +148,8 @@ describe("NewExpensePage", () => {
         method: "PATCH",
       }),
     );
-    expect(screen.getByLabelText("Veículo *")).toHaveValue(VEHICLE_ID);
-    expect(screen.getByLabelText("Categoria *")).toHaveValue("fuel");
+    expect(screen.getByLabelText("Veículo *")).toHaveTextContent("Fiat Uno");
+    expect(screen.getByLabelText("Categoria *")).toHaveTextContent("Combustível");
     expect(screen.getByLabelText("Valor (R$) *")).toHaveValue("120,00");
   });
 
@@ -173,12 +188,14 @@ describe("NewExpensePage", () => {
   it("altera o ano mantendo mês e dia (RF-02)", async () => {
     mockLookups();
     renderPage();
-    await screen.findByText("Fiat Uno");
+    await waitForVehiclesLoaded();
 
-    fireEvent.change(screen.getByLabelText("Data *"), { target: { value: "2026-06-12" } });
+    fireEvent.change(screen.getByLabelText("Data e hora *"), {
+      target: { value: "2026-06-12T10:00" },
+    });
     fireEvent.change(screen.getByLabelText("Ano"), { target: { value: "2023" } });
 
-    expect(screen.getByLabelText("Data *")).toHaveValue("2023-06-12");
+    expect(screen.getByLabelText("Data e hora *")).toHaveValue("2023-06-12T10:00");
   });
 
   /**
@@ -187,8 +204,8 @@ describe("NewExpensePage", () => {
   it("Tanque cheio? é tri-state, começa sem seleção e alterna sim/não/nenhum", async () => {
     mockLookups();
     renderPage();
-    await screen.findByText("Fiat Uno");
-    fireEvent.change(screen.getByLabelText("Categoria *"), { target: { value: "fuel" } });
+    await waitForVehiclesLoaded();
+    await selectCombobox("Categoria *", "Combustível");
 
     const simButton = screen.getByRole("button", { name: "Sim" });
     expect(simButton).toHaveAttribute("aria-pressed", "false");
@@ -206,8 +223,8 @@ describe("NewExpensePage", () => {
   it("calcula amount a partir de litros e valor por litro (RF-05)", async () => {
     mockLookups();
     renderPage();
-    await screen.findByText("Fiat Uno");
-    fireEvent.change(screen.getByLabelText("Categoria *"), { target: { value: "fuel" } });
+    await waitForVehiclesLoaded();
+    await selectCombobox("Categoria *", "Combustível");
 
     typeDigits(screen.getByLabelText("Valor por litro"), "500");
     typeDigits(screen.getByLabelText("Litros"), "1000");
@@ -221,8 +238,8 @@ describe("NewExpensePage", () => {
   it("exibe a linha-resumo quando amount/liters/price_per_liter estão consistentes", async () => {
     mockLookups();
     renderPage();
-    await screen.findByText("Fiat Uno");
-    fireEvent.change(screen.getByLabelText("Categoria *"), { target: { value: "fuel" } });
+    await waitForVehiclesLoaded();
+    await selectCombobox("Categoria *", "Combustível");
 
     typeDigits(screen.getByLabelText("Valor por litro"), "500");
     typeDigits(screen.getByLabelText("Litros"), "1000");
@@ -264,10 +281,8 @@ describe("NewExpensePage", () => {
     renderPage();
 
     expect(await screen.findByText("Nenhum veículo cadastrado")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Cadastrar veículo →" })).toHaveAttribute(
-      "href",
-      "/vehicles/new",
-    );
+    fireEvent.click(screen.getByRole("button", { name: "Cadastrar veículo" }));
+    expect(pushMock).toHaveBeenCalledWith("/vehicles/new");
     expect(screen.queryByLabelText("Veículo *")).not.toBeInTheDocument();
   });
 
@@ -294,7 +309,7 @@ describe("NewExpensePage", () => {
     mockLookups();
     renderPage();
 
-    await screen.findByText("Fiat Uno");
+    await waitForVehiclesLoaded();
     fireEvent.click(screen.getByRole("button", { name: "Cancelar" }));
 
     expect(confirmSpy).not.toHaveBeenCalled();
@@ -309,9 +324,9 @@ describe("NewExpensePage", () => {
     mockLookups();
     renderPage();
 
-    await screen.findByText("Fiat Uno");
+    await waitForVehiclesLoaded();
     await screen.findByText(/Herdado do contexto em foco/);
-    expect(screen.getByLabelText("Veículo *")).toHaveValue(VEHICLE_ID);
+    expect(screen.getByLabelText("Veículo *")).toHaveTextContent("Fiat Uno");
   });
 
   /**
@@ -321,8 +336,8 @@ describe("NewExpensePage", () => {
     mockLookups();
     renderPage();
 
-    await screen.findByText("Fiat Uno");
-    fireEvent.change(screen.getByLabelText("Veículo *"), { target: { value: VEHICLE_ID } });
+    await waitForVehiclesLoaded();
+    await selectCombobox("Veículo *", "Fiat Uno");
 
     expect(await screen.findByText(/Selecionado manualmente/)).toBeInTheDocument();
     expect(screen.queryByText(/Herdado do contexto em foco/)).not.toBeInTheDocument();
@@ -345,15 +360,15 @@ describe("NewExpensePage", () => {
   it("mudança de contexto com o formulário aberto não reseta o campo, mas avisa", async () => {
     mockLookups();
     renderPage();
-    await screen.findByText("Fiat Uno");
+    await waitForVehiclesLoaded();
 
-    fireEvent.change(screen.getByLabelText("Veículo *"), { target: { value: VEHICLE_ID } });
-    expect(screen.getByLabelText("Veículo *")).toHaveValue(VEHICLE_ID);
+    await selectCombobox("Veículo *", "Fiat Uno");
+    expect(screen.getByLabelText("Veículo *")).toHaveTextContent("Fiat Uno");
 
     useDashboardStore.getState().setActiveVehicle("99999999-9999-4999-8999-999999999999");
 
     expect(await screen.findByText("O contexto ativo mudou.")).toBeInTheDocument();
-    expect(screen.getByLabelText("Veículo *")).toHaveValue(VEHICLE_ID);
+    expect(screen.getByLabelText("Veículo *")).toHaveTextContent("Fiat Uno");
 
     fireEvent.click(screen.getByRole("button", { name: "Atualizar campo" }));
     expect(screen.queryByText("O contexto ativo mudou.")).not.toBeInTheDocument();

@@ -7,7 +7,7 @@ import {
   type ExpenseTemplate,
   type UpdateExpenseInput,
 } from "@nave/validators";
-import { CurrencyInput, OdometerInput } from "@nave/ui";
+import { Alert, Button, Combobox, Container, CurrencyInput, Input, OdometerInput } from "@nave/ui";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
@@ -226,8 +226,8 @@ export default function ExpenseDetailPage({
   if (id === null || isLoading) return <main className="p-8">Carregando...</main>;
   if (isError || !expense)
     return (
-      <main className="p-8" role="alert">
-        Despesa não encontrada.
+      <main className="p-8">
+        <Alert variant="error" description="Despesa não encontrada." />
       </main>
     );
 
@@ -239,21 +239,21 @@ export default function ExpenseDetailPage({
     Math.abs(fuelCalc.liters * fuelCalc.pricePerLiter - fuelCalc.amount) <= 0.01;
 
   return (
-    <main className="mx-auto flex max-w-sm flex-col gap-4 p-8">
+    <Container size="sm">
       <h1 className="text-xl font-semibold">
         {expense.category} — {expense.occurred_at.slice(0, 10)}
       </h1>
 
       {expense.is_readonly && (
-        <p role="alert">
-          Esta despesa está vinculada a um registro de outro módulo e não pode ser editada nem
-          removida por aqui.
-        </p>
+        <Alert
+          variant="info"
+          description="Esta despesa está vinculada a um registro de outro módulo e não pode ser editada nem removida por aqui."
+        />
       )}
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-3">
         <label htmlFor="category">Categoria *</label>
-        <input
+        <Input
           id="category"
           value={category}
           onChange={(event) => setCategory(event.target.value)}
@@ -273,7 +273,7 @@ export default function ExpenseDetailPage({
         <div className="flex gap-3">
           <div className="flex flex-1 flex-col gap-1">
             <label htmlFor="occurred_at">Data e hora *</label>
-            <input
+            <Input
               id="occurred_at"
               type="datetime-local"
               value={occurredAt}
@@ -284,7 +284,7 @@ export default function ExpenseDetailPage({
           </div>
           <div className="flex flex-col gap-1">
             <label htmlFor="year">Ano</label>
-            <input
+            <Input
               id="year"
               type="text"
               inputMode="numeric"
@@ -314,7 +314,7 @@ export default function ExpenseDetailPage({
         )}
 
         <label htmlFor="description">Descrição</label>
-        <input
+        <Input
           id="description"
           value={description}
           onChange={(event) => setDescription(event.target.value)}
@@ -323,39 +323,43 @@ export default function ExpenseDetailPage({
 
         {isFuel && (
           <section aria-label="Dados do abastecimento" className="flex flex-col gap-3 rounded border p-3">
-            <label htmlFor="fuel_type">Tipo de combustível</label>
-            <select
-              id="fuel_type"
+            <span className="text-sm font-medium">Tipo de combustível</span>
+            <Combobox
+              aria-label="Tipo de combustível"
+              options={FUEL_TYPE_OPTIONS.map((option) => ({
+                value: option.value,
+                label: option.label,
+              }))}
               value={fuelType}
-              onChange={(event) => setFuelType(event.target.value)}
+              onValueChange={setFuelType}
+              placeholder="Selecione (opcional)"
+              searchPlaceholder="Buscar tipo..."
+              emptyMessage="Nenhum tipo encontrado"
               disabled={expense.is_readonly}
-            >
-              <option value="">Selecione (opcional)</option>
-              {FUEL_TYPE_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
+            />
 
             <span id="full_tank_label">Tanque cheio?</span>
             <div role="group" aria-labelledby="full_tank_label" className="flex gap-2">
-              <button
+              <Button
                 type="button"
+                variant={fullTank === true ? "default" : "outline"}
+                size="sm"
                 aria-pressed={fullTank === true}
                 disabled={expense.is_readonly}
                 onClick={() => setFullTank((current) => (current === true ? null : true))}
               >
                 Sim
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
+                variant={fullTank === false ? "default" : "outline"}
+                size="sm"
                 aria-pressed={fullTank === false}
                 disabled={expense.is_readonly}
                 onClick={() => setFullTank((current) => (current === false ? null : false))}
               >
                 Não
-              </button>
+              </Button>
             </div>
 
             <label htmlFor="liters">Litros</label>
@@ -382,7 +386,7 @@ export default function ExpenseDetailPage({
             )}
 
             <label htmlFor="supplier">Posto / Fornecedor</label>
-            <input
+            <Input
               id="supplier"
               list="supplier-suggestions"
               value={supplier}
@@ -395,50 +399,53 @@ export default function ExpenseDetailPage({
           </section>
         )}
 
-        {fieldError && <p role="alert">{fieldError}</p>}
+        {fieldError && <Alert variant="error" description={fieldError} />}
         {updateMutation.isError && !fieldError && (
-          <p role="alert">Não foi possível atualizar a despesa.</p>
+          <Alert variant="error" description="Não foi possível atualizar a despesa." />
         )}
         {updateMutation.isSuccess && <p>Despesa atualizada.</p>}
 
         <div className="flex gap-2">
-          <button type="submit" disabled={updateMutation.isPending || expense.is_readonly}>
+          <Button type="submit" disabled={updateMutation.isPending || expense.is_readonly}>
             {updateMutation.isPending ? "Salvando..." : "Salvar"}
-          </button>
-          <button type="button" onClick={handleCancel}>
+          </Button>
+          <Button type="button" variant="outline" onClick={handleCancel}>
             Cancelar
-          </button>
+          </Button>
         </div>
       </form>
 
-      <button
+      <Button
         type="button"
+        variant="destructive"
         onClick={handleDelete}
         disabled={deleteMutation.isPending || expense.is_readonly}
       >
         {deleteMutation.isPending ? "Removendo..." : "Remover despesa"}
-      </button>
-      {deleteMutation.isError && <p role="alert">Não foi possível remover a despesa.</p>}
+      </Button>
+      {deleteMutation.isError && (
+        <Alert variant="error" description="Não foi possível remover a despesa." />
+      )}
 
-      <button type="button" onClick={() => setSavingTemplate((prev) => !prev)}>
+      <Button type="button" variant="outline" onClick={() => setSavingTemplate((prev) => !prev)}>
         Salvar como modelo
-      </button>
+      </Button>
       {savingTemplate && (
         <form onSubmit={handleSaveAsTemplate} className="flex flex-col gap-2">
           <label htmlFor="template_name">Nome do modelo</label>
-          <input
+          <Input
             id="template_name"
             value={templateName}
             onChange={(event) => setTemplateName(event.target.value)}
             required
           />
-          {templateError && <p role="alert">{templateError}</p>}
-          <button type="submit" disabled={saveTemplateMutation.isPending}>
+          {templateError && <Alert variant="error" description={templateError} />}
+          <Button type="submit" disabled={saveTemplateMutation.isPending}>
             {saveTemplateMutation.isPending ? "Salvando..." : "Salvar modelo"}
-          </button>
+          </Button>
         </form>
       )}
       {savedTemplateName && <p>Modelo &apos;{savedTemplateName}&apos; criado com sucesso.</p>}
-    </main>
+    </Container>
   );
 }

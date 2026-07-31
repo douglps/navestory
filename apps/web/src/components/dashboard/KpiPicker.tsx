@@ -10,6 +10,9 @@ import {
   type UpdatePreferencesInput,
 } from "@nave/validators";
 import {
+  Alert,
+  Button,
+  Checkbox,
   Dialog,
   DialogClose,
   DialogContent,
@@ -78,9 +81,9 @@ export function KpiPicker({ activeIds }: { activeIds: KpiCatalogId[] }): ReactNo
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
-        <button type="button" className="self-start text-sm underline">
+        <Button type="button" variant="ghost" size="sm" className="self-start">
           Personalizar KPIs
-        </button>
+        </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
@@ -95,8 +98,7 @@ export function KpiPicker({ activeIds }: { activeIds: KpiCatalogId[] }): ReactNo
             const isChecked = selected.includes(id);
             return (
               <label key={id} className="flex items-center gap-2">
-                <input
-                  type="checkbox"
+                <Checkbox
                   checked={isChecked}
                   onChange={(event) => toggle(id, event.target.checked)}
                   disabled={!isChecked && selected.length >= MAX_ACTIVE_DASHBOARD_KPIS}
@@ -110,24 +112,22 @@ export function KpiPicker({ activeIds }: { activeIds: KpiCatalogId[] }): ReactNo
           })}
         </div>
 
-        {error && (
-          <p role="alert" className="mt-2 text-sm text-danger">
-            {error}
-          </p>
-        )}
+        {error && <Alert variant="error" description={error} className="mt-2" />}
         {mutation.isError && (
-          <p role="alert" className="mt-2 text-sm text-danger">
-            Não foi possível salvar. Tente novamente.
-          </p>
+          <Alert
+            variant="error"
+            description="Não foi possível salvar. Tente novamente."
+            className="mt-2"
+          />
         )}
 
         <DialogFooter>
           <DialogClose asChild>
-            <button type="button">Cancelar</button>
+            <Button type="button" variant="outline">Cancelar</Button>
           </DialogClose>
-          <button type="button" onClick={handleSave} disabled={mutation.isPending}>
+          <Button type="button" onClick={handleSave} disabled={mutation.isPending}>
             {mutation.isPending ? "Salvando..." : "Salvar"}
-          </button>
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

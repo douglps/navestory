@@ -1,7 +1,8 @@
 ---
 id: SPEC-20260722-002
 title: "Design System — Canvas Quente Sutil no Light Mode"
-status: approved
+status: deprecated
+superseded_by: SPEC-20260729-001
 date: 2026-07-22
 author: Douglas Lopes (lps.doug@protonmail.com)
 rules: [C-DS-01]
@@ -11,8 +12,14 @@ camadas: [frontend, design]
 
 # SPEC-20260722-002: Design System — Canvas Quente Sutil no Light Mode
 
-**Status:** approved
+**Status:** deprecated (superseded_by [SPEC-20260729-001](SPEC-20260729-001-adocao-direcao-prata.md))
 **Criada em:** 2026-07-22
+
+> **Nota de depreciação (2026-07-29):** a adoção da direção Prata como identidade de marca
+> (`SPEC-20260729-001`) reverte o canvas quente descrito aqui — Prata usa um canvas frio
+> (acorde azul-prata-cinza), incompatível com a chroma no eixo b+ (H=80) desta spec. `background`,
+> `card`, `border` e `muted` voltaram a ter matiz definido pela paleta de marca (H≈248/260), não
+> mais um undertone quente independente. Ver ADR-009 para o racional completo.
 
 ---
 

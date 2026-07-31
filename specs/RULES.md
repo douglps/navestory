@@ -25,10 +25,10 @@
 | R-CAT-02 | `value` de categoria personalizada segue slug `^[a-z0-9_-]+$`, 1–50 caracteres; validado por Zod e por constraint de DB | [SPEC-20260602-004](expenses/SPEC-20260602-004.md) |
 | R-CAT-03 | `value` de categoria personalizada não pode coincidir com o `value` de nenhuma categoria padrão; retorna 409 se coincidir | [SPEC-20260602-004](expenses/SPEC-20260602-004.md) |
 | R-CAT-04 | Hard-delete de categoria; despesas existentes com aquele `category` value não são afetadas (campo TEXT, sem FK) | [SPEC-20260602-004](expenses/SPEC-20260602-004.md) |
-| R-GRP-01 | Máximo 200 veículos por grupo — validado pelo schema Zod em `setGroupMembersInputSchema` | [SPEC-20260602-003](vehicles/SPEC-20260602-003.md) |
-| R-GRP-02 | `setGroupMembers` usa replace-all; histórico de membros anteriores não é preservado | [SPEC-20260602-003](vehicles/SPEC-20260602-003.md) |
-| R-GRP-03 | Apenas veículos ativos (`deleted_at IS NULL`) do próprio usuário podem ser membros de um grupo; veículos inválidos são descartados silenciosamente | [SPEC-20260602-003](vehicles/SPEC-20260602-003.md) |
-| R-GRP-04 | Exclusão de grupo é hard-delete; membros são removidos por cascade FK, não por lógica de aplicação | [SPEC-20260602-003](vehicles/SPEC-20260602-003.md) |
+| R-GRP-01 | Máximo 200 veículos por grupo — validado pelo schema Zod em `setGroupMembersInputSchema` | [SPEC-20260602-003](vehicle-groups/SPEC-20260602-003.md) |
+| R-GRP-02 | `setGroupMembers` usa replace-all; histórico de membros anteriores não é preservado | [SPEC-20260602-003](vehicle-groups/SPEC-20260602-003.md) |
+| R-GRP-03 | Apenas veículos ativos (`deleted_at IS NULL`) do próprio usuário podem ser membros de um grupo; veículos inválidos são descartados silenciosamente | [SPEC-20260602-003](vehicle-groups/SPEC-20260602-003.md) |
+| R-GRP-04 | Exclusão de grupo é hard-delete; membros são removidos por cascade FK, não por lógica de aplicação | [SPEC-20260602-003](vehicle-groups/SPEC-20260602-003.md) |
 | R-CTX-01 | Apenas um modo de contexto (`single`, `group`, `multi`, `attribute`) pode estar ativo simultaneamente; ativar qualquer modo zera os demais campos conflitantes no store | [SPEC-20260602-001](context/SPEC-20260602-001-em-foco-contexto-global.md) |
 | R-CTX-02 | Contextos `single` e `group` persistem em sessionStorage (isolado por aba); `multi` e `attribute` são efêmeros (somente sessão); logout limpa todos os campos de contexto e remove explicitamente a chave do sessionStorage. **v2** — ver [Histórico de Versões](#histórico-de-versões) | [SPEC-20260602-001](context/SPEC-20260602-001-em-foco-contexto-global.md), [SPEC-20260603-001](context/SPEC-20260603-001-context-chip-subheader.md) |
 | R-CTX-03 | Formulários transacionais (despesa, manutenção) exigem `vehicle_id` singular para gravar; contextos coletivos (`group`, `multi`, `attribute`) nunca propagam automaticamente para o campo de veículo | [SPEC-20260602-001](context/SPEC-20260602-001-em-foco-contexto-global.md) |
@@ -72,7 +72,12 @@
 | R-DS-02 | Toda documentação de design system do projeto (`Design.md`, `docs/ui-design/design-system.md`, specs futuras da feature `design-system`) segue estrutura obrigatória de seções, nesta ordem: Foundations, Tokens, Componentes, Padrões, Acessibilidade, Content/Voice, Governança. Seção sem conteúdo nesta fase declara "não aplicável", nunca é omitida silenciosamente | [SPEC-20260722-001](design-system/SPEC-20260722-001-design-system-v2-direcao-criativa.md) |
 | R-DS-03 | Cor semântica (`success`/`warning`/`danger`/`info`) é reservada exclusivamente a comunicar status real de dado (saúde de veículo, urgência, custo); o token `gold` é o único elemento decorativo/destaque de marca permitido. Nenhuma paleta decorativa multicolor sem significado de status é introduzida no sistema | [SPEC-20260722-001](design-system/SPEC-20260722-001-design-system-v2-direcao-criativa.md) |
 | R-DS-04 | `rounded-full` é reservado a badge, tag e preset de filtro; todo botão de ação de interface (formulário, tabela, header) usa raio máximo `rounded-md` | [SPEC-20260722-001](design-system/SPEC-20260722-001-design-system-v2-direcao-criativa.md) |
-| R-DS-05 | Proporção cromática de referência para auditoria visual de telas novas: ~70% neutro / ~15% primary (ação) / ~10% semântico (status) / ~5% gold (destaque de marca) — desvio relevante é sinalizado em revisão, não é lint automatizado | [SPEC-20260722-001](design-system/SPEC-20260722-001-design-system-v2-direcao-criativa.md) |
+| R-DS-05 | Proporção cromática de referência para auditoria visual de telas novas: ~60% neutro / ~30% estrutural (primary/border em card, header, divisor) / ~10% acento saturado (gold + danger) — desvio relevante é sinalizado em revisão, não é lint automatizado. **v2** — ver [Histórico de Versões](#histórico-de-versões) | [SPEC-20260722-001](design-system/SPEC-20260722-001-design-system-v2-direcao-criativa.md), [SPEC-20260729-001](design-system/SPEC-20260729-001-adocao-direcao-prata.md) |
+| R-DS-06 | O token `danger` (e `finance-outgoing`) usa um terracota dessaturado (H≈32, C≈0.14), nunca vermelho puro/alta saturação — evita competir em intensidade perceptual com `gold`, o único acento que deve "gritar" na tela; `danger` nunca é aplicado como fundo sólido diretamente sobre `background`/`card` do tema ativo, só sobre `danger-pastel` (mesmo racional de "vermelho nunca direto sobre fundo escuro") | [SPEC-20260729-001](design-system/SPEC-20260729-001-adocao-direcao-prata.md) |
+| R-DS-07 | A paleta categórica (`--categorical-1..5`) é reservada exclusivamente para dados sem status real — gráficos multi-série (`CHART_CATEGORY_COLORS`) e indicadores de modo/contexto (ex: seletor de veículo único/grupo/múltiplo/atributo). Nunca usada para comunicar status real de dado — isso continua sendo papel exclusivo de `success`/`warning`/`danger`/`info` | [SPEC-20260729-002](design-system/SPEC-20260729-002-prata-fase-2-categoricos-urgencia-varredura.md) |
+| R-DS-08 | Toda escala de urgência/intensidade codificada por cor usa no máximo 4 níveis (ISO 11064-4) e é sempre acompanhada de label textual/numérico — nunca só cor. A escala de vencimento de despesas (`urgencyBadge`) é a referência: Vencido/`danger`, ≤7d/`urgency-hot`, ≤30d/`warning`, ≤60d/`info` | [SPEC-20260729-002](design-system/SPEC-20260729-002-prata-fase-2-categoricos-urgencia-varredura.md) |
+| R-DS-09 | Todo campo de texto/número livre usa `Input`/`Textarea` de `@nave/ui`, todo checkbox usa `Checkbox`, todo botão usa `Button`, e todo `<select>` nativo usa `Combobox` (extensão de R-FORM-03 para além de campos monetários) — nunca elemento HTML nativo sem estilo. Exceções documentadas: `dashboard/concept/*` (protótipos isolados) e controles com forma customizada que a API do componente não cobre (ex: swatch de cor circular, botão de ícone do dock) | [SPEC-20260729-003](design-system/SPEC-20260729-003-formularios-input-textarea-checkbox-switch.md) |
+| R-DS-10 | Todo badge de status semântico (pill pequeno, `inline-flex ... px-1.5 py-0.5 text-xs`) usa `Badge` de `@nave/ui`; todo placeholder de carregamento (`animate-pulse rounded-* bg-muted`) usa `Skeleton`; todo wrapper `<main>` de página usa `Container`; todo tooltip usa `Tooltip` (Radix) — nunca `title=` nativo do navegador. Exceção: indicadores que tingem uma linha/card inteiro por urgência (não um pill isolado, ex. `UpcomingCostsWidget`/`FleetAlertBar`/urgência de `expenses/page.tsx`) não usam `Badge` — a classe semântica ad hoc no wrapper é o padrão correto para esse caso, distinto de um badge de status | [SPEC-20260730-001](design-system/SPEC-20260730-001-padronizacao-showcase-badge-skeleton-container-tooltip.md) |
 
 ### Regras de Fuso Horário (R-TZ)
 
@@ -112,11 +117,12 @@
 | R-BIZ-08 | NPS coletado a cada 30 dias ativos; feedback negativo gera alerta automatico | [SPEC-20260620-001](business/SPEC-20260620-001-business-strategy-stories.md) |
 | R-BIZ-09 | Dados gerais (resumos mensais consolidados) sao retidos indefinidamente enquanto a conta existir, independente do plano | [SPEC-20260620-001](business/SPEC-20260620-001-business-strategy-stories.md) |
 | R-BIZ-10 | Downgrade consolida dados fora da janela visivel em resumo mensal; nunca deleta registros durante o grace period | [SPEC-20260620-001](business/SPEC-20260620-001-business-strategy-stories.md) |
-| R-BIZ-11 | Grace period = 50% do tempo como assinante, cap 1 ano, minimo 30d (1-3m) / 60d (4-11m) / 90d (12m+) | [SPEC-20260620-001](business/SPEC-20260620-001-business-strategy-stories.md) |
-| R-BIZ-12 | Export bloqueado no plano Gratis; Pro mensal com rate limit (a definir); Pro anual e Frota ilimitados | [SPEC-20260620-001](business/SPEC-20260620-001-business-strategy-stories.md) |
+| R-BIZ-11 | Grace period = 50% do tempo como assinante, cap 1 ano, mínimo 30d (1-3m) / 60d (4-11m) / 90d (12m+); fórmula: `max(min_faixa, min(365, tempo_assinante_dias * 0.5))` onde `tempo_assinante_dias` é a soma de dias pagos (sem contar trial) | [SPEC-20260620-001](business/SPEC-20260620-001-business-strategy-stories.md) |
+| R-BIZ-12 | Export bloqueado no plano Grátis; Pro mensal com rate limit (a definir); Pro anual e Frota ilimitados | [SPEC-20260620-001](business/SPEC-20260620-001-business-strategy-stories.md) |
 | R-BIZ-13 | API publica requer simulacao de custos de infraestrutura aprovada antes do lancamento | [SPEC-20260620-001](business/SPEC-20260620-001-business-strategy-stories.md) |
 | R-BIZ-14 | Consolidacao e irreversivel — apos expirar o grace, dados gerais sao permanentes e nao podem ser reexpandidos em detalhes | [SPEC-20260620-001](business/SPEC-20260620-001-business-strategy-stories.md) |
-| R-BIZ-15 | Resolucao de features segue precedencia Usuario > Plano > Sistema, exceto kill-switch de Sistema (`force`); toda alteracao e auditada e exige motivo obrigatorio | [SPEC-20260620-001](business/SPEC-20260620-001-business-strategy-stories.md) |
+| R-BIZ-15 | Resolução de features segue precedência Usuário > Plano > Sistema, exceto kill-switch de Sistema (`force`); toda alteração é auditada e exige motivo obrigatório | [SPEC-20260620-001](business/SPEC-20260620-001-business-strategy-stories.md) |
+| R-BIZ-16 | Oferta de win-back é enviada por email e exibida como banner in-app durante todo o grace period (e apenas durante ele); o desconto é proporcional ao tempo como assinante pago: 20% OFF (1–3m), 30% OFF (4–11m), 40% OFF + 1 mês grátis (12m+); não se aplica durante o trial inicial (R-BIZ-03); oferta não é cumulativa com outros cupons ativos | [SPEC-20260620-001](business/SPEC-20260620-001-business-strategy-stories.md) |
 
 ---
 
@@ -135,6 +141,23 @@
 | R-ODO-04 | `findMaxOdometerByVehicle` (em `expenses` e `maintenances`) filtra por `date >= started_at` do ciclo mais recente em `vehicle_odometer_cycles` para o veículo; sem linha registrada, nenhum filtro é aplicado (comportamento idêntico ao pré-existente) | [SPEC-20260711-001](vehicles/SPEC-20260711-001-odometer-cycles.md) |
 | R-ODO-05 | Apenas o dono do veículo (`vehicles.user_id`) pode criar um novo ciclo em `vehicle_odometer_cycles`; a ação exige `reason` obrigatório e é auditada via `AuditService` (aplica R-MON-01, R-MON-02) | [SPEC-20260711-001](vehicles/SPEC-20260711-001-odometer-cycles.md) |
 | R-ODO-06 | O "ciclo 1" é implícito — nenhuma linha é criada em `vehicle_odometer_cycles` para ele; a primeira linha inserida nasce com `cycle_number = 2`; a UI exibe badge de ciclo somente a partir do 2º em diante | [SPEC-20260711-001](vehicles/SPEC-20260711-001-odometer-cycles.md) |
+
+### Regras de Score de Saúde (R-HS)
+
+| ID | Regra | Spec |
+|----|-------|------|
+| R-HS-01 | Score começa em 100 e tem piso em 0; cálculo é exclusivo da RPC PostgreSQL `calculate_vehicle_health(p_vehicle_id)`; jamais recalculado no NestJS ou no frontend | [SPEC-20260730-001](vehicles/SPEC-20260730-001-vehicle-health-score.md) |
+| R-HS-02 | Manutenções pendentes (`status IN ('scheduled','in_progress')`, `deleted_at IS NULL`): -5 pontos/item, máximo -20 pontos | [SPEC-20260730-001](vehicles/SPEC-20260730-001-vehicle-health-score.md) |
+| R-HS-03 | Manutenções vencidas (pendentes com `scheduled_date < CURRENT_DATE`): desconto **adicional** de -15 pontos/item, máximo -30 pontos; cumulativo com R-HS-02 | [SPEC-20260730-001](vehicles/SPEC-20260730-001-vehicle-health-score.md) |
+| R-HS-04 | Documento a vencer em ≤ 30 dias: -10 pontos/documento (IPVA, Seguro, CRLV são penalizados individualmente); campos `NULL` ignorados sem penalidade; "hoje" usa `CURRENT_DATE` do PostgreSQL (aplica R-TZ-01 apenas na exibição de dias restantes no frontend) | [SPEC-20260730-001](vehicles/SPEC-20260730-001-vehicle-health-score.md) |
+| R-HS-05 | Alerta de km: `vehicles.odometer >= vehicles.next_maintenance_km - 1000` → -5 pontos (desconto único, independente do valor de km dentro da janela); campos `NULL` ignorados sem penalidade | [SPEC-20260730-001](vehicles/SPEC-20260730-001-vehicle-health-score.md) |
+| R-HS-06 | Multas pendentes (`fines.status = 'pending'`, `deleted_at IS NULL`): -5 pontos/item, máximo -15 pontos | [SPEC-20260730-001](vehicles/SPEC-20260730-001-vehicle-health-score.md) |
+| R-HS-07 | Semáforo canônico: 70-100 = success ("Em dia"), 40-69 = warning ("Atenção"), 0-39 = danger ("Crítico"); nenhuma tela usa mapeamento diferente; o componente `VehicleHealthScore` de `@nave/ui` é a implementação de referência | [SPEC-20260730-001](vehicles/SPEC-20260730-001-vehicle-health-score.md) |
+| R-HS-08 | `calculate_vehicle_health` persiste `vehicles.health_score` e `vehicles.updated_at = NOW()` como efeito colateral de cada chamada | [SPEC-20260730-001](vehicles/SPEC-20260730-001-vehicle-health-score.md) |
+| R-HS-09 | `vehicles.health_score` é write-only pela RPC — NestJS, server actions e client nunca escrevem diretamente nessa coluna; `calculate_fleet_health` delega a `calculate_vehicle_health` para cada veículo; score de frota (KPI) = média aritmética dos scores individuais | [SPEC-20260730-001](vehicles/SPEC-20260730-001-vehicle-health-score.md) |
+| R-HS-10 | Flags canônicas emitidas pela RPC: `maintenance_overdue` (campo `count`), `ipva_expiring` (campo `days`), `insurance_expiring` (campo `days`), `crlv_expiring` (campo `days`), `km_alert` (campo `km_until`), `fines_pending` (campo `count`); manutenções pendentes mas não vencidas não emitem flag visual | [SPEC-20260730-001](vehicles/SPEC-20260730-001-vehicle-health-score.md) |
+
+---
 
 ### Regras de KPIs do Dashboard (R-KPI)
 
@@ -175,6 +198,10 @@
 | R-NAV-02 | Toda área de toque de elemento interativo do shell (botão hamburger, item de sidebar, item de nav) deve ter área mínima de 44 × 44 px em mobile — alinhado a WCAG 2.5.8 (AAA) e Apple HIG; o valor `min-h-[44px]` é o teto mínimo, não o default | [SPEC-20260722-003](layout-responsivo/SPEC-20260722-003-shell-mobile-first.md) |
 | R-NAV-03 | O padding horizontal do shell é mobile-first (`px-4 md:px-6 lg:px-8`); nenhum componente do shell aplica `pl-16` ou `pl-64` fixo sem breakpoint condicional — o offset da sidebar é zerado em mobile pois ela vira overlay | [SPEC-20260722-003](layout-responsivo/SPEC-20260722-003-shell-mobile-first.md) |
 | R-NAV-04 | O drawer mobile fecha automaticamente ao: (a) clicar no backdrop, (b) pressionar `Esc`, (c) navegar para qualquer rota diferente da atual. A ação de fechar usa `toggleMobileNav()` do `useUIStore` — nenhum outro mecanismo de fechamento é criado em paralelo | [SPEC-20260722-003](layout-responsivo/SPEC-20260722-003-shell-mobile-first.md) |
+| R-NAV-05 | O botão de logout na sidebar usa hold-to-confirm: o usuário deve manter pressionado por 1.000 ms; uma barra de progresso visual avança durante esse tempo; soltar antes de completar cancela sem invocar `logout()`; o `logout()` é chamado apenas ao término completo do timer. O segundo ponto de logout (dropdown de avatar no header) não exige hold-to-confirm — confirmação por clique simples é suficiente para esse ponto de acesso mais explícito | [SPEC-20260730-002](layout-responsivo/SPEC-20260730-002-shell-ux-improvements.md) |
+| R-NAV-06 | `isSidebarCollapsed` em `useUIStore` persiste entre reloads via `zustand/middleware persist` em `sessionStorage` (key `"nave-ui-state"`); somente `isSidebarCollapsed` é serializado no `partialize` (excluindo `isMobileNavOpen` e `toasts`, que são efêmeros); a função `logout()` remove a chave `"nave-ui-state"` do `sessionStorage` junto com `"nave-dashboard-context"` | [SPEC-20260730-002](layout-responsivo/SPEC-20260730-002-shell-ux-improvements.md) |
+| R-NAV-07 | O wrapper raiz do shell usa `flex-col`; o `Header` é filho direto desse wrapper (não da coluna de conteúdo), tornando-o irmão de uma row `flex` que contém sidebar e conteúdo — assim ocupa 100% da largura da viewport em qualquer estado da sidebar. A sidebar no desktop (≥ md) é in-flow (`md:static`); em mobile permanece como drawer `fixed inset-y-0 left-0` (R-NAV-01 preservada por CSS condicional). O padding de compensação `md:pl-16`/`md:pl-64` é eliminado | [SPEC-20260730-002](layout-responsivo/SPEC-20260730-002-shell-ux-improvements.md) |
+| R-NAV-08 | O header deve exibir um avatar/identidade do usuário autenticado (iniciais do nome como fallback quando não há foto de perfil); ao clicar, abre um dropdown com nome completo, email (somente leitura), link para `/settings/account` e botão de logout (clique simples, sem hold-to-confirm); os dados do usuário são obtidos do cache de TanStack Query já existente, sem nova chamada de API exclusiva para esse componente | [SPEC-20260730-002](layout-responsivo/SPEC-20260730-002-shell-ux-improvements.md) |
 
 ---
 
@@ -246,6 +273,14 @@ A regra nunca mudou de comportamento — o texto abaixo é status de verificaç�
 
 ### R-ODO-01 — Nota de relacionamento com R1 (não é mudança de versão)
 R-ODO-01 não é uma versão de R1 — é uma regra própria que supersede R1 **apenas no fluxo web** (server actions de `expenses`); R1/SPEC-20260601-001 permanece válida para `apps/api`. As duas regras coexistem por camada de aplicação, não por substituição temporal de uma pela outra.
+
+### R-DS-05 — Proporção cromática de referência
+**Versão atual:** v2 (2026-07-29)
+
+| Versão | Data | Mudança |
+|--------|------|---------|
+| v1 | 2026-07-22 | Criação (SPEC-20260722-001): ~70% neutro / ~15% primary / ~10% semântico / ~5% gold |
+| v2 | 2026-07-29 | SPEC-20260729-001 (adoção da direção Prata): revisada para 60-30-10 (neutro/estrutural/acento saturado), alinhada à pesquisa de proporção e distribuição de cor trazida pelo usuário e ao ajuste feito no showcase Prata, que corrigiu um fundo majoritariamente colorido (gradiente cobrindo ~100% de uma seção) para a nova proporção. `SPEC-20260722-001` cita a regra sem versão travada (`R-DS-05`, não `R-DS-05@v1`) — herda v2 automaticamente, sem precisar de edição própria. |
 
 ---
 

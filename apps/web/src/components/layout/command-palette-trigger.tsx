@@ -3,8 +3,15 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import { CommandPalette, type CommandPaletteItem } from "@nave/ui";
+import dynamic from "next/dynamic";
+import type { CommandPaletteItem } from "@nave/ui";
 import { apiClient } from "@/lib/http/api-client";
+
+// RNF-03: `CommandPalette` (e suas dependências `cmdk`/`@radix-ui/react-dialog`) fica em
+// chunk separado, buscado só na primeira abertura — não entra no bundle inicial do shell.
+const CommandPalette = dynamic(() => import("@nave/ui").then((mod) => mod.CommandPalette), {
+  ssr: false,
+});
 
 interface VehicleSummary {
   id: string;
@@ -27,6 +34,12 @@ interface MaintenanceSummary {
   scheduled_date: string;
 }
 
+interface FineSummary {
+  id: string;
+  description: string;
+  occurred_at: string;
+}
+
 function normalize(value: string): string {
   return value
     .toLowerCase()
@@ -36,17 +49,19 @@ function normalize(value: string): string {
 
 /**
  * @spec SPEC-20260721-001 RF-06
- * Trigger global de `Ctrl+K`/`⌘K` (F-5). Busca client-side sobre veículos, despesas e
- * manutenções já carregáveis pela API existente — sem endpoint de busca full-text dedicado
- * (fora do escopo desta spec, ver "Fora de Escopo" em SPEC-20260721-001). As queries usam as
- * mesmas `queryKey` já em uso nas telas (`["vehicles"]`, `["expenses"]`, `["maintenances"]`),
- * reaproveitando o cache do TanStack Query quando o usuário já navegou por essas telas.
- * `/fines` ainda não existe como rota (ver levantamento do estado atual) — omitido da busca
- * até a tela existir.
+ * Trigger global de `Ctrl+K`/`⌘K` (F-5). Busca client-side sobre veículos, despesas,
+ * manutenções e multas já carregáveis pela API existente — sem endpoint de busca full-text
+ * dedicado (fora do escopo desta spec, ver "Fora de Escopo" em SPEC-20260721-001). As queries
+ * usam as mesmas `queryKey` já em uso nas telas (`["vehicles"]`, `["expenses"]`,
+ * `["maintenances"]`, `["fines"]`), reaproveitando o cache do TanStack Query quando o usuário
+ * já navegou por essas telas.
  */
 export function CommandPaletteTrigger(): ReactNode {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
+  // RNF-03: só monta (e só então baixa o chunk) o `CommandPalette` após a primeira
+  // abertura — nem o clique no botão nem o `Ctrl+K` disparam o fetch do chunk antes disso.
+  const [hasOpenedOnce, setHasOpenedOnce] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -54,7 +69,11 @@ export function CommandPaletteTrigger(): ReactNode {
       const isShortcut = (event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k";
       if (!isShortcut) return;
       event.preventDefault();
-      setOpen((current) => !current);
+      setOpen((current) => {
+        const next = !current;
+        if (next) setHasOpenedOnce(true);
+        return next;
+      });
     }
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
@@ -79,6 +98,14 @@ export function CommandPaletteTrigger(): ReactNode {
   const { data: maintenances } = useQuery({
     queryKey: ["maintenances"],
     queryFn: () => apiClient<MaintenanceSummary[]>("/maintenances?limit=100"),
+    enabled: open,
+    retry: false,
+    staleTime: 60_000,
+  });
+
+  const { data: fines } = useQuery({
+    queryKey: ["fines"],
+    queryFn: () => apiClient<FineSummary[]>("/fines"),
     enabled: open,
     retry: false,
     staleTime: 60_000,
@@ -109,8 +136,16 @@ export function CommandPaletteTrigger(): ReactNode {
       onSelect: () => router.push(`/maintenance/${maintenance.id}`),
     }));
 
-    return [...vehicleItems, ...expenseItems, ...maintenanceItems];
-  }, [vehicles, expenses, maintenances, router]);
+    const fineItems: CommandPaletteItem[] = (fines ?? []).map((fine) => ({
+      id: `fine-${fine.id}`,
+      category: "Multas",
+      label: fine.description,
+      description: fine.occurred_at.slice(0, 10),
+      onSelect: () => router.push(`/fines/${fine.id}`),
+    }));
+
+    return [...vehicleItems, ...expenseItems, ...maintenanceItems, ...fineItems];
+  }, [vehicles, expenses, maintenances, fines, router]);
 
   const filteredItems = useMemo(() => {
     if (query.length < 2) return [];
@@ -124,7 +159,10 @@ export function CommandPaletteTrigger(): ReactNode {
     <>
       <button
         type="button"
-        onClick={() => setOpen(true)}
+        onClick={() => {
+          setHasOpenedOnce(true);
+          setOpen(true);
+        }}
         className="flex h-9 items-center gap-2 rounded-md border border-border px-3 text-sm text-muted-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
       >
         <span aria-hidden="true">🔍</span>
@@ -132,19 +170,21 @@ export function CommandPaletteTrigger(): ReactNode {
         <kbd className="hidden rounded border border-border px-1.5 py-0.5 text-xs sm:inline">Ctrl K</kbd>
       </button>
 
-      <CommandPalette
-        open={open}
-        onOpenChange={(next) => {
-          setOpen(next);
-          if (!next) setQuery("");
-        }}
-        items={filteredItems}
-        query={query}
-        onQueryChange={setQuery}
-        emptyMessage={
-          query.length < 2 ? "Digite ao menos 2 caracteres" : `Nenhum resultado para "${query}"`
-        }
-      />
+      {hasOpenedOnce && (
+        <CommandPalette
+          open={open}
+          onOpenChange={(next) => {
+            setOpen(next);
+            if (!next) setQuery("");
+          }}
+          items={filteredItems}
+          query={query}
+          onQueryChange={setQuery}
+          emptyMessage={
+            query.length < 2 ? "Digite ao menos 2 caracteres" : `Nenhum resultado para "${query}"`
+          }
+        />
+      )}
     </>
   );
 }

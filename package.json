@@ -16,6 +16,7 @@
     "test": "turbo run test",
     "test:coverage": "turbo run test:coverage",
     "check:test-pairing": "node scripts/check-test-pairing.mjs",
+    "check:hardcoded-colors": "node scripts/check-hardcoded-colors.mjs",
     "db:migrate": "supabase db push",
     "db:generate": "supabase gen types typescript --local > packages/database/src/types.ts"
   },

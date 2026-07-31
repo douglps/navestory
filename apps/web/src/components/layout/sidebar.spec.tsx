@@ -60,7 +60,7 @@ describe("Sidebar", () => {
 
     const dot = container.querySelector('[aria-hidden="true"].rounded-full') as HTMLElement;
     expect(dot).toBeInTheDocument();
-    expect(dot).toHaveClass("bg-amber-400");
+    expect(dot).toHaveClass("bg-categorical-4");
     expect(dot.tagName).toBe("SPAN");
     expect(dot).not.toHaveAttribute("role", "button");
     expect(dot).not.toHaveAttribute("tabindex");

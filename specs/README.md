@@ -4,7 +4,7 @@ Esta pasta é a **fonte de verdade de requisitos** do projeto. Antes de implemen
 
 **Nível de maturidade do projeto:** 2 (Produto)
 **Critério:** SaaS multi-módulo com dado sensível/regulado (dados financeiros e pessoais sob LGPD), múltiplos usuários reais previstos e dependências externas reais já em uso (Supabase, Resend). Estrutura completa de specs/matrizes/ADRs já opera nesse regime desde antes da declaração formal deste campo.
-**Última revisão:** 2026-07-19
+**Última revisão:** 2026-07-31
 
 ---
 
@@ -27,22 +27,23 @@ Esta pasta é a **fonte de verdade de requisitos** do projeto. Antes de implemen
 |---------|-------|-------|
 | Autenticação | [auth/](auth/) | SPEC-20260524-001, SPEC-20260524-002 |
 | Despesas | [expenses/](expenses/) | SPEC-20260521-003, SPEC-20260601-001, -002, -003, SPEC-20260602-004, SPEC-20260606-001, -002, SPEC-20260608-001, -002, -003, SPEC-20260609-001, -002, -003, SPEC-20260612-001, -002 |
-| Multas | [fines/](fines/) | SPEC-20260607-001 |
+| Multas | [fines/](fines/) | SPEC-20260607-001 (approved — backend), SPEC-20260722-005 (approved — frontend) |
 | Manutenção | [maintenance/](maintenance/) | SPEC-20260521-002, SPEC-20260603-002 |
-| Dashboard | [dashboard/](dashboard/) | SPEC-20260531-001, SPEC-20260602-005 |
-| Veículos | [vehicles/](vehicles/) | SPEC-20260602-002, SPEC-20260602-003, SPEC-20260603-003 |
+| Dashboard | [dashboard/](dashboard/) | SPEC-20260531-001 (approved — redesign Sprint 1-3), SPEC-20260602-005, SPEC-20260721-002 (approved — Dashboard v2: KPIs configuráveis, FleetCharts, HealthScore), SPEC-20260722-004 (approved — Subheader Financeiro) |
+| Veículos | [vehicles/](vehicles/) | SPEC-20260602-002, SPEC-20260603-003, SPEC-20260711-001, SPEC-20260730-001 (draft — score de saúde) |
+| Grupos de Veículos | [vehicle-groups/](vehicle-groups/) | SPEC-20260602-003 (approved — CRUD core implementado; RF-11..15 FleetAside ⏳ Fase 5) |
 | Preferencias | [preferences/](preferences/) | SPEC-20260603-004, SPEC-20260612-003 |
 | Segurança | [security/](security/) | SPEC-20260521-001 |
 | Admin / LGPD | [admin/](admin/) | SPEC-20260521-004, SPEC-20260521-005 |
-| Design System | [design-system/](design-system/) | SPEC-20260525-001 (approved — §10 implementado em componentes; migração de consumidores ⏳), SPEC-20260721-001 (approved), SPEC-20260722-001 (approved — direção criativa v2), SPEC-20260722-002 (approved — canvas quente light mode) |
+| Design System | [design-system/](design-system/) | SPEC-20260525-001 (approved — §10 implementado; migração de consumidores ⏳), SPEC-20260721-001 (approved), SPEC-20260722-001 (approved — direção criativa v2), SPEC-20260722-002 (deprecated — superseded_by SPEC-20260729-001), SPEC-20260729-001 (approved — Prata como identidade de marca), SPEC-20260729-002 (approved — Prata Fase 2: paleta categórica + urgência + varredura), SPEC-20260729-003 (approved — Fecho de Formulários: Input/Textarea/Checkbox/Switch + migração de consumidores), SPEC-20260730-001 (approved — Showcase Prata: Badge/Skeleton/Container/Tooltip). Ver também `PROPOSTA-BRAND-DESIGN-SYSTEM-2026-07-30.md` e `PROPOSTA-BRAND-PLATAFORMA-2026-07-30.md` — direção "Azul-Índigo" + identidade de marca (definição, não spec formal ainda) |
 | Contexto Global | [context/](context/) | SPEC-20260602-001, SPEC-20260603-001 |
 | Formulários | [forms/](forms/) | SPEC-20260619-001 |
-| Negócio / Estratégia | [business/](business/) | SPEC-20260620-001 |
+| Negócio / Estratégia | [business/](business/) | SPEC-20260620-001. Ver também `PLANO-MARKETING-PUBLICIDADE-FUTURO.md` — plano represado de Marketing/Publicidade, ativa só com gatilho real (soft launch, primeiro pagante, verba aprovada) |
 | Analytics / BI | [analytics/](analytics/) | SPEC-20260622-001 (Fase 1 implementada) |
 | PWA / Offline | [pwa/](pwa/) | SPEC-20260712-001 (approved, v0.5 — implementada) |
 | QA / Testes E2E | [qa/](qa/) | SPEC-20260716-003 (draft) |
 | DevOps / Infra | [devops/](devops/) | SPEC-20260716-001 (approved), SPEC-20260716-002 (draft) |
-| Layout Responsivo | [layout-responsivo/](layout-responsivo/) | SPEC-20260722-003 (approved) |
+| Layout Responsivo | [layout-responsivo/](layout-responsivo/) | SPEC-20260722-003 (approved), SPEC-20260730-002 (draft — melhorias UX shell) |
 
 ---
 

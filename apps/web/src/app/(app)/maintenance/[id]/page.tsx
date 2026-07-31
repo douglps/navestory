@@ -6,7 +6,7 @@ import {
   type MaintenanceStatus,
   type UpdateMaintenanceInput,
 } from "@nave/validators";
-import { CurrencyInput, OdometerInput } from "@nave/ui";
+import { Alert, Button, Combobox, Container, CurrencyInput, Input, OdometerInput } from "@nave/ui";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
@@ -123,13 +123,18 @@ export default function MaintenanceDetailPage({
   }
 
   if (isLoading) return <p className="p-8">Carregando...</p>;
-  if (isError || !maintenance) return <p role="alert" className="p-8">Manutenção não encontrada.</p>;
+  if (isError || !maintenance)
+    return (
+      <div className="p-8">
+        <Alert variant="error" description="Manutenção não encontrada." />
+      </div>
+    );
 
   const allowedNext = MAINTENANCE_STATUS_TRANSITIONS[maintenance.status];
   const isTerminal = allowedNext.length === 0;
 
   return (
-    <main className="mx-auto flex max-w-sm flex-col gap-4 p-8">
+    <Container size="sm">
       <h1 className="text-xl font-semibold">Manutenção</h1>
       <p className="text-sm text-muted-foreground">
         Status atual: <strong>{STATUS_LABEL[maintenance.status]}</strong>
@@ -137,7 +142,7 @@ export default function MaintenanceDetailPage({
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-3">
         <label htmlFor="description">Descrição *</label>
-        <input
+        <Input
           id="description"
           value={description}
           onChange={(event) => setDescription(event.target.value)}
@@ -145,7 +150,7 @@ export default function MaintenanceDetailPage({
         />
 
         <label htmlFor="scheduled_date">Data e hora agendada *</label>
-        <input
+        <Input
           id="scheduled_date"
           type="datetime-local"
           value={scheduledDate}
@@ -154,7 +159,7 @@ export default function MaintenanceDetailPage({
         />
 
         <label htmlFor="completion_date">Data e hora de conclusão</label>
-        <input
+        <Input
           id="completion_date"
           type="datetime-local"
           value={completionDate}
@@ -169,38 +174,40 @@ export default function MaintenanceDetailPage({
 
         {!isTerminal && (
           <>
-            <label htmlFor="next_status">Mudar status</label>
-            <select
-              id="next_status"
+            <span className="text-sm font-medium">Mudar status</span>
+            <Combobox
+              aria-label="Mudar status"
+              options={[
+                { value: "", label: "Manter status atual" },
+                ...allowedNext.map((status) => ({
+                  value: status,
+                  // eslint-disable-next-line security/detect-object-injection -- status vem de allowedNext, subconjunto fixo de MaintenanceStatus
+                  label: STATUS_LABEL[status],
+                })),
+              ]}
               value={nextStatus}
-              onChange={(event) => setNextStatus(event.target.value as MaintenanceStatus | "")}
-            >
-              <option value="">Manter status atual</option>
-              {/* eslint-disable security/detect-object-injection -- status vem de allowedNext, subconjunto fixo de MaintenanceStatus */}
-              {allowedNext.map((status) => (
-                <option key={status} value={status}>
-                  {STATUS_LABEL[status]}
-                </option>
-              ))}
-              {/* eslint-enable security/detect-object-injection */}
-            </select>
+              onValueChange={(value) => setNextStatus(value as MaintenanceStatus | "")}
+              placeholder="Manter status atual"
+              searchPlaceholder="Buscar status..."
+              emptyMessage="Nenhum status encontrado"
+            />
           </>
         )}
 
-        {fieldError && <p role="alert">{fieldError}</p>}
+        {fieldError && <Alert variant="error" description={fieldError} />}
         {mutation.isError && !fieldError && (
-          <p role="alert">Não foi possível atualizar a manutenção.</p>
+          <Alert variant="error" description="Não foi possível atualizar a manutenção." />
         )}
 
         <div className="flex gap-2">
-          <button type="submit" disabled={mutation.isPending}>
+          <Button type="submit" disabled={mutation.isPending}>
             {mutation.isPending ? "Salvando..." : "Salvar"}
-          </button>
-          <button type="button" onClick={handleCancel}>
+          </Button>
+          <Button type="button" variant="outline" onClick={handleCancel}>
             Cancelar
-          </button>
+          </Button>
         </div>
       </form>
-    </main>
+    </Container>
   );
 }

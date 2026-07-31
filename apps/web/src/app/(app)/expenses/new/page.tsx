@@ -7,7 +7,7 @@ import {
   type CreateExpenseTemplateInput,
   type ExpenseTemplate,
 } from "@nave/validators";
-import { CurrencyInput, OdometerInput } from "@nave/ui";
+import { Alert, Button, Combobox, Container, CurrencyInput, EmptyState, Input, OdometerInput } from "@nave/ui";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -153,46 +153,52 @@ function ExpenseTemplatesTray({
         )}
         {templates?.map((template) => (
           <div key={template.id} className="flex items-center gap-1 whitespace-nowrap">
-            <button
+            <Button
               type="button"
+              variant="outline"
+              size="sm"
               aria-label={`Aplicar modelo ${template.name}`}
               onClick={() => handleApply(template)}
             >
               {template.name}
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
+              variant="ghost"
+              size="sm"
               aria-label={`Excluir modelo ${template.name}`}
               onClick={() => handleDelete(template.id)}
             >
               ×
-            </button>
+            </Button>
           </div>
         ))}
-        <button
+        <Button
           type="button"
+          variant="outline"
+          size="sm"
           aria-label="Criar novo modelo"
           disabled={atLimit}
           onClick={() => setCreating((prev) => !prev)}
         >
           +
-        </button>
+        </Button>
       </div>
 
       {creating && (
         <form onSubmit={handleCreateSubmit} className="flex flex-col gap-2">
           <label htmlFor="template_name">Nome do modelo</label>
-          <input
+          <Input
             id="template_name"
             value={templateName}
             onChange={(event) => setTemplateName(event.target.value)}
             required
           />
           <p>Usa os campos veículo, categoria, valor e descrição preenchidos no formulário.</p>
-          {createError && <p role="alert">{createError}</p>}
-          <button type="submit" disabled={createMutation.isPending}>
+          {createError && <Alert variant="error" description={createError} />}
+          <Button type="submit" disabled={createMutation.isPending}>
             {createMutation.isPending ? "Salvando..." : "Salvar modelo"}
-          </button>
+          </Button>
         </form>
       )}
     </section>
@@ -375,18 +381,14 @@ function NewExpensePageContent(): ReactNode {
    */
   if (!vehiclesLoading && vehicles?.length === 0) {
     return (
-      <main className="mx-auto flex max-w-sm flex-col gap-4 p-8">
+      <Container size="sm">
         <h1 className="text-xl font-semibold">Nova despesa</h1>
-        <div className="flex flex-col items-center gap-2 rounded border p-6 text-center">
-          <p className="font-medium">Nenhum veículo cadastrado</p>
-          <p className="text-sm text-muted-foreground">
-            Cadastre um veículo para registrar despesas.
-          </p>
-          <Link href="/vehicles/new" className="underline">
-            Cadastrar veículo →
-          </Link>
-        </div>
-      </main>
+        <EmptyState
+          title="Nenhum veículo cadastrado"
+          description="Cadastre um veículo para registrar despesas."
+          action={{ label: "Cadastrar veículo", onClick: () => router.push("/vehicles/new") }}
+        />
+      </Container>
     );
   }
 
@@ -398,7 +400,7 @@ function NewExpensePageContent(): ReactNode {
     Math.abs(fuelCalc.liters * fuelCalc.pricePerLiter - fuelCalc.amount) <= 0.01;
 
   return (
-    <main className="mx-auto flex max-w-sm flex-col gap-4 p-8">
+    <Container size="sm">
       <h1 className="text-xl font-semibold">Nova despesa</h1>
 
       <ExpenseTemplatesTray
@@ -413,84 +415,83 @@ function NewExpensePageContent(): ReactNode {
           supplier,
         }}
       />
-      {templateNotice && <p role="alert">{templateNotice}</p>}
+      {templateNotice && <Alert variant="warning" description={templateNotice} />}
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-3">
         {contextChangeNotice && (
-          <div role="status" className="flex items-center justify-between gap-2 rounded border border-neutral-200 p-2 text-sm">
+          <div role="status" className="flex items-center justify-between gap-2 rounded-md border border-border bg-card p-2 text-sm">
             <span>{contextChangeNotice}</span>
             <div className="flex shrink-0 gap-2">
-              <button type="button" onClick={applyContextChange} className="underline">
+              <Button type="button" variant="ghost" size="sm" onClick={applyContextChange}>
                 Atualizar campo
-              </button>
-              <button type="button" onClick={dismissContextChangeNotice} aria-label="Fechar aviso">
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={dismissContextChangeNotice}
+                aria-label="Fechar aviso"
+              >
                 ×
-              </button>
+              </Button>
             </div>
           </div>
         )}
 
-        <label htmlFor="vehicle_id">Veículo *</label>
-        <select
-          id="vehicle_id"
+        <span className="text-sm font-medium">Veículo *</span>
+        <Combobox
+          aria-label="Veículo *"
+          options={filteredVehicles.map((vehicle) => ({
+            value: vehicle.id,
+            label: vehicleLabel(vehicle),
+          }))}
           value={vehicleId}
-          onChange={(event) => setVehicleId(event.target.value)}
-          required
+          onValueChange={setVehicleId}
+          placeholder="Selecione um veículo"
+          searchPlaceholder="Buscar veículo..."
+          emptyMessage="Nenhum veículo encontrado"
+          loading={vehiclesLoading}
           className={
             isVehicleInherited
-              ? "border border-amber-300 bg-amber-50"
+              ? "border-warning bg-warning-pastel"
               : vehicleId
-                ? "border border-neutral-300"
-                : ""
+                ? "border-border"
+                : undefined
           }
-        >
-          <option value="" disabled>
-            Selecione um veículo
-          </option>
-          {filteredVehicles.map((vehicle) => (
-            <option key={vehicle.id} value={vehicle.id}>
-              {vehicleLabel(vehicle)}
-            </option>
-          ))}
-        </select>
+        />
         {isVehicleInherited && (
-          <span className="text-xs text-amber-700">↩ Herdado do contexto em foco</span>
+          <span className="text-xs text-foreground">↩ Herdado do contexto em foco</span>
         )}
         {!isVehicleInherited && vehicleId && (
-          <span className="text-xs text-neutral-500">✓ Selecionado manualmente</span>
+          <span className="text-xs text-muted-foreground">✓ Selecionado manualmente</span>
         )}
         {vehicleContextHint && <p className="text-xs text-muted-foreground">{vehicleContextHint}</p>}
         {vehicleQuickPicks.length > 0 && (
           <div className="flex flex-wrap gap-1">
             {vehicleQuickPicks.map((vehicle) => (
-              <button
+              <Button
                 key={vehicle.id}
                 type="button"
+                variant="outline"
+                size="sm"
                 onClick={() => setVehicleId(vehicle.id)}
-                className="rounded border px-2 py-0.5 text-xs hover:bg-neutral-100"
               >
                 {vehicleLabel(vehicle)}
-              </button>
+              </Button>
             ))}
           </div>
         )}
 
-        <label htmlFor="category">Categoria *</label>
-        <select
-          id="category"
+        <span className="text-sm font-medium">Categoria *</span>
+        <Combobox
+          aria-label="Categoria *"
+          options={allCategories.map((cat) => ({ value: cat.value, label: cat.label }))}
           value={category}
-          onChange={(event) => setCategory(event.target.value)}
-          required
-        >
-          <option value="" disabled>
-            Selecione uma categoria
-          </option>
-          {allCategories.map((cat) => (
-            <option key={cat.value} value={cat.value}>
-              {cat.label}
-            </option>
-          ))}
-        </select>
+          onValueChange={setCategory}
+          placeholder="Selecione uma categoria"
+          searchPlaceholder="Buscar categoria..."
+          emptyMessage="Nenhuma categoria encontrada"
+        />
 
         <label htmlFor="amount">Valor (R$) *</label>
         <CurrencyInput id="amount" value={fuelCalc.amount} onChange={fuelCalc.setAmount} required />
@@ -498,7 +499,7 @@ function NewExpensePageContent(): ReactNode {
         <div className="flex gap-3">
           <div className="flex flex-1 flex-col gap-1">
             <label htmlFor="occurred_at">Data e hora *</label>
-            <input
+            <Input
               id="occurred_at"
               type="datetime-local"
               value={occurredAt}
@@ -508,7 +509,7 @@ function NewExpensePageContent(): ReactNode {
           </div>
           <div className="flex flex-col gap-1">
             <label htmlFor="year">Ano</label>
-            <input
+            <Input
               id="year"
               type="text"
               inputMode="numeric"
@@ -531,7 +532,7 @@ function NewExpensePageContent(): ReactNode {
         )}
 
         <label htmlFor="description">Descrição</label>
-        <input
+        <Input
           id="description"
           value={description}
           onChange={(event) => setDescription(event.target.value)}
@@ -539,36 +540,40 @@ function NewExpensePageContent(): ReactNode {
 
         {isFuel && (
           <section aria-label="Dados do abastecimento" className="flex flex-col gap-3 rounded border p-3">
-            <label htmlFor="fuel_type">Tipo de combustível</label>
-            <select
-              id="fuel_type"
+            <span className="text-sm font-medium">Tipo de combustível</span>
+            <Combobox
+              aria-label="Tipo de combustível"
+              options={FUEL_TYPE_OPTIONS.map((option) => ({
+                value: option.value,
+                label: option.label,
+              }))}
               value={fuelType}
-              onChange={(event) => setFuelType(event.target.value)}
-            >
-              <option value="">Selecione (opcional)</option>
-              {FUEL_TYPE_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
+              onValueChange={setFuelType}
+              placeholder="Selecione (opcional)"
+              searchPlaceholder="Buscar tipo..."
+              emptyMessage="Nenhum tipo encontrado"
+            />
 
             <span id="full_tank_label">Tanque cheio?</span>
             <div role="group" aria-labelledby="full_tank_label" className="flex gap-2">
-              <button
+              <Button
                 type="button"
+                variant={fullTank === true ? "default" : "outline"}
+                size="sm"
                 aria-pressed={fullTank === true}
                 onClick={() => setFullTank((current) => (current === true ? null : true))}
               >
                 Sim
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
+                variant={fullTank === false ? "default" : "outline"}
+                size="sm"
                 aria-pressed={fullTank === false}
                 onClick={() => setFullTank((current) => (current === false ? null : false))}
               >
                 Não
-              </button>
+              </Button>
             </div>
 
             <label htmlFor="liters">Litros</label>
@@ -593,7 +598,7 @@ function NewExpensePageContent(): ReactNode {
             )}
 
             <label htmlFor="supplier">Posto / Fornecedor</label>
-            <input
+            <Input
               id="supplier"
               list="supplier-suggestions"
               value={supplier}
@@ -609,36 +614,36 @@ function NewExpensePageContent(): ReactNode {
           /**
            * @spec SPEC-20260720-002 RF-03 RF-04 RF-06
            */
-          <div role="alert" className="flex flex-col gap-2 rounded border border-amber-300 bg-amber-50 p-3 text-sm">
+          <div role="alert" className="flex flex-col gap-2 rounded-md border border-warning bg-warning-pastel p-3 text-sm">
             <p>Uma despesa com os mesmos dados já existe. Verifique se este não é um lançamento duplicado.</p>
             <div className="flex gap-3">
               <Link href={`/expenses/${duplicateId}`} className="underline">
                 Ver despesa duplicada
               </Link>
-              <button type="button" onClick={() => router.push("/expenses")} className="underline">
+              <Button type="button" variant="ghost" size="sm" onClick={() => router.push("/expenses")}>
                 Entendido
-              </button>
+              </Button>
             </div>
           </div>
         ) : (
           <>
-            {fieldError && <p role="alert">{fieldError}</p>}
+            {fieldError && <Alert variant="error" description={fieldError} />}
             {mutation.isError && !fieldError && (
-              <p role="alert">Não foi possível registrar a despesa.</p>
+              <Alert variant="error" description="Não foi possível registrar a despesa." />
             )}
           </>
         )}
 
         <div className="flex gap-2">
-          <button type="submit" disabled={mutation.isPending || duplicateId !== null}>
+          <Button type="submit" disabled={mutation.isPending || duplicateId !== null}>
             {mutation.isPending ? "Salvando..." : "Registrar"}
-          </button>
-          <button type="button" onClick={handleCancel}>
+          </Button>
+          <Button type="button" variant="outline" onClick={handleCancel}>
             Cancelar
-          </button>
+          </Button>
         </div>
       </form>
-    </main>
+    </Container>
   );
 }
 

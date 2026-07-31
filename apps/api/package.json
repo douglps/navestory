@@ -11,7 +11,8 @@
     "test": "jest",
     "test:coverage": "jest --coverage",
     "test:integration": "jest --config test/integration/jest-integration.config.js",
-    "seed:e2e": "node scripts/seed-e2e.mjs"
+    "seed:e2e": "node scripts/seed-e2e.mjs",
+    "seed:random": "node scripts/seed-random-data.mjs"
   },
   "dependencies": {
     "@nave/validators": "workspace:*",

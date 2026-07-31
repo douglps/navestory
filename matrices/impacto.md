@@ -1115,6 +1115,90 @@ confirmação de backend/banco (ver spec).
 
 ---
 
+### IMPACTO-042 — Adoção da Direção Prata como Identidade de Marca (SPEC-20260729-001, ADR-009) (2026-07-29)
+
+| Campo | Valor |
+|-------|-------|
+| **Spec** | SPEC-20260729-001 (approved) |
+| **Status** | Implementado — tokens migrados, suítes `vitest` completas de `packages/ui` e `apps/web` passando sem alteração de asserção |
+| **Risco geral** | Médio (paleta de marca é consumida globalmente por `packages/ui`, mas mudança é só de valor de token, sem alteração de componente) |
+
+| # | Mudança | Módulos afetados | Risco | Mitigação |
+|---|---------|-----------------|-------|-----------|
+| 1 | Paleta de marca ("Steel & Sapphire") substituída pela direção Prata: `background`/`foreground`/`card`/`border`/`muted`/`primary`/`secondary`/`gold`/`danger` (+`-foreground`/`-pastel`) remapeados para OKLCH, light e dark | `packages/ui/src/tokens/colors.ts`, `apps/web/src/app/globals.css` | Médio | Valores convertidos diretamente do hex já validado no showcase (`contrastExpectations`); suíte `vitest` completa de ambos os pacotes (141 + 329 testes, incl. `jest-axe`) rodada após a mudança, sem regressão |
+| 2 | Canvas quente do light mode (`SPEC-20260722-002`) revertido para canvas frio (azul-prata) | `apps/web/src/app/globals.css` (`:root`) | Baixo | Chroma trocado (H=80→248), luminosidade em faixa equivalente; `SPEC-20260722-002` marcada `deprecated`/`superseded_by` |
+| 3 | `mutedForeground` (light) sobe de L=42% para L=50.4% em OKLCH — acima do teto documentado em `SPEC-20260721-001` RF-02 | `packages/ui/src/tokens/colors.ts` | Baixo | Requisito real (`C-DS-01`) é razão de contraste ≥4.5:1, não o valor de L em si — nova razão calculada em ~5.2:1 (light) / ~6.8:1 (dark), acima do mínimo; `jest-axe` sem violação |
+| 4 | `R-DS-05` revisada v1→v2 (60-30-10); `R-DS-06` criada (terracota único tom de `danger`) | `specs/RULES.md` | Baixo | Regra de auditoria visual/revisão manual, não lint automatizado — sem risco de regressão de código |
+| 5 | `secondary`/`secondaryForeground` recebem valor derivado (mesma família de `primary`), sem parte literal da paleta Prata | `packages/ui/src/tokens/colors.ts` | Nenhum | Confirmado por grep: nenhum componente de `packages/ui` consome `secondary` hoje — zero superfície de regressão visual |
+
+**Riscos a observar:**
+- `primary` em dark mode fica com chroma bem mais baixa (0.038 vs. 0.22 anterior) — fiel à paleta Prata validada (calibrada para composição de gradiente), mas pode parecer menos "vibrante" como cor de ação isolada (botão/link) em uso real; observar em revisão visual e ajustar em spec futura se necessário. **Resolvido em IMPACTO-043** (chroma reforçada para 0.11, decisão explícita do usuário).
+- `--surface`/`--on-surface*`/`--chart-*`/`--finance-outgoing` (tokens de `SPEC-20260721-002`, dashboard v2) não foram tocados — ficam temporariamente fora de alinhamento com a nova paleta até spec dedicada do dashboard os revisar. **Resolvido em IMPACTO-043**.
+- Nenhuma varredura de cor hardcoded fora do sistema de tokens foi feita nesta rodada — fora de escopo desta spec (ver "Fora de Escopo"). **Resolvido em IMPACTO-043**.
+
+---
+
+### IMPACTO-043 — Prata Fase 2: Paleta Categórica, Escala de Urgência e Varredura de Cor Hardcoded (SPEC-20260729-002, ADR-010) (2026-07-29)
+
+| Campo | Valor |
+|-------|-------|
+| **Spec** | SPEC-20260729-002 (approved) |
+| **Status** | Implementado — tokens, migração de componentes, governança e verificação (`tsc`/`vitest`/`pnpm build`) concluídos na mesma sessão |
+| **Risco geral** | Baixo (migração majoritariamente mecânica de classe Tailwind, sem mudança de lógica; dois tokens novos com racional de acessibilidade fundamentado por agente especializado) |
+
+| # | Mudança | Módulos afetados | Risco | Mitigação |
+|---|---------|-----------------|-------|-----------|
+| 1 | `--surface*`/`--on-surface*` realinhados à família Prata; `--primary` dark ganha chroma reforçada (0.038→0.11) | `apps/web/src/app/globals.css`, `packages/ui/src/tokens/colors.ts` | Baixo | Decisão explícita do usuário (chroma); `UpcomingCostsWidget` (único consumidor de `.glass-card`/`.kicker`) sem regressão de teste |
+| 2 | `--categorical-1..5` substitui `--chart-1..5`; util compartilhado `chart-colors.ts`; migração de 6 arquivos de gráfico/indicador | `FleetCharts.tsx`, `analytics/page.tsx`, `tco-breakdown-chart.tsx`, `fuel-trend-chart.tsx`, `vehicle-context-chip.tsx`, `sidebar.tsx` | Médio | Hues fundamentados em Okabe-Ito/ColorBrewer pelo agente `design-system` (distinguíveis sob deuteranopia/protanopia); `grep` confirmou zero consumidor órfão de `--chart-1..5` antes da remoção |
+| 3 | Escada de urgência colapsada de 5 para 4 níveis; novo par `--urgency-hot`/`-pastel`; `--finance-outgoing` realinhado | `apps/web/src/app/(app)/expenses/page.tsx`, `globals.css` | Baixo | Fundamentado em ISO 11064-4 pelo agente `design-system`; label numérico preserva a granularidade que a cor deixou de carregar sozinha |
+| 4 | Badges de status semântico (atividades/maintenance/fines/VehicleSpotlight) migrados 1:1; helper compartilhado para fines | `atividades/page.tsx`, `maintenance/page.tsx`, `fines/page.tsx`, `fines/[id]/page.tsx`, `apps/web/src/lib/fines/status-badge.ts`, `VehicleSpotlight.tsx` | Baixo | Mapeamento direto (mesma semântica, só troca de classe); nenhum teste com asserção de cor afetada |
+| 5 | Chrome estrutural e PWA migrados para tokens; `offline/page.tsx` passou a usar `Button` de `@nave/ui` | `vehicle-context-dialog.tsx`, `vehicle-context-sheet.tsx`, `vehicle-switcher-content.tsx`, `install-prompt-banner.tsx`, `ios-install-banner.tsx`, `connectivity-indicator.tsx`, `offline/page.tsx`, formulários "new" (hints de contexto), `register`/`recover-password`, `page.tsx`, `password-input.tsx` | Baixo | Migração mecânica; `grep` confirmou nenhuma asserção de teste hardcoded antes da edição |
+| 6 | `manifest.ts`/`layout.tsx` recalculados para hex Prata; comentário de exceção do `gold` corrigido (2 protótipos, não 1) | `manifest.ts`, `layout.tsx`, `packages/ui/src/tokens/colors.ts` | Nenhum | Hex-fonte já documentado em `SPEC-20260729-001`, sem reconversão |
+
+**Riscos a observar:**
+- `sidebar.tsx` (dot passivo) perde a distinção visual entre modo `single` e `multi` (ambos `categorical-4`) — aceito porque o dot é indicador passivo secundário; o chip do header continua diferenciando via borda tracejada. Ver `ADR-010`, "Dificulta".
+- Nenhuma revisão visual manual (screenshot) foi feita nesta rodada — validação ficou restrita a `tsc`/`vitest`/`pnpm build` e inspeção de código; recomenda-se conferência visual antes de considerar a paleta categórica definitiva.
+
+---
+
+### IMPACTO-044 — Fecho de Formulários: Input/Textarea/Checkbox/Switch e Migração de Consumidores (SPEC-20260729-003) (2026-07-30)
+
+| Campo | Valor |
+|-------|-------|
+| **Spec** | SPEC-20260729-003 (approved) |
+| **Status** | Implementado — componentes novos em `packages/ui`, migração de consumidores restantes e R-DS-09 registrada |
+| **Risco geral** | Baixo (extensão aditiva do design system + migração mecânica de campos nativos para componentes já testados) |
+
+| # | Mudança | Módulos afetados | Risco | Mitigação |
+|---|---------|-----------------|-------|-----------|
+| 1 | Componentes `Input`/`Textarea`/`Checkbox`/`Switch` adicionados a `packages/ui` com testes próprios | `packages/ui/src/components/*.tsx` + `*.test.tsx` | Baixo | Componentes novos, sem consumidor prévio quebrado; testes unitários incluídos no mesmo commit |
+| 2 | Migração de campos nativos (`<input>`/`<textarea>`/checkbox HTML) para os componentes de `@nave/ui` nas telas restantes | Telas de formulário listadas em `PLANO-MIGRACAO-CONSUMIDORES.md` Rodada 5 | Médio | Migração mecânica 1:1 de markup, sem mudança de validação/lógica; regra R-DS-09 registrada para travar regressão futura |
+| 3 | Nova regra R-DS-09 (uso obrigatório dos componentes de formulário) registrada em `RULES.md` | `specs/RULES.md` | Nenhum | Exceções documentadas explicitamente na própria regra (`dashboard/concept/*`, controles de forma customizada) |
+
+**Riscos a observar:**
+- Auditoria de teste (`specs/TEST_DECISIONS.md`) para a decisão sobre esta spec segue pendente de aprovação do Douglas.
+
+---
+
+### IMPACTO-045 — Padronização do Showcase Prata: Badge/Skeleton/Container/Tooltip (SPEC-20260730-001) (2026-07-30)
+
+| Campo | Valor |
+|-------|-------|
+| **Spec** | SPEC-20260730-001 (approved) |
+| **Status** | Implementado — componentes novos em `packages/ui`, showcase padronizado e R-DS-10 registrada |
+| **Risco geral** | Baixo (extensão aditiva do design system + padronização de markup ad hoc já existente) |
+
+| # | Mudança | Módulos afetados | Risco | Mitigação |
+|---|---------|-----------------|-------|-----------|
+| 1 | Componentes `Badge`/`Skeleton`/`Container`/`Tooltip` adicionados a `packages/ui` com testes próprios | `packages/ui/src/components/*.tsx` + `*.test.tsx` | Baixo | Componentes novos, testados no mesmo commit (inclusive `jest-axe` quando aplicável) |
+| 2 | Migração do showcase (`design-system/`) e telas consumidoras de markup ad hoc (`animate-pulse`, pills manuais, `title=` nativo) para os componentes reais | `apps/web/src/app/(app)/design-system/`, telas com badges/skeletons/tooltips pré-existentes | Médio | `PLANO-MIGRACAO-SHOWCASE-INFRA.md` documenta o checklist rodada a rodada; exceção documentada para indicadores de urgência que tingem linha/card inteiro (não pill isolado) |
+| 3 | Nova regra R-DS-10 registrada em `RULES.md` | `specs/RULES.md` | Nenhum | Exceção de `UpcomingCostsWidget`/`FleetAlertBar`/urgência de `expenses/page.tsx` documentada explicitamente na regra |
+
+**Riscos a observar:**
+- Auditoria de teste (`specs/TEST_DECISIONS.md`) para a decisão sobre esta spec segue pendente de aprovação do Douglas.
+
+---
+
 ## Legenda de Risco
 
 | Nível | Critério |

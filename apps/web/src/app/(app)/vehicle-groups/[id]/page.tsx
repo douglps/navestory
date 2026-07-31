@@ -4,6 +4,7 @@ import { updateGroupInputSchema } from "@nave/validators";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
+import { Alert, Button, Checkbox, Container, Input } from "@nave/ui";
 import { apiClient } from "@/lib/http/api-client";
 
 interface VehicleGroup {
@@ -118,56 +119,65 @@ export default function VehicleGroupDetailPage({
   }
 
   if (id === null || isLoading) return <main className="p-8">Carregando...</main>;
-  if (isError || !group) return <main className="p-8" role="alert">Grupo não encontrado.</main>;
+  if (isError || !group)
+    return (
+      <main className="p-8">
+        <Alert variant="error" description="Grupo não encontrado." />
+      </main>
+    );
 
   return (
-    <main className="mx-auto flex max-w-sm flex-col gap-4 p-8">
+    <Container size="sm">
       <h1 className="text-xl font-semibold">{group.name}</h1>
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-3">
         <label htmlFor="name">Nome</label>
-        <input id="name" value={name} onChange={(event) => setName(event.target.value)} />
+        <Input id="name" value={name} onChange={(event) => setName(event.target.value)} />
 
         <label htmlFor="color">Cor</label>
-        <input id="color" value={color} onChange={(event) => setColor(event.target.value)} />
+        <Input id="color" value={color} onChange={(event) => setColor(event.target.value)} />
 
-        {fieldError && <p role="alert">{fieldError}</p>}
-        {updateMutation.isError && <p role="alert">Não foi possível atualizar o grupo.</p>}
+        {fieldError && <Alert variant="error" description={fieldError} />}
+        {updateMutation.isError && (
+          <Alert variant="error" description="Não foi possível atualizar o grupo." />
+        )}
         {updateMutation.isSuccess && <p>Grupo atualizado.</p>}
 
-        <button type="submit" disabled={updateMutation.isPending}>
+        <Button type="submit" disabled={updateMutation.isPending}>
           {updateMutation.isPending ? "Salvando..." : "Salvar"}
-        </button>
+        </Button>
       </form>
 
       <fieldset className="flex flex-col gap-1">
         <legend>Veículos membros</legend>
         {vehicles?.map((vehicle) => (
           <label key={vehicle.id} className="flex items-center gap-2">
-            <input
-              type="checkbox"
+            <Checkbox
               checked={selectedVehicleIds.includes(vehicle.id)}
               onChange={() => toggleVehicle(vehicle.id)}
             />
             {vehicle.make} {vehicle.model} — {vehicle.plate}
           </label>
         ))}
-        <button
+        <Button
           type="button"
+          variant="outline"
           onClick={() => setMembersMutation.mutate()}
           disabled={setMembersMutation.isPending}
         >
           {setMembersMutation.isPending ? "Salvando membros..." : "Salvar membros"}
-        </button>
+        </Button>
         {setMembersMutation.isError && (
-          <p role="alert">Não foi possível atualizar os membros do grupo.</p>
+          <Alert variant="error" description="Não foi possível atualizar os membros do grupo." />
         )}
       </fieldset>
 
-      <button type="button" onClick={handleDelete} disabled={deleteMutation.isPending}>
+      <Button type="button" variant="destructive" onClick={handleDelete} disabled={deleteMutation.isPending}>
         {deleteMutation.isPending ? "Removendo..." : "Remover grupo"}
-      </button>
-      {deleteMutation.isError && <p role="alert">Não foi possível remover o grupo.</p>}
-    </main>
+      </Button>
+      {deleteMutation.isError && (
+        <Alert variant="error" description="Não foi possível remover o grupo." />
+      )}
+    </Container>
   );
 }

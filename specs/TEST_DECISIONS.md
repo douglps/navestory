@@ -36,6 +36,16 @@
 
 ---
 
+### SPEC-20260730-002 — US-05 (RF-11..RF-14): Ícone Sempre Visível, Rota Ativa, Remoção de Marca e Largura Calculada
+
+**Status:** aprovado
+**Decisão:** requer testes (parcial)
+**Justificativa:** RF-12 (destaque de rota ativa) é lógica comportamental verificável — comparação de `pathname` com `item.href` determinando classe/`aria-current` é exatamente o tipo de branch que um teste de componente cobre com precisão. RF-11 (ícone sempre visível) é dispensado de teste dedicado por ser render JSX simples, já coberto indiretamente pelo teste de RF-12 que renderiza a sidebar. RF-13 (remoção do texto "Nave") é uma remoção de elemento, sem lógica — validado por revisão visual/build. RF-14 (largura via `ResizeObserver`/`scrollWidth`) não é testável com significado em `jsdom` (layout real não é computado no ambiente de teste — `scrollWidth` retorna 0); validado por revisão visual manual nos breakpoints, mesmo critério já usado para RF-08/RF-09 desta spec.
+**Escopo (se aprovado):** component (RF-12: destaque de rota ativa)
+**Decidido em:** 2026-07-31
+
+---
+
 ### SPEC-20260730-001 — Score de Saúde de Veículo e Frota
 
 **Status:** aprovado

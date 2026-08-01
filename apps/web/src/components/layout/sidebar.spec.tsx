@@ -1,11 +1,19 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { render, type RenderResult, screen } from "@testing-library/react";
+import { fireEvent, render, type RenderResult, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { act } from "react";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { logout } from "@/lib/auth/logout";
 import { useDashboardStore } from "@/lib/stores/use-dashboard-store";
 import { useUIStore } from "@/lib/stores/ui-store";
 import { Sidebar } from "./sidebar";
+
+vi.mock("@/lib/auth/logout", () => ({ logout: vi.fn().mockResolvedValue(undefined) }));
+
+let mockPathname = "/dashboard";
+vi.mock("next/navigation", () => ({
+  usePathname: () => mockPathname,
+}));
 
 function renderSidebar(): RenderResult {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -110,6 +118,108 @@ describe("Sidebar", () => {
       await user.keyboard("{Escape}");
 
       expect(useUIStore.getState().isMobileNavOpen).toBe(false);
+    });
+  });
+
+  describe("SPEC-20260730-002 — hold-to-confirm logout (RF-01, RF-02, RF-03, RNF-03)", () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+      vi.mocked(logout).mockClear();
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it("RF-03: não chama logout() se o botão for solto antes de 1.000 ms", () => {
+      renderSidebar();
+      const button = screen.getByRole("button", { name: "Segure para sair" });
+
+      fireEvent.mouseDown(button);
+      vi.advanceTimersByTime(500);
+      fireEvent.mouseUp(button);
+      vi.advanceTimersByTime(600);
+
+      expect(logout).not.toHaveBeenCalled();
+    });
+
+    it("RF-01: chama logout() somente após segurar por 1.000 ms completos", () => {
+      renderSidebar();
+      const button = screen.getByRole("button", { name: "Segure para sair" });
+
+      fireEvent.mouseDown(button);
+      vi.advanceTimersByTime(999);
+      expect(logout).not.toHaveBeenCalled();
+
+      vi.advanceTimersByTime(1);
+      expect(logout).toHaveBeenCalledTimes(1);
+    });
+
+    it("RF-03: onMouseLeave cancela o hold assim como onMouseUp", () => {
+      renderSidebar();
+      const button = screen.getByRole("button", { name: "Segure para sair" });
+
+      fireEvent.mouseDown(button);
+      vi.advanceTimersByTime(700);
+      fireEvent.mouseLeave(button);
+      vi.advanceTimersByTime(1000);
+
+      expect(logout).not.toHaveBeenCalled();
+    });
+
+    it("RF-02, RNF-03: aria-busy reflete o progresso do hold e reseta ao cancelar", () => {
+      renderSidebar();
+      const button = screen.getByRole("button", { name: "Segure para sair" });
+
+      expect(button).toHaveAttribute("aria-busy", "false");
+
+      fireEvent.mouseDown(button);
+      expect(button).toHaveAttribute("aria-busy", "true");
+
+      fireEvent.mouseUp(button);
+      expect(button).toHaveAttribute("aria-busy", "false");
+    });
+  });
+
+  describe("SPEC-20260730-002 — sidebar expandida (RF-11, RF-12, RF-13)", () => {
+    afterEach(() => {
+      mockPathname = "/dashboard";
+    });
+
+    it("RF-11: exibe o ícone junto ao label no estado expandido", () => {
+      renderSidebar();
+
+      const link = screen.getByRole("link", { name: "Veículos" });
+      expect(link.querySelector("svg")).toBeInTheDocument();
+    });
+
+    it("RF-12: destaca a rota ativa com aria-current=page", () => {
+      mockPathname = "/vehicles";
+      renderSidebar();
+
+      expect(screen.getByRole("link", { name: "Veículos" })).toHaveAttribute(
+        "aria-current",
+        "page",
+      );
+      expect(screen.getByRole("link", { name: "Dashboard" })).not.toHaveAttribute(
+        "aria-current",
+      );
+    });
+
+    it("RF-12: destaca o item pai quando a rota atual é uma sub-rota dele", () => {
+      mockPathname = "/settings/account/security";
+      renderSidebar();
+
+      expect(screen.getByRole("link", { name: "Minha conta" })).toHaveAttribute(
+        "aria-current",
+        "page",
+      );
+    });
+
+    it("RF-13: não exibe mais o texto de marca 'Nave'", () => {
+      renderSidebar();
+
+      expect(screen.queryByText("Nave")).not.toBeInTheDocument();
     });
   });
 });

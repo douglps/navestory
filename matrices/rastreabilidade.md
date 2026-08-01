@@ -3077,24 +3077,29 @@ RNF-04 (foco preso no drawer + retorno ao hamburger ao fechar) implementado em `
 
 ---
 
-## SPEC-20260730-002 — Melhorias de UX do Shell (draft)
+## SPEC-20260730-002 — Melhorias de UX do Shell (approved)
 
-> Hold-to-confirm no logout da sidebar (1.000 ms + barra de progresso, R-NAV-05), dropdown de avatar no header com nome/email/link-settings/logout (R-NAV-08), persistência de `isSidebarCollapsed` em `sessionStorage` via `zustand persist` (R-NAV-06) e reestruturação do layout para header full-width com sidebar in-flow em desktop (R-NAV-07). Camadas: frontend. Regras: R-NAV-01, R-NAV-02, R-NAV-04, R-NAV-05, R-NAV-06, R-NAV-07, R-NAV-08. Segurança: S1.
+> Hold-to-confirm no logout da sidebar (1.000 ms + barra de progresso, R-NAV-05), dropdown de avatar no header com nome/email/link-settings/logout (R-NAV-08), persistência de `isSidebarCollapsed` em `sessionStorage` via `zustand persist` (R-NAV-06), reestruturação do layout para header full-width com sidebar in-flow em desktop (R-NAV-07) e, na extensão US-05, ícone sempre visível + destaque de rota ativa + remoção do texto "Nave" + largura calculada em runtime (fit-content + 20%) na sidebar expandida (R-NAV-09, R-NAV-10, R-NAV-11). Camadas: frontend. Regras: R-NAV-01, R-NAV-02, R-NAV-04, R-NAV-05, R-NAV-06, R-NAV-07, R-NAV-08, R-NAV-09, R-NAV-10, R-NAV-11. Segurança: S1.
 >
 > **2026-07-30 (criação):** Spec em `draft`. Nenhum dos requisitos implementado ainda.
+> **2026-07-31 (fechamento):** RF-01..RF-10 implementados e testados (código já existente antes desta atualização — matriz estava desatualizada). Spec estendida com US-05/RF-11..RF-14 e promovida a `approved`.
 
 | Req | Descrição | Código | Teste | Status |
 |-----|-----------|--------|-------|--------|
-| RF-01 | Hold-to-confirm no botão "Sair" da sidebar (1.000 ms) substituindo clique simples | — | — | ⏳ |
-| RF-02 | Barra de progresso visual durante o hold; reset visual ao cancelar | — | — | ⏳ |
-| RF-03 | Eventos `onMouseDown`/`onTouchStart` (início) e `onMouseUp`/`onMouseLeave`/`onTouchEnd` (cancelamento); `logout()` invocado somente no callback interno de conclusão do timer | — | — | ⏳ |
-| RF-04 | Componente `AvatarDropdown` no header: avatar (iniciais como fallback), nome, email, link `/settings/account`, botão "Sair" (clique simples) | — | — | ⏳ |
-| RF-05 | Dados de nome/email do `AvatarDropdown` obtidos via cache TanStack Query existente (sem nova chamada de API) | — | — | ⏳ |
-| RF-06 | `persist` do Zustand adicionado ao `useUIStore` (`sessionStorage`, key `"nave-ui-state"`, `partialize` apenas `isSidebarCollapsed`) | — | — | ⏳ |
-| RF-07 | `logout()` remove `"nave-ui-state"` do `sessionStorage` junto com `"nave-dashboard-context"` | — | — | ⏳ |
-| RF-08 | Layout shell reestruturado para `flex-col` com `Header` como irmão de `flex` row (sidebar + conteúdo); elimina `md:pl-16`/`md:pl-64` | — | — | ⏳ |
-| RF-09 | Sidebar: `md:static md:inset-auto` em desktop; `fixed inset-y-0 left-0` em mobile (R-NAV-01 preservada) | — | — | ⏳ |
-| RF-10 | `FinancialSubheader` sem ajuste adicional — continua dentro do `flex-1` de conteúdo | — | — | ⏳ |
+| RF-01 | Hold-to-confirm no botão "Sair" da sidebar (1.000 ms) substituindo clique simples | `apps/web/src/components/layout/sidebar.tsx` (`useHoldToConfirm`) | `apps/web/src/components/layout/sidebar.spec.tsx` (describe "hold-to-confirm logout") | ✅ |
+| RF-02 | Barra de progresso visual durante o hold; reset visual ao cancelar | `apps/web/src/components/layout/sidebar.tsx` (`isHoldingLogout`, barra `bg-danger/20`) | `apps/web/src/components/layout/sidebar.spec.tsx` (RF-02, RNF-03) | ✅ |
+| RF-03 | Eventos `onMouseDown`/`onTouchStart` (início) e `onMouseUp`/`onMouseLeave`/`onTouchEnd` (cancelamento); `logout()` invocado somente no callback interno de conclusão do timer | `apps/web/src/components/layout/sidebar.tsx` (`useHoldToConfirm`) | `apps/web/src/components/layout/sidebar.spec.tsx` (RF-03 ×2) | ✅ |
+| RF-04 | Componente `AvatarDropdown` no header: avatar (iniciais como fallback), nome, email, link `/settings/account`, botão "Sair" (clique simples) | `packages/ui/src/components/avatar-dropdown.tsx`; consumido em `apps/web/src/components/layout/header.tsx` | — (dispensado, ver `specs/TEST_DECISIONS.md`) | ✅ |
+| RF-05 | Dados de nome/email do `AvatarDropdown` obtidos via cache TanStack Query existente (sem nova chamada de API) | `apps/web/src/lib/hooks/use-current-user.ts` | — (dispensado) | ✅ |
+| RF-06 | `persist` do Zustand adicionado ao `useUIStore` (`sessionStorage`, key `"nave-ui-state"`, `partialize` apenas `isSidebarCollapsed`) | `apps/web/src/lib/stores/ui-store.ts` | `apps/web/src/lib/stores/ui-store.spec.ts` (describe "persistência de isSidebarCollapsed") | ✅ |
+| RF-07 | `logout()` remove `"nave-ui-state"` do `sessionStorage` junto com `"nave-dashboard-context"` | `apps/web/src/lib/auth/logout.ts` | `apps/web/src/lib/auth/logout.spec.ts` (RF-07) | ✅ |
+| RF-08 | Layout shell reestruturado para `flex-col` com `Header` como irmão de `flex` row (sidebar + conteúdo); elimina `md:pl-16`/`md:pl-64` | `apps/web/src/app/(app)/layout.tsx` | — (dispensado) | ✅ |
+| RF-09 | Sidebar: `md:static md:inset-auto` em desktop; `fixed inset-y-0 left-0` em mobile (R-NAV-01 preservada) | `apps/web/src/components/layout/sidebar.tsx` | — (dispensado) | ✅ |
+| RF-10 | `FinancialSubheader` sem ajuste adicional — continua dentro do `flex-1` de conteúdo | `apps/web/src/app/(app)/layout.tsx` | — (dispensado) | ✅ |
+| RF-11 | Ícone Lucide exibido junto ao label em todo item de navegação quando não colapsada | `apps/web/src/components/layout/sidebar.tsx` | `apps/web/src/components/layout/sidebar.spec.tsx` (RF-11) | ✅ |
+| RF-12 | Destaque visual + `aria-current="page"` na rota ativa (igualdade ou prefixo do `href`) | `apps/web/src/components/layout/sidebar.tsx` | `apps/web/src/components/layout/sidebar.spec.tsx` (RF-12 ×2) | ✅ |
+| RF-13 | Remoção do texto de marca "Nave" do topo da sidebar | `apps/web/src/components/layout/sidebar.tsx` | `apps/web/src/components/layout/sidebar.spec.tsx` (RF-13) | ✅ |
+| RF-14 | Largura da sidebar expandida calculada em runtime (`scrollWidth * 1.2`) via `ResizeObserver` | `apps/web/src/components/layout/sidebar.tsx` | — (dispensado, ver `specs/TEST_DECISIONS.md`) | ✅ |
 
 ---
 

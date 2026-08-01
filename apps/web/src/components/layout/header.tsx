@@ -2,11 +2,13 @@
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useTheme } from "next-themes";
-import { ThemeToggle } from "@nave/ui";
+import { AvatarDropdown, ThemeToggle } from "@nave/ui";
 import { VehicleContextChip } from "./vehicle-context-chip";
 import { CommandPaletteTrigger } from "./command-palette-trigger";
 import { MOBILE_NAV_DRAWER_ID } from "./sidebar";
 import { ConnectivityIndicator } from "@/components/pwa/connectivity-indicator";
+import { logout } from "@/lib/auth/logout";
+import { useCurrentUser } from "@/lib/hooks/use-current-user";
 import { useUIStore } from "@/lib/stores/ui-store";
 
 /**
@@ -32,6 +34,9 @@ export function Header(): ReactNode {
   const toggleMobileNav = useUIStore((state) => state.toggleMobileNav);
   const hamburgerRef = useRef<HTMLButtonElement>(null);
   const wasOpenRef = useRef(isMobileNavOpen);
+  // @spec SPEC-20260730-002 RF-04, RF-05 — sem chamada de API exclusiva: reaproveita o cache
+  // de ["users", "me"] já usado por settings/account/page.tsx.
+  const { data: profile } = useCurrentUser();
 
   // RNF-04: ao fechar o drawer (por qualquer via — backdrop, Esc, navegação), o foco retorna
   // ao botão que o abriu.
@@ -68,16 +73,25 @@ export function Header(): ReactNode {
         <VehicleContextChip />
         <CommandPaletteTrigger />
       </div>
-      <div className="ml-auto hidden items-center gap-1 md:flex">
-        {/* @spec SPEC-20260712-001 RF-13 */}
-        <ConnectivityIndicator />
-        {mounted ? (
-          <ThemeToggle
-            theme={resolvedTheme === "dark" ? "dark" : "light"}
-            onToggle={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
-          />
+      <div className="ml-auto flex items-center gap-1">
+        <div className="hidden items-center gap-1 md:flex">
+          {/* @spec SPEC-20260712-001 RF-13 */}
+          <ConnectivityIndicator />
+          {mounted ? (
+            <ThemeToggle
+              theme={resolvedTheme === "dark" ? "dark" : "light"}
+              onToggle={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
+            />
+          ) : (
+            <span aria-hidden="true" className="h-9 w-9 rounded-md" />
+          )}
+        </div>
+        {/* @spec SPEC-20260730-002 RF-04 — visível em todos os breakpoints: era o único ponto
+            de identidade/logout ausente do header (sidebar fica atrás do drawer em mobile). */}
+        {profile?.name ? (
+          <AvatarDropdown name={profile.name} email={profile.email} onLogout={() => void logout()} />
         ) : (
-          <span aria-hidden="true" className="h-9 w-9 rounded-md" />
+          <span aria-hidden="true" className="h-9 w-9 rounded-full" />
         )}
       </div>
     </header>

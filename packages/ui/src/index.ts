@@ -69,6 +69,7 @@ export {
   type VehicleHealthScoreProps,
 } from "./components/vehicle-health-score";
 export { ThemeToggle, type ThemeToggleProps } from "./components/theme-toggle";
+export { AvatarDropdown, type AvatarDropdownProps } from "./components/avatar-dropdown";
 export {
   CommandPalette,
   type CommandPaletteProps,

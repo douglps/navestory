@@ -43,4 +43,19 @@ describe("logout", () => {
 
     expect(sessionStorage.getItem("nave-dashboard-context")).toBeNull();
   });
+
+  it("SPEC-20260730-002 RF-07: remove a chave nave-ui-state do sessionStorage", async () => {
+    sessionStorage.setItem(
+      "nave-ui-state",
+      JSON.stringify({ state: { isSidebarCollapsed: true }, version: 0 }),
+    );
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({ ok: true, status: 204, json: () => Promise.resolve({}) }),
+    );
+
+    await logout();
+
+    expect(sessionStorage.getItem("nave-ui-state")).toBeNull();
+  });
 });

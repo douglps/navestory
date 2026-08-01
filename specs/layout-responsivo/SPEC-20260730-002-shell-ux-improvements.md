@@ -1,10 +1,10 @@
 ---
 id: SPEC-20260730-002
-title: "Melhorias de UX do Shell — Hold-to-Confirm Logout, Avatar Dropdown e Sidebar Persistente com Header Full-Width"
-status: draft
+title: "Melhorias de UX do Shell — Hold-to-Confirm Logout, Avatar Dropdown, Sidebar Persistente com Header Full-Width e Sidebar Expandida com Ícones e Rota Ativa"
+status: approved
 date: 2026-07-30
 author: Douglas Lopes (lps.doug@protonmail.com)
-rules: [R-NAV-01, R-NAV-02, R-NAV-04, R-NAV-05, R-NAV-06, R-NAV-07, R-NAV-08]
+rules: [R-NAV-01, R-NAV-02, R-NAV-04, R-NAV-05, R-NAV-06, R-NAV-07, R-NAV-08, R-NAV-09, R-NAV-10, R-NAV-11]
 security: [S1]
 camadas: [frontend]
 ---
@@ -37,6 +37,9 @@ O `Header` fica dentro da coluna de conteúdo. Em desktop, ele começa na borda 
 
 O projeto de referência (`C:\Dev\Antigravity\Nave-SaaS-main`) resolve os três pontos: hold-to-confirm no logout da sidebar, dropdown de avatar no header e shell com `flex-col` + sidebar in-flow em desktop.
 
+**4. Sidebar expandida sem ícone, sem destaque de rota ativa, com marca duplicada e largura arbitrária**
+Após a correção de consistência de iconografia (glifos Unicode → Lucide, ver changelog desta spec), a sidebar só exibe o ícone Lucide quando **colapsada**; no estado expandido volta a mostrar apenas o label em texto, perdendo o reforço visual do ícone. Além disso, nenhum item de navegação indica visualmente qual rota está ativa — `NAV_ITEMS` não compara `item.href` com `pathname`. O cabeçalho da sidebar ainda exibe o texto "Nave" (`<span>Nave</span>`), duplicando a identidade de marca que já está disponível no header via `AvatarDropdown`/logo. Por fim, a largura expandida é um valor Tailwind fixo (`md:w-64` = 256px) escolhido arbitrariamente, sem relação com a largura real necessária para caber o conteúdo (ícone + label mais largo).
+
 ---
 
 ## Objetivo
@@ -46,6 +49,7 @@ Ao final da implementação:
 2. O header exibe um dropdown de avatar com nome/email do usuário, link para configurações e logout por clique simples.
 3. O colapso da sidebar sobrevive a reload e nova aba (persistência em `sessionStorage`).
 4. O `Header` ocupa 100% da largura da viewport em desktop, independente do estado colapsado/expandido da sidebar.
+5. A sidebar expandida exibe ícone Lucide junto ao label de cada item de navegação (não apenas o label), destaca visualmente a rota atualmente ativa, deixa de exibir o texto de marca "Nave" e tem sua largura calculada em runtime como a largura intrínseca do conteúdo + 20% (não mais um valor Tailwind fixo arbitrário).
 
 ---
 
@@ -85,6 +89,16 @@ Ao final da implementação:
 - **Dado que** estou em desktop com a sidebar colapsada, **quando** visualizo o header, **então** o header permanece com a mesma largura (100% da viewport) — não "pula" nem sofre reflow ao colapsar/expandir.
 - **Dado que** estou em mobile, **quando** visualizo o header, **então** o comportamento atual é preservado (hamburger, sem regressão).
 
+### US-05 — Sidebar expandida com ícone + rota ativa destacada, sem marca duplicada, largura ajustada ao conteúdo
+
+**Como** usuário navegando pelo produto, **quero** ver o ícone de cada seção mesmo com a sidebar expandida e identificar de imediato em qual rota estou, **para** escanear o menu mais rápido e não depender só de leitura de texto.
+
+- **Dado que** a sidebar está expandida (desktop, não colapsada), **quando** vejo a lista de navegação, **então** cada item exibe o ícone Lucide (24px, stroke 1.75) ao lado do label — não apenas o label como hoje.
+- **Dado que** estou na rota `/vehicles`, **quando** vejo o item "Veículos" na sidebar, **então** ele recebe destaque visual distinto dos demais itens (cor/peso de fonte/plano de fundo) e `aria-current="page"`.
+- **Dado que** estou em uma sub-rota de um item de navegação (ex: `/settings/account/security` quando o item é `/settings/account`), **quando** vejo a sidebar, **então** o item pai correspondente ainda é destacado como ativo (comparação por prefixo, não só igualdade exata).
+- **Dado que** vejo o topo da sidebar, **quando** ela está expandida ou colapsada, **então** o texto "Nave" não é mais exibido ali (a marca já está representada no header).
+- **Dado que** a sidebar está expandida, **quando** meço sua largura, **então** ela corresponde à largura intrínseca do conteúdo de navegação (ícone + label mais largo, considerando padding interno) acrescida de 20% — não um valor fixo arbitrário independente do conteúdo real.
+
 ---
 
 ## Requisitos Funcionais
@@ -101,6 +115,10 @@ Ao final da implementação:
 | RF-08 | Reestruturar `apps/web/src/app/(app)/layout.tsx` para wrapper `flex-col`: `Header` como irmão de uma row `flex` contendo sidebar e conteúdo (R-NAV-07); eliminar `md:pl-16`/`md:pl-64` da coluna de conteúdo | Alta | US-04 |
 | RF-09 | Na reestruturação do layout, a sidebar no desktop (≥ md) deixa de ser `fixed inset-y-0 left-0` e passa a ser in-flow (`md:static md:translate-x-0`); em mobile mantém `fixed inset-y-0 left-0` para o comportamento de drawer (R-NAV-01 preservada) | Alta | US-04 |
 | RF-10 | O `FinancialSubheader` não exige ajuste de largura/posicionamento — continua dentro do `flex-1` de conteúdo após a reestruturação | Baixa | US-04 |
+| RF-11 | Cada `NavItem` passa a renderizar seu ícone Lucide (já mapeado por item na correção de iconografia) simultaneamente ao label sempre que a sidebar não está colapsada (`!effectiveCollapsed`); no estado colapsado o comportamento atual (só ícone) é preservado (R-NAV-09) | Alta | US-05 |
+| RF-12 | O componente compara `pathname` (via `usePathname()`, já importado) com `item.href` de cada `NavItem`: rota ativa quando `pathname === item.href` ou `pathname.startsWith(item.href + "/")`; o item ativo recebe classe de destaque (cor de texto/plano de fundo distintos do hover) e `aria-current="page"` (R-NAV-09) | Alta | US-05 |
+| RF-13 | Remover o `<span>Nave</span>` e a estrutura `flex items-center justify-between` que o continha no topo da `<nav>`; o botão de colapsar/expandir permanece, agora sozinho nesse cabeçalho (R-NAV-11) | Média | US-05 |
+| RF-14 | A largura da sidebar expandida (`md:w-64` fixo hoje) é substituída por um valor calculado em runtime: medir a largura intrínseca (`scrollWidth`) do conteúdo de navegação via `ref` + `ResizeObserver`, multiplicar por 1.2, e aplicar como `style={{ width }}` inline sobre a `<nav>` quando não colapsada; usar `md:w-64` apenas como valor de fallback antes da primeira medição (evita layout de largura 0) (R-NAV-10) | Alta | US-05 |
 
 ---
 
@@ -124,6 +142,8 @@ Ao final da implementação:
 - Não inclui: notificações ou badge de contagem no avatar dropdown.
 - Não inclui: persistência do estado da sidebar em `localStorage` (mantido em `sessionStorage` conforme convenção do projeto; tradeoff documentado em Notas Técnicas).
 - Não inclui: hold-to-confirm no logout do avatar dropdown do header (confirmação simples é suficiente para esse ponto de acesso mais explícito).
+- Não inclui: recálculo de largura em resposta a mudança de zoom/font-size do usuário além do que o `ResizeObserver` já cobre nativamente.
+- Não inclui: layout de marca alternativo no topo da sidebar (ex: logo/ícone no lugar do texto "Nave") — o requisito é apenas remover o texto, não substituí-lo por outro elemento de marca.
 
 ---
 
@@ -173,10 +193,31 @@ A sidebar no `sidebar.tsx` precisa de condicionamento por breakpoint: `fixed ins
 
 O frontend já deve ter acesso ao `profile` do usuário autenticado via TanStack Query (cache de `/users/me` ou equivalente). O componente `AvatarDropdown` deve consumir esse cache sem disparar nova chamada. Iniciais calculadas a partir do `name`: primeiras letras de cada token separado por espaço, limitado a 2 caracteres (ex: "Douglas Lopes" → "DL").
 
+### Largura da sidebar como fit-content + 20% (RF-14)
+
+CSS puro não resolve isso com precisão: `width: fit-content` funciona para dimensionar ao conteúdo, mas não existe operação nativa de "multiplicar uma largura intrínseca por 1.2" — `calc()` exige operandos que sejam `<length-percentage>`, e palavras-chave de dimensionamento como `fit-content`/`max-content` não são operandos válidos dentro de `calc()`. A solução é medir em runtime:
+
+```tsx
+const contentRef = useRef<HTMLUListElement>(null);
+const [expandedWidth, setExpandedWidth] = useState<number | null>(null);
+
+useEffect(() => {
+  const el = contentRef.current;
+  if (!el) return;
+  const measure = () => setExpandedWidth(el.scrollWidth * 1.2);
+  measure();
+  const observer = new ResizeObserver(measure);
+  observer.observe(el);
+  return () => observer.disconnect();
+}, []);
+```
+
+O `scrollWidth` é medido sobre um elemento cujos itens **não** são forçados a `w-full` (para refletir a largura real do conteúdo, não a largura do container pai). O valor é aplicado via `style={{ width: expandedWidth ?? undefined }}` na `<nav>`, com `md:w-64` como fallback de classe (usado enquanto `expandedWidth` é `null`, isto é, antes do primeiro layout). Este cálculo só se aplica ao estado expandido — colapsado continua com `md:w-16` fixo (ícone apenas), sem relação com este requisito.
+
 ---
 
 ## Changelog (pós-aprovação)
 
 | Data | O que mudou | Por quê |
 |------|-------------|---------|
-| | | |
+| 2026-07-31 | Adicionada US-05 (RF-11..RF-14, R-NAV-09/10/11): ícone sempre visível na sidebar expandida, destaque de rota ativa, remoção do texto "Nave" e largura calculada em runtime (fit-content + 20%). Status alterado para `approved`. | Pedido direto de Douglas após revisão da iconografia da sidebar (correção prévia trocou glifos Unicode por Lucide, mas só no estado colapsado) — extensão da mesma spec de UX do shell por ser o mesmo componente/feature, ainda em `draft` no momento do pedido. |

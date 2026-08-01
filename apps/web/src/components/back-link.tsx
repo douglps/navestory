@@ -15,7 +15,11 @@ interface BackLinkProps {
  * Sem JS, funciona como um `<Link>` estático para `fallback`. Com JS, tenta `router.back()`
  * quando há histórico de navegação na aba atual.
  */
-export function BackLink({ fallback, label = "Voltar", className }: BackLinkProps): ReactNode {
+export function BackLink({
+  fallback,
+  label = "Voltar",
+  className,
+}: BackLinkProps): ReactNode {
   const router = useRouter();
 
   function handleClick(event: MouseEvent<HTMLAnchorElement>): void {

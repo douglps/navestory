@@ -1,6 +1,6 @@
 "use client";
 
-import { createOdometerCycleInputSchema } from "@nave/validators";
+import { createOdometerCycleInputSchema } from "@navestory/validators";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import {
@@ -16,7 +16,7 @@ import {
   TableHeader,
   TableRow,
   Textarea,
-} from "@nave/ui";
+} from "@navestory/ui";
 import { apiClient } from "@/lib/http/api-client";
 
 interface OdometerCycle {
@@ -43,9 +43,14 @@ export default function OdometerCyclesPage({
     void params.then((resolved) => setVehicleId(resolved.vehicleId));
   }, [params]);
 
-  const { data: cycles, isLoading, isError } = useQuery({
+  const {
+    data: cycles,
+    isLoading,
+    isError,
+  } = useQuery({
     queryKey: ["odometer-cycles", vehicleId],
-    queryFn: () => apiClient<OdometerCycle[]>(`/vehicles/${vehicleId}/odometer-cycles`),
+    queryFn: () =>
+      apiClient<OdometerCycle[]>(`/vehicles/${vehicleId}/odometer-cycles`),
     enabled: vehicleId !== null,
     retry: false,
   });
@@ -62,7 +67,9 @@ export default function OdometerCyclesPage({
         body: input,
       }),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ["odometer-cycles", vehicleId] });
+      void queryClient.invalidateQueries({
+        queryKey: ["odometer-cycles", vehicleId],
+      });
       setReason("");
       setStartingValue("0");
       setIsModalOpen(false);
@@ -85,11 +92,15 @@ export default function OdometerCyclesPage({
     mutation.mutate(result.data);
   }
 
-  if (vehicleId === null || isLoading) return <main className="p-8">Carregando...</main>;
+  if (vehicleId === null || isLoading)
+    return <main className="p-8">Carregando...</main>;
   if (isError)
     return (
       <main className="p-8">
-        <Alert variant="error" description="Não foi possível carregar os ciclos de odômetro." />
+        <Alert
+          variant="error"
+          description="Não foi possível carregar os ciclos de odômetro."
+        />
       </main>
     );
 
@@ -97,7 +108,11 @@ export default function OdometerCyclesPage({
     <Container size="2xl">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold">Ciclos de odômetro</h1>
-        <Button type="button" variant="outline" onClick={() => setIsModalOpen(true)}>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => setIsModalOpen(true)}
+        >
           Reiniciar odômetro
         </Button>
       </div>
@@ -124,7 +139,9 @@ export default function OdometerCyclesPage({
             {cycles.map((cycle, index) => (
               <TableRow key={cycle.id} striped={index % 2 === 1}>
                 <TableCell>{cycle.cycle_number}</TableCell>
-                <TableCell>{new Date(cycle.started_at).toLocaleDateString("pt-BR")}</TableCell>
+                <TableCell>
+                  {new Date(cycle.started_at).toLocaleDateString("pt-BR")}
+                </TableCell>
                 <TableCell>{cycle.starting_value}</TableCell>
                 <TableCell>{cycle.previous_cycle_max ?? "—"}</TableCell>
                 <TableCell>{cycle.reason}</TableCell>
@@ -135,7 +152,11 @@ export default function OdometerCyclesPage({
       )}
 
       {isModalOpen && (
-        <form onSubmit={handleSubmit} className="flex flex-col gap-3" role="dialog">
+        <form
+          onSubmit={handleSubmit}
+          className="flex flex-col gap-3"
+          role="dialog"
+        >
           <label htmlFor="starting_value">Valor inicial (km)</label>
           <Input
             id="starting_value"
@@ -155,14 +176,21 @@ export default function OdometerCyclesPage({
 
           {fieldError && <Alert variant="error" description={fieldError} />}
           {mutation.isError && (
-            <Alert variant="error" description="Não foi possível registrar o novo ciclo." />
+            <Alert
+              variant="error"
+              description="Não foi possível registrar o novo ciclo."
+            />
           )}
 
           <div className="flex gap-2">
             <Button type="submit" disabled={mutation.isPending}>
               {mutation.isPending ? "Salvando..." : "Confirmar"}
             </Button>
-            <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setIsModalOpen(false)}
+            >
               Cancelar
             </Button>
           </div>

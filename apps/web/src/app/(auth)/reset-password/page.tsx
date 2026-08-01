@@ -1,7 +1,7 @@
 "use client";
 
-import { passwordSchema } from "@nave/validators";
-import { Alert, Button, Container } from "@nave/ui";
+import { passwordSchema } from "@navestory/validators";
+import { Alert, Button, Container } from "@navestory/ui";
 import { useMutation } from "@tanstack/react-query";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState, type FormEvent, type ReactNode } from "react";
@@ -74,7 +74,10 @@ function ResetPasswordForm(): ReactNode {
           {fieldError && <Alert variant="error" description={fieldError} />}
 
           {mutation.isError && (
-            <Alert variant="error" description="Link de redefinição inválido ou expirado." />
+            <Alert
+              variant="error"
+              description="Link de redefinição inválido ou expirado."
+            />
           )}
 
           <Button type="submit" disabled={mutation.isPending}>

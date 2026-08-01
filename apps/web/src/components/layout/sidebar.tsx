@@ -2,7 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import {
   Car,
   FolderTree,
@@ -16,10 +22,13 @@ import {
   Wrench,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import { Tooltip } from "@nave/ui";
+import { Tooltip } from "@navestory/ui";
 import { logout } from "@/lib/auth/logout";
 import { useMediaQuery } from "@/lib/hooks/use-media-query";
-import { useDashboardStore, type SelectionMode } from "@/lib/stores/use-dashboard-store";
+import {
+  useDashboardStore,
+  type SelectionMode,
+} from "@/lib/stores/use-dashboard-store";
 import { useUIStore } from "@/lib/stores/ui-store";
 
 // @spec SPEC-20260730-002 RF-01, RF-02, RF-03
@@ -126,13 +135,17 @@ const FOCUSABLE_SELECTOR =
  * (@radix-ui/react-focus-scope só está presente como transitiva do Dialog).
  * @spec SPEC-20260722-003 RF-08
  */
-function useFocusTrap(active: boolean, containerRef: React.RefObject<HTMLElement | null>): void {
+function useFocusTrap(
+  active: boolean,
+  containerRef: React.RefObject<HTMLElement | null>,
+): void {
   useEffect(() => {
     if (!active) return;
     const container = containerRef.current;
     if (!container) return;
 
-    const focusable = container.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR);
+    const focusable =
+      container.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR);
     const first = focusable[0];
     const last = focusable[focusable.length - 1];
     first?.focus();
@@ -161,7 +174,9 @@ function useFocusTrap(active: boolean, containerRef: React.RefObject<HTMLElement
 // @spec SPEC-20260722-003 RF-06, RF-07, RF-08, RF-09, RF-13, RF-14 — drawer overlay em mobile.
 export function Sidebar(): ReactNode {
   const isCollapsed = useUIStore((state) => state.isSidebarCollapsed);
-  const toggleSidebarCollapsed = useUIStore((state) => state.toggleSidebarCollapsed);
+  const toggleSidebarCollapsed = useUIStore(
+    (state) => state.toggleSidebarCollapsed,
+  );
   const isMobileNavOpen = useUIStore((state) => state.isMobileNavOpen);
   const toggleMobileNav = useUIStore((state) => state.toggleMobileNav);
   const selectionMode = useDashboardStore((state) => state.selectionMode);
@@ -203,9 +218,8 @@ export function Sidebar(): ReactNode {
     void useUIStore.persist?.rehydrate();
   }, []);
 
-  const { isHolding: isHoldingLogout, handlers: holdLogoutHandlers } = useHoldToConfirm(() =>
-    void logout(),
-  );
+  const { isHolding: isHoldingLogout, handlers: holdLogoutHandlers } =
+    useHoldToConfirm(() => void logout());
 
   // @spec SPEC-20260730-002 RF-14 — largura da sidebar expandida = largura intrínseca do
   // conteúdo de navegação (md:w-fit no <ul>, ver className abaixo) + 20%, medida via
@@ -222,7 +236,9 @@ export function Sidebar(): ReactNode {
   }, [isCollapsed]);
 
   const navStyle =
-    !isMobileViewport && !isCollapsed && expandedWidth ? { width: expandedWidth } : undefined;
+    !isMobileViewport && !isCollapsed && expandedWidth
+      ? { width: expandedWidth }
+      : undefined;
 
   return (
     <>
@@ -248,7 +264,7 @@ export function Sidebar(): ReactNode {
           isMobileNavOpen ? "translate-x-0" : "-translate-x-full"
         } ${isCollapsed ? "md:w-16 md:items-center" : "md:w-64"}`}
       >
-        {/* @spec SPEC-20260730-002 RF-13 — texto de marca "Nave" removido (identidade já
+        {/* @spec SPEC-20260730-002 RF-13 — texto de marca "navestory" removido (identidade já
             representada no header via AvatarDropdown); resta apenas o toggle de colapso. */}
         <div className="flex w-full items-center justify-end">
           <button
@@ -284,7 +300,8 @@ export function Sidebar(): ReactNode {
           {NAV_ITEMS.map((item) => {
             const { Icon } = item;
             // @spec SPEC-20260730-002 RF-12 — rota ativa: igualdade exata ou prefixo de sub-rota.
-            const isActive = pathname === item.href || pathname?.startsWith(`${item.href}/`);
+            const isActive =
+              pathname === item.href || pathname?.startsWith(`${item.href}/`);
             const link = (
               <Link
                 href={item.href}
@@ -297,13 +314,24 @@ export function Sidebar(): ReactNode {
               >
                 {/* @spec SPEC-20260730-002 RF-11 — ícone exibido junto ao label também no
                     estado expandido, não apenas quando colapsado. */}
-                <Icon size={24} strokeWidth={1.75} className="shrink-0" aria-hidden />
+                <Icon
+                  size={24}
+                  strokeWidth={1.75}
+                  className="shrink-0"
+                  aria-hidden
+                />
                 {!effectiveCollapsed && item.label}
               </Link>
             );
             return (
               <li key={item.href}>
-                {effectiveCollapsed ? <Tooltip content={item.label} side="right">{link}</Tooltip> : link}
+                {effectiveCollapsed ? (
+                  <Tooltip content={item.label} side="right">
+                    {link}
+                  </Tooltip>
+                ) : (
+                  link
+                )}
               </li>
             );
           })}

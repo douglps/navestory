@@ -1,15 +1,19 @@
 # ADR 003: Estratégia de Autenticação baseada em JWT
 
 ## Status
+
 Aceito
 
 ## Contexto
+
 Precisamos prover autenticação robusta para usuários web, bem como permitir que sistemas e integrações terceiras acessem os dados via API. O sistema deve interagir bem com nossa escolha de RLS (ADR 002).
 
 ## Decisão
-Os padrões de autenticação serão baseados em **JWT (JSON Web Tokens)** distribuídos de forma atrelada aos mecanismos já providos no provedor de Auth (ex: Supabase Auth). As sessões para front-end web devem usar *httpOnly cookies*, enquanto que integrações e clientes de APIs externas proveniarão tokens (ex: de conta de serviço/API Key) nos cabeçalhos `Authorization: Bearer <token>`.
+
+Os padrões de autenticação serão baseados em **JWT (JSON Web Tokens)** distribuídos de forma atrelada aos mecanismos já providos no provedor de Auth (ex: Supabase Auth). As sessões para front-end web devem usar _httpOnly cookies_, enquanto que integrações e clientes de APIs externas proveniarão tokens (ex: de conta de serviço/API Key) nos cabeçalhos `Authorization: Bearer <token>`.
 
 ## Consequências
+
 - **Positivas:**
   - Stateless e facilmente escalável.
   - Passagem implícita e natural do contexto (UUID do usuário, Role) para o banco avaliar usando Claims e RLS do Supabase.
@@ -37,14 +41,14 @@ O problema de cross-origin em dev é resolvido via **rewrite no `apps/web/next.c
 // apps/web/next.config.ts
 rewrites: async () => [
   {
-    source: '/api/backend/:path*',
-    destination: 'http://localhost:3001/:path*',
+    source: "/api/backend/:path*",
+    destination: "http://localhost:3001/:path*",
   },
-]
+];
 ```
 
 Todas as chamadas do frontend para a API são feitas em `/api/backend/*` (mesma origem), e o Next.js faz o proxy para `localhost:3001`. O browser vê apenas `localhost:3000`, o cookie `httpOnly` é setado na mesma origem, e não há requisição cross-origin no sentido do browser.
 
-**Implicação em produção:** Em produção, o frontend e a API residem em domínios distintos (`nave.app` / `api.nave.app`) ou a API é servida via reverse proxy na mesma origem. O mesmo padrão de rewrite pode ser replicado via configuração de proxy do CDN/infra, mantendo o cookie como `httpOnly` sem `SameSite=None`. Esta decisão não altera o ADR de usar httpOnly cookies — apenas especifica o mecanismo de transporte para o ambiente de desenvolvimento local.
+**Implicação em produção:** Em produção, o frontend e a API residem em domínios distintos (`navestory.app` / `api.navestory.app`) ou a API é servida via reverse proxy na mesma origem. O mesmo padrão de rewrite pode ser replicado via configuração de proxy do CDN/infra, mantendo o cookie como `httpOnly` sem `SameSite=None`. Esta decisão não altera o ADR de usar httpOnly cookies — apenas especifica o mecanismo de transporte para o ambiente de desenvolvimento local.
 
 **Arquivos afetados:** `apps/web/next.config.ts`, `apps/web/middleware.ts` (usa `/api/backend/auth/refresh` para renovar sessão SSR).

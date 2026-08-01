@@ -1,4 +1,4 @@
-import { seasonalQuerySchema } from "@nave/validators";
+import { seasonalQuerySchema } from "@navestory/validators";
 import type { z } from "zod";
 
 export const seasonalDtoSchema = seasonalQuerySchema;

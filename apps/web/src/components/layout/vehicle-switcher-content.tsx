@@ -8,7 +8,7 @@ import {
   type VehicleSummary,
 } from "@/lib/context/use-vehicle-context";
 import { useOnlineStatus } from "@/lib/hooks/use-online-status";
-import { Alert, Skeleton } from "@nave/ui";
+import { Alert, Skeleton } from "@navestory/ui";
 
 const ERROR_RETRY_TIMEOUT_MS = 8000;
 
@@ -29,7 +29,9 @@ function normalizeForSearch(value: string): string {
 function matchesQuery(haystack: string[], query: string): boolean {
   if (!query) return true;
   const normalizedQuery = normalizeForSearch(query);
-  return haystack.some((value) => normalizeForSearch(value).includes(normalizedQuery));
+  return haystack.some((value) =>
+    normalizeForSearch(value).includes(normalizedQuery),
+  );
 }
 
 interface VehicleSwitcherContentProps {
@@ -43,7 +45,9 @@ interface VehicleSwitcherContentProps {
  *
  * @spec SPEC-20260603-001 RF-07, RF-09, RF-11, RF-14, RF-18, RF-19, RNF-05
  */
-export function VehicleSwitcherContent({ onClose }: VehicleSwitcherContentProps): ReactNode {
+export function VehicleSwitcherContent({
+  onClose,
+}: VehicleSwitcherContentProps): ReactNode {
   const [query, setQuery] = useState("");
   const isOnline = useOnlineStatus();
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -78,12 +82,17 @@ export function VehicleSwitcherContent({ onClose }: VehicleSwitcherContentProps)
 
   const filteredVehicles = useMemo(() => {
     return (vehicles ?? []).filter((vehicle: VehicleSummary) =>
-      matchesQuery([vehicle.plate, vehicle.make ?? "", vehicle.model ?? ""], query),
+      matchesQuery(
+        [vehicle.plate, vehicle.make ?? "", vehicle.model ?? ""],
+        query,
+      ),
     );
   }, [vehicles, query]);
 
   const filteredGroups = useMemo(() => {
-    return (groups ?? []).filter((group: VehicleGroupSummary) => matchesQuery([group.name], query));
+    return (groups ?? []).filter((group: VehicleGroupSummary) =>
+      matchesQuery([group.name], query),
+    );
   }, [groups, query]);
 
   function handleSelectVehicle(vehicleId: string): void {
@@ -105,7 +114,10 @@ export function VehicleSwitcherContent({ onClose }: VehicleSwitcherContentProps)
   return (
     <div className="flex flex-col gap-3">
       {!isOnline && (
-        <Alert variant="warning" description="Sem conexão — dados podem estar desatualizados" />
+        <Alert
+          variant="warning"
+          description="Sem conexão — dados podem estar desatualizados"
+        />
       )}
 
       <input
@@ -130,7 +142,11 @@ export function VehicleSwitcherContent({ onClose }: VehicleSwitcherContentProps)
         <Alert
           variant="error"
           description="Não foi possível carregar veículos e grupos."
-          action={showRetry ? { label: "Tentar novamente", onClick: handleRetry } : undefined}
+          action={
+            showRetry
+              ? { label: "Tentar novamente", onClick: handleRetry }
+              : undefined
+          }
         />
       )}
 
@@ -144,7 +160,9 @@ export function VehicleSwitcherContent({ onClose }: VehicleSwitcherContentProps)
               Veículos
             </span>
             {filteredVehicles.length === 0 && (
-              <span className="px-2 py-1 text-xs text-muted-foreground">Nenhum veículo encontrado</span>
+              <span className="px-2 py-1 text-xs text-muted-foreground">
+                Nenhum veículo encontrado
+              </span>
             )}
             {filteredVehicles.map((vehicle) => (
               <button
@@ -153,8 +171,8 @@ export function VehicleSwitcherContent({ onClose }: VehicleSwitcherContentProps)
                 onClick={() => handleSelectVehicle(vehicle.id)}
                 className="rounded-md px-2 py-2 text-left text-sm hover:bg-muted"
               >
-                {VEHICLE_TYPE_ICONS[vehicle.vehicle_type] ?? "🚗"} {vehicle.plate} ·{" "}
-                {vehicle.model ?? vehicle.make}
+                {VEHICLE_TYPE_ICONS[vehicle.vehicle_type] ?? "🚗"}{" "}
+                {vehicle.plate} · {vehicle.model ?? vehicle.make}
               </button>
             ))}
           </div>
@@ -164,7 +182,9 @@ export function VehicleSwitcherContent({ onClose }: VehicleSwitcherContentProps)
               Grupos
             </span>
             {filteredGroups.length === 0 && (
-              <span className="px-2 py-1 text-xs text-muted-foreground">Nenhum grupo encontrado</span>
+              <span className="px-2 py-1 text-xs text-muted-foreground">
+                Nenhum grupo encontrado
+              </span>
             )}
             {filteredGroups.map((group) => (
               <button

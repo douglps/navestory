@@ -1,4 +1,4 @@
-# Plataforma de Marca — Nave (Brand Platform, Parte I)
+# Plataforma de Marca — navestory (Brand Platform, Parte I)
 
 > **Complemento aprovado ao documento irmão.** Este documento COMPLEMENTA, e não substitui, a
 > [`PROPOSTA-BRAND-DESIGN-SYSTEM-2026-07-30.md`](./PROPOSTA-BRAND-DESIGN-SYSTEM-2026-07-30.md), que registra
@@ -60,70 +60,70 @@
 
 A distinção entre "visão de produto" e "visão de marca" é técnica e importa: a visão de produto descreve
 **o que o software faz e para quem**; a visão de marca descreve **que lugar na vida do usuário e na cultura
-do mercado a marca quer ocupar a longo prazo**. O PRD do Nave já tem visão de produto definida. Este capítulo
+do mercado a marca quer ocupar a longo prazo**. O PRD do navestory já tem visão de produto definida. Este capítulo
 constrói a camada de marca sobre essa base.
 
 ### 1.1 Propósito
 
-> **Por que o Nave existe, além de gerar receita.**
+> **Por que o navestory existe, além de gerar receita.**
 
 Proprietários de veículos e gestores de frota tomam decisões importantes — trocar de carro, renovar frota,
 cortar custos operacionais — com informação fragmentada, espalhada em recibos físicos, planilhas paralelas
 e memória. O resultado é invisibilidade financeira sobre um dos bens que mais consome e mais depende de
 atenção contínua.
 
-**O Nave existe para encerrar essa invisibilidade — devolvendo a quem cuida de um veículo a tranquilidade
+**O navestory existe para encerrar essa invisibilidade — devolvendo a quem cuida de um veículo a tranquilidade
 de saber, com exatidão, o que está acontecendo e o que precisa de atenção.**
 
-*Nota de aplicação:* o propósito não é tagline (não vai para um anúncio), é o filtro interno de
+_Nota de aplicação:_ o propósito não é tagline (não vai para um anúncio), é o filtro interno de
 decisão — qualquer feature nova, qualquer texto de UI, qualquer material de marketing pode ser
 avaliado pela pergunta "isso contribui para encerrar a invisibilidade financeira do veículo do usuário?".
 
 ### 1.2 Visão de Marca
 
-> **Que lugar o Nave quer ocupar no mercado brasileiro daqui a 5-10 anos.**
+> **Que lugar o navestory quer ocupar no mercado brasileiro daqui a 5-10 anos.**
 
 Ser a referência de clareza e cuidado na gestão de veículos no Brasil — o primeiro app que vem à mente
 quando alguém precisa entender o custo real do seu carro ou da sua frota, da mesma forma que o Nubank
 redefiniu o que um banco pode ser para o brasileiro.
 
-*Diferença em relação à visão de produto do PRD:* a visão de produto fala em "reduzir custos operacionais
+_Diferença em relação à visão de produto do PRD:_ a visão de produto fala em "reduzir custos operacionais
 e evitar esquecimentos críticos" — é o que o software entrega. A visão de marca fala em ocupar um
 **espaço de referência cultural** no mercado brasileiro — é o que a empresa constrói ao longo do tempo.
 
 ### 1.3 Missão
 
-> **O que o Nave faz no dia a dia para chegar à visão.**
+> **O que o navestory faz no dia a dia para chegar à visão.**
 
 Transformar registros fragmentados de despesas, manutenções e quilômetros rodados em uma visão limpa
 e acionável do estado real de cada veículo — para que qualquer pessoa saiba, em segundos, se seu carro
 ou frota está saudável hoje.
 
-*A missão ancora o princípio "Calm UI" já estabelecido:* "segundos" não é figura de linguagem, é
+_A missão ancora o princípio "Calm UI" já estabelecido:_ "segundos" não é figura de linguagem, é
 critério de design.
 
 ### 1.4 Valores
 
-Valores de marca são comportamentos não negociáveis, não slogans. Cada valor do Nave vem com uma
-manifestação concreta e um anti-padrão — o que a marca *não* faz e que outras fazem.
+Valores de marca são comportamentos não negociáveis, não slogans. Cada valor do navestory vem com uma
+manifestação concreta e um anti-padrão — o que a marca _não_ faz e que outras fazem.
 
 ---
 
 **V1 — Clareza antes de completude**
 
-A informação útil e legível vale mais que a informação total e confusa. O Nave prefere mostrar
+A informação útil e legível vale mais que a informação total e confusa. O navestory prefere mostrar
 um KPI confiável a exibir dez métricas duvidosas.
 
-*Anti-padrão evitado:* apps de gestão que sobrecarregam a tela para "parecer completos".
+_Anti-padrão evitado:_ apps de gestão que sobrecarregam a tela para "parecer completos".
 
 ---
 
 **V2 — Cuidado sem paternalismo**
 
-O Nave cuida do veículo do usuário, não do usuário. Avisa sobre manutenção vencida sem dramatizar,
+O navestory cuida do veículo do usuário, não do usuário. Avisa sobre manutenção vencida sem dramatizar,
 registra despesa inesperada sem julgar, responde erros sem culpar. A autonomia do usuário é preservada.
 
-*Anti-padrão evitado:* apps que "educam" o usuário a todo momento sobre como usá-los.
+_Anti-padrão evitado:_ apps que "educam" o usuário a todo momento sobre como usá-los.
 
 ---
 
@@ -132,17 +132,17 @@ registra despesa inesperada sem julgar, responde erros sem culpar. A autonomia d
 Despesa inesperada, revisão cara, alerta de atraso — esses são momentos emocionalmente carregados.
 A marca responde com precisão e próximo passo claro, nunca com drama nem com fórmula de reasseguramento.
 
-*Anti-padrão evitado:* "Não se preocupe, nossa equipe está cuidando disso."
+_Anti-padrão evitado:_ "Não se preocupe, nossa equipe está cuidando disso."
 
 ---
 
 **V4 — Brasileiro de verdade**
 
-A sofisticação que o Nave busca é a do Barroco Mineiro — produzida aqui, com referências daqui,
+A sofisticação que o navestory busca é a do Barroco Mineiro — produzida aqui, com referências daqui,
 para um mercado que entende e valoriza qualidade quando a vê. Não é "design brasileiro com jeitinho",
 é artesanato de alta qualidade com identidade cultural genuína.
 
-*Anti-padrão evitado:* copiar a estética de apps americanos sem questionar se faz sentido no Brasil.
+_Anti-padrão evitado:_ copiar a estética de apps americanos sem questionar se faz sentido no Brasil.
 
 ---
 
@@ -151,25 +151,26 @@ para um mercado que entende e valoriza qualidade quando a vê. Não é "design b
 O detalhe técnico existe para que o usuário tome uma decisão melhor, não para que o produto pareça
 mais complexo do que é. Quando a complexidade não serve ao usuário, ela é removida.
 
-*Anti-padrão evitado:* features que existem para impressionar, não para resolver.
+_Anti-padrão evitado:_ features que existem para impressionar, não para resolver.
 
 ---
 
 ### 1.5 Proposta Única de Valor (UVP)
 
-A UVP responde "por que o Nave, e não outra coisa?" — deve funcionar em uma frase, dirigida à persona
+A UVP responde "por que o navestory, e não outra coisa?" — deve funcionar em uma frase, dirigida à persona
 principal (Carlos, motorista autônomo, e Ana, gestora de frota pequena).
 
-> **"O Nave transforma cada quilômetro rodado em clareza — não em mais uma planilha."**
+> **"O navestory transforma cada quilômetro rodado em clareza — não em mais uma planilha."**
 
-*Versão expandida (landing page, onboarding):*
-"Chega de anotar no papel, de perder recibo, de estimar quanto o carro está custando. O Nave reúne
+_Versão expandida (landing page, onboarding):_
+"Chega de anotar no papel, de perder recibo, de estimar quanto o carro está custando. O navestory reúne
 despesas, manutenções e odômetro num único lugar e transforma isso em respostas — para você saber
 exatamente o que seu veículo precisa, antes de precisar descobrir da pior forma."
 
-*Critérios que a UVP satisfaz:*
-- **Diferenciação real de Samsara/Motive:** eles são enterprise + IoT + hardware; o Nave é leve, mobile-first, sem hardware.
-- **Diferenciação de apps genéricos de finanças (Mobills, GuiaBolso):** eles não entendem veículo; o Nave é especializado.
+_Critérios que a UVP satisfaz:_
+
+- **Diferenciação real de Samsara/Motive:** eles são enterprise + IoT + hardware; o navestory é leve, mobile-first, sem hardware.
+- **Diferenciação de apps genéricos de finanças (Mobills, GuiaBolso):** eles não entendem veículo; o navestory é especializado.
 - **Conectado ao propósito:** a "clareza" da UVP é a mesma que aparece no propósito ("encerrar a invisibilidade").
 - **Evita feature-speak:** não lista funcionalidades ("agenda de manutenção, registro de despesa, odômetro") — aponta para o benefício emocional real (saber, antes de ser surpreendido).
 
@@ -186,7 +187,7 @@ Dois eixos que melhor capturam a diferença real entre os players do mercado:
                    INDIVIDUAL / HUMANO
                           ▲
                           │
-           Apps de        │        ★ Nave
+           Apps de        │        ★ navestory
            finanças       │        (especializado + humano)
            pessoais       │
            (genérico) ●   │
@@ -203,40 +204,41 @@ LEVE / ACESSÍVEL          │                    PESADO / ENTERPRISE
 
 **Conclusão do mapa:** o quadrante "Especializado em veículo + Individual/Humano" está vazio no Brasil.
 Samsara e Motive dominam o quadrante enterprise/operacional; apps de finanças pessoais são genéricos.
-O Nave entra sem concorrente direto nesse quadrante — é um posicionamento de nicho com potencial de
+O navestory entra sem concorrente direto nesse quadrante — é um posicionamento de nicho com potencial de
 expansão para o quadrante enterprise à medida que o produto Roberto (grande frota) for desenvolvido.
 
 #### Comparativo de posicionamento vs. concorrentes
 
-| Dimensão | Samsara | Motive | Apps de finanças pessoais | **Nave** |
-|---|---|---|---|---|
-| Público-alvo primário | Grandes frotas (50+ veículos) | Médias/grandes frotas | Pessoa física geral | Motorista individual + gestora de frota pequena (3-10 veículos) |
-| Tecnologia | IoT + hardware (rastreador) | IoT + hardware | Mobile/web, contabilidade pessoal | Web/mobile, sem hardware |
-| Especialização em veículo | Alta (operacional) | Alta (operacional) | Nenhuma | Alta (financeira + manutenção) |
-| Tom de marca | Técnico/enterprise | Operacional/neutro | Amigável/genérico | Especializado + acolhedor |
-| Acesso/custo inicial | Alto (contrato enterprise) | Alto | Gratuito/freemium | Freemium (pré-definido como acessível) |
-| Presença no Brasil | Limitada/distribuidor | Limitada | Alta (Mobills, GuiaBolso) | Nascido no Brasil |
+| Dimensão                  | Samsara                       | Motive                | Apps de finanças pessoais         | **navestory**                                                   |
+| ------------------------- | ----------------------------- | --------------------- | --------------------------------- | --------------------------------------------------------------- |
+| Público-alvo primário     | Grandes frotas (50+ veículos) | Médias/grandes frotas | Pessoa física geral               | Motorista individual + gestora de frota pequena (3-10 veículos) |
+| Tecnologia                | IoT + hardware (rastreador)   | IoT + hardware        | Mobile/web, contabilidade pessoal | Web/mobile, sem hardware                                        |
+| Especialização em veículo | Alta (operacional)            | Alta (operacional)    | Nenhuma                           | Alta (financeira + manutenção)                                  |
+| Tom de marca              | Técnico/enterprise            | Operacional/neutro    | Amigável/genérico                 | Especializado + acolhedor                                       |
+| Acesso/custo inicial      | Alto (contrato enterprise)    | Alto                  | Gratuito/freemium                 | Freemium (pré-definido como acessível)                          |
+| Presença no Brasil        | Limitada/distribuidor         | Limitada              | Alta (Mobills, GuiaBolso)         | Nascido no Brasil                                               |
 
 ### 1.7 Arquitetura de Marca
 
 **Decisão: Branded House (marca monolítica).**
 
-Tudo é Nave — não há submarcas, variantes de produto com identidade visual própria nem marcas de funcionalidade.
+Tudo é navestory — não há submarcas, variantes de produto com identidade visual própria nem marcas de funcionalidade.
 
-*Justificativa:*
+_Justificativa:_
+
 1. O produto é único hoje — não há portfólio que justifique casa de marcas.
 2. Pré-lançamento é o momento de construir reconhecimento em torno de um nome, não de fragmentá-lo.
 3. O benchmark mais próximo no quadrante desejado (Linear, Ramp, Mercury) também opera como Branded House — o produto é a marca.
 4. Custo de manutenção de identidade é mínimo com marca única — crítico para um time pequeno.
 
-*Decisão consciente para o futuro:* se o produto Roberto (grande frota, 50-500 veículos) for lançado
+_Decisão consciente para o futuro:_ se o produto Roberto (grande frota, 50-500 veículos) for lançado
 com proposta de valor suficientemente distinta da do Carlos/Ana, a decisão de criar uma extensão de marca
-("Nave Frotas" ou similar) deve ser reavaliada naquele momento — não antes. Registrada aqui para que
+("navestory Frotas" ou similar) deve ser reavaliada naquele momento — não antes. Registrada aqui para que
 não seja tomada por inércia quando chegar a hora.
 
-*Naming de features:* features do produto ganham nome descritivo funcional ("Relatório de custos",
-"Agenda de manutenção"), nunca nome de sub-produto com identidade própria (não "Nave Insights",
-"Nave Care"). O produto é o Nave; as features são partes do Nave.
+_Naming de features:_ features do produto ganham nome descritivo funcional ("Relatório de custos",
+"Agenda de manutenção"), nunca nome de sub-produto com identidade própria (não "navestory Insights",
+"navestory Care"). O produto é o navestory; as features são partes do navestory.
 
 ---
 
@@ -262,25 +264,26 @@ lista de regras.
 **Voz:** preciso, confiante, baseado em evidências — sem jargão desnecessário.
 **Medo do arquétipo:** ser enganoso, superficial, ou fazer o usuário se sentir ignorante.
 
-*Por que o Sábio e não o Governante (Ruler) ou o Herói (Hero):*
+_Por que o Sábio e não o Governante (Ruler) ou o Herói (Hero):_
+
 - O Governante projeta autoridade e controle institucional — adequado para bancos tradicionais e
-  enterprise como a Salesforce. Não combina com o registro caloroso e acessível do Nave (pequeno gestor, motorista autônomo).
+  enterprise como a Salesforce. Não combina com o registro caloroso e acessível do navestory (pequeno gestor, motorista autônomo).
 - O Herói conquista, supera, vence — tom de energia intensa que contradiz o "Calm UI" e o "caloroso
-  com compostura". Mercury e Linear exploram o Herói sutilmente; o Nave lida com momentos de estresse
+  com compostura". Mercury e Linear exploram o Herói sutilmente; o navestory lida com momentos de estresse
   financeiro do usuário, onde o Herói seria invasivo.
 - O Sábio domina em produtos cujo valor central é **fazer o usuário entender algo que antes era opaco**
-  — que é exatamente o que o Nave entrega: a visão clara de custo/saúde do veículo. Exemplos bem-sucedidos
+  — que é exatamente o que o navestory entrega: a visão clara de custo/saúde do veículo. Exemplos bem-sucedidos
   de Sage em B2B: Notion ("ferramentas para entender e organizar"), Airtable, IBM Watson.
 
-*Conexão com os cinco adjetivos aprovados:*
+_Conexão com os cinco adjetivos aprovados:_
 
-| Adjetivo aprovado | Manifestação no arquétipo Sábio |
-|---|---|
-| Competente | O Sábio conhece o assunto — usa termo técnico quando ajuda, não para performar |
-| Direto | O Sábio não usa rodeios — fala o que sabe, claramente |
-| Confiável | O Sábio demonstra confiança com fatos, não com frases de efeito |
-| Acolhedor | Onde o Sábio puro seria frio, o secundário Cuidador aquece (ver abaixo) |
-| Caloroso com compostura | O Sábio é rigoroso; o Cuidador é humano — juntos, chegam ao tom certo |
+| Adjetivo aprovado       | Manifestação no arquétipo Sábio                                                |
+| ----------------------- | ------------------------------------------------------------------------------ |
+| Competente              | O Sábio conhece o assunto — usa termo técnico quando ajuda, não para performar |
+| Direto                  | O Sábio não usa rodeios — fala o que sabe, claramente                          |
+| Confiável               | O Sábio demonstra confiança com fatos, não com frases de efeito                |
+| Acolhedor               | Onde o Sábio puro seria frio, o secundário Cuidador aquece (ver abaixo)        |
+| Caloroso com compostura | O Sábio é rigoroso; o Cuidador é humano — juntos, chegam ao tom certo          |
 
 #### Arquétipo secundário: O Cuidador (Caregiver)
 
@@ -289,11 +292,11 @@ lista de regras.
 **Limite de uso:** o Cuidador aparece no tom e na atenção ao usuário em momentos difíceis (manutenção
 vencida, despesa inesperada, erro) — nunca como paternalismo ou proteção excessiva.
 
-*Por que secundário e não primário:* o Cuidador como primário levaria a um tom de "app de bem-estar"
-ou saúde — maternal, emocional, gentil em excesso. O Nave resolve um problema técnico/financeiro real;
+_Por que secundário e não primário:_ o Cuidador como primário levaria a um tom de "app de bem-estar"
+ou saúde — maternal, emocional, gentil em excesso. O navestory resolve um problema técnico/financeiro real;
 o Cuidador existe para que o Sábio não abandone o usuário no momento errado.
 
-*A dupla Sábio + Cuidador no mercado:* é o perfil de "Consultor de Confiança" — o contador que realmente
+_A dupla Sábio + Cuidador no mercado:_ é o perfil de "Consultor de Confiança" — o contador que realmente
 explica o imposto, o mecânico honesto que mostra o problema sem inventar. É exatamente o que o Carlos
 (motorista autônomo) e a Ana (gestora de frota pequena) precisam: alguém que sabe mais do que eles
 sobre o veículo e que não vai usar esse conhecimento para intimidar.
@@ -307,14 +310,14 @@ já definidos ali não são repetidos — esta seção acrescenta as regras que 
 
 **Fazer — vocabulário alinhado ao Sábio + Cuidador:**
 
-| Contexto | Prefira | Em vez de |
-|---|---|---|
-| Descrever o produto | "ver claramente", "acompanhar", "entender o que está acontecendo" | "monitorar", "rastrear", "supervisionar" (remete a vigilância, não cuidado) |
-| Ação do usuário | "registre", "adicione", "revise", "agende" | "monitore", "gerencie", "controle" |
-| Saúde do veículo | "está em dia", "precisa de atenção", "está em atraso" | "OK", "NOK", "fora do prazo", "atrasado" (frio demais) |
-| Custo/gasto | "quanto está custando", "valor registrado", "gasto do mês" | "débito", "encargo", "saída financeira" (linguagem bancária fora de contexto) |
-| Onboarding | "vamos ver de verdade", "comece por aqui", "em alguns minutos" | "configure seu perfil", "preencha os campos", "complete o cadastro" |
-| Sucesso de ação | "registrado", "agendado", "atualizado" | "operação concluída", "processado com sucesso", "dados salvos" |
+| Contexto            | Prefira                                                           | Em vez de                                                                     |
+| ------------------- | ----------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| Descrever o produto | "ver claramente", "acompanhar", "entender o que está acontecendo" | "monitorar", "rastrear", "supervisionar" (remete a vigilância, não cuidado)   |
+| Ação do usuário     | "registre", "adicione", "revise", "agende"                        | "monitore", "gerencie", "controle"                                            |
+| Saúde do veículo    | "está em dia", "precisa de atenção", "está em atraso"             | "OK", "NOK", "fora do prazo", "atrasado" (frio demais)                        |
+| Custo/gasto         | "quanto está custando", "valor registrado", "gasto do mês"        | "débito", "encargo", "saída financeira" (linguagem bancária fora de contexto) |
+| Onboarding          | "vamos ver de verdade", "comece por aqui", "em alguns minutos"    | "configure seu perfil", "preencha os campos", "complete o cadastro"           |
+| Sucesso de ação     | "registrado", "agendado", "atualizado"                            | "operação concluída", "processado com sucesso", "dados salvos"                |
 
 **Banir — vocabulário proibido em qualquer texto de produto ou marca:**
 
@@ -322,9 +325,9 @@ já definidos ali não são repetidos — esta seção acrescenta as regras que 
 - **Fórmulas de reasseguramento:** "seus dados estão seguros", "pedimos desculpas pelo transtorno",
   "nossa equipe está ciente", "agradecemos sua compreensão"
 - **Linguagem de app de finança pessoal genérico:** "organize suas finanças", "controle seus gastos",
-  "economize mais" — o Nave é sobre veículo, não sobre finanças em geral
+  "economize mais" — o navestory é sobre veículo, não sobre finanças em geral
 - **Linguagem enterprise de frota:** "gerenciar ativos", "frotas de ativos", "gestão de compliance" —
-  é o tom de Samsara; o Nave é mais próximo que isso
+  é o tom de Samsara; o navestory é mais próximo que isso
 - **Coloquialismo de fala solta:** "tá", "bora", "né", "pra" (em texto de produto — na fala de marketing
   casual pode ter exceção, mas nunca no produto)
 - **Superlativos gratuitos:** "incrível", "poderoso", "revolucionário", "transformador" — o Sábio
@@ -336,15 +339,17 @@ já definidos ali não são repetidos — esta seção acrescenta as regras que 
 Usar "você" sempre — nunca "o usuário", "o proprietário", "o gestor" no texto de interface.
 
 **Caixa:**
+
 - Títulos de seção e página: primeira palavra em maiúsculo, restante em minúsculo (estilo sentença)
   — "Despesas do mês", não "Despesas Do Mês" nem "DESPESAS DO MÊS"
-- Nomes próprios e da marca: Nave (sempre com inicial maiúscula, nunca NAVE)
+- Nomes próprios e da marca: navestory (sempre com inicial maiúscula, nunca navestory)
 - Labels de formulário: caixa sentença ("Valor da despesa", não "Valor Da Despesa")
 - CTAs: caixa sentença ("Salvar despesa", não "SALVAR DESPESA" nem "Salvar Despesa")
 - Status/badges: caixa baixa preferencial ("em dia", "em atraso", "pendente") — só maiúsculo se
   o tamanho da fonte exigir legibilidade (≤11px, onde caixa baixa pode ficar difícil)
 
 **Pontuação:**
+
 - Pontos finais em frases completas de corpo; sem ponto em labels, placeholders e CTAs curtos
 - Reticências apenas para indicar loading ou texto truncado — nunca como device de suspense ("Carregando...")
 - Ponto de exclamação: reservado a momentos de conquista genuína (primeiro login, primeira despesa
@@ -355,6 +360,7 @@ Usar "você" sempre — nunca "o usuário", "o proprietário", "o gestor" no tex
   "despesas, manutenções e odômetro" (sem vírgula antes do "e")
 
 **Números e valores:**
+
 - Moeda: R$ 150,00 (espaço não quebrável entre símbolo e número, vírgula decimal, ponto milhar)
   — "R$ 150,00", nunca "R$ 150.00" nem "BRL 150"
 - Quilômetros: 12.345 km (ponto milhar, espaço antes da unidade)
@@ -363,6 +369,7 @@ Usar "você" sempre — nunca "o usuário", "o proprietário", "o gestor" no tex
   — exceção pragmática para legibilidade em dashboards)
 
 **Língua inclusiva:**
+
 - Preferir construções neutras sempre que possível: "proprietário do veículo" pode ser neutralizado
   para "quem cuida do veículo" ou "você, que cuida do veículo"
 - Não usar o masculino genérico em onboarding e textos principais — redirecionar para segunda pessoa
@@ -373,6 +380,7 @@ Usar "você" sempre — nunca "o usuário", "o proprietário", "o gestor" no tex
   e construções que dispensam essa marcação
 
 **Emoji:**
+
 - Proibido em textos de produto, labels, mensagens de erro, confirmações e alertas
 - Autorizado com critério em comunicações de marketing externo (redes sociais, e-mail marketing)
   onde o tom de canal justifica — nunca como substituto de palavra, sempre como complemento
@@ -380,17 +388,17 @@ Usar "você" sempre — nunca "o usuário", "o proprietário", "o gestor" no tex
 
 #### Regras de comprimento de texto por contexto
 
-| Contexto | Comprimento máximo orientativo |
-|---|---|
-| Título de página / header | 4-6 palavras |
-| Subtítulo de seção | 6-10 palavras |
-| Label de campo | 3-5 palavras |
-| Placeholder de campo | Máximo 1 frase curta (exemplo do que preencher) |
-| Mensagem de erro inline | 1 frase, máximo 12 palavras |
-| Toast de confirmação | 1 frase, máximo 8 palavras |
-| Toast de erro (com próximo passo) | 2 frases, máximo 20 palavras |
-| Empty state (título + descrição) | Título ≤6 palavras + descrição ≤20 palavras |
-| Onboarding step | Máximo 3 frases de corpo — mais que isso, é UX research, não copywriting |
+| Contexto                          | Comprimento máximo orientativo                                           |
+| --------------------------------- | ------------------------------------------------------------------------ |
+| Título de página / header         | 4-6 palavras                                                             |
+| Subtítulo de seção                | 6-10 palavras                                                            |
+| Label de campo                    | 3-5 palavras                                                             |
+| Placeholder de campo              | Máximo 1 frase curta (exemplo do que preencher)                          |
+| Mensagem de erro inline           | 1 frase, máximo 12 palavras                                              |
+| Toast de confirmação              | 1 frase, máximo 8 palavras                                               |
+| Toast de erro (com próximo passo) | 2 frases, máximo 20 palavras                                             |
+| Empty state (título + descrição)  | Título ≤6 palavras + descrição ≤20 palavras                              |
+| Onboarding step                   | Máximo 3 frases de corpo — mais que isso, é UX research, não copywriting |
 
 ### 2.3 — Validação e Extensão de Copywriting
 
@@ -465,18 +473,18 @@ o que deve ser substituído. Isso cria ambiguidade para qualquer redator.
 
 Política proposta (inserir no guia como regra):
 
-| Termo | Status no produto | Substituto preferido | Notas |
-|---|---|---|---|
-| dashboard | Aceitável — sem tradução natural estabelecida | "painel" apenas em texto explicativo | Nunca forçar "painel de controle" — soa burocrático |
-| onboarding | Aceitável internamente; evitar exposto ao usuário | "primeiros passos", "início", "boas-vindas" | O usuário deve ver "Vamos começar", não "Onboarding" |
-| features | Proibido no produto e no marketing externo | "recursos", ou simplesmente descreva a função | Ex: não "esta feature" → "esta opção" ou nomeie diretamente |
-| insights | Evitar no produto — prefira a conclusão direta | "o que isso significa" → mostre o número + a conclusão | "Veja seus insights" é vago; "Seu custo por km subiu 12%" é Sábio |
-| upgrade | Aceitável em contexto de paywall, onde o conceito é compreendido | "mudar de plano" em contexto editorial | Em CTA de paywall, "Escolher um plano" é mais neutro |
-| trial | Evitar — prefira descrição | "período gratuito", "experimente por X dias" | "Seu trial acabou" → "Seu período gratuito acabou" |
-| setup | Evitar | "configuração", "início" | |
-| update | Evitar no produto | "atualização", "atualizar" | |
-| default | Evitar no produto | "padrão" | |
-| report | Aceitável como termo técnico interno; evitar no nome de tela | "Relatório de custos", não "Cost Report" | O produto em pt-BR não deve misturar idiomas em labels |
+| Termo      | Status no produto                                                | Substituto preferido                                   | Notas                                                             |
+| ---------- | ---------------------------------------------------------------- | ------------------------------------------------------ | ----------------------------------------------------------------- |
+| dashboard  | Aceitável — sem tradução natural estabelecida                    | "painel" apenas em texto explicativo                   | Nunca forçar "painel de controle" — soa burocrático               |
+| onboarding | Aceitável internamente; evitar exposto ao usuário                | "primeiros passos", "início", "boas-vindas"            | O usuário deve ver "Vamos começar", não "Onboarding"              |
+| features   | Proibido no produto e no marketing externo                       | "recursos", ou simplesmente descreva a função          | Ex: não "esta feature" → "esta opção" ou nomeie diretamente       |
+| insights   | Evitar no produto — prefira a conclusão direta                   | "o que isso significa" → mostre o número + a conclusão | "Veja seus insights" é vago; "Seu custo por km subiu 12%" é Sábio |
+| upgrade    | Aceitável em contexto de paywall, onde o conceito é compreendido | "mudar de plano" em contexto editorial                 | Em CTA de paywall, "Escolher um plano" é mais neutro              |
+| trial      | Evitar — prefira descrição                                       | "período gratuito", "experimente por X dias"           | "Seu trial acabou" → "Seu período gratuito acabou"                |
+| setup      | Evitar                                                           | "configuração", "início"                               |                                                                   |
+| update     | Evitar no produto                                                | "atualização", "atualizar"                             |                                                                   |
+| default    | Evitar no produto                                                | "padrão"                                               |                                                                   |
+| report     | Aceitável como termo técnico interno; evitar no nome de tela     | "Relatório de custos", não "Cost Report"               | O produto em pt-BR não deve misturar idiomas em labels            |
 
 **3. Lacuna: "carro" vs. "veículo" — regra de uso ausente**
 
@@ -510,30 +518,30 @@ este mês. Quer ver o detalhamento?"
 #### Novos exemplos de microcopy — contextos não cobertos
 
 Os contextos abaixo não constam nos exemplos aprovados na seção 11 do documento irmão. Cada
-par mostra versão genérica (a evitar) e versão Nave, com nota do mecanismo de voz usado.
+par mostra versão genérica (a evitar) e versão navestory, com nota do mecanismo de voz usado.
 
 ---
 
-**Notificação push — veículo acima do limite de km** *(Fase 2, fora do MVP)*
+**Notificação push — veículo acima do limite de km** _(Fase 2, fora do MVP)_
 
-| | Texto |
-|---|---|
-| Evitar | "Lembrete: veículo ABC-1234 com manutenção pendente." |
-| Nave | "O Gol 2020 já passou 500 km da última revisão. Uma olhada rápida resolve." |
+|           | Texto                                                                       |
+| --------- | --------------------------------------------------------------------------- |
+| Evitar    | "Lembrete: veículo ABC-1234 com manutenção pendente."                       |
+| navestory | "O Gol 2020 já passou 500 km da última revisão. Uma olhada rápida resolve." |
 
-*Mecanismo:* Sábio (dado específico: 500 km, não "em atraso genérico") + Cuidador ("uma olhada
+_Mecanismo:_ Sábio (dado específico: 500 km, não "em atraso genérico") + Cuidador ("uma olhada
 rápida resolve" — remove ansiedade sem minimizar). Nenhuma fórmula de reasseguramento.
 
 ---
 
 **Erro de validação — valor zerado ou em branco em campo monetário**
 
-| | Texto |
-|---|---|
-| Evitar | "O campo Valor é obrigatório e não pode ser zero." |
-| Nave | "Informe o valor da despesa. Quanto custou, de fato?" |
+|           | Texto                                                 |
+| --------- | ----------------------------------------------------- |
+| Evitar    | "O campo Valor é obrigatório e não pode ser zero."    |
+| navestory | "Informe o valor da despesa. Quanto custou, de fato?" |
 
-*Mecanismo:* Sábio direto (fato: precisa informar o valor) sem tom acusatório. A segunda frase
+_Mecanismo:_ Sábio direto (fato: precisa informar o valor) sem tom acusatório. A segunda frase
 não é obrigatória — usar quando o campo estiver em contexto de despesa significativa onde a
 pergunta faz sentido. Não usar para campos técnicos de formulário.
 
@@ -541,24 +549,24 @@ pergunta faz sentido. Não usar para campos técnicos de formulário.
 
 **Tooltip explicativo — custo por km**
 
-| | Texto |
-|---|---|
-| Evitar | "Custo por quilômetro rodado." |
-| Nave | "Total de despesas do período dividido pelos quilômetros rodados — quanto cada km saiu do bolso." |
+|           | Texto                                                                                             |
+| --------- | ------------------------------------------------------------------------------------------------- |
+| Evitar    | "Custo por quilômetro rodado."                                                                    |
+| navestory | "Total de despesas do período dividido pelos quilômetros rodados — quanto cada km saiu do bolso." |
 
-*Mecanismo:* Sábio explica o cálculo (não só nomeia a métrica). "saiu do bolso" é linguagem
+_Mecanismo:_ Sábio explica o cálculo (não só nomeia a métrica). "saiu do bolso" é linguagem
 concreta que ancora o conceito no mundo real do usuário — não é financês, não é jargão técnico.
 
 ---
 
-**Paywall/upgrade — limite de veículos atingido** *(funcionalidade futura de monetização)*
+**Paywall/upgrade — limite de veículos atingido** _(funcionalidade futura de monetização)_
 
-| | Texto |
-|---|---|
-| Evitar | "Você atingiu o limite do plano gratuito. Faça upgrade para continuar." |
-| Nave | "Você já acompanha 2 veículos — o plano atual chega até aí. Para incluir mais, escolha o plano que faz sentido para você." |
+|           | Texto                                                                                                                      |
+| --------- | -------------------------------------------------------------------------------------------------------------------------- |
+| Evitar    | "Você atingiu o limite do plano gratuito. Faça upgrade para continuar."                                                    |
+| navestory | "Você já acompanha 2 veículos — o plano atual chega até aí. Para incluir mais, escolha o plano que faz sentido para você." |
 
-*Mecanismo:* Sábio (fato concreto: "o plano atual chega até aí", não "limite atingido") +
+_Mecanismo:_ Sábio (fato concreto: "o plano atual chega até aí", não "limite atingido") +
 autonomia do Cuidador ("que faz sentido para você" — sem urgência falsa, sem pressão de Herói).
 O CTA do botão deve ser "Ver planos", nunca "Fazer upgrade agora".
 
@@ -566,24 +574,24 @@ O CTA do botão deve ser "Ver planos", nunca "Fazer upgrade agora".
 
 **Exportação concluída — relatório gerado**
 
-| | Texto |
-|---|---|
-| Evitar | "Exportação concluída com sucesso. O arquivo foi gerado." |
-| Nave | "Relatório gerado. Você encontra o PDF na pasta de downloads." |
+|           | Texto                                                          |
+| --------- | -------------------------------------------------------------- |
+| Evitar    | "Exportação concluída com sucesso. O arquivo foi gerado."      |
+| navestory | "Relatório gerado. Você encontra o PDF na pasta de downloads." |
 
-*Mecanismo:* Sábio com fato concreto e instrução do próximo passo ("na pasta de downloads" —
+_Mecanismo:_ Sábio com fato concreto e instrução do próximo passo ("na pasta de downloads" —
 não "foi enviado para seu e-mail" de forma vaga). Nenhuma fórmula de confirmação burocrática.
 
 ---
 
 **Convite de compartilhamento de acesso**
 
-| | Texto |
-|---|---|
-| Evitar | "Convite enviado ao usuário com sucesso." |
-| Nave | "Convite enviado para [email]. Assim que confirmar, verá os veículos que você compartilhar." |
+|           | Texto                                                                                        |
+| --------- | -------------------------------------------------------------------------------------------- |
+| Evitar    | "Convite enviado ao usuário com sucesso."                                                    |
+| navestory | "Convite enviado para [email]. Assim que confirmar, verá os veículos que você compartilhar." |
 
-*Mecanismo:* Sábio explica o que vai acontecer a seguir ("assim que confirmar") — não deixa o
+_Mecanismo:_ Sábio explica o que vai acontecer a seguir ("assim que confirmar") — não deixa o
 usuário no escuro sobre o próximo passo. O [email] deve ser o endereço real, não um placeholder
 genérico como "o destinatário".
 
@@ -591,25 +599,25 @@ genérico como "o destinatário".
 
 **Loading de cálculo demorado (>2 segundos)**
 
-| | Texto |
-|---|---|
-| Evitar | "Carregando dados..." |
-| Nave | "Calculando o custo total — pode levar alguns segundos." |
+|           | Texto                                                    |
+| --------- | -------------------------------------------------------- |
+| Evitar    | "Carregando dados..."                                    |
+| navestory | "Calculando o custo total — pode levar alguns segundos." |
 
-*Mecanismo:* Sábio define expectativa com tempo real ("alguns segundos", não "aguarde"). A
+_Mecanismo:_ Sábio define expectativa com tempo real ("alguns segundos", não "aguarde"). A
 reticências em "Carregando..." é o único uso autorizado de reticências no produto (ver §2.2),
-mas a versão Nave substitui a frase vaga por contexto do que está acontecendo.
+mas a versão navestory substitui a frase vaga por contexto do que está acontecendo.
 
 ---
 
 **Erro de conexão — sem internet**
 
-| | Texto |
-|---|---|
-| Evitar | "Sem conexão com a internet. Verifique sua rede e tente novamente." |
-| Nave | "Você está sem conexão agora. Assim que voltar, o Nave retoma de onde parou." |
+|           | Texto                                                                              |
+| --------- | ---------------------------------------------------------------------------------- |
+| Evitar    | "Sem conexão com a internet. Verifique sua rede e tente novamente."                |
+| navestory | "Você está sem conexão agora. Assim que voltar, o navestory retoma de onde parou." |
 
-*Mecanismo:* Cuidador (assegura com fato concreto — "retoma de onde parou" — sem a fórmula
+_Mecanismo:_ Cuidador (assegura com fato concreto — "retoma de onde parou" — sem a fórmula
 de reasseguramento proibida "seus dados estão seguros"). Sábio (não culpa o usuário, não
 drama, apenas estado + o que acontece a seguir).
 
@@ -617,7 +625,7 @@ drama, apenas estado + o que acontece a seguir).
 
 #### Opções de tagline pública
 
-A UVP interna ("O Nave transforma cada quilômetro rodado em clareza — não em mais uma planilha")
+A UVP interna ("O navestory transforma cada quilômetro rodado em clareza — não em mais uma planilha")
 é precisa como filtro de decisão interno, mas tem 14 palavras e uma negação — formato que funciona
 em landing page como texto de apoio, não como tagline de memória em site, app store ou anúncio.
 
@@ -635,9 +643,9 @@ segunda entrega a promessa do Sábio com precisão: não "entenda melhor", não 
 sabe". O "agora" marca a transformação que o produto entrega. Funciona em anúncio de aquisição,
 app store e header de landing page.
 
-*Por que é a recomendada:* ativa o insight (core do arquétipo Sábio), tem ritmo de duas frases
+_Por que é a recomendada:_ ativa o insight (core do arquétipo Sábio), tem ritmo de duas frases
 curtas que retém, e o "agora você sabe" é a formulação mais honesta da promessa do produto —
-antes do Nave, você estimava; depois, você sabe.
+antes do navestory, você estimava; depois, você sabe.
 
 ---
 
@@ -683,13 +691,13 @@ campanha B2B direcionada.
 
 **Recomendação de uso por contexto:**
 
-| Contexto | Tagline recomendada |
-|---|---|
-| Header de landing page (hero) | Opção 1 — "Seu carro tem custo. Agora você sabe." |
-| App Store / Play Store (subtítulo) | Opção 2 — "Veículo cuidado. Dinheiro entendido." |
-| Anúncio Meta Ads / Google (headline) | Opção 3 — "O que seu carro custa. Sem chute." |
-| Slide de pitch / press kit | Opção 4 — "Clareza sobre o que seu veículo realmente custa." |
-| Campanha segmentada para frota | Opção 5 — "Gestão de frota sem hardware. Só clareza." |
+| Contexto                             | Tagline recomendada                                          |
+| ------------------------------------ | ------------------------------------------------------------ |
+| Header de landing page (hero)        | Opção 1 — "Seu carro tem custo. Agora você sabe."            |
+| App Store / Play Store (subtítulo)   | Opção 2 — "Veículo cuidado. Dinheiro entendido."             |
+| Anúncio Meta Ads / Google (headline) | Opção 3 — "O que seu carro custa. Sem chute."                |
+| Slide de pitch / press kit           | Opção 4 — "Clareza sobre o que seu veículo realmente custa." |
+| Campanha segmentada para frota       | Opção 5 — "Gestão de frota sem hardware. Só clareza."        |
 
 As opções 1 e 2 devem ser **aprovadas antes de qualquer uso público** — são as que mais
 provavelmente se tornarão canônicas e precisam de validação de Douglas antes de aparecer
@@ -738,29 +746,29 @@ surgem quando o redator traduz mentalmente do inglês sem questionar.
 - **"report"** em nome de tela — o produto usa "Relatório de custos", não "Cost Report" nem
   "Report". Nunca misturar idiomas em labels da interface.
 
-- **"cashback", "split"** — o Nave não é app de pagamento; esses termos não têm contexto
+- **"cashback", "split"** — o navestory não é app de pagamento; esses termos não têm contexto
   no produto hoje, mas podem surgir ao descrever integrações. Usar apenas se o conceito
   for diretamente aplicável e não houver substituto em português.
 
 - **"organizar suas finanças"** ou **"controlar seus gastos"** como benefício principal —
-  esses são os benefícios de Mobills e GuiaBolso (concorrentes genéricos). O Nave é sobre
+  esses são os benefícios de Mobills e GuiaBolso (concorrentes genéricos). O navestory é sobre
   veículo. O benefício é "saber o que seu carro está custando", nunca "organizar finanças".
 
 - **"solução"** como substantivo para o produto — "nossa solução de gestão de frotas" é
-  linguagem enterprise que o Nave explicitamente evita. O produto é o Nave, não "a solução".
+  linguagem enterprise que o navestory explicitamente evita. O produto é o navestory, não "a solução".
 
 - **"plataforma"** como descrição do produto em texto de usuário — aceitável em press kit
   e documentação interna; evitar em onboarding e produto ("bem-vindo à plataforma" →
-  "bem-vindo ao Nave").
+  "bem-vindo ao navestory").
 
 - **"usuário"** em qualquer texto voltado para o usuário — o guia já cobre isso, mas
   vale reforçar: "o usuário pode configurar" nunca aparece em tela; é sempre "você".
 
 ---
 
-*Seção adicionada pelo agente `ad-creative` em 2026-07-30, revisando e validando o trabalho
+_Seção adicionada pelo agente `ad-creative` em 2026-07-30, revisando e validando o trabalho
 do `brand-designer` nas seções 2.1 e 2.2. As decisões de posicionamento, arquétipo, paleta e
-logotipo das demais seções não foram alteradas.*
+logotipo das demais seções não foram alteradas._
 
 ---
 
@@ -775,11 +783,15 @@ logotipo das demais seções não foram alteradas.*
 #### Tipo de marca recomendado: Combination mark (símbolo + wordmark)
 
 **Racional:**
+
 - Marcas 100% wordmark (Ramp, Linear) funcionam quando o nome é simples e rítmico o suficiente para
-  ser memorável por si só — o que é o caso do Nave também, mas...
-- O Nave em português tem um significado semântico rico ("nave" = embarcação, invólucro, interior de
-  uma catedral) que pode ser comunicado visualmente via símbolo, ampliando a narrativa de marca sem
-  precisar de texto
+  ser memorável por si só — o que é o caso do navestory também, mas...
+- O nome **navestory** é um composto de duas raízes com carga semântica distinta e complementar:
+  **nave** (em português: embarcação, invólucro protetor, o interior de uma catedral — espaço de
+  orientação e cuidado) + **story** (narrativa, jornada, história acumulada). Juntas, comunicam
+  exatamente o que o produto entrega: a história real de cada veículo, vista com clareza — e um
+  centro de decisão que orienta, como uma nave orienta uma travessia. Esse significado composto
+  pode ser comunicado visualmente via símbolo, ampliando a narrativa de marca sem precisar de texto
 - Em um estágio inicial sem reconhecimento de marca, a combination mark permite que símbolo e wordmark
   trabalhem juntos para construir associação — o símbolo torna-se usável sozinho (favicon, app icon,
   bordado em uniforme) apenas quando o reconhecimento já existe
@@ -805,7 +817,8 @@ centro — inspirados na geometria de rosetas e volutas de talha dourada barroca
 geométrica e contemporânea, nunca ornamental ou florida. Traço/preenchimento com a mesma gramática
 visual dos ícones Lucide já adotados no produto (precisão geométrica, sem serrilhado).
 
-*O que a estrela-rosácea comunica:*
+_O que a estrela-rosácea comunica:_
+
 - **Bússola / orientação / centro de decisão:** a estrela de quatro pontas é a metáfora visual de
   um ponto cardeal de referência — o painel que orienta a gestão da frota, sem ser um velocímetro
   literal (não é um carro, não é uma roda, não é um painel de instrumentos)
@@ -818,7 +831,8 @@ visual dos ícones Lucide já adotados no produto (precisão geométrica, sem se
 - **Escala e precisão:** geometria simétrica e traço único comunicam exatidão — consistente com V5
   (Precisão que liberta)
 
-*O que a estrela-rosácea NÃO é:*
+_O que a estrela-rosácea NÃO é:_
+
 - Não é anel de loading nem progress ring — o núcleo sólido de quatro pontas rompe a leitura
   circular pura
 - Não é âncora, volante, roda ou qualquer elemento náutico/automotivo literal
@@ -826,7 +840,8 @@ visual dos ícones Lucide já adotados no produto (precisão geométrica, sem se
 - Não é uma estrela decorativa genérica — a presença dos anéis orbitais e a proporção das pontas
   são o que distingue a forma de um ícone de "favorito"/"destaque" comum em UI
 
-*Sistema em duas camadas — completo vs. reduzido (definido no handoff de execução):*
+_Sistema em duas camadas — completo vs. reduzido (definido no handoff de execução):_
+
 - **Símbolo completo** (`symbol-full`, ≥64px: dashboard, marketing, apresentações) — estrela +
   anéis orbitais, com leve gradiente/chanfro metálico entre `oklch(67.4% 0.122 86)` e
   `oklch(48% 0.10 82)`
@@ -839,13 +854,15 @@ Os detalhes completos de geometria, paleta corrigida e regras de execução (o q
 consolidados em `HANDOFF-SIMBOLO-EQUIPE-DESIGN-2026-07-31.md` — este documento permanece a fonte
 narrativa/estratégica do conceito, aquele é a fonte de execução técnica.
 
-*Tratamento cromático do símbolo:*
+_Tratamento cromático do símbolo:_
+
 - Versão principal: símbolo em ouro-acento (`oklch(67.4% 0.122 86)`) sobre fundo escuro; wordmark em branco
 - Versão sobre fundo claro: símbolo em ouro-bronze estrutural (`oklch(48% 0.10 82)`); wordmark em azul-índigo principal
 - Versão monocromática (preto): símbolo e wordmark em preto sólido
 - Versão monocromática (branco): símbolo e wordmark em branco
 
-*Proporção símbolo/wordmark:*
+_Proporção símbolo/wordmark:_
+
 - O símbolo ocupa altura equivalente ao cap-height do wordmark
 - O espaçamento entre símbolo e wordmark é igual a 1× a largura do elemento central do símbolo (a estrela)
 - A leitura natural é símbolo à esquerda, wordmark à direita — a versão empilhada (símbolo acima,
@@ -853,41 +870,42 @@ narrativa/estratégica do conceito, aquele é a fonte de execução técnica.
 
 #### Wordmark
 
-"Nave" em Inter Variable, peso 600 (SemiBold), caixa baixa.
+"navestory" em Inter Variable, peso 600 (SemiBold), caixa baixa.
 
-*Por que caixa baixa:*
-- "NAVE" em maiúsculas leria como sigla ou nome de empresa estatal ("NAVE", "CAPES", "BNDES")
-- "Nave" com inicial maiúscula leria como nome próprio de pessoa ou lugar — é o padrão de mercado,
+_Por que caixa baixa:_
+
+- "NAVESTORY" em maiúsculas leria como sigla ou nome de empresa estatal ("NAVESTORY", "CAPES", "BNDES")
+- "Navestory" com inicial maiúscula leria como nome próprio de pessoa ou lugar — é o padrão de mercado,
   mas perde a oportunidade de reforçar a personalidade "Direto" e "Caloroso" que a caixa baixa entrega
-- "nave" em caixa baixa tem precedentes fortes em marcas do espaço tech: "linear", "vercel", "notion",
-  "stripe" — o registros informal sem perder sofisticação
+- "navestory" em caixa baixa tem precedentes fortes em marcas do espaço tech: "linear", "vercel", "notion",
+  "stripe" — registro informal sem perder sofisticação
 
-*Letterspacing:* -0.02em (levemente condensado) — aumenta a coesão visual da palavra curta e
+_Letterspacing:_ -0.02em (levemente condensado) — aumenta a coesão visual da palavra curta e
 confere confiança sem rigidez.
 
-*Uso de variantes OpenType:* ativar `cv03` (zero cortado) e `cv04` (l/1 distintos) na tipografia
-da marca — não que apareçam no wordmark "nave", mas como regra de consistência: quando a fonte Inter
+_Uso de variantes OpenType:_ ativar `cv03` (zero cortado) e `cv04` (l/1 distintos) na tipografia
+da marca — não que apareçam no wordmark "navestory", mas como regra de consistência: quando a fonte Inter
 aparece em contexto institucional, essas variantes estão ativas.
 
 ### 3.2 Versões e Área de Proteção
 
 #### Versões autorizadas
 
-| Versão | Quando usar |
-|---|---|
-| **Principal** — símbolo ouro + wordmark branco, sobre fundo grafite ou azul-índigo | Uso padrão em materiais digitais, dark mode, apresentações |
-| **Sobre fundo claro** — símbolo ouro-bronze + wordmark azul-índigo, sobre fundo branco/grafite-light | Documentos impressos, slides de apresentação em fundo branco, e-mail |
-| **Monocromática preta** — símbolo + wordmark em preto sólido | Contratos, papelaria monocromática, bordado, gravação |
-| **Monocromática branca** — símbolo + wordmark em branco | Sobreposição em fotografia escura, merchandising escuro |
-| **Símbolo isolado** — apenas o núcleo da estrela (marca reduzida, sem anéis), sem wordmark | Favicon (16×16px, 32×32px, SVG), ícone de app, avatar de perfil social — SOMENTE após reconhecimento de marca estabelecido |
-| **Empilhada** — símbolo acima, wordmark abaixo | Avatar de app stores, perfil social quadrado |
+| Versão                                                                                               | Quando usar                                                                                                                |
+| ---------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| **Principal** — símbolo ouro + wordmark branco, sobre fundo grafite ou azul-índigo                   | Uso padrão em materiais digitais, dark mode, apresentações                                                                 |
+| **Sobre fundo claro** — símbolo ouro-bronze + wordmark azul-índigo, sobre fundo branco/grafite-light | Documentos impressos, slides de apresentação em fundo branco, e-mail                                                       |
+| **Monocromática preta** — símbolo + wordmark em preto sólido                                         | Contratos, papelaria monocromática, bordado, gravação                                                                      |
+| **Monocromática branca** — símbolo + wordmark em branco                                              | Sobreposição em fotografia escura, merchandising escuro                                                                    |
+| **Símbolo isolado** — apenas o núcleo da estrela (marca reduzida, sem anéis), sem wordmark           | Favicon (16×16px, 32×32px, SVG), ícone de app, avatar de perfil social — SOMENTE após reconhecimento de marca estabelecido |
+| **Empilhada** — símbolo acima, wordmark abaixo                                                       | Avatar de app stores, perfil social quadrado                                                                               |
 
 #### Tamanho mínimo
 
-| Mídia | Tamanho mínimo (wordmark) |
-|---|---|
-| Digital (px) | 80px de largura total (combination mark) |
-| Impresso (mm) | 25mm de largura total |
+| Mídia           | Tamanho mínimo (wordmark)                                          |
+| --------------- | ------------------------------------------------------------------ |
+| Digital (px)    | 80px de largura total (combination mark)                           |
+| Impresso (mm)   | 25mm de largura total                                              |
 | Símbolo isolado | 16×16px (digital); 8mm (impresso) — abaixo disso, usar só wordmark |
 
 #### Área de proteção (clear space)
@@ -901,7 +919,7 @@ Nenhum elemento visual (texto, ícone, foto, borda, outro logotipo) pode entrar 
 
 ```
 DON'T 1 — Não deformar proporções
-[nave] ← assim não; [ n a v e ] ← assim também não
+[navestory] ← assim não; [ n a v e ] ← assim também não
 Manter proporção original sempre — nunca esticar nem comprimir.
 
 DON'T 2 — Não recolorir arbitrariamente
@@ -923,13 +941,13 @@ O símbolo isolado não é autorizado como logo principal até que pesquisa de r
 indique que o usuário identifica a marca sem o wordmark.
 
 DON'T 6 — Não usar o wordmark em maiúsculas
-"NAVE" não é a marca. "nave" é.
+"navestory" não é a marca. "navestory" é.
 
-DON'T 7 — Não sobrepor símbolo de outra marca ao Nave
+DON'T 7 — Não sobrepor símbolo de outra marca ao navestory
 Em co-branding, os logotipos ficam separados por espaçamento mínimo definido em §4.2.
 
 DON'T 8 — Não recriar o logo tipograficamente
-Usar a fonte Inter com "nave" escrito pelo usuário não é o logotipo — o logotipo tem
+Usar a fonte Inter com "navestory" escrito pelo usuário não é o logotipo — o logotipo tem
 letterspacing, peso e configurações OpenType específicos, fixados nos arquivos de brand.
 ```
 
@@ -945,35 +963,35 @@ eventual uso impresso/institucional).
 > em cores de alta saturação como o azul-índigo); conversões para Pantone exigem comparação física
 > de amostra (swatch) — os números aqui são o ponto de partida mais próximo, não o match definitivo.
 >
-> O CMYK/Pantone são especificados aqui como **preparação para quando o Nave precisar de impressão**
+> O CMYK/Pantone são especificados aqui como **preparação para quando o navestory precisar de impressão**
 > (press kit, cartão de visita, patrocínio de evento) — hoje o produto é 100% digital e esses valores
 > não têm uso imediato. Não inventar caso de uso de impressão onde não existe.
 
 #### Paleta principal — cores de marca
 
-| Papel | OKLCH (autoritativo) | HEX (aprox.) | RGB (aprox.) | CMYK processo (aprox.) | Pantone Solid Coated (aprox.) |
-|---|---|---|---|---|---|
-| **Primary — luz** (botão primário, link, ação principal, light mode) | `oklch(44% 0.19 250)` | `#3B30AF` | 59, 48, 175 | C84 M80 Y0 K10 | 2736 C |
-| **Primary — escuro** (idem, dark mode) | `oklch(66% 0.16 250)` | `#6B62D9` | 107, 98, 217 | C63 M57 Y0 K0 | 2716 C |
-| **Secondary / Bronze** (ouro estrutural, botão secundário, divisor, composição de marca) | `oklch(48% 0.10 82)` | `#7B6420` | 123, 100, 32 | C0 M18 Y75 K52 | 110 C |
-| **Gold accent** (brilho pontual, badge, conquista, detalhe — ≤10% da superfície) | `oklch(67.4% 0.122 86)` | `#B89A2A` | 184, 154, 42 | C0 M15 Y78 K28 | 124 C |
+| Papel                                                                                    | OKLCH (autoritativo)    | HEX (aprox.) | RGB (aprox.) | CMYK processo (aprox.) | Pantone Solid Coated (aprox.) |
+| ---------------------------------------------------------------------------------------- | ----------------------- | ------------ | ------------ | ---------------------- | ----------------------------- |
+| **Primary — luz** (botão primário, link, ação principal, light mode)                     | `oklch(44% 0.19 250)`   | `#3B30AF`    | 59, 48, 175  | C84 M80 Y0 K10         | 2736 C                        |
+| **Primary — escuro** (idem, dark mode)                                                   | `oklch(66% 0.16 250)`   | `#6B62D9`    | 107, 98, 217 | C63 M57 Y0 K0          | 2716 C                        |
+| **Secondary / Bronze** (ouro estrutural, botão secundário, divisor, composição de marca) | `oklch(48% 0.10 82)`    | `#7B6420`    | 123, 100, 32 | C0 M18 Y75 K52         | 110 C                         |
+| **Gold accent** (brilho pontual, badge, conquista, detalhe — ≤10% da superfície)         | `oklch(67.4% 0.122 86)` | `#B89A2A`    | 184, 154, 42 | C0 M15 Y78 K28         | 124 C                         |
 
 #### Paleta de fundo e superfície
 
-| Papel | HEX (aprox.) | RGB (aprox.) | CMYK | Nota |
-|---|---|---|---|---|
-| **Background light** (fundo de página, light mode) | `#F4F5F7` | 244, 245, 247 | C2 M1 Y0 K3 | grafite-99 |
-| **Background dark** (fundo de página, dark mode) | `#13131A` | 19, 19, 26 | C30 M27 Y0 K90 | grafite-10 — **não é preto puro** |
-| **Card light** | `#EAEBEE` | 234, 235, 238 | C2 M1 Y0 K7 | grafite-95 |
-| **Card dark** | `#1B1B22` | 27, 27, 34 | C21 M19 Y0 K87 | grafite-20 |
+| Papel                                              | HEX (aprox.) | RGB (aprox.)  | CMYK           | Nota                              |
+| -------------------------------------------------- | ------------ | ------------- | -------------- | --------------------------------- |
+| **Background light** (fundo de página, light mode) | `#F4F5F7`    | 244, 245, 247 | C2 M1 Y0 K3    | grafite-99                        |
+| **Background dark** (fundo de página, dark mode)   | `#13131A`    | 19, 19, 26    | C30 M27 Y0 K90 | grafite-10 — **não é preto puro** |
+| **Card light**                                     | `#EAEBEE`    | 234, 235, 238 | C2 M1 Y0 K7    | grafite-95                        |
+| **Card dark**                                      | `#1B1B22`    | 27, 27, 34    | C21 M19 Y0 K87 | grafite-20                        |
 
 #### Paleta semântica (estados)
 
-| Papel | HEX (aprox.) | OKLCH | Nota |
-|---|---|---|---|
-| Danger / Erro | `#C94A20` | `oklch(56.3% 0.14 32)` | Terracota — inalterado do irmão |
-| Success / Sucesso | verde H=150 | `oklch(58% 0.13 150)` (aprox.) | Verde floresta — inalterado |
-| Warning / Aviso | âmbar | `oklch(72% 0.14 85)` (aprox.) | — |
+| Papel             | HEX (aprox.) | OKLCH                          | Nota                            |
+| ----------------- | ------------ | ------------------------------ | ------------------------------- |
+| Danger / Erro     | `#C94A20`    | `oklch(56.3% 0.14 32)`         | Terracota — inalterado do irmão |
+| Success / Sucesso | verde H=150  | `oklch(58% 0.13 150)` (aprox.) | Verde floresta — inalterado     |
+| Warning / Aviso   | âmbar        | `oklch(72% 0.14 85)` (aprox.)  | —                               |
 
 > **Aviso de gamut para impressão:** o azul-índigo `primary` (`oklch(44% 0.19 250)`) está fora do
 > gamut CMYK em algumas impressoras. A conversão C84 M80 Y0 K10 é o mais próximo possível, mas
@@ -983,13 +1001,13 @@ eventual uso impresso/institucional).
 > crítica. Para impressão de baixo custo (ofício, impressora de escritório), aceitar a perda e
 > usar CMYK processo.
 
-#### Hierarquia de uso (regra 60-30-10 aplicada ao Nave)
+#### Hierarquia de uso (regra 60-30-10 aplicada ao navestory)
 
-| Proporção | Cor | Papel |
-|---|---|---|
-| ~60% | Grafite (superfície, fundo) | Sustentação neutra — deixa conteúdo e cores de marca respirar |
-| ~30% | Azul-índigo (primary) | Identidade, ação, navegação, hierarquia |
-| ~10% | Ouro (secondary + accent) | Destaque, conquista, elemento de marca distintivo |
+| Proporção | Cor                         | Papel                                                         |
+| --------- | --------------------------- | ------------------------------------------------------------- |
+| ~60%      | Grafite (superfície, fundo) | Sustentação neutra — deixa conteúdo e cores de marca respirar |
+| ~30%      | Azul-índigo (primary)       | Identidade, ação, navegação, hierarquia                  |
+| ~10%      | Ouro (secondary + accent)   | Destaque, conquista, elemento de marca distintivo             |
 
 A proporção 60-30-10 é ponto de partida para qualquer composição — peças com muito espaço em branco
 (poster, slide de abertura) podem ampliar o grafite para 70%+ e reduzir o azul; peças de ação
@@ -1000,13 +1018,13 @@ A proporção 60-30-10 é ponto de partida para qualquer composição — peças
 Todos os pares abaixo foram avaliados com WCAG 2.2 AA como piso mínimo inegociável. APCA é indicado
 como referência adicional para pares com peso de fonte leve ou tamanho reduzido.
 
-| Texto | Fundo | Razão estimada | Passa AA? | Nota |
-|---|---|---|---|---|
-| Branco `#FFFFFF` | Primary light `#3B30AF` | ~7.1:1 | Sim (AAA) | CTA principal, botão primário |
-| Branco `#FFFFFF` | Background dark `#13131A` | ~18:1 | Sim (AAA) | Corpo em dark mode |
-| Primary light `#3B30AF` | Background light `#F4F5F7` | ~7.8:1 | Sim (AAA) | Links em light mode |
-| Preto `#000000` | Gold accent `#B89A2A` | ~6.2:1 | Sim (AA) | Badge de destaque com texto |
-| Branco `#FFFFFF` | Secondary/Bronze `#7B6420` | ~5.1:1 | Sim (AA) | Botão secundário — verificar com APCA |
+| Texto                   | Fundo                      | Razão estimada | Passa AA? | Nota                                  |
+| ----------------------- | -------------------------- | -------------- | --------- | ------------------------------------- |
+| Branco `#FFFFFF`        | Primary light `#3B30AF`    | ~7.1:1         | Sim (AAA) | CTA principal, botão primário         |
+| Branco `#FFFFFF`        | Background dark `#13131A`  | ~18:1          | Sim (AAA) | Corpo em dark mode                    |
+| Primary light `#3B30AF` | Background light `#F4F5F7` | ~7.8:1         | Sim (AAA) | Links em light mode                   |
+| Preto `#000000`         | Gold accent `#B89A2A`      | ~6.2:1         | Sim (AA)  | Badge de destaque com texto           |
+| Branco `#FFFFFF`        | Secondary/Bronze `#7B6420` | ~5.1:1         | Sim (AA)  | Botão secundário — verificar com APCA |
 
 > **Pendência C-DS-01 (herdada do documento irmão):** pares `warning`/`success` sobre canvas geral
 > ainda precisam de validação formal — aguardando spec de recalibração. Esta tabela não resolve a
@@ -1021,6 +1039,7 @@ A decisão já está aprovada no documento irmão (seção 5). O que falta é o 
 **Licenciamento:** Inter é publicada sob a SIL Open Font License 1.1 (OFL) — uso gratuito, inclusive
 em produto comercial, sem royalties. Não exige atribuição em uso de produto; atribuição em documentos
 tipográficos é cortesia de mercado. Fonte disponível em:
+
 - Google Fonts (CDN, subsetagem automática, gratuito)
 - `fontsource` npm package (recomendado para Next.js — sem dependência de CDN externo, controle de
   subsetagem, adequado ao projeto já usando bundler)
@@ -1030,11 +1049,21 @@ tipográficos é cortesia de mercado. Fonte disponível em:
 (cyrillic, greek) — aumenta o peso sem benefício para o mercado brasileiro.
 
 **Fallback de sistema (font stack):**
+
 ```css
-font-family: 'Inter', ui-sans-serif, system-ui, -apple-system,
-             BlinkMacSystemFont, 'Segoe UI', Roboto,
-             'Helvetica Neue', Arial, sans-serif;
+font-family:
+  "Inter",
+  ui-sans-serif,
+  system-ui,
+  -apple-system,
+  BlinkMacSystemFont,
+  "Segoe UI",
+  Roboto,
+  "Helvetica Neue",
+  Arial,
+  sans-serif;
 ```
+
 O fallback garante que, se a Inter não carregar (conexão lenta, falha de CDN), o sistema sirva
 a fonte de UI nativa — que no macOS é SF Pro, no Windows é Segoe UI — ambas sem-serif de alta
 legibilidade e proporções próximas à Inter.
@@ -1046,14 +1075,14 @@ o custo de manutenção de duas famílias não se paga no estágio atual. A Inte
 
 **Escala para materiais institucionais (fora do produto):**
 
-| Contexto | Tamanho / Peso | Uso |
-|---|---|---|
-| Headline de landing page | 40-60px / 700 | H1 do site institucional |
-| Subheadline | 24-32px / 600 | H2/H3 de seção |
-| Body de landing page | 16-18px / 400 | Parágrafos explicativos |
-| Caption / legal | 12-13px / 400 | Rodapé, atribuições, nota legal |
-| Apresentações (slide título) | 48-64px / 700 | Fonte para apresentações de pitch/investidor |
-| Apresentações (slide body) | 18-24px / 400 | Corpo de slide |
+| Contexto                     | Tamanho / Peso | Uso                                          |
+| ---------------------------- | -------------- | -------------------------------------------- |
+| Headline de landing page     | 40-60px / 700  | H1 do site institucional                     |
+| Subheadline                  | 24-32px / 600  | H2/H3 de seção                               |
+| Body de landing page         | 16-18px / 400  | Parágrafos explicativos                      |
+| Caption / legal              | 12-13px / 400  | Rodapé, atribuições, nota legal              |
+| Apresentações (slide título) | 48-64px / 700  | Fonte para apresentações de pitch/investidor |
+| Apresentações (slide body)   | 18-24px / 400  | Corpo de slide                               |
 
 A escala do produto (definida no documento irmão, seção 5) é distinta desta — não misturar as duas
 tabelas. O produto tem suas próprias restrições de densidade; materiais institucionais têm mais espaço
@@ -1076,15 +1105,17 @@ em B2B SaaS: o produto em si é o visual principal dos materiais institucionais.
 de pessoas, não há ilustração abstrata de terceiros, não há stock photography de carros — há
 **capturas de tela da UI real**, polidas, sobre fundo grafite escuro ou gradiente tonal do azul-índigo.
 
-*Por que isso funciona para o Nave:*
-- A UI do Nave já tem identidade visual própria (dark mode grafite, primário índigo, ouro de destaque)
+_Por que isso funciona para o navestory:_
+
+- A UI do navestory já tem identidade visual própria (dark mode grafite, primário índigo, ouro de destaque)
   — ela já é bonita o suficiente para ser o herói visual
 - Screenshots eliminam a desconfiança de "mas como é de verdade?" — o maior obstáculo de conversão
   em SaaS
 - Custo zero de produção visual externa (não há fotógrafo, não há estúdio)
 - Escala perfeitamente: cada feature nova gera novo visual de marketing automaticamente
 
-*Tratamento de screenshots:*
+_Tratamento de screenshots:_
+
 - Fundo de apresentação: grafite escuro (`#13131A`) ou degradê azul-índigo tom 20→10 (da escala tonal)
 - Screenshot em device frame opcional — se usar, frame minimalista sem marca de fabricante (frame genérico,
   preto ou cinza escuro) para não criar dependência visual de uma marca específica de hardware
@@ -1096,6 +1127,7 @@ de pessoas, não há ilustração abstrata de terceiros, não há stock photogra
 
 Quando screenshots não forem suficientes (conceito abstrato, empty state de marketing, animação
 de hero), usar a mesma linguagem já definida no produto, com mais espaço negativo:
+
 - Escala tonal do azul-índigo (tons 60-90 para figuras, 30-50 para detalhes)
 - Ouro-acento pontualmente (≤10% da área da ilustração) em elementos de destaque
 - Traço único (equivalente a 2px em 24×24px — escalar proporcionalmente)
@@ -1104,8 +1136,9 @@ de hero), usar a mesma linguagem já definida no produto, com mais espaço negat
 
 **Fotografia humana: uso restrito e arte-dirigido**
 
-Se/quando o Nave chegar ao estágio de produção fotográfica (press kit com foto do fundador,
+Se/quando o navestory chegar ao estágio de produção fotográfica (press kit com foto do fundador,
 campanha de awareness com persona real), a direção é:
+
 - **Sujeito:** a pessoa + o veículo; nunca pessoa isolada de estúdio (remete a stock genérico)
 - **Fundo:** ambiente real (oficina, garagem, estacionamento), nunca fundo infinito de estúdio
 - **Paleta:** tratamento de cor na edição que preserve azuis e tons terrosos (consistente com a
@@ -1128,7 +1161,7 @@ curadoria que corresponda à direção acima — nunca o primeiro resultado.
 
 ### 4.1 Estrutura de Repositório de Assets
 
-O Nave não usa ferramenta DAM externa (Bynder, Brandfolder, Canto) — custo não justificado para
+O navestory não usa ferramenta DAM externa (Bynder, Brandfolder, Canto) — custo não justificado para
 o estágio atual. A solução é um diretório `assets/brand/` no próprio repositório do projeto,
 com estrutura padronizada que evolui conforme os assets forem produzidos.
 
@@ -1145,30 +1178,30 @@ assets/
     ├── README.md                     ← índice desta pasta: o que há, como usar, o que não existe ainda
     ├── logo/
     │   ├── primary/                  ← combination mark principal (símbolo + wordmark)
-    │   │   ├── nave-logo.svg         ← SVG vetorial (fonte de verdade)
-    │   │   ├── nave-logo@2x.png      ← PNG 2x para e-mail e contextos sem SVG
-    │   │   └── nave-logo@1x.png      ← PNG 1x
+    │   │   ├── navestory-logo.svg         ← SVG vetorial (fonte de verdade)
+    │   │   ├── navestory-logo@2x.png      ← PNG 2x para e-mail e contextos sem SVG
+    │   │   └── navestory-logo@1x.png      ← PNG 1x
     │   ├── dark/                     ← versão sobre fundo escuro (branco/ouro)
-    │   │   ├── nave-logo-dark.svg
-    │   │   └── nave-logo-dark@2x.png
+    │   │   ├── navestory-logo-dark.svg
+    │   │   └── navestory-logo-dark@2x.png
     │   ├── light/                    ← versão sobre fundo claro (índigo/bronze)
-    │   │   ├── nave-logo-light.svg
-    │   │   └── nave-logo-light@2x.png
+    │   │   ├── navestory-logo-light.svg
+    │   │   └── navestory-logo-light@2x.png
     │   ├── mono/                     ← versões monocromáticas
-    │   │   ├── nave-logo-black.svg
-    │   │   └── nave-logo-white.svg
+    │   │   ├── navestory-logo-black.svg
+    │   │   └── navestory-logo-white.svg
     │   ├── symbol/                   ← símbolo isolado (arco), uso restrito conforme §3.2
-    │   │   ├── nave-symbol.svg
-    │   │   └── nave-symbol-white.svg
+    │   │   ├── navestory-symbol.svg
+    │   │   └── navestory-symbol-white.svg
     │   └── favicon/
     │       ├── favicon.svg           ← SVG universal (browsers modernos)
     │       ├── favicon-32x32.png
     │       ├── favicon-16x16.png
     │       └── apple-touch-icon.png  ← 180×180px
     ├── colors/
-    │   ├── nave-swatches.ase         ← Adobe Swatch Exchange (Illustrator, Photoshop, InDesign)
-    │   ├── nave-swatches.clr         ← Apple Color List (macOS, Sketch)
-    │   └── nave-palette.json         ← referência de valores em JSON (OKLCH + HEX + RGB)
+    │   ├── navestory-swatches.ase         ← Adobe Swatch Exchange (Illustrator, Photoshop, InDesign)
+    │   ├── navestory-swatches.clr         ← Apple Color List (macOS, Sketch)
+    │   └── navestory-palette.json         ← referência de valores em JSON (OKLCH + HEX + RGB)
     ├── fonts/
     │   └── inter/
     │       ├── LICENSE.txt           ← cópia da OFL 1.1
@@ -1191,22 +1224,23 @@ assets/
         │   ├── signature.html        ← assinatura de e-mail (HTML inline)
         │   └── marketing-header.svg  ← header de e-mail marketing
         └── presentation/
-            └── nave-slides-template.pptx   ← template de apresentação (PowerPoint-compatível)
+            └── navestory-slides-template.pptx   ← template de apresentação (PowerPoint-compatível)
 ```
 
 #### Convenção de nomenclatura de arquivos
 
-- Caixa baixa, hifenização, sem espaços: `nave-logo-dark@2x.png`
-- Prefixo de marca sempre "nave-": `nave-logo`, `nave-symbol`, `nave-swatches`
+- Caixa baixa, hifenização, sem espaços: `navestory-logo-dark@2x.png`
+- Prefixo de marca sempre "navestory-": `navestory-logo`, `navestory-symbol`, `navestory-swatches`
 - Sufixos de resolução: `@1x`, `@2x`, `@3x` — sem sufixo = arquivo vetorial ou single-res
 - Sufixos de tema: `-dark` (fundo escuro), `-light` (fundo claro), `-black`, `-white` (mono)
-- Versões de dimensão específica: `nave-logo-256.png`, `nave-logo-512.png`
-- **Nunca:** `nave-logo-final.svg`, `nave-logo-novo.svg`, `nave-logo-v2-corrigido.svg` —
+- Versões de dimensão específica: `navestory-logo-256.png`, `navestory-logo-512.png`
+- **Nunca:** `navestory-logo-final.svg`, `navestory-logo-novo.svg`, `navestory-logo-v2-corrigido.svg` —
   o Git resolve versionamento; nome de arquivo é sempre o atual definitivo
 
 #### assets/brand/README.md — conteúdo mínimo obrigatório
 
 O README desta pasta deve conter:
+
 1. Link para este documento (`PROPOSTA-BRAND-PLATAFORMA-2026-07-30.md`) e para o documento irmão
 2. Tabela de "o que há × o que ainda não existe" — status de cada subpasta (produzido / pendente)
 3. Como obter o logo nos formatos corretos (onde abrir o SVG, como gerar PNG de outras resoluções)
@@ -1214,40 +1248,41 @@ O README desta pasta deve conter:
 
 ### 4.2 Regras de Co-branding
 
-Co-branding ocorre quando o Nave aparece ao lado da marca de um parceiro — integrações de produto,
+Co-branding ocorre quando o navestory aparece ao lado da marca de um parceiro — integrações de produto,
 patrocínios, conteúdo conjunto, anúncio de parceria.
 
 #### Regras gerais
 
-**R-CB-01 — Separação obrigatória:** os logotipos do Nave e do parceiro nunca se tocam nem se
-sobrepõem. O espaço mínimo entre eles é igual a 1× a largura do símbolo do Nave (o arco)
+**R-CB-01 — Separação obrigatória:** os logotipos do navestory e do parceiro nunca se tocam nem se
+sobrepõem. O espaço mínimo entre eles é igual a 1× a largura do símbolo do navestory (o arco)
 em qualquer aplicação.
 
 **R-CB-02 — Separador visual:** o elemento separador entre os dois logotipos é um "×" (sinal
 de multiplicação, não a letra x) ou uma linha vertical divisória de 1px na cor grafite-40 aproximado.
-Formato preferido: `nave × parceiro`. O "×" comunica colaboração ativa, não subordinação.
+Formato preferido: `navestory × parceiro`. O "×" comunica colaboração ativa, não subordinação.
 
 **R-CB-03 — Hierarquia:** quando a parceria for de igual para igual, os dois logotipos têm a
-mesma altura de cap-height. Quando o Nave for o produto (parceiro é integração/plugin dentro do Nave),
-o logo do parceiro é 20% menor. Quando o Nave aparecer no contexto do parceiro (plataforma do parceiro
-exibe o Nave como opção), o logo do parceiro pode ser maior — mas o Nave mantém área de proteção.
+mesma altura de cap-height. Quando o navestory for o produto (parceiro é integração/plugin dentro do navestory),
+o logo do parceiro é 20% menor. Quando o navestory aparecer no contexto do parceiro (plataforma do parceiro
+exibe o navestory como opção), o logo do parceiro pode ser maior — mas o navestory mantém área de proteção.
 
 **R-CB-04 — Cor de fundo neutro:** em co-branding, usar sempre fundo branco ou grafite claro
-(`#F4F5F7`) — nunca a cor de marca do parceiro como fundo para o Nave, e nunca o azul-índigo do
-Nave como fundo para logo do parceiro. Isso garante que nenhum dos dois logotipos perca legibilidade
+(`#F4F5F7`) — nunca a cor de marca do parceiro como fundo para o navestory, e nunca o azul-índigo do
+navestory como fundo para logo do parceiro. Isso garante que nenhum dos dois logotipos perca legibilidade
 por causa da cor do outro.
 
 **R-CB-05 — Aprovação prévia:** qualquer material de co-branding deve ser aprovado por Douglas
 antes de publicação — sem exceção. Parceiro não tem autonomia para produzir material com o logo do
-Nave sem aprovação.
+navestory sem aprovação.
 
-**R-CB-06 — Sem combinação de efeitos:** o logo do Nave em co-branding segue as mesmas regras
+**R-CB-06 — Sem combinação de efeitos:** o logo do navestory em co-branding segue as mesmas regras
 de uso da seção 3.3 (don'ts) — não aceita sombra, distorção ou recoloração mesmo que o parceiro
 tenha essa linguagem na própria identidade.
 
 #### Hierarquia de distribuição de assets para parceiros
 
-Quando um parceiro solicitar o logo do Nave para usar em material de comunicação:
+Quando um parceiro solicitar o logo do navestory para usar em material de comunicação:
+
 1. Fornecer o SVG original da versão mais adequada ao fundo que o parceiro vai usar
 2. Incluir link para este documento (seção 3.2 e 3.3) — brevemente, as regras de área de proteção e don'ts
 3. Solicitar preview do material antes da publicação (R-CB-05)
@@ -1269,7 +1304,7 @@ Douglas, as ações são:
 2. **Criar `assets/brand/README.md`** com status inicial de cada subpasta (tudo "pendente" até os
    arquivos forem produzidos)
 
-3. **Produzir `assets/brand/colors/nave-palette.json`** com os valores OKLCH + HEX + RGB desta
+3. **Produzir `assets/brand/colors/navestory-palette.json`** com os valores OKLCH + HEX + RGB desta
    especificação — ponto de partida para o arquivo de swatches
 
 4. **Spec formal de marca** (`SPEC-YYYYMMDD-NNN`) cobrindo os tokens e regras que precisam de
@@ -1285,6 +1320,18 @@ Douglas, as ações são:
 
 ## Changelog
 
+- **2026-08-01** — Rebrand: produto renomeado de "Nave" para "navestory". Dois ajustes conceituais
+  na seção 3.1 (não cosméticos — não resolvidos pelo find-replace mecânico):
+  (1) Racional do combination mark atualizado: o argumento "o nome tem significado semântico rico
+  em português" agora explica corretamente que a raiz **nave** (embarcação, invólucro, interior de
+  catedral) + o sufixo **story** (narrativa, jornada, história acumulada) formam um composto com
+  carga semântica dupla — a identidade visual via símbolo amplifica esse significado composto,
+  não apenas a palavra isolada "nave" que existia no nome anterior.
+  (2) Exemplos tipográficos do wordmark corrigidos: o find-replace havia uniformizado
+  "NAVESTORY"/"Navestory"/"navestory" para "navestory" em todas as ocorrências, tornando a
+  justificativa de caixa baixa incoerente (todos os três exemplos mostravam a mesma string).
+  Nenhuma outra seção — paleta, tipografia, arquétipo, voz, símbolo — foi alterada.
+
 - **2026-07-31** — Seção 3.1 revisada: conceito de símbolo "O Arco Aberto" substituído pela
   "Estrela-Rosácea" (estrela de quatro pontas + anéis orbitais), após avaliação de que um arco
   parcial era forma disputada demais no mercado (spinners, gauges de fitness tracker, arco
@@ -1296,5 +1343,5 @@ Douglas, as ações são:
 
 ---
 
-*Documento produzido por `brand-designer` em 2026-07-30. Complementa
-`PROPOSTA-BRAND-DESIGN-SYSTEM-2026-07-30.md`. Aguarda aprovação antes de qualquer implementação.*
+_Documento produzido por `brand-designer` em 2026-07-30. Complementa
+`PROPOSTA-BRAND-DESIGN-SYSTEM-2026-07-30.md`. Aguarda aprovação antes de qualquer implementação._

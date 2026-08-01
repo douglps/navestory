@@ -22,7 +22,7 @@ camadas: [frontend, design]
 O usuário pediu para "padronizar todo o design system de acordo com o showcase Prata". Uma
 auditoria (2 agentes de exploração) comparou os 9 componentes do brand showcase
 (`apps/web/src/app/(app)/brand-showcase/_components/*-specimens/`) ainda sem análogo em
-`@nave/ui` contra o uso real em produção. O usuário confirmou construir só os que têm consumidor
+`@navestory/ui` contra o uso real em produção. O usuário confirmou construir só os que têm consumidor
 real hoje: **Badge, Skeleton, Container, Tooltip**. `Avatar`, `ProgressBar`, `Divider` e `Stack`
 ficam sem ação por ora (nenhuma tela real os usa hoje, só aparecem no showcase) — mesmo critério já
 aplicado a `Switch`/`Steps`/`DateRangePicker`/`FileUpload`/`Breadcrumb`.
@@ -30,7 +30,7 @@ aplicado a `Switch`/`Steps`/`DateRangePicker`/`FileUpload`/`Breadcrumb`.
 Achados da auditoria:
 
 - **Badge** — 8+ arquivos já convergiam no padrão `border-{semantic} bg-{semantic}-pastel
-  text-foreground`, com um precedente de extração já existente
+text-foreground`, com um precedente de extração já existente
   (`apps/web/src/lib/fines/status-badge.ts`).
 - **Skeleton** — `animate-pulse rounded-* bg-muted` idêntico em 5 lugares, incluindo dois já
   dentro do próprio `packages/ui` (`kpi-card.tsx`, `chart-wrapper.tsx`).
@@ -62,22 +62,22 @@ migração dos consumidores reais identificados; (3) a regra `R-DS-10`, incluind
 
 ## Requisitos Funcionais
 
-| ID | Requisito | Código |
-|----|-----------|--------|
-| RF-01 | `Badge` criado (`variant`: success/warning/danger/info/neutral) | `packages/ui/src/components/badge.tsx` |
-| RF-02 | `Skeleton` criado; `kpi-card.tsx`/`chart-wrapper.tsx` refatorados internamente para compor `Skeleton` em vez de reimplementar `animate-pulse rounded-* bg-muted` | `packages/ui/src/components/skeleton.tsx`, `kpi-card.tsx`, `chart-wrapper.tsx` |
-| RF-03 | `Container` criado (`size`: sm/md/2xl/3xl/4xl/5xl; `gap`: 4/8) | `packages/ui/src/components/container.tsx` |
-| RF-04 | `Tooltip` criado sobre `@radix-ui/react-tooltip` (nova dependência de `packages/ui/package.json`, mesma família Radix de `dialog.tsx`/`combobox.tsx`/`tabs.tsx`) | `packages/ui/src/components/tooltip.tsx` |
-| RF-05 | Badge migrado em `apps/web/src/lib/fines/status-badge.ts` (`FINE_STATUS_BADGE_CLASS` → `FINE_STATUS_BADGE_VARIANT`) e nos consumidores: `fines/page.tsx`, `fines/[id]/page.tsx`, `atividades/page.tsx`, `maintenance/page.tsx`, `VehicleHealthCard.tsx` (`DocumentBadge`) | arquivos citados |
-| RF-06 | Skeleton migrado em `financial-subheader.tsx`, `vehicle-context-chip.tsx`, `vehicle-switcher-content.tsx` | arquivos citados |
-| RF-07 | Container migrado em 28 arquivos `page.tsx` de `(app)/` e `(auth)/` (32 ocorrências) | arquivos citados |
-| RF-08 | Tooltip migrado em `sidebar.tsx` (label ao colapsar), `VehicleHealthCard.tsx` (flags), `atividades/page.tsx` (timestamp) | arquivos citados |
+| ID    | Requisito                                                                                                                                                                                                                                                                 | Código                                                                         |
+| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| RF-01 | `Badge` criado (`variant`: success/warning/danger/info/neutral)                                                                                                                                                                                                           | `packages/ui/src/components/badge.tsx`                                         |
+| RF-02 | `Skeleton` criado; `kpi-card.tsx`/`chart-wrapper.tsx` refatorados internamente para compor `Skeleton` em vez de reimplementar `animate-pulse rounded-* bg-muted`                                                                                                          | `packages/ui/src/components/skeleton.tsx`, `kpi-card.tsx`, `chart-wrapper.tsx` |
+| RF-03 | `Container` criado (`size`: sm/md/2xl/3xl/4xl/5xl; `gap`: 4/8)                                                                                                                                                                                                            | `packages/ui/src/components/container.tsx`                                     |
+| RF-04 | `Tooltip` criado sobre `@radix-ui/react-tooltip` (nova dependência de `packages/ui/package.json`, mesma família Radix de `dialog.tsx`/`combobox.tsx`/`tabs.tsx`)                                                                                                          | `packages/ui/src/components/tooltip.tsx`                                       |
+| RF-05 | Badge migrado em `apps/web/src/lib/fines/status-badge.ts` (`FINE_STATUS_BADGE_CLASS` → `FINE_STATUS_BADGE_VARIANT`) e nos consumidores: `fines/page.tsx`, `fines/[id]/page.tsx`, `atividades/page.tsx`, `maintenance/page.tsx`, `VehicleHealthCard.tsx` (`DocumentBadge`) | arquivos citados                                                               |
+| RF-06 | Skeleton migrado em `financial-subheader.tsx`, `vehicle-context-chip.tsx`, `vehicle-switcher-content.tsx`                                                                                                                                                                 | arquivos citados                                                               |
+| RF-07 | Container migrado em 28 arquivos `page.tsx` de `(app)/` e `(auth)/` (32 ocorrências)                                                                                                                                                                                      | arquivos citados                                                               |
+| RF-08 | Tooltip migrado em `sidebar.tsx` (label ao colapsar), `VehicleHealthCard.tsx` (flags), `atividades/page.tsx` (timestamp)                                                                                                                                                  | arquivos citados                                                               |
 
 ## Requisitos Não-Funcionais
 
-| ID | Requisito | Métrica de Aceite |
-|----|-----------|------------------|
-| RNF-01 | Nenhuma regressão | `tsc --noEmit` limpo; `vitest` completo — `packages/ui` 179/179 (157+22 novos), `apps/web` 329/329 |
+| ID     | Requisito                                                                                                                                          | Métrica de Aceite                                                                                                                                  |
+| ------ | -------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| RNF-01 | Nenhuma regressão                                                                                                                                  | `tsc --noEmit` limpo; `vitest` completo — `packages/ui` 179/179 (157+22 novos), `apps/web` 329/329                                                 |
 | RNF-02 | Zero `animate-pulse`/`<main className="mx-auto flex max-w-`/badge pill inline fora de `Skeleton`/`Container`/`Badge`, exceto exceções documentadas | `grep` confirmando ocorrências restantes só em `brand-showcase/`, `dashboard/concept/*`, e os 3 casos de "tingimento de linha inteira" (não-badge) |
 
 ---
@@ -99,6 +99,6 @@ migração dos consumidores reais identificados; (3) a regra `R-DS-10`, incluind
 
 ## Changelog (pós-aprovação)
 
-| Data | O que mudou | Por quê |
-|------|-------------|---------|
+| Data       | O que mudou                                                                                                                                                              | Por quê                                                                                          |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
 | 2026-07-30 | Implementação concluída (RF-01 a RF-08) e spec criada já como `approved` — decisão e implementação ocorreram na mesma sessão, mesmo padrão de `SPEC-20260729-002`/`003`. | Gate de sincronia exige matriz atualizada com caminhos reais; ver `matrices/rastreabilidade.md`. |

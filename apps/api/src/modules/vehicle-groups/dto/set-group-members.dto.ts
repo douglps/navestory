@@ -1,4 +1,4 @@
-import { setGroupMembersInputSchema } from "@nave/validators";
+import { setGroupMembersInputSchema } from "@navestory/validators";
 import type { z } from "zod";
 
 export const setGroupMembersDtoSchema = setGroupMembersInputSchema;

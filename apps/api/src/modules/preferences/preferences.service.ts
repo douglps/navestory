@@ -1,4 +1,8 @@
-import { Injectable, InternalServerErrorException, Logger } from "@nestjs/common";
+import {
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+} from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import {
   DEFAULT_AUTO_DRAFT_ENABLED,
@@ -6,7 +10,7 @@ import {
   DEFAULT_DASHBOARD_KPI_IDS,
   type ChipField,
   type KpiCatalogId,
-} from "@nave/validators";
+} from "@navestory/validators";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createUserScopedClient } from "../../shared/supabase/create-user-scoped-client";
 import type { UpdatePreferencesDto } from "./dto/update-preferences.dto";
@@ -18,7 +22,8 @@ type PreferencesResponse = {
   timezone: string | null;
 };
 
-const PREFERENCES_COLUMNS = "auto_draft_enabled, vehicle_chip_fields, dashboard_kpi_ids, timezone";
+const PREFERENCES_COLUMNS =
+  "auto_draft_enabled, vehicle_chip_fields, dashboard_kpi_ids, timezone";
 
 /**
  * @spec SPEC-20260612-003
@@ -42,7 +47,10 @@ export class PreferencesService {
    * @spec SPEC-20260612-003 RF-01.3 — fallback para default quando ausente (R-PREF-01)
    * @spec SPEC-20260603-003 RF-06 — fallback de vehicle_chip_fields (R-DISP-03)
    */
-  async findOne(accessToken: string, userId: string): Promise<PreferencesResponse> {
+  async findOne(
+    accessToken: string,
+    userId: string,
+  ): Promise<PreferencesResponse> {
     const { data, error } = await this.clientForUser(accessToken)
       .from("user_preferences")
       .select(PREFERENCES_COLUMNS)
@@ -51,7 +59,9 @@ export class PreferencesService {
 
     if (error) {
       this.logger.error("Falha ao carregar preferências", error.message);
-      throw new InternalServerErrorException("Não foi possível carregar as preferências");
+      throw new InternalServerErrorException(
+        "Não foi possível carregar as preferências",
+      );
     }
 
     const row = data as PreferencesResponse | null;
@@ -82,7 +92,9 @@ export class PreferencesService {
 
     if (error) {
       this.logger.error("Falha ao salvar preferências", error.message);
-      throw new InternalServerErrorException("Não foi possível salvar as preferências");
+      throw new InternalServerErrorException(
+        "Não foi possível salvar as preferências",
+      );
     }
 
     return data as PreferencesResponse;

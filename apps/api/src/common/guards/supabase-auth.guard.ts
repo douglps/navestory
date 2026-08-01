@@ -19,15 +19,20 @@ import type { JwtPayload } from "../../modules/auth/jwt.strategy";
  * (ES256/JWKS, padrão do Supabase CLI atual), então `SUPABASE_JWT_SECRET` (HS256, legado) não
  * consegue validar a assinatura — todo token, mesmo válido, era rejeitado com 401 antes desta
  * correção (achado do teste de ambiente local em 2026-07-19). Também aceita o token via cookie
- * httpOnly (`nave_access_token`), não só via header `Authorization`, alinhando o guard ao
+ * httpOnly (`navestory_access_token`), não só via header `Authorization`, alinhando o guard ao
  * mesmo padrão de extração já usado manualmente em cada controller (ver `extractAccessToken`).
  */
 @Injectable()
 export class SupabaseAuthGuard implements CanActivate {
-  constructor(@Inject(SUPABASE_ADMIN_CLIENT) private readonly supabaseAdmin: SupabaseClient) {}
+  constructor(
+    @Inject(SUPABASE_ADMIN_CLIENT)
+    private readonly supabaseAdmin: SupabaseClient,
+  ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const request = context.switchToHttp().getRequest<Request & { user?: JwtPayload }>();
+    const request = context
+      .switchToHttp()
+      .getRequest<Request & { user?: JwtPayload }>();
     const token = this.extractToken(request);
     if (!token) {
       throw new UnauthorizedException("Token de acesso ausente");
@@ -80,7 +85,8 @@ export class SupabaseAuthGuard implements CanActivate {
     if (header?.startsWith("Bearer ")) {
       return header.slice("Bearer ".length);
     }
-    const cookieToken = (request.cookies as Record<string, string> | undefined)?.nave_access_token;
+    const cookieToken = (request.cookies as Record<string, string> | undefined)
+      ?.navestory_access_token;
     return cookieToken ?? null;
   }
 }

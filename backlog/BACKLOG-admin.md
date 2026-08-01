@@ -4,7 +4,7 @@
 > Este arquivo foi corrigido em 2026-07-12 para refletir o estado real do projeto.
 > Versoes anteriores marcavam todos os 6 itens como `✅` "entregue" com datas de entrega
 > (ex: "✅ 2026-05-28") que não correspondiam ao filesystem real do repositório.
-> O repositório Nave é **greenfield**: não existe nenhum código-fonte implementado.
+> O repositório navestory é **greenfield**: não existe nenhum código-fonte implementado.
 >
 > **O que foi preservado:** a descrição funcional de todas as stories, critérios de aceite,
 > dependências entre itens, pontuação e prioridades — tudo genuíno e mantido integralmente.
@@ -23,10 +23,10 @@
 
 ## Legenda
 
-| Símbolo | Significado                                         |
-| ------- | --------------------------------------------------- |
-| ⚠️      | Pré-requisito ou decisão aberta que bloqueia o item |
-| 🔗      | Depende de outro item deste backlog                 |
+| Símbolo | Significado                                          |
+| ------- | ---------------------------------------------------- |
+| ⚠️      | Pré-requisito ou decisão aberta que bloqueia o item  |
+| 🔗      | Depende de outro item deste backlog                  |
 | 🔶      | Parcialmente implementado — apenas o delta está aqui |
 
 ---
@@ -67,7 +67,7 @@
 
 ### BL-ADMIN-02 · STORY-02 — Auto-exclusão de conta (`DELETE /users/me`)
 
-**Como** usuário do Nave,
+**Como** usuário do navestory,
 **quero** poder solicitar a exclusão permanente da minha conta,
 **para** exercer meu direito ao esquecimento (LGPD Art. 18).
 
@@ -174,25 +174,25 @@
 
 ## Resumo para planejamento
 
-| ID          | Story                                         | Pts | Prioridade | Depende de             | Status  |
-| ----------- | --------------------------------------------- | --- | ---------- | ---------------------- | ------- |
-| BL-ADMIN-01 | `AdminSupabaseService` + `AdminGuard`         | 3   | P0         | —                      | ⏳      |
-| BL-ADMIN-02 | Auto-exclusão `DELETE /users/me`              | 8   | P0         | BL-ADMIN-01, 03        | ⏳      |
-| BL-ADMIN-03 | Corrigir trigger `soft_delete_profile()`      | 2   | P0         | —                      | ⏳      |
-| BL-ADMIN-04 | Admin exclui usuário `DELETE /admin/users/:id`| 3   | P1         | BL-ADMIN-01, 02        | ⏳      |
-| BL-ADMIN-05 | Listar usuários `GET /admin/users`            | 3   | P2         | BL-ADMIN-01            | ⏳      |
-| BL-ADMIN-06 | Audit logs `GET /admin/audit-logs`            | 3   | P2         | BL-ADMIN-01            | ⏳      |
-| **Total**   |                                               | **22 pts** |     |                        |         |
+| ID          | Story                                          | Pts        | Prioridade | Depende de      | Status |
+| ----------- | ---------------------------------------------- | ---------- | ---------- | --------------- | ------ |
+| BL-ADMIN-01 | `AdminSupabaseService` + `AdminGuard`          | 3          | P0         | —               | ⏳     |
+| BL-ADMIN-02 | Auto-exclusão `DELETE /users/me`               | 8          | P0         | BL-ADMIN-01, 03 | ⏳     |
+| BL-ADMIN-03 | Corrigir trigger `soft_delete_profile()`       | 2          | P0         | —               | ⏳     |
+| BL-ADMIN-04 | Admin exclui usuário `DELETE /admin/users/:id` | 3          | P1         | BL-ADMIN-01, 02 | ⏳     |
+| BL-ADMIN-05 | Listar usuários `GET /admin/users`             | 3          | P2         | BL-ADMIN-01     | ⏳     |
+| BL-ADMIN-06 | Audit logs `GET /admin/audit-logs`             | 3          | P2         | BL-ADMIN-01     | ⏳     |
+| **Total**   |                                                | **22 pts** |            |                 |        |
 
 ---
 
 ## Fora deste backlog
 
-| Item                                      | Motivo                              |
-| ----------------------------------------- | ----------------------------------- |
-| UI de painel administrativo               | Fase 2 — fora de escopo da SPEC-004 |
-| Hard delete automático pós-30-dias        | Fase 2 — job de retenção agendado   |
-| MFA para operações admin                  | Fase 2                              |
-| Gestão de roles via UI                    | Fase 2 — admin atribuído via Supabase Dashboard no MVP |
-| Exportação de dados pessoais (portabilidade) | LGPD Art. 18 II — Fase 2          |
-| UI de confirmação no frontend (modal)     | Fase 2 — endpoint backend é suficiente para MVP |
+| Item                                         | Motivo                                                 |
+| -------------------------------------------- | ------------------------------------------------------ |
+| UI de painel administrativo                  | Fase 2 — fora de escopo da SPEC-004                    |
+| Hard delete automático pós-30-dias           | Fase 2 — job de retenção agendado                      |
+| MFA para operações admin                     | Fase 2                                                 |
+| Gestão de roles via UI                       | Fase 2 — admin atribuído via Supabase Dashboard no MVP |
+| Exportação de dados pessoais (portabilidade) | LGPD Art. 18 II — Fase 2                               |
+| UI de confirmação no frontend (modal)        | Fase 2 — endpoint backend é suficiente para MVP        |

@@ -11,9 +11,13 @@ import { AdminNav } from "./admin-nav";
  * antes de chegar neste Server Component, mas fica redundante de propósito (defesa em
  * profundidade) para o caso de acesso direto sem passar pelo middleware.
  */
-export default async function AdminLayout({ children }: { children: ReactNode }): Promise<ReactNode> {
+export default async function AdminLayout({
+  children,
+}: {
+  children: ReactNode;
+}): Promise<ReactNode> {
   const cookieStore = await cookies();
-  const accessToken = cookieStore.get("nave_access_token")?.value;
+  const accessToken = cookieStore.get("navestory_access_token")?.value;
   const role = accessToken ? decodeJwtRole(accessToken) : null;
 
   if (role !== "admin") {

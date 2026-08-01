@@ -12,7 +12,7 @@ import {
   OdometerInput,
   Switch,
   Textarea,
-} from "@nave/ui";
+} from "@navestory/ui";
 import { Section, StateRow, Subsection } from "../section-shell";
 
 const VEHICLE_OPTIONS = [
@@ -29,7 +29,10 @@ export function InputsSection() {
   const [odometer, setOdometer] = useState<number>();
 
   return (
-    <Section title="Inputs & Formulários" description="Input, Textarea, Checkbox, Switch, Combobox, DateRangePicker, FileUpload e os inputs mascarados (CurrencyInput/OdometerInput).">
+    <Section
+      title="Inputs & Formulários"
+      description="Input, Textarea, Checkbox, Switch, Combobox, DateRangePicker, FileUpload e os inputs mascarados (CurrencyInput/OdometerInput)."
+    >
       <Subsection title="Input — estados">
         <StateRow label="default">
           <Input placeholder="Valor da despesa" className="w-56" />
@@ -43,7 +46,10 @@ export function InputsSection() {
       </Subsection>
 
       <Subsection title="Textarea">
-        <Textarea placeholder="Observações sobre a manutenção" className="w-full max-w-md" />
+        <Textarea
+          placeholder="Observações sobre a manutenção"
+          className="w-full max-w-md"
+        />
       </Subsection>
 
       <Subsection title="Checkbox & Switch">
@@ -56,8 +62,14 @@ export function InputsSection() {
           </label>
         </StateRow>
         <StateRow label="switch">
-          <Switch checked={switchOn} onCheckedChange={setSwitchOn} aria-label="Notificações" />
-          <span className="text-sm text-muted-foreground">{switchOn ? "Ativado" : "Desativado"}</span>
+          <Switch
+            checked={switchOn}
+            onCheckedChange={setSwitchOn}
+            aria-label="Notificações"
+          />
+          <span className="text-sm text-muted-foreground">
+            {switchOn ? "Ativado" : "Desativado"}
+          </span>
         </StateRow>
       </Subsection>
 
@@ -77,22 +89,50 @@ export function InputsSection() {
           value={range}
           onValueChange={setRange}
           presets={[
-            { label: "Últimos 7 dias", range: { from: new Date(Date.now() - 6 * 86400000), to: new Date() } },
-            { label: "Este mês", range: { from: new Date(new Date().getFullYear(), new Date().getMonth(), 1), to: new Date() } },
+            {
+              label: "Últimos 7 dias",
+              range: {
+                from: new Date(Date.now() - 6 * 86400000),
+                to: new Date(),
+              },
+            },
+            {
+              label: "Este mês",
+              range: {
+                from: new Date(
+                  new Date().getFullYear(),
+                  new Date().getMonth(),
+                  1,
+                ),
+                to: new Date(),
+              },
+            },
           ]}
         />
       </Subsection>
 
       <Subsection title="FileUpload (arraste um arquivo para ver isDragging)">
-        <FileUpload onFilesChange={() => {}} label="Comprovante" hint="PNG, JPG ou PDF até 10MB" />
+        <FileUpload
+          onFilesChange={() => {}}
+          label="Comprovante"
+          hint="PNG, JPG ou PDF até 10MB"
+        />
       </Subsection>
 
       <Subsection title="Inputs mascarados — CurrencyInput / OdometerInput">
         <StateRow label="moeda">
-          <CurrencyInput value={currency} onChange={setCurrency} aria-label="Valor da despesa" />
+          <CurrencyInput
+            value={currency}
+            onChange={setCurrency}
+            aria-label="Valor da despesa"
+          />
         </StateRow>
         <StateRow label="odômetro">
-          <OdometerInput value={odometer} onChange={setOdometer} aria-label="Quilometragem" />
+          <OdometerInput
+            value={odometer}
+            onChange={setOdometer}
+            aria-label="Quilometragem"
+          />
         </StateRow>
       </Subsection>
     </Section>

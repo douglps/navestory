@@ -14,7 +14,14 @@ import { PublicHeader } from "@/components/public-header";
  * @spec SPEC-20260731-004 RF-06, RF-07, RF-12 — header/footer públicos e navegação de retorno
  */
 export default function TermsOfServicePage(): ReactNode {
-  const filePath = join(process.cwd(), "..", "..", "docs", "legal", "terms-of-service.md");
+  const filePath = join(
+    process.cwd(),
+    "..",
+    "..",
+    "docs",
+    "legal",
+    "terms-of-service.md",
+  );
   const content = readFileSync(filePath, "utf-8");
   return (
     <>

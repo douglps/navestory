@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Checkbox } from "@nave/ui";
+import { Checkbox } from "@navestory/ui";
 import { Section, Subsection } from "../section-shell";
 import { PROPOSED_TOKENS, tokenDark, tokenLight } from "../../_lib/tokens";
 import { contrastRatio, wcagLevel } from "../../_lib/contrast";
@@ -29,17 +29,40 @@ const PAIRS: { label: string; mode: "light" | "dark" }[] = [
 ];
 
 function resolvePair(label: string, mode: "light" | "dark"): [string, string] {
-  const bg = mode === "dark" ? PROPOSED_TOKENS.background.dark : PROPOSED_TOKENS.background.light;
-  if (label.startsWith("primary")) return [mode === "dark" ? PROPOSED_TOKENS.primary.dark : PROPOSED_TOKENS.primary.light, bg];
-  if (label.startsWith("secondary")) return [mode === "dark" ? PROPOSED_TOKENS.secondary.dark : PROPOSED_TOKENS.secondary.light, bg];
-  return [mode === "dark" ? tokenDark("mutedForeground") : tokenLight("mutedForeground"), bg];
+  const bg =
+    mode === "dark"
+      ? PROPOSED_TOKENS.background.dark
+      : PROPOSED_TOKENS.background.light;
+  if (label.startsWith("primary"))
+    return [
+      mode === "dark"
+        ? PROPOSED_TOKENS.primary.dark
+        : PROPOSED_TOKENS.primary.light,
+      bg,
+    ];
+  if (label.startsWith("secondary"))
+    return [
+      mode === "dark"
+        ? PROPOSED_TOKENS.secondary.dark
+        : PROPOSED_TOKENS.secondary.light,
+      bg,
+    ];
+  return [
+    mode === "dark"
+      ? tokenDark("mutedForeground")
+      : tokenLight("mutedForeground"),
+    bg,
+  ];
 }
 
 export function AcessibilidadeSection() {
   const [checked, setChecked] = useState<Record<number, boolean>>({});
 
   return (
-    <Section title="Acessibilidade" description="Checklist da proposta §10 e contraste calculado ao vivo (mesmo motor de packages/ui/src/tokens) para os pares que a direção Azul-Índigo introduz.">
+    <Section
+      title="Acessibilidade"
+      description="Checklist da proposta §10 e contraste calculado ao vivo (mesmo motor de packages/ui/src/tokens) para os pares que a direção Azul-Índigo introduz."
+    >
       <Subsection title="Contraste ao vivo — pares novos">
         <div className="overflow-x-auto rounded-md border border-border">
           <table className="w-full text-sm">
@@ -57,7 +80,10 @@ export function AcessibilidadeSection() {
                 const ratio = contrastRatio(`oklch(${a})`, `oklch(${b})`);
                 const level = wcagLevel(ratio);
                 return (
-                  <tr key={`${label}-${mode}`} className="border-b border-border last:border-0">
+                  <tr
+                    key={`${label}-${mode}`}
+                    className="border-b border-border last:border-0"
+                  >
                     <td className="p-2">{label}</td>
                     <td className="p-2 text-muted-foreground">{mode}</td>
                     <td className="p-2 tabular-nums">{ratio.toFixed(2)}:1</td>
@@ -65,7 +91,10 @@ export function AcessibilidadeSection() {
                       <span
                         className="rounded-sm px-1.5 py-0.5 text-xs font-semibold"
                         style={{
-                          backgroundColor: level === "Falha" ? "oklch(var(--danger-pastel))" : "oklch(var(--success-pastel))",
+                          backgroundColor:
+                            level === "Falha"
+                              ? "oklch(var(--danger-pastel))"
+                              : "oklch(var(--success-pastel))",
                           color: "oklch(var(--foreground))",
                         }}
                       >
@@ -79,8 +108,9 @@ export function AcessibilidadeSection() {
           </table>
         </div>
         <p className="text-xs text-muted-foreground">
-          Pendência C-DS-01 (contraste warning/success sobre o canvas geral) permanece em aberto — não é
-          resolvida por esta direção, apenas referenciada.
+          Pendência C-DS-01 (contraste warning/success sobre o canvas geral)
+          permanece em aberto — não é resolvida por esta direção, apenas
+          referenciada.
         </p>
       </Subsection>
 
@@ -90,10 +120,21 @@ export function AcessibilidadeSection() {
             <li key={item} className="flex items-start gap-2 text-sm">
               <Checkbox
                 checked={Boolean(checked[index])}
-                onChange={(e) => setChecked((current) => ({ ...current, [index]: e.target.checked }))}
+                onChange={(e) =>
+                  setChecked((current) => ({
+                    ...current,
+                    [index]: e.target.checked,
+                  }))
+                }
                 className="mt-0.5"
               />
-              <span className={checked[index] ? "text-muted-foreground line-through" : ""}>{item}</span>
+              <span
+                className={
+                  checked[index] ? "text-muted-foreground line-through" : ""
+                }
+              >
+                {item}
+              </span>
             </li>
           ))}
         </ul>

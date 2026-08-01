@@ -8,10 +8,10 @@ import {
   updatePreferencesInputSchema,
   type ChipField,
   type UpdatePreferencesInput,
-} from "@nave/validators";
+} from "@navestory/validators";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState, type ReactNode } from "react";
-import { Alert, Button, Checkbox, Container, Input } from "@nave/ui";
+import { Alert, Button, Checkbox, Container, Input } from "@navestory/ui";
 import { apiClient } from "@/lib/http/api-client";
 import { formatChipPreview } from "@/lib/vehicle-chip";
 
@@ -44,7 +44,12 @@ const CHIP_FIELD_LABELS: Record<ChipField, string> = {
 const OPTIONAL_CHIP_FIELDS = CHIP_FIELDS.filter((field) => field !== "plate");
 
 /** @spec SPEC-20260603-003 RNF-03 — veículo de exemplo para a prévia em tempo real */
-const PREVIEW_VEHICLE = { make: "Toyota", model: "Corolla", plate: "ABC1D23", nickname: "Branquinho" };
+const PREVIEW_VEHICLE = {
+  make: "Toyota",
+  model: "Corolla",
+  plate: "ABC1D23",
+  nickname: "Branquinho",
+};
 
 function chipFieldLabel(field: ChipField): string {
   switch (field) {
@@ -59,7 +64,11 @@ function chipFieldLabel(field: ChipField): string {
   }
 }
 
-function moveField(fields: ChipField[], index: number, direction: -1 | 1): ChipField[] {
+function moveField(
+  fields: ChipField[],
+  index: number,
+  direction: -1 | 1,
+): ChipField[] {
   const target = index + direction;
   if (target < 0 || target >= fields.length) return fields;
   /* eslint-disable security/detect-object-injection -- index/target são bounds-checked acima */
@@ -80,7 +89,11 @@ function moveField(fields: ChipField[], index: number, direction: -1 | 1): ChipF
 export default function PreferencesPage(): ReactNode {
   const queryClient = useQueryClient();
 
-  const { data: preferences, isLoading, isError } = useQuery({
+  const {
+    data: preferences,
+    isLoading,
+    isError,
+  } = useQuery({
     queryKey: ["preferences"],
     queryFn: () => apiClient<UserPreferencesResponse>("/preferences"),
     retry: false,
@@ -88,9 +101,12 @@ export default function PreferencesPage(): ReactNode {
 
   const [autoDraftEnabled, setAutoDraftEnabled] = useState(false);
   const [isDraftDirty, setIsDraftDirty] = useState(false);
-  const [draftSaveState, setDraftSaveState] = useState<"idle" | "saved">("idle");
+  const [draftSaveState, setDraftSaveState] = useState<"idle" | "saved">(
+    "idle",
+  );
 
-  const [chipFields, setChipFields] = useState<ChipField[]>(DEFAULT_CHIP_FIELDS);
+  const [chipFields, setChipFields] =
+    useState<ChipField[]>(DEFAULT_CHIP_FIELDS);
   const [isChipDirty, setIsChipDirty] = useState(false);
   const [chipSaveState, setChipSaveState] = useState<"idle" | "saved">("idle");
   const [chipError, setChipError] = useState<string | null>(null);
@@ -113,7 +129,10 @@ export default function PreferencesPage(): ReactNode {
 
   const mutation = useMutation({
     mutationFn: (input: UpdatePreferencesInput) =>
-      apiClient<UserPreferencesResponse>("/preferences", { method: "PATCH", body: input }),
+      apiClient<UserPreferencesResponse>("/preferences", {
+        method: "PATCH",
+        body: input,
+      }),
     onSuccess: (data) => {
       queryClient.setQueryData(["preferences"], data);
     },
@@ -126,7 +145,9 @@ export default function PreferencesPage(): ReactNode {
   }
 
   function handleSaveDraft(): void {
-    const result = updatePreferencesInputSchema.safeParse({ auto_draft_enabled: autoDraftEnabled });
+    const result = updatePreferencesInputSchema.safeParse({
+      auto_draft_enabled: autoDraftEnabled,
+    });
     if (!result.success) return;
     mutation.mutate(result.data, {
       onSuccess: () => {
@@ -147,7 +168,9 @@ export default function PreferencesPage(): ReactNode {
   function handleToggleChipField(field: ChipField, checked: boolean): void {
     setChipError(null);
     setChipFields((current) => {
-      const next = checked ? [...current, field] : current.filter((f) => f !== field);
+      const next = checked
+        ? [...current, field]
+        : current.filter((f) => f !== field);
       return next;
     });
     setIsChipDirty(true);
@@ -222,7 +245,10 @@ export default function PreferencesPage(): ReactNode {
   if (isError)
     return (
       <main className="p-8">
-        <Alert variant="error" description="Não foi possível carregar as preferências." />
+        <Alert
+          variant="error"
+          description="Não foi possível carregar as preferências."
+        />
       </main>
     );
 
@@ -231,7 +257,10 @@ export default function PreferencesPage(): ReactNode {
       <h1 className="text-xl font-semibold">Preferências</h1>
 
       {mutation.isError && (
-        <Alert variant="error" description="Não foi possível salvar as preferências." />
+        <Alert
+          variant="error"
+          description="Não foi possível salvar as preferências."
+        />
       )}
 
       <section className="flex flex-col gap-2">
@@ -243,15 +272,24 @@ export default function PreferencesPage(): ReactNode {
           Rascunho automático
         </label>
         <p className="text-sm text-muted-foreground">
-          Salva automaticamente os dados não enviados de formulários ao fechar a aba ou expirar a
-          sessão.
+          Salva automaticamente os dados não enviados de formulários ao fechar a
+          aba ou expirar a sessão.
         </p>
 
         <div className="flex items-center gap-2">
-          <Button type="button" onClick={handleSaveDraft} disabled={!isDraftDirty || mutation.isPending}>
+          <Button
+            type="button"
+            onClick={handleSaveDraft}
+            disabled={!isDraftDirty || mutation.isPending}
+          >
             {mutation.isPending ? "Salvando..." : "Salvar"}
           </Button>
-          <Button type="button" variant="outline" onClick={handleCancelDraft} disabled={!isDraftDirty}>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleCancelDraft}
+            disabled={!isDraftDirty}
+          >
             Cancelar
           </Button>
           {draftSaveState === "saved" && !isDraftDirty && <span>✓ Salvo</span>}
@@ -261,7 +299,8 @@ export default function PreferencesPage(): ReactNode {
       <section className="flex flex-col gap-3">
         <h2 className="text-lg font-medium">Exibição do veículo</h2>
         <p className="text-sm text-muted-foreground">
-          Escolha quais campos aparecem no chip de contexto do veículo. A placa é sempre exibida.
+          Escolha quais campos aparecem no chip de contexto do veículo. A placa
+          é sempre exibida.
         </p>
 
         <div className="flex flex-col gap-1">
@@ -273,7 +312,9 @@ export default function PreferencesPage(): ReactNode {
             <label key={field} className="flex items-center gap-2">
               <Checkbox
                 checked={chipFields.includes(field)}
-                onChange={(event) => handleToggleChipField(field, event.target.checked)}
+                onChange={(event) =>
+                  handleToggleChipField(field, event.target.checked)
+                }
               />
               {chipFieldLabel(field)}
             </label>
@@ -311,7 +352,10 @@ export default function PreferencesPage(): ReactNode {
           </ul>
         </div>
 
-        <div className="rounded-md border border-border px-3 py-2" data-testid="chip-preview">
+        <div
+          className="rounded-md border border-border px-3 py-2"
+          data-testid="chip-preview"
+        >
           <span className="text-xs text-muted-foreground">Prévia:</span>{" "}
           {formatChipPreview(chipFields, PREVIEW_VEHICLE)}
         </div>
@@ -326,7 +370,12 @@ export default function PreferencesPage(): ReactNode {
           >
             {mutation.isPending ? "Salvando..." : "Salvar"}
           </Button>
-          <Button type="button" variant="outline" onClick={handleCancelChipFields} disabled={!isChipDirty}>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleCancelChipFields}
+            disabled={!isChipDirty}
+          >
             Cancelar
           </Button>
           {chipSaveState === "saved" && !isChipDirty && <span>✓ Salvo</span>}
@@ -337,12 +386,13 @@ export default function PreferencesPage(): ReactNode {
       <section className="flex flex-col gap-3">
         <h2 className="text-lg font-medium">Fuso horário</h2>
         <p className="text-sm text-muted-foreground">
-          Usado para calcular &quot;hoje&quot; em alertas e KPIs, e para preencher a hora atual em
-          novos lançamentos.
+          Usado para calcular &quot;hoje&quot; em alertas e KPIs, e para
+          preencher a hora atual em novos lançamentos.
         </p>
 
         <span className="text-sm">
-          Atual: <strong>{preferences?.timezone ?? "Não detectado ainda"}</strong>
+          Atual:{" "}
+          <strong>{preferences?.timezone ?? "Não detectado ainda"}</strong>
         </span>
 
         <label htmlFor="timezone">Selecionar fuso</label>
@@ -362,10 +412,19 @@ export default function PreferencesPage(): ReactNode {
         {tzError && <Alert variant="error" description={tzError} />}
 
         <div className="flex items-center gap-2">
-          <Button type="button" onClick={handleSaveTimezone} disabled={!isTzDirty || mutation.isPending}>
+          <Button
+            type="button"
+            onClick={handleSaveTimezone}
+            disabled={!isTzDirty || mutation.isPending}
+          >
             {mutation.isPending ? "Salvando..." : "Salvar"}
           </Button>
-          <Button type="button" variant="outline" onClick={handleCancelTimezone} disabled={!isTzDirty}>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleCancelTimezone}
+            disabled={!isTzDirty}
+          >
             Cancelar
           </Button>
           {tzSaveState === "saved" && !isTzDirty && <span>✓ Salvo</span>}

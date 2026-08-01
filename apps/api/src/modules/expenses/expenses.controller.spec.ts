@@ -15,7 +15,9 @@ describe("ExpensesController", () => {
       update: jest.fn().mockResolvedValue({ id: "e1", amount: 200 }),
       remove: jest.fn().mockResolvedValue(undefined),
       listSuppliers: jest.fn().mockResolvedValue(["Shell Av. Paulista"]),
-      getUpcomingCosts: jest.fn().mockResolvedValue([{ source_type: "fine", source_id: "f1" }]),
+      getUpcomingCosts: jest
+        .fn()
+        .mockResolvedValue([{ source_type: "fine", source_id: "f1" }]),
       getKpis: jest.fn().mockResolvedValue({
         total_this_month: 100,
         total_prev_month: 50,
@@ -24,10 +26,17 @@ describe("ExpensesController", () => {
         upcoming_30_days_total: 30,
         upcoming_30_days_count: 1,
       }),
-      exportConsolidatedCsv: jest.fn().mockResolvedValue("Data,Veiculo,Placa,Categoria,Valor,Origem,Descricao\n"),
+      exportConsolidatedCsv: jest
+        .fn()
+        .mockResolvedValue(
+          "Data,Veiculo,Placa,Categoria,Valor,Origem,Descricao\n",
+        ),
       ...overrides,
     } as unknown as ExpensesService;
-    return { controller: new ExpensesController(expensesService), expensesService };
+    return {
+      controller: new ExpensesController(expensesService),
+      expensesService,
+    };
   }
 
   function createRes(): Response {
@@ -37,14 +46,22 @@ describe("ExpensesController", () => {
     } as unknown as Response;
   }
 
-  const req = { headers: { authorization: "Bearer token-123" }, cookies: {} } as Request;
+  const req = {
+    headers: { authorization: "Bearer token-123" },
+    cookies: {},
+  } as Request;
 
   it("create extrai o token e cria a despesa", async () => {
     const { controller, expensesService } = createController();
 
     const result = await controller.create(req, "u1", { amount: 150 } as never);
 
-    expect(expensesService.create).toHaveBeenCalledWith("token-123", "u1", { amount: 150 }, false);
+    expect(expensesService.create).toHaveBeenCalledWith(
+      "token-123",
+      "u1",
+      { amount: 150 },
+      false,
+    );
     expect(result.data).toEqual({ id: "e1" });
   });
 
@@ -56,7 +73,12 @@ describe("ExpensesController", () => {
 
     await controller.create(req, "u1", { amount: 150 } as never, "true");
 
-    expect(expensesService.create).toHaveBeenCalledWith("token-123", "u1", { amount: 150 }, true);
+    expect(expensesService.create).toHaveBeenCalledWith(
+      "token-123",
+      "u1",
+      { amount: 150 },
+      true,
+    );
   });
 
   it("findAll retorna envelope paginado", async () => {
@@ -65,8 +87,17 @@ describe("ExpensesController", () => {
 
     const result = await controller.findAll(req, "u1", query);
 
-    expect(expensesService.findAll).toHaveBeenCalledWith("token-123", "u1", query);
-    expect(result.meta).toEqual({ total: 1, page: 1, limit: 20, has_next: false });
+    expect(expensesService.findAll).toHaveBeenCalledWith(
+      "token-123",
+      "u1",
+      query,
+    );
+    expect(result.meta).toEqual({
+      total: 1,
+      page: 1,
+      limit: 20,
+      has_next: false,
+    });
   });
 
   it("findOne retorna a despesa pelo id", async () => {
@@ -74,16 +105,28 @@ describe("ExpensesController", () => {
 
     const result = await controller.findOne(req, "u1", "e1");
 
-    expect(expensesService.findOne).toHaveBeenCalledWith("token-123", "u1", "e1");
+    expect(expensesService.findOne).toHaveBeenCalledWith(
+      "token-123",
+      "u1",
+      "e1",
+    );
     expect(result.data).toEqual({ id: "e1" });
   });
 
   it("update atualiza a despesa", async () => {
     const { controller, expensesService } = createController();
 
-    const result = await controller.update(req, "u1", "e1", { amount: 200 } as never);
+    const result = await controller.update(req, "u1", "e1", {
+      amount: 200,
+    } as never);
 
-    expect(expensesService.update).toHaveBeenCalledWith("token-123", "u1", "e1", { amount: 200 }, false);
+    expect(expensesService.update).toHaveBeenCalledWith(
+      "token-123",
+      "u1",
+      "e1",
+      { amount: 200 },
+      false,
+    );
     expect(result.data).toEqual({ id: "e1", amount: 200 });
   });
 
@@ -95,7 +138,13 @@ describe("ExpensesController", () => {
 
     await controller.update(req, "u1", "e1", { amount: 200 } as never, "true");
 
-    expect(expensesService.update).toHaveBeenCalledWith("token-123", "u1", "e1", { amount: 200 }, true);
+    expect(expensesService.update).toHaveBeenCalledWith(
+      "token-123",
+      "u1",
+      "e1",
+      { amount: 200 },
+      true,
+    );
   });
 
   it("listSuppliers retorna sugestões de fornecedores (SPEC-20260606-002 RF-02)", async () => {
@@ -103,7 +152,10 @@ describe("ExpensesController", () => {
 
     const result = await controller.listSuppliers(req, "u1");
 
-    expect(expensesService.listSuppliers).toHaveBeenCalledWith("token-123", "u1");
+    expect(expensesService.listSuppliers).toHaveBeenCalledWith(
+      "token-123",
+      "u1",
+    );
     expect(result.data).toEqual(["Shell Av. Paulista"]);
   });
 
@@ -113,7 +165,10 @@ describe("ExpensesController", () => {
 
     const result = await controller.getUpcoming(req, query);
 
-    expect(expensesService.getUpcomingCosts).toHaveBeenCalledWith("token-123", query);
+    expect(expensesService.getUpcomingCosts).toHaveBeenCalledWith(
+      "token-123",
+      query,
+    );
     expect(result.data).toEqual([{ source_type: "fine", source_id: "f1" }]);
   });
 
@@ -123,7 +178,11 @@ describe("ExpensesController", () => {
 
     const result = await controller.getKpis(req, "u1", query);
 
-    expect(expensesService.getKpis).toHaveBeenCalledWith("token-123", "u1", query);
+    expect(expensesService.getKpis).toHaveBeenCalledWith(
+      "token-123",
+      "u1",
+      query,
+    );
     expect(result.data.total_this_month).toBe(100);
   });
 
@@ -133,13 +192,22 @@ describe("ExpensesController", () => {
 
     await controller.exportConsolidated(req, "u1", {} as never, res);
 
-    expect(expensesService.exportConsolidatedCsv).toHaveBeenCalledWith("token-123", "u1", {});
-    expect(res.setHeader).toHaveBeenCalledWith("Content-Type", "text/csv; charset=utf-8");
+    expect(expensesService.exportConsolidatedCsv).toHaveBeenCalledWith(
+      "token-123",
+      "u1",
+      {},
+    );
+    expect(res.setHeader).toHaveBeenCalledWith(
+      "Content-Type",
+      "text/csv; charset=utf-8",
+    );
     expect(res.setHeader).toHaveBeenCalledWith(
       "Content-Disposition",
-      expect.stringContaining("nave-despesas-completo-"),
+      expect.stringContaining("navestory-despesas-completo-"),
     );
-    expect(res.send).toHaveBeenCalledWith(expect.stringContaining("Data,Veiculo,Placa"));
+    expect(res.send).toHaveBeenCalledWith(
+      expect.stringContaining("Data,Veiculo,Placa"),
+    );
   });
 
   it("remove remove a despesa", async () => {
@@ -147,7 +215,11 @@ describe("ExpensesController", () => {
 
     await controller.remove(req, "u1", "e1");
 
-    expect(expensesService.remove).toHaveBeenCalledWith("token-123", "u1", "e1");
+    expect(expensesService.remove).toHaveBeenCalledWith(
+      "token-123",
+      "u1",
+      "e1",
+    );
   });
 
   it("lança 401 quando não há token disponível", async () => {
@@ -163,15 +235,17 @@ describe("ExpensesController", () => {
     const { controller, expensesService } = createController();
     const reqComCookie = {
       headers: {},
-      cookies: { nave_access_token: "cookie-token" },
+      cookies: { navestory_access_token: "cookie-token" },
     } as unknown as Request;
 
-    await controller.findAll(reqComCookie, "u1", { page: 1, limit: 20 } as never);
+    await controller.findAll(reqComCookie, "u1", {
+      page: 1,
+      limit: 20,
+    } as never);
 
-    expect(expensesService.findAll).toHaveBeenCalledWith(
-      "cookie-token",
-      "u1",
-      { page: 1, limit: 20 },
-    );
+    expect(expensesService.findAll).toHaveBeenCalledWith("cookie-token", "u1", {
+      page: 1,
+      limit: 20,
+    });
   });
 });

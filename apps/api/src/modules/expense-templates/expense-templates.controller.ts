@@ -13,7 +13,12 @@ import {
   UseGuards,
   UsePipes,
 } from "@nestjs/common";
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from "@nestjs/swagger";
 import type { Request } from "express";
 import { UserId } from "../../common/decorators/user-id.decorator";
 import { SupabaseAuthGuard } from "../../common/guards/supabase-auth.guard";
@@ -36,14 +41,21 @@ import { ExpenseTemplatesService } from "./expense-templates.service";
 @UseGuards(SupabaseAuthGuard)
 @Controller("expense-templates")
 export class ExpenseTemplatesController {
-  constructor(private readonly expenseTemplatesService: ExpenseTemplatesService) {}
+  constructor(
+    private readonly expenseTemplatesService: ExpenseTemplatesService,
+  ) {}
 
   @Get()
-  @ApiOperation({ summary: "Listar modelos de despesa do usuário, ordenados por uso recente" })
+  @ApiOperation({
+    summary: "Listar modelos de despesa do usuário, ordenados por uso recente",
+  })
   @ApiResponse({ status: 200, description: "Lista de modelos" })
   async findAll(@Req() req: Request, @UserId() userId: string) {
     const accessToken = this.extractAccessToken(req);
-    const templates = await this.expenseTemplatesService.findAll(accessToken, userId);
+    const templates = await this.expenseTemplatesService.findAll(
+      accessToken,
+      userId,
+    );
     return { data: templates };
   }
 
@@ -59,7 +71,11 @@ export class ExpenseTemplatesController {
     @Body() dto: CreateExpenseTemplateDto,
   ) {
     const accessToken = this.extractAccessToken(req);
-    const template = await this.expenseTemplatesService.create(accessToken, userId, dto);
+    const template = await this.expenseTemplatesService.create(
+      accessToken,
+      userId,
+      dto,
+    );
     return { data: template };
   }
 
@@ -75,18 +91,33 @@ export class ExpenseTemplatesController {
     @Body() dto: UpdateExpenseTemplateDto,
   ) {
     const accessToken = this.extractAccessToken(req);
-    const template = await this.expenseTemplatesService.update(accessToken, userId, id, dto);
+    const template = await this.expenseTemplatesService.update(
+      accessToken,
+      userId,
+      id,
+      dto,
+    );
     return { data: template };
   }
 
   @Patch(":id/touch")
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: "Marcar modelo como usado agora (bump de last_used_at)" })
+  @ApiOperation({
+    summary: "Marcar modelo como usado agora (bump de last_used_at)",
+  })
   @ApiResponse({ status: 200, description: "Modelo atualizado" })
   @ApiResponse({ status: 404, description: "Modelo não encontrado" })
-  async touch(@Req() req: Request, @UserId() userId: string, @Param("id") id: string) {
+  async touch(
+    @Req() req: Request,
+    @UserId() userId: string,
+    @Param("id") id: string,
+  ) {
     const accessToken = this.extractAccessToken(req);
-    const template = await this.expenseTemplatesService.touch(accessToken, userId, id);
+    const template = await this.expenseTemplatesService.touch(
+      accessToken,
+      userId,
+      id,
+    );
     return { data: template };
   }
 
@@ -95,7 +126,11 @@ export class ExpenseTemplatesController {
   @ApiOperation({ summary: "Remover modelo de despesa (hard delete)" })
   @ApiResponse({ status: 204, description: "Modelo removido" })
   @ApiResponse({ status: 404, description: "Modelo não encontrado" })
-  async remove(@Req() req: Request, @UserId() userId: string, @Param("id") id: string): Promise<void> {
+  async remove(
+    @Req() req: Request,
+    @UserId() userId: string,
+    @Param("id") id: string,
+  ): Promise<void> {
     const accessToken = this.extractAccessToken(req);
     await this.expenseTemplatesService.remove(accessToken, userId, id);
   }
@@ -105,7 +140,9 @@ export class ExpenseTemplatesController {
     if (header?.startsWith("Bearer ")) {
       return header.slice("Bearer ".length);
     }
-    const cookieToken = req.cookies?.nave_access_token as string | undefined;
+    const cookieToken = req.cookies?.navestory_access_token as
+      | string
+      | undefined;
     if (cookieToken) {
       return cookieToken;
     }

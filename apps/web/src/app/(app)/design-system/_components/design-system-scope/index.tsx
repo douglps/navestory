@@ -1,7 +1,12 @@
 "use client";
 
 import type { CSSProperties, ReactNode } from "react";
-import { colorChannels, cssVariableName, darkColorChannels, type ColorToken } from "@nave/ui/tokens";
+import {
+  colorChannels,
+  cssVariableName,
+  darkColorChannels,
+  type ColorToken,
+} from "@navestory/ui/tokens";
 import { PROPOSED_TOKENS } from "../../_lib/tokens";
 import { interFont } from "../../_lib/fonts";
 
@@ -12,7 +17,10 @@ function realTokenVars(mode: ScopeMode): Record<string, string> {
   const entries = Object.keys(colorChannels) as ColorToken[];
   const vars: Record<string, string> = {};
   for (const token of entries) {
-    vars[cssVariableName(token)] = mode === "dark" ? (darkColorChannels[token] ?? colorChannels[token]) : colorChannels[token];
+    vars[cssVariableName(token)] =
+      mode === "dark"
+        ? (darkColorChannels[token] ?? colorChannels[token])
+        : colorChannels[token];
   }
   return vars;
 }
@@ -21,7 +29,8 @@ function realTokenVars(mode: ScopeMode): Record<string, string> {
 function proposedOverrides(mode: ScopeMode): Record<string, string> {
   const vars: Record<string, string> = {};
   for (const [role, value] of Object.entries(PROPOSED_TOKENS)) {
-    vars[cssVariableName(role as ColorToken)] = mode === "dark" ? value.dark : value.light;
+    vars[cssVariableName(role as ColorToken)] =
+      mode === "dark" ? value.dark : value.light;
   }
   return vars;
 }
@@ -33,13 +42,17 @@ interface DesignSystemScopeProps {
 }
 
 /**
- * Re-temiza os componentes REAIS de `@nave/ui` dentro desta rota, sobrescrevendo as CSS
+ * Re-temiza os componentes REAIS de `@navestory/ui` dentro desta rota, sobrescrevendo as CSS
  * custom properties que eles já consomem via `oklch(var(--x))` — nenhum componente é
  * modificado, nenhum arquivo de produção é tocado. `UNCHANGED_ROLES` (gold/danger/success/
  * warning/info/accent/muted-foreground) chega aqui com o MESMO valor de produção, por
  * `realTokenVars`; só os papéis em `PROPOSED_TOKENS` são de fato sobrescritos.
  */
-export function DesignSystemScope({ mode, children, className }: DesignSystemScopeProps) {
+export function DesignSystemScope({
+  mode,
+  children,
+  className,
+}: DesignSystemScopeProps) {
   const vars = {
     ...realTokenVars(mode),
     ...proposedOverrides(mode),
@@ -55,7 +68,12 @@ export function DesignSystemScope({ mode, children, className }: DesignSystemSco
     <div
       style={vars}
       data-design-system-mode={mode}
-      className={[mode === "dark" ? "dark" : "", interFont.variable, "bg-background text-foreground", className]
+      className={[
+        mode === "dark" ? "dark" : "",
+        interFont.variable,
+        "bg-background text-foreground",
+        className,
+      ]
         .filter(Boolean)
         .join(" ")}
     >

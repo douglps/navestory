@@ -24,6 +24,17 @@ export default defineConfig({
         "**/*.config.*",
         ".next/**",
         "public/**",
+        // Showcase interno de design system — documentação/protótipo, sem regra de negócio de produção
+        "src/app/(app)/design-system/**",
+        "src/app/(app)/dashboard/concept/**",
+        // Infra/config sem regra de negócio testável
+        "e2e/**",
+        "instrumentation.ts",
+        "instrumentation-client.ts",
+        "src/app/manifest.ts",
+        "src/app/sw.ts",
+        "src/app/serwist/**",
+        ".scratch-screenshot.mjs",
       ],
       thresholds: {
         lines: 88,

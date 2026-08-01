@@ -44,29 +44,46 @@ describe("RestoreAccountPage", () => {
     searchParams.set("deletedAt", deletedAt);
     renderPage();
 
-    const expected = new Date(new Date(deletedAt).getTime() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString(
-      "pt-BR",
-      { day: "2-digit", month: "long", year: "numeric" },
+    const expected = new Date(
+      new Date(deletedAt).getTime() + 30 * 24 * 60 * 60 * 1000,
+    ).toLocaleDateString("pt-BR", {
+      day: "2-digit",
+      month: "long",
+      year: "numeric",
+    });
+    expect(screen.getByText(/exclusão definitiva em/i)).toHaveTextContent(
+      expected,
     );
-    expect(screen.getByText(/exclusão definitiva em/i)).toHaveTextContent(expected);
   });
 
   it("chama POST /users/me/restore e navega para /dashboard com toast de sucesso ao confirmar", async () => {
     vi.mocked(apiClient).mockResolvedValue({ message: "ok" });
     renderPage();
 
-    fireEvent.click(screen.getByRole("button", { name: "Cancelar exclusão e restaurar minha conta" }));
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: "Cancelar exclusão e restaurar minha conta",
+      }),
+    );
 
     await waitFor(() => expect(pushMock).toHaveBeenCalledWith("/dashboard"));
-    expect(apiClient).toHaveBeenCalledWith("/users/me/restore", { method: "POST" });
-    expect(useUIStore.getState().toasts[0]?.title).toBe("Sua conta foi restaurada com sucesso!");
+    expect(apiClient).toHaveBeenCalledWith("/users/me/restore", {
+      method: "POST",
+    });
+    expect(useUIStore.getState().toasts[0]?.title).toBe(
+      "Sua conta foi restaurada com sucesso!",
+    );
   });
 
   it("exibe erro e não navega quando o restore falha, sem deslogar o usuário", async () => {
     vi.mocked(apiClient).mockRejectedValue(new ApiError("Conflito", 409));
     renderPage();
 
-    fireEvent.click(screen.getByRole("button", { name: "Cancelar exclusão e restaurar minha conta" }));
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: "Cancelar exclusão e restaurar minha conta",
+      }),
+    );
 
     expect(await screen.findByText("Conflito")).toBeInTheDocument();
     expect(pushMock).not.toHaveBeenCalled();
@@ -76,7 +93,9 @@ describe("RestoreAccountPage", () => {
   it("aciona logout ao clicar em 'Continuar com a exclusão'", () => {
     renderPage();
 
-    fireEvent.click(screen.getByRole("button", { name: "Continuar com a exclusão" }));
+    fireEvent.click(
+      screen.getByRole("button", { name: "Continuar com a exclusão" }),
+    );
 
     expect(logoutMock).toHaveBeenCalled();
   });

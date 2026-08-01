@@ -13,7 +13,7 @@ import {
   TableHeader,
   TableRow,
   Tooltip,
-} from "@nave/ui";
+} from "@navestory/ui";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, type ReactNode } from "react";
@@ -57,23 +57,36 @@ export function AdminUsersTable(): ReactNode {
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ["admin", "users", page],
-    queryFn: () => apiClient<AdminUsersResponse>(`/admin/users?page=${page}&limit=${PAGE_LIMIT}`),
+    queryFn: () =>
+      apiClient<AdminUsersResponse>(
+        `/admin/users?page=${page}&limit=${PAGE_LIMIT}`,
+      ),
     retry: false,
   });
 
   const roleMutation = useMutation({
     mutationFn: ({ userId, role }: { userId: string; role: "admin" | null }) =>
-      apiClient(`/admin/users/${userId}/role`, { method: "PATCH", body: { role } }),
+      apiClient(`/admin/users/${userId}/role`, {
+        method: "PATCH",
+        body: { role },
+      }),
     onSuccess: (_result, variables) => {
       void queryClient.invalidateQueries({ queryKey: ["admin", "users"] });
       pushToast({
         variant: "success",
-        title: variables.role === "admin" ? "Usuário promovido a admin" : "Role de admin revogado",
+        title:
+          variables.role === "admin"
+            ? "Usuário promovido a admin"
+            : "Role de admin revogado",
         duration: 5000,
       });
     },
     onError: () => {
-      pushToast({ variant: "error", title: "Não foi possível alterar o role", duration: 5000 });
+      pushToast({
+        variant: "error",
+        title: "Não foi possível alterar o role",
+        duration: 5000,
+      });
     },
   });
 
@@ -94,7 +107,12 @@ export function AdminUsersTable(): ReactNode {
   }
 
   if (isError || !data) {
-    return <Alert variant="error" description="Não foi possível carregar os usuários." />;
+    return (
+      <Alert
+        variant="error"
+        description="Não foi possível carregar os usuários."
+      />
+    );
   }
 
   if (data.data.length === 0) {
@@ -125,7 +143,9 @@ export function AdminUsersTable(): ReactNode {
                 type="button"
                 variant="outline"
                 disabled={revokeDisabled}
-                onClick={() => roleMutation.mutate({ userId: user.id, role: null })}
+                onClick={() =>
+                  roleMutation.mutate({ userId: user.id, role: null })
+                }
               >
                 Revogar admin
               </Button>
@@ -136,14 +156,18 @@ export function AdminUsersTable(): ReactNode {
                 <TableCell>{user.email ?? "—"}</TableCell>
                 <TableCell>{user.name ?? "—"}</TableCell>
                 <TableCell>
-                  <Badge variant={isAdmin ? "info" : "neutral"}>{isAdmin ? "Admin" : "Usuário"}</Badge>
+                  <Badge variant={isAdmin ? "info" : "neutral"}>
+                    {isAdmin ? "Admin" : "Usuário"}
+                  </Badge>
                 </TableCell>
                 <TableCell>
                   <Badge variant={user.deleted_at ? "warning" : "success"}>
                     {user.deleted_at ? "Pendente de exclusão" : "Ativo"}
                   </Badge>
                 </TableCell>
-                <TableCell>{new Date(user.created_at).toLocaleDateString("pt-BR")}</TableCell>
+                <TableCell>
+                  {new Date(user.created_at).toLocaleDateString("pt-BR")}
+                </TableCell>
                 <TableCell>
                   <div className="flex flex-wrap gap-2">
                     {isAdmin ? (
@@ -159,12 +183,21 @@ export function AdminUsersTable(): ReactNode {
                         type="button"
                         variant="outline"
                         disabled={roleMutation.isPending}
-                        onClick={() => roleMutation.mutate({ userId: user.id, role: "admin" })}
+                        onClick={() =>
+                          roleMutation.mutate({
+                            userId: user.id,
+                            role: "admin",
+                          })
+                        }
                       >
                         Promover a admin
                       </Button>
                     )}
-                    <Button type="button" variant="destructive" onClick={() => setUserToDelete(user)}>
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      onClick={() => setUserToDelete(user)}
+                    >
                       Excluir conta
                     </Button>
                   </div>
@@ -177,7 +210,8 @@ export function AdminUsersTable(): ReactNode {
 
       <div className="flex items-center justify-between">
         <span className="text-sm text-muted-foreground">
-          Página {data.meta.page} — {data.meta.total} usuário{data.meta.total === 1 ? "" : "s"}
+          Página {data.meta.page} — {data.meta.total} usuário
+          {data.meta.total === 1 ? "" : "s"}
         </span>
         <div className="flex gap-2">
           <Button
@@ -207,7 +241,9 @@ export function AdminUsersTable(): ReactNode {
           onOpenChange={(open) => !open && setUserToDelete(null)}
           onDeleted={() => {
             setUserToDelete(null);
-            void queryClient.invalidateQueries({ queryKey: ["admin", "users"] });
+            void queryClient.invalidateQueries({
+              queryKey: ["admin", "users"],
+            });
           }}
         />
       )}

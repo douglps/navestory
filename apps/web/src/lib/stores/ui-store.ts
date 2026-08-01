@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
-import type { ToastItem } from "@nave/ui";
+import type { ToastItem } from "@navestory/ui";
 
 /**
  * Exemplo de estado puramente client-side (ADR-008): nunca guardar dado
@@ -32,19 +32,23 @@ export const useUIStore = create<UIState>()(
   persist(
     (set) => ({
       isMobileNavOpen: false,
-      toggleMobileNav: () => set((state) => ({ isMobileNavOpen: !state.isMobileNavOpen })),
+      toggleMobileNav: () =>
+        set((state) => ({ isMobileNavOpen: !state.isMobileNavOpen })),
       isSidebarCollapsed: false,
       toggleSidebarCollapsed: () =>
         set((state) => ({ isSidebarCollapsed: !state.isSidebarCollapsed })),
       toasts: [],
       pushToast: (toast) =>
-        set((state) => ({ toasts: [...state.toasts, { ...toast, id: crypto.randomUUID() }] })),
-      dismissToast: (id) => set((state) => ({ toasts: state.toasts.filter((t) => t.id !== id) })),
+        set((state) => ({
+          toasts: [...state.toasts, { ...toast, id: crypto.randomUUID() }],
+        })),
+      dismissToast: (id) =>
+        set((state) => ({ toasts: state.toasts.filter((t) => t.id !== id) })),
       hasHydrated: false,
       markHydrated: () => set({ hasHydrated: true }),
     }),
     {
-      name: "nave-ui-state",
+      name: "navestory-ui-state",
       storage: createJSONStorage(() => sessionStorage),
       skipHydration: true,
       partialize: (state) => ({ isSidebarCollapsed: state.isSidebarCollapsed }),

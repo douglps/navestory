@@ -64,4 +64,41 @@ describe("NewVehicleGroupPage", () => {
       }),
     );
   });
+
+  it("adiciona e remove veículo da seleção (toggleVehicle)", async () => {
+    const VEHICLE_ID = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
+    vi.mocked(apiClient).mockImplementation((path: string) => {
+      if (path === "/vehicles") {
+        return Promise.resolve([{ id: VEHICLE_ID, plate: "XYZ9876", make: "Honda", model: "CG" }]);
+      }
+      if (path === "/vehicle-groups") return Promise.resolve({ id: "g1" });
+      return Promise.resolve(undefined);
+    });
+    renderPage();
+
+    const checkbox = await screen.findByRole("checkbox");
+    expect(checkbox).not.toBeChecked();
+    fireEvent.click(checkbox); // toggleVehicle → adiciona
+    expect(checkbox).toBeChecked();
+    fireEvent.click(checkbox); // toggleVehicle → remove
+    expect(checkbox).not.toBeChecked();
+  });
+
+  it("altera a cor via input de texto e via botão preset (setColor handlers)", async () => {
+    vi.mocked(apiClient).mockResolvedValue([]);
+    renderPage();
+
+    // Cobre onChange do input de cor
+    const colorInput = screen.getByLabelText("Cor");
+    fireEvent.change(colorInput, { target: { value: "#ff0000" } });
+    expect(colorInput).toHaveValue("#ff0000");
+
+    // Cobre onClick do botão de preset de cor (primeiro preset disponível)
+    const { PRESET_GROUP_COLORS } = await import("@navestory/validators");
+    const secondPreset = PRESET_GROUP_COLORS[1];
+    fireEvent.click(screen.getByRole("button", { name: secondPreset }));
+
+    // Após clicar, o input deve refletir o preset selecionado
+    await waitFor(() => expect(colorInput).toHaveValue(secondPreset));
+  });
 });

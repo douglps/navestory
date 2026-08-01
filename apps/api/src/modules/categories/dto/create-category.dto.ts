@@ -1,4 +1,4 @@
-import { createCategoryInputSchema } from "@nave/validators";
+import { createCategoryInputSchema } from "@navestory/validators";
 import type { z } from "zod";
 
 export const createCategoryDtoSchema = createCategoryInputSchema;

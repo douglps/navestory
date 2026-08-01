@@ -1,6 +1,10 @@
-import { Injectable, NotFoundException, UnprocessableEntityException } from "@nestjs/common";
+import {
+  Injectable,
+  NotFoundException,
+  UnprocessableEntityException,
+} from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
-import type { ExpenseTemplate } from "@nave/validators";
+import type { ExpenseTemplate } from "@navestory/validators";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createUserScopedClient } from "../../shared/supabase/create-user-scoped-client";
 import type { CreateExpenseTemplateDto } from "./dto/create-expense-template.dto";
@@ -28,7 +32,10 @@ export class ExpenseTemplatesService {
   /**
    * @spec SPEC-20260601-003 RF-01, RNF-01
    */
-  async findAll(accessToken: string, userId: string): Promise<ExpenseTemplate[]> {
+  async findAll(
+    accessToken: string,
+    userId: string,
+  ): Promise<ExpenseTemplate[]> {
     const { data, error } = await this.clientForUser(accessToken)
       .from("expense_templates")
       .select(TEMPLATE_COLUMNS)
@@ -36,7 +43,9 @@ export class ExpenseTemplatesService {
       .order("last_used_at", { ascending: false });
 
     if (error) {
-      throw new NotFoundException("Não foi possível listar os modelos de despesa");
+      throw new NotFoundException(
+        "Não foi possível listar os modelos de despesa",
+      );
     }
     return (data ?? []) as ExpenseTemplate[];
   }
@@ -69,7 +78,9 @@ export class ExpenseTemplatesService {
       .eq("user_id", userId);
 
     if (countError) {
-      throw new NotFoundException("Não foi possível validar o limite de modelos");
+      throw new NotFoundException(
+        "Não foi possível validar o limite de modelos",
+      );
     }
     if ((count ?? 0) >= TEMPLATE_LIMIT) {
       throw new UnprocessableEntityException(
@@ -125,14 +136,24 @@ export class ExpenseTemplatesService {
   /**
    * @spec SPEC-20260601-003 RF-08
    */
-  async touch(accessToken: string, userId: string, templateId: string): Promise<ExpenseTemplate> {
-    return this.patch(accessToken, userId, templateId, { last_used_at: new Date().toISOString() });
+  async touch(
+    accessToken: string,
+    userId: string,
+    templateId: string,
+  ): Promise<ExpenseTemplate> {
+    return this.patch(accessToken, userId, templateId, {
+      last_used_at: new Date().toISOString(),
+    });
   }
 
   /**
    * @spec SPEC-20260601-003 RF-10, CA-08
    */
-  async remove(accessToken: string, userId: string, templateId: string): Promise<void> {
+  async remove(
+    accessToken: string,
+    userId: string,
+    templateId: string,
+  ): Promise<void> {
     const client = this.clientForUser(accessToken);
     const { data: existing, error: findError } = await client
       .from("expense_templates")

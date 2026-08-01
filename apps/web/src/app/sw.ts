@@ -1,5 +1,10 @@
 /// <reference lib="webworker" />
-import { Serwist, NetworkFirst, StaleWhileRevalidate, NetworkOnly } from "serwist";
+import {
+  Serwist,
+  NetworkFirst,
+  StaleWhileRevalidate,
+  NetworkOnly,
+} from "serwist";
 import type { PrecacheEntry } from "serwist";
 import { apiCacheRetentionPlugin } from "@/lib/pwa/api-cache-retention-plugin";
 
@@ -24,7 +29,10 @@ const serwist = new Serwist({
       // RF-06, RF-07 — navegação de rotas
       matcher: ({ request }) => request.mode === "navigate",
       method: "GET",
-      handler: new NetworkFirst({ cacheName: "nave-pages", networkTimeoutSeconds: 3 }),
+      handler: new NetworkFirst({
+        cacheName: "navestory-pages",
+        networkTimeoutSeconds: 3,
+      }),
     },
     {
       // RF-08, RF-10 — leitura de dados da API. Caminho real é `/api/backend/*`
@@ -36,13 +44,14 @@ const serwist = new Serwist({
       // api-cache-retention-plugin.ts (não usa o ExpirationPlugin padrão, que bloquearia a
       // leitura de uma entrada "velha" mesmo offline).
       handler: new StaleWhileRevalidate({
-        cacheName: "nave-api-data",
+        cacheName: "navestory-api-data",
         plugins: [apiCacheRetentionPlugin],
       }),
     },
     // RF-09 — mutações nunca interceptadas por estratégia de cache, sempre NetworkOnly.
     ...(["POST", "PUT", "PATCH", "DELETE"] as const).map((method) => ({
-      matcher: ({ url }: { url: URL }) => url.pathname.startsWith("/api/backend/"),
+      matcher: ({ url }: { url: URL }) =>
+        url.pathname.startsWith("/api/backend/"),
       method,
       handler: new NetworkOnly(),
     })),

@@ -1,4 +1,4 @@
-# Contribuindo — Nave SaaS
+# Contribuindo — navestory SaaS
 
 Consulte o guia completo em [`docs/contributing.md`](docs/contributing.md).
 

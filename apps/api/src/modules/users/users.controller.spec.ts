@@ -7,7 +7,9 @@ describe("UsersController", () => {
   function createController(overrides?: Partial<UsersService>) {
     const usersService = {
       getProfile: jest.fn().mockResolvedValue({ id: "u1", name: "Ana" }),
-      updateProfile: jest.fn().mockResolvedValue({ id: "u1", name: "Ana Atualizada" }),
+      updateProfile: jest
+        .fn()
+        .mockResolvedValue({ id: "u1", name: "Ana Atualizada" }),
       deleteAccount: jest.fn().mockResolvedValue(undefined),
       ...overrides,
     } as unknown as UsersService;
@@ -25,14 +27,18 @@ describe("UsersController", () => {
     const result = await controller.getMe(req, "u1");
 
     expect(usersService.getProfile).toHaveBeenCalledWith("token-123", "u1");
-    expect(result.data).toEqual({ id: "u1", name: "Ana", email: "ana@example.com" });
+    expect(result.data).toEqual({
+      id: "u1",
+      name: "Ana",
+      email: "ana@example.com",
+    });
   });
 
   it("getMe usa o cookie de sessão quando não há header Authorization", async () => {
     const { controller, usersService } = createController();
     const req = {
       headers: {},
-      cookies: { nave_access_token: "cookie-token" },
+      cookies: { navestory_access_token: "cookie-token" },
       user: { sub: "u1", email: "ana@example.com", aud: "authenticated" },
     } as unknown as Request;
 
@@ -45,14 +51,21 @@ describe("UsersController", () => {
     const { controller } = createController();
     const req = { headers: {}, cookies: {} } as unknown as Request;
 
-    await expect(controller.getMe(req, "u1")).rejects.toBeInstanceOf(UnauthorizedException);
+    await expect(controller.getMe(req, "u1")).rejects.toBeInstanceOf(
+      UnauthorizedException,
+    );
   });
 
   it("updateMe atualiza o perfil", async () => {
     const { controller, usersService } = createController();
-    const req = { headers: { authorization: "Bearer token-123" }, cookies: {} } as Request;
+    const req = {
+      headers: { authorization: "Bearer token-123" },
+      cookies: {},
+    } as Request;
 
-    const result = await controller.updateMe(req, "u1", { name: "Ana Atualizada" });
+    const result = await controller.updateMe(req, "u1", {
+      name: "Ana Atualizada",
+    });
 
     expect(usersService.updateProfile).toHaveBeenCalledWith("token-123", "u1", {
       name: "Ana Atualizada",

@@ -8,12 +8,20 @@ import {
   UseGuards,
   UsePipes,
 } from "@nestjs/common";
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from "@nestjs/swagger";
 import type { Request } from "express";
 import { UserId } from "../../common/decorators/user-id.decorator";
 import { SupabaseAuthGuard } from "../../common/guards/supabase-auth.guard";
 import { ZodValidationPipe } from "../../common/pipes/zod-validation.pipe";
-import { updatePreferencesDtoSchema, type UpdatePreferencesDto } from "./dto/update-preferences.dto";
+import {
+  updatePreferencesDtoSchema,
+  type UpdatePreferencesDto,
+} from "./dto/update-preferences.dto";
 import { PreferencesService } from "./preferences.service";
 
 /**
@@ -27,17 +35,24 @@ export class PreferencesController {
   constructor(private readonly preferencesService: PreferencesService) {}
 
   @Get()
-  @ApiOperation({ summary: "Obter preferências do usuário (fallback default se ausente)" })
+  @ApiOperation({
+    summary: "Obter preferências do usuário (fallback default se ausente)",
+  })
   @ApiResponse({ status: 200, description: "Preferências" })
   async findOne(@Req() req: Request, @UserId() userId: string) {
     const accessToken = this.extractAccessToken(req);
-    const preferences = await this.preferencesService.findOne(accessToken, userId);
+    const preferences = await this.preferencesService.findOne(
+      accessToken,
+      userId,
+    );
     return { data: preferences };
   }
 
   @Patch()
   @UsePipes(new ZodValidationPipe(updatePreferencesDtoSchema))
-  @ApiOperation({ summary: "Atualizar preferências do usuário (upsert idempotente)" })
+  @ApiOperation({
+    summary: "Atualizar preferências do usuário (upsert idempotente)",
+  })
   @ApiResponse({ status: 200, description: "Preferências atualizadas" })
   async update(
     @Req() req: Request,
@@ -45,7 +60,11 @@ export class PreferencesController {
     @Body() dto: UpdatePreferencesDto,
   ) {
     const accessToken = this.extractAccessToken(req);
-    const preferences = await this.preferencesService.upsert(accessToken, userId, dto);
+    const preferences = await this.preferencesService.upsert(
+      accessToken,
+      userId,
+      dto,
+    );
     return { data: preferences };
   }
 
@@ -54,7 +73,9 @@ export class PreferencesController {
     if (header?.startsWith("Bearer ")) {
       return header.slice("Bearer ".length);
     }
-    const cookieToken = req.cookies?.nave_access_token as string | undefined;
+    const cookieToken = req.cookies?.navestory_access_token as
+      | string
+      | undefined;
     if (cookieToken) {
       return cookieToken;
     }

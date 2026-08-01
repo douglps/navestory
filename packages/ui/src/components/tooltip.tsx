@@ -16,7 +16,12 @@ export interface TooltipProps {
   className?: string;
 }
 
-export function Tooltip({ content, children, side = "top", className }: TooltipProps): ReactNode {
+export function Tooltip({
+  content,
+  children,
+  side = "top",
+  className,
+}: TooltipProps): ReactNode {
   return (
     <RadixTooltip.Provider delayDuration={200}>
       <RadixTooltip.Root>

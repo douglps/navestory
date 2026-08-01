@@ -1,4 +1,4 @@
-import { recoverPasswordInputSchema } from "@nave/validators";
+import { recoverPasswordInputSchema } from "@navestory/validators";
 import type { z } from "zod";
 
 export const recoverPasswordDtoSchema = recoverPasswordInputSchema;

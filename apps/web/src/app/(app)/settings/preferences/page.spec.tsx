@@ -158,4 +158,114 @@ describe("PreferencesPage — exibição do veículo (SPEC-20260603-003)", () =>
       ),
     );
   });
+
+  it("cancela alterações do rascunho automático (handleCancelDraft)", async () => {
+    vi.mocked(apiClient).mockResolvedValue({ auto_draft_enabled: false });
+    renderPage();
+
+    const checkbox = await screen.findByRole("checkbox", { name: /Rascunho automático/ });
+    fireEvent.click(checkbox); // torna isDraftDirty=true
+
+    const cancelBtns = screen.getAllByRole("button", { name: "Cancelar" });
+    expect(cancelBtns[0]).not.toBeDisabled();
+    fireEvent.click(cancelBtns[0]!); // handleCancelDraft
+
+    // após cancelar, isDraftDirty=false → botão volta a ficar desabilitado
+    expect(screen.getAllByRole("button", { name: "Cancelar" })[0]).toBeDisabled();
+  });
+
+  it("move campo na ordem do chip (handleMoveChipField)", async () => {
+    vi.mocked(apiClient).mockResolvedValue({ auto_draft_enabled: false });
+    renderPage();
+
+    await screen.findByRole("checkbox", { name: /Rascunho automático/ });
+    // DEFAULT_CHIP_FIELDS = ["make", "plate", "model"]
+    // "Mover Marca para baixo" → index=0, direction=1 → troca make e plate
+    fireEvent.click(screen.getByRole("button", { name: "Mover Marca para baixo" }));
+
+    // isChipDirty=true → Salvar[1] passa a ser habilitado
+    const saveBtns = screen.getAllByRole("button", { name: "Salvar" });
+    expect(saveBtns[1]).not.toBeDisabled();
+  });
+
+  it("cancela alterações da exibição do veículo (handleCancelChipFields)", async () => {
+    vi.mocked(apiClient).mockResolvedValue({ auto_draft_enabled: false });
+    renderPage();
+
+    await screen.findByRole("checkbox", { name: /Rascunho automático/ });
+    fireEvent.click(screen.getByRole("checkbox", { name: "Apelido" })); // isChipDirty=true
+
+    const cancelBtns = screen.getAllByRole("button", { name: "Cancelar" });
+    expect(cancelBtns[1]).not.toBeDisabled();
+    fireEvent.click(cancelBtns[1]!); // handleCancelChipFields
+
+    // isChipDirty=false → botão desabilitado novamente
+    expect(screen.getAllByRole("button", { name: "Cancelar" })[1]).toBeDisabled();
+  });
+
+  it("altera o campo de fuso horário (handleTimezoneChange)", async () => {
+    vi.mocked(apiClient).mockResolvedValue({ auto_draft_enabled: false, timezone: "America/Sao_Paulo" });
+    renderPage();
+
+    await screen.findByRole("checkbox", { name: /Rascunho automático/ });
+    const tzInput = screen.getByLabelText("Selecionar fuso");
+    fireEvent.change(tzInput, { target: { value: "America/Manaus" } });
+
+    // isTzDirty=true → Salvar[2] habilitado
+    const saveBtns = screen.getAllByRole("button", { name: "Salvar" });
+    expect(saveBtns[2]).not.toBeDisabled();
+  });
+
+  it("salva o fuso horário ao clicar em Salvar (handleSaveTimezone)", async () => {
+    vi.mocked(apiClient).mockImplementation((path: string, options?: { method?: string }) => {
+      if (options?.method === "PATCH") {
+        return Promise.resolve({ auto_draft_enabled: false, timezone: "America/Manaus" });
+      }
+      return Promise.resolve({ auto_draft_enabled: false, timezone: "America/Sao_Paulo" });
+    });
+    renderPage();
+
+    await screen.findByRole("checkbox", { name: /Rascunho automático/ });
+    fireEvent.change(screen.getByLabelText("Selecionar fuso"), { target: { value: "America/Manaus" } });
+
+    const saveBtns = screen.getAllByRole("button", { name: "Salvar" });
+    fireEvent.click(saveBtns[2]!);
+
+    await waitFor(() =>
+      expect(apiClient).toHaveBeenCalledWith(
+        "/preferences",
+        expect.objectContaining({ method: "PATCH", body: { timezone: "America/Manaus" } }),
+      ),
+    );
+    expect(await screen.findByText("✓ Salvo")).toBeInTheDocument();
+  });
+
+  it("cancela alterações de fuso horário (handleCancelTimezone)", async () => {
+    vi.mocked(apiClient).mockResolvedValue({ auto_draft_enabled: false, timezone: "America/Sao_Paulo" });
+    renderPage();
+
+    await screen.findByRole("checkbox", { name: /Rascunho automático/ });
+    const tzInput = screen.getByLabelText("Selecionar fuso");
+    fireEvent.change(tzInput, { target: { value: "America/Manaus" } });
+
+    const cancelBtns = screen.getAllByRole("button", { name: "Cancelar" });
+    fireEvent.click(cancelBtns[2]!); // handleCancelTimezone
+
+    // volta ao valor original
+    expect(tzInput).toHaveValue("America/Sao_Paulo");
+  });
+
+  it("exibe erro ao salvar fuso horário inválido (handleSaveTimezone — branch de falha)", async () => {
+    vi.mocked(apiClient).mockResolvedValue({ auto_draft_enabled: false, timezone: "" });
+    renderPage();
+
+    await screen.findByRole("checkbox", { name: /Rascunho automático/ });
+    // fuso com espaço é inválido pelo timezoneSchema
+    fireEvent.change(screen.getByLabelText("Selecionar fuso"), { target: { value: "Invalido Com Espaço" } });
+
+    const saveBtns = screen.getAllByRole("button", { name: "Salvar" });
+    fireEvent.click(saveBtns[2]!);
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("Fuso horário deve ser um nome IANA");
+  });
 });

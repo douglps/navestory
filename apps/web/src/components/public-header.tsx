@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useTheme } from "next-themes";
-import { ThemeToggle } from "@nave/ui";
+import { ThemeToggle } from "@navestory/ui";
 import { useEffect, useState, type ReactNode } from "react";
 
 interface PublicHeaderProps {
@@ -24,7 +24,7 @@ export function PublicHeader({ navLink }: PublicHeaderProps): ReactNode {
     <header className="flex h-14 w-full items-center justify-between gap-3 border-b border-border px-4">
       <div className="flex items-center gap-3">
         <Link href="/" className="text-base font-semibold text-foreground">
-          Nave
+          navestory
         </Link>
         {navLink && (
           <Link href={navLink.href} className="text-sm underline">

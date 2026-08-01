@@ -19,14 +19,14 @@ camadas: [frontend, design]
 
 ## Contexto
 
-Em 2026-07-22, o usuário solicitou uma verificação completa do design system atual ("Steel & Sapphire", formalizado em `SPEC-20260721-001`) e o uso de um documento de inspiração externo — uma análise do design language do Notion (`DESIGN-notion.md`, fora do repositório) — para evoluir a identidade visual do Nave de forma mais criativa, sem abandonar o perfil de produto (SaaS B2B de gestão de frota, dashboards densos de dados, "Calm UI" anti-fadiga).
+Em 2026-07-22, o usuário solicitou uma verificação completa do design system atual ("Steel & Sapphire", formalizado em `SPEC-20260721-001`) e o uso de um documento de inspiração externo — uma análise do design language do Notion (`DESIGN-notion.md`, fora do repositório) — para evoluir a identidade visual do navestory de forma mais criativa, sem abandonar o perfil de produto (SaaS B2B de gestão de frota, dashboards densos de dados, "Calm UI" anti-fadiga).
 
 Uma pesquisa de mercado (via agente `design-system`) confirmou dois pontos que esta spec formaliza:
 
 1. **O formato `Design.md` não é o padrão clássico de documentação de design system** (que é multi-página: Polaris, Carbon, Atlassian, Material 3) — é uma convenção emergente de 2026 para consumo por AI coding agents, complementar à documentação humana, não substituta.
 2. **A estrutura de seções desses sistemas maduros converge**: Foundations, Tokens, Componentes, Padrões, Acessibilidade, Content/Voice, Governança. O usuário decidiu adotar essa estrutura como **padrão obrigatório** para toda documentação de design system do projeto daqui em diante — não apenas para este documento pontual.
 
-A pesquisa também identificou riscos concretos de importar literalmente a estética Notion para o Nave: paleta decorativa multicolor ("sticker") sem semântica de status colidiria com a gramática de cor já usada para comunicar saúde de veículo/urgência/custo; pill buttons (`rounded-full`) em toda ação de interface prejudicam escaneabilidade em telas com 15-20 ações simultâneas. Essas armadilhas foram descartadas explicitamente pelo usuário na decisão de produto.
+A pesquisa também identificou riscos concretos de importar literalmente a estética Notion para o navestory: paleta decorativa multicolor ("sticker") sem semântica de status colidiria com a gramática de cor já usada para comunicar saúde de veículo/urgência/custo; pill buttons (`rounded-full`) em toda ação de interface prejudicam escaneabilidade em telas com 15-20 ações simultâneas. Essas armadilhas foram descartadas explicitamente pelo usuário na decisão de produto.
 
 ## Objetivo
 
@@ -34,17 +34,17 @@ Formalizar como requisitos rastreáveis: (1) a direção criativa aprovada para 
 
 ## Material de Referência (não duplicar aqui)
 
-| Documento | Conteúdo | Caminho |
-|-----------|----------|---------|
-| Fundamentos aprovados (2026-07-21) | Tokens `--gold`, dark/light mode, contraste AA, NavBadge, VehicleContextSelector, CommandPalette | [SPEC-20260721-001](SPEC-20260721-001-design-system-fundamentos.md) |
-| Inventário do Design System | Estado atual de tokens e componentes em `packages/ui` | [INVENTARIO-DESIGN-SYSTEM.md](INVENTARIO-DESIGN-SYSTEM.md) |
-| `Design.md` | Documento AI-agent-facing, raiz do repositório — tokens + racional qualitativo, aplica a estrutura de seções desta spec | `/Design.md` |
+| Documento                          | Conteúdo                                                                                                                | Caminho                                                             |
+| ---------------------------------- | ----------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| Fundamentos aprovados (2026-07-21) | Tokens `--gold`, dark/light mode, contraste AA, NavBadge, VehicleContextSelector, CommandPalette                        | [SPEC-20260721-001](SPEC-20260721-001-design-system-fundamentos.md) |
+| Inventário do Design System        | Estado atual de tokens e componentes em `packages/ui`                                                                   | [INVENTARIO-DESIGN-SYSTEM.md](INVENTARIO-DESIGN-SYSTEM.md)          |
+| `Design.md`                        | Documento AI-agent-facing, raiz do repositório — tokens + racional qualitativo, aplica a estrutura de seções desta spec | `/Design.md`                                                        |
 
 ---
 
 ## Histórias de Usuário e Critérios de Aceitação
 
-**Persona P1 — Douglas, mantenedor do Nave**, responsável pela identidade visual e consistência do design system.
+**Persona P1 — Douglas, mantenedor do navestory**, responsável pela identidade visual e consistência do design system.
 **Persona P2 — Gestor de frota**, usuário final que consome dashboards densos de dados por longos períodos.
 
 ### US-01 — Documentação de design system com estrutura previsível
@@ -78,19 +78,19 @@ Formalizar como requisitos rastreáveis: (1) a direção criativa aprovada para 
 
 ## Requisitos Funcionais
 
-| ID | Requisito | Prioridade | História relacionada |
-|----|-----------|------------|----------------------|
-| RF-01 | Criar `Design.md` na raiz do repositório seguindo a estrutura de seções de R-DS-02, referenciando (não duplicando) `packages/ui/src/tokens`, `INVENTARIO-DESIGN-SYSTEM.md` e as specs de design system existentes | Alta | US-01 |
-| RF-02 | Registrar em `specs/RULES.md` as regras R-DS-02 (estrutura de documentação), R-DS-03 (gramática semântica de cor), R-DS-04 (granularidade de raio) e R-DS-05 (proporção cromática de referência) | Alta | US-01, US-02, US-03 |
-| RF-03 | Aplicar `tabular-nums` no valor principal de `KpiCard` (`packages/ui/src/components/kpi-card.tsx`) e em `TableCell` (`packages/ui/src/components/table.tsx`) | Média | US-04 |
-| RF-04 | Atualizar `docs/ui-design/design-system.md` para apontar também para o novo `Design.md` e para esta spec, sem duplicar conteúdo | Baixa | US-01 |
+| ID    | Requisito                                                                                                                                                                                                         | Prioridade | História relacionada |
+| ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | -------------------- |
+| RF-01 | Criar `Design.md` na raiz do repositório seguindo a estrutura de seções de R-DS-02, referenciando (não duplicando) `packages/ui/src/tokens`, `INVENTARIO-DESIGN-SYSTEM.md` e as specs de design system existentes | Alta       | US-01                |
+| RF-02 | Registrar em `specs/RULES.md` as regras R-DS-02 (estrutura de documentação), R-DS-03 (gramática semântica de cor), R-DS-04 (granularidade de raio) e R-DS-05 (proporção cromática de referência)                  | Alta       | US-01, US-02, US-03  |
+| RF-03 | Aplicar `tabular-nums` no valor principal de `KpiCard` (`packages/ui/src/components/kpi-card.tsx`) e em `TableCell` (`packages/ui/src/components/table.tsx`)                                                      | Média      | US-04                |
+| RF-04 | Atualizar `docs/ui-design/design-system.md` para apontar também para o novo `Design.md` e para esta spec, sem duplicar conteúdo                                                                                   | Baixa      | US-01                |
 
 ## Requisitos Não-Funcionais
 
-| ID | Requisito | Métrica de Aceite |
-|----|-----------|------------------|
+| ID     | Requisito                                                                                            | Métrica de Aceite                                                                                                                                                                                      |
+| ------ | ---------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | RNF-01 | Nenhuma nova família de cor decorativa é introduzida nos tokens (`packages/ui/src/tokens/colors.ts`) | Diff de `colors.ts` desta spec em diante: zero tokens novos fora de `background/foreground/card/border/muted/primary/secondary/accent/gold/success/warning/danger/info` e seus `-foreground`/`-pastel` |
-| RNF-02 | Nenhum botão de ação de interface em `packages/ui` usa `rounded-full` | Auditoria de código: `grep -rn "rounded-full" packages/ui/src/components/button.tsx` retorna vazio |
+| RNF-02 | Nenhum botão de ação de interface em `packages/ui` usa `rounded-full`                                | Auditoria de código: `grep -rn "rounded-full" packages/ui/src/components/button.tsx` retorna vazio                                                                                                     |
 
 ---
 
@@ -102,11 +102,11 @@ Formalizar como requisitos rastreáveis: (1) a direção criativa aprovada para 
 
 ## Dependências
 
-| Tipo | Referência | Descrição |
-|------|-----------|-----------|
-| Spec | SPEC-20260721-001 | Tokens `--gold`, contraste AA e dark/light mode — base sobre a qual esta spec constrói |
-| Spec | SPEC-20260525-001 | Componentes base de `packages/ui` (`KpiCard`, `Table`) alterados por RF-03 |
-| Regra | R-DS-01, C-DS-01 | Regras de design system pré-existentes, não alteradas por esta spec |
+| Tipo  | Referência        | Descrição                                                                              |
+| ----- | ----------------- | -------------------------------------------------------------------------------------- |
+| Spec  | SPEC-20260721-001 | Tokens `--gold`, contraste AA e dark/light mode — base sobre a qual esta spec constrói |
+| Spec  | SPEC-20260525-001 | Componentes base de `packages/ui` (`KpiCard`, `Table`) alterados por RF-03             |
+| Regra | R-DS-01, C-DS-01  | Regras de design system pré-existentes, não alteradas por esta spec                    |
 
 ## Notas Técnicas
 
@@ -120,8 +120,8 @@ Formalizar como requisitos rastreáveis: (1) a direção criativa aprovada para 
 
 > Preencher apenas após `status: approved`.
 
-| Data | O que mudou | Por quê |
-|------|-------------|---------|
-| 2026-07-22 | Implementação concluída e spec movida de `draft` para `approved`. RF-01 (`Design.md`), RF-02 (regras R-DS-02 a R-DS-05 em `RULES.md`) e RF-04 (`docs/ui-design/design-system.md` atualizado) concluídos como documentação/governança. RF-03 (`tabular-nums`) implementado em `KpiCard` e `TableCell`, sem teste automatizado dedicado à classe CSS — ver `matrices/rastreabilidade.md` para status detalhado. | Gate de sincronia exige matriz atualizada com caminhos reais ao concluir a implementação, conforme `.claude/CLAUDE.md`. |
-| 2026-07-23 | RF-03 fechado: teste automatizado dedicado assertando a classe `tabular-nums` adicionado em `packages/ui/src/components/kpi-card.test.tsx` ("aplica tabular-nums ao valor principal") e `packages/ui/src/components/table.test.tsx` ("célula usa tabular-nums para alinhar dígitos entre linhas"). Correção pequena de lacuna já prevista no RF, sem mudança de comportamento — status permanece `approved`. | Fechar a lacuna 🟡 registrada em `matrices/rastreabilidade.md` e `docs/IMPLEMENTATION_STRATEGY.md` (T11.2). |
+| Data       | O que mudou                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | Por quê                                                                                                                                                  |
+| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-07-22 | Implementação concluída e spec movida de `draft` para `approved`. RF-01 (`Design.md`), RF-02 (regras R-DS-02 a R-DS-05 em `RULES.md`) e RF-04 (`docs/ui-design/design-system.md` atualizado) concluídos como documentação/governança. RF-03 (`tabular-nums`) implementado em `KpiCard` e `TableCell`, sem teste automatizado dedicado à classe CSS — ver `matrices/rastreabilidade.md` para status detalhado.                                                                                                                          | Gate de sincronia exige matriz atualizada com caminhos reais ao concluir a implementação, conforme `.claude/CLAUDE.md`.                                  |
+| 2026-07-23 | RF-03 fechado: teste automatizado dedicado assertando a classe `tabular-nums` adicionado em `packages/ui/src/components/kpi-card.test.tsx` ("aplica tabular-nums ao valor principal") e `packages/ui/src/components/table.test.tsx` ("célula usa tabular-nums para alinhar dígitos entre linhas"). Correção pequena de lacuna já prevista no RF, sem mudança de comportamento — status permanece `approved`.                                                                                                                           | Fechar a lacuna 🟡 registrada em `matrices/rastreabilidade.md` e `docs/IMPLEMENTATION_STRATEGY.md` (T11.2).                                              |
 | 2026-07-29 | `R-DS-05` (proporção cromática de referência, citada sem versão travada) foi revisada de v1 (70/15/10/5) para v2 (60-30-10) por `SPEC-20260729-001` — herdada automaticamente por esta spec via mecanismo de versionamento de regra (`specs/RULES.md`), sem edição do texto desta spec. Demais requisitos (R-DS-02, R-DS-03, R-DS-04; Design.md; pill buttons; tabular-nums) permanecem inalterados e válidos — apenas a proporção de referência mudou, no contexto da adoção da direção Prata como identidade de marca (ver ADR-009). | Direção de marca "Steel & Sapphire" substituída por "Prata"; gate de sincronia exige o registro do impacto em specs approved que citam a regra revisada. |

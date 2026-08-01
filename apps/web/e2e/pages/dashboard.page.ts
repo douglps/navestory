@@ -29,7 +29,7 @@ export class DashboardPage {
     this.sidebar = page.getByRole("dialog", { name: "Menu de navegação" });
   }
 
-  /** Navega diretamente para /dashboard. */
+  /** navega diretamente para /dashboard. */
   async goto(): Promise<void> {
     // domcontentloaded em vez do "load" padrão: o dev server do Next.js mantém conexões
     // (HMR, streaming dos gráficos) que impedem o evento "load" de disparar dentro do

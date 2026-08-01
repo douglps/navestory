@@ -7,8 +7,8 @@ import type { MetadataRoute } from "next";
 // padrão (Björn Ottosson).
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Nave — Gestão Inteligente de Veículos",
-    short_name: "Nave",
+    name: "navestory — Gestão Inteligente de Veículos",
+    short_name: "navestory",
     description: "Gestão inteligente de veículos, despesas e manutenções.",
     start_url: "/",
     display: "standalone",

@@ -1,12 +1,12 @@
-# 📚 Índice Mestre de Documentação - Nave SaaS
+# 📚 Índice Mestre de Documentação - navestory SaaS
 
-Bem-vindo à documentação oficial do **Nave SaaS**. Este índice organiza toda a base de conhecimento do projeto de acordo com a estrutura [Diátaxis](https://diataxis.fr/) e os requisitos oficiais de Produto e Arquitetura.
+Bem-vindo à documentação oficial do **navestory SaaS**. Este índice organiza toda a base de conhecimento do projeto de acordo com a estrutura [Diátaxis](https://diataxis.fr/) e os requisitos oficiais de Produto e Arquitetura.
 
 ---
 
-## 🗺️ Navegação Principal (Diataxis)
+## 🗺️ navegação Principal (Diataxis)
 
-A documentação do Nave é dividida em quatro quadrantes, além das definições centrais de produto e operação:
+A documentação do navestory é dividida em quatro quadrantes, além das definições centrais de produto e operação:
 
 | Categoria         | Descrição                                                                | Diretório                                   |
 | ----------------- | ------------------------------------------------------------------------ | ------------------------------------------- |

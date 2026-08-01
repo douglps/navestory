@@ -3,7 +3,7 @@ import type { SerwistPlugin } from "serwist";
 
 const THIRTY_DAYS_IN_SECONDS = 60 * 60 * 24 * 30;
 
-const cacheExpiration = new CacheExpiration("nave-api-data", {
+const cacheExpiration = new CacheExpiration("navestory-api-data", {
   maxAgeSeconds: THIRTY_DAYS_IN_SECONDS,
   maxEntries: 200,
 });

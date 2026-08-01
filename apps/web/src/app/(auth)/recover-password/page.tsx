@@ -1,6 +1,6 @@
 "use client";
 
-import { Button, Container, Input } from "@nave/ui";
+import { Button, Container, Input } from "@navestory/ui";
 import { useMutation } from "@tanstack/react-query";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useState, type FormEvent, type ReactNode } from "react";
@@ -58,7 +58,10 @@ function RecoverPasswordForm(): ReactNode {
           />
 
           {mutation.isSuccess && (
-            <p role="status" className="rounded-md bg-success-pastel p-3 text-sm text-foreground">
+            <p
+              role="status"
+              className="rounded-md bg-success-pastel p-3 text-sm text-foreground"
+            >
               Se o e-mail existir, enviaremos instruções de redefinição.
             </p>
           )}

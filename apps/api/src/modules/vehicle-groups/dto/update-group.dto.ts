@@ -1,4 +1,4 @@
-import { updateGroupInputSchema } from "@nave/validators";
+import { updateGroupInputSchema } from "@navestory/validators";
 import type { z } from "zod";
 
 export const updateGroupDtoSchema = updateGroupInputSchema;

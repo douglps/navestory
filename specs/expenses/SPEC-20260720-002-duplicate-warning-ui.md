@@ -69,23 +69,23 @@ duplicado antes de sair da tela.
 
 ## Requisitos Funcionais
 
-| ID | Requisito | Prioridade | História relacionada |
-|----|-----------|------------|----------------------|
-| RF-01 | O tipo `ExpenseResponse` em `page.tsx` deve ser estendido para incluir os campos opcionais `duplicate_warning?: boolean` e `duplicate_id?: string`, refletindo o contrato real da API definido em SPEC-20260601-002 RF-03. | Alta | US-01 |
-| RF-02 | O callback `onSuccess` do mutation de criação deve verificar se `data.duplicate_warning === true`. Se verdadeiro, armazenar o `duplicate_id` em estado local e **não** navegar para `/expenses` imediatamente — aguardar ação do usuário. | Alta | US-01 |
-| RF-03 | Quando `duplicate_warning === true`, exibir na página um elemento com `role="alert"` contendo: (a) texto indicando que uma possível despesa duplicada foi detectada; (b) botão "Entendido" que ao ser clicado executa `router.push("/expenses")`; (c) link opcional "Ver despesa duplicada" que aponta para `/expenses/{duplicate_id}`. | Alta | US-01 |
-| RF-04 | O banner de aviso deve ser posicionado de forma visível, acima dos botões de ação do formulário ou substituindo a área de erro (`fieldError`), usando o mesmo padrão visual já adotado para outros alertas no formulário (`<p role="alert">` ou `<div role="alert">`). | Alta | US-01 |
-| RF-05 | Quando `duplicate_warning` está ausente ou é `false`, o comportamento de navegação permanece idêntico ao atual: `router.push("/expenses")` executado diretamente no `onSuccess`, sem nenhum estado intermediário. | Alta | US-01 |
-| RF-06 | O aviso de duplicata e o aviso de erro (`fieldError`, `mutation.isError`) são mutuamente exclusivos na renderização — apenas um é exibido por vez. O aviso de duplicata só é exibido após uma resposta 201 bem-sucedida; erros de API (4xx/5xx) continuam no fluxo de `onError` existente. | Alta | US-01 |
+| ID    | Requisito                                                                                                                                                                                                                                                                                                                               | Prioridade | História relacionada |
+| ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | -------------------- |
+| RF-01 | O tipo `ExpenseResponse` em `page.tsx` deve ser estendido para incluir os campos opcionais `duplicate_warning?: boolean` e `duplicate_id?: string`, refletindo o contrato real da API definido em SPEC-20260601-002 RF-03.                                                                                                              | Alta       | US-01                |
+| RF-02 | O callback `onSuccess` do mutation de criação deve verificar se `data.duplicate_warning === true`. Se verdadeiro, armazenar o `duplicate_id` em estado local e **não** navegar para `/expenses` imediatamente — aguardar ação do usuário.                                                                                          | Alta       | US-01                |
+| RF-03 | Quando `duplicate_warning === true`, exibir na página um elemento com `role="alert"` contendo: (a) texto indicando que uma possível despesa duplicada foi detectada; (b) botão "Entendido" que ao ser clicado executa `router.push("/expenses")`; (c) link opcional "Ver despesa duplicada" que aponta para `/expenses/{duplicate_id}`. | Alta       | US-01                |
+| RF-04 | O banner de aviso deve ser posicionado de forma visível, acima dos botões de ação do formulário ou substituindo a área de erro (`fieldError`), usando o mesmo padrão visual já adotado para outros alertas no formulário (`<p role="alert">` ou `<div role="alert">`).                                                                  | Alta       | US-01                |
+| RF-05 | Quando `duplicate_warning` está ausente ou é `false`, o comportamento de navegação permanece idêntico ao atual: `router.push("/expenses")` executado diretamente no `onSuccess`, sem nenhum estado intermediário.                                                                                                                  | Alta       | US-01                |
+| RF-06 | O aviso de duplicata e o aviso de erro (`fieldError`, `mutation.isError`) são mutuamente exclusivos na renderização — apenas um é exibido por vez. O aviso de duplicata só é exibido após uma resposta 201 bem-sucedida; erros de API (4xx/5xx) continuam no fluxo de `onError` existente.                                              | Alta       | US-01                |
 
 ---
 
 ## Requisitos Não-Funcionais
 
-| ID | Requisito | Métrica de Aceite |
-|----|-----------|------------------|
-| RNF-01 | Nenhuma chamada adicional à API para exibir o aviso — o `duplicate_id` já vem na resposta 201 | Zero requisições extras após a criação |
-| RNF-02 | O elemento `role="alert"` deve ser detectável por testes E2E via seletor semântico (`getByRole('alert')`) | RF-E2E-05 de SPEC-20260716-003 passa sem seletor frágil de CSS |
+| ID     | Requisito                                                                                                                                  | Métrica de Aceite                                                       |
+| ------ | ------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------- |
+| RNF-01 | Nenhuma chamada adicional à API para exibir o aviso — o `duplicate_id` já vem na resposta 201                                              | Zero requisições extras após a criação                                  |
+| RNF-02 | O elemento `role="alert"` deve ser detectável por testes E2E via seletor semântico (`getByRole('alert')`)                                  | RF-E2E-05 de SPEC-20260716-003 passa sem seletor frágil de CSS          |
 | RNF-03 | O aviso não bloqueia a criação da despesa — a persistência já ocorreu (R2); o usuário pode sair a qualquer momento clicando em "Entendido" | Tempo de resposta percebido não aumenta; nenhuma requisição de bloqueio |
 
 ---
@@ -103,9 +103,9 @@ duplicado antes de sair da tela.
 
 ## Dependências
 
-| Tipo | Referência | Descrição |
-|------|-----------|-----------|
-| Spec | SPEC-20260601-002 | Introduz R2, define o contrato de `duplicate_warning` e `duplicate_id` na resposta 201 de `POST /expenses`; esta spec é extensão de UI do NG-06 daquela. |
+| Tipo | Referência                    | Descrição                                                                                                                                                        |
+| ---- | ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Spec | SPEC-20260601-002             | Introduz R2, define o contrato de `duplicate_warning` e `duplicate_id` na resposta 201 de `POST /expenses`; esta spec é extensão de UI do NG-06 daquela.         |
 | Spec | SPEC-20260716-003 (RF-E2E-05) | Spec de E2E com Playwright que consome este requisito — o critério de aceite de RF-E2E-05 só pode ser implementado após esta spec estar aprovada e implementada. |
 
 ---
@@ -133,11 +133,12 @@ onSuccess: (data) => {
   } else {
     router.push("/expenses");
   }
-}
+};
 ```
 
 **Anotação de rastreabilidade:** ao implementar, adicionar no topo da função/bloco
 correspondente:
+
 ```ts
 // @spec SPEC-20260720-002 RF-02 RF-03
 ```
@@ -154,6 +155,6 @@ foi criada e persistida antes da interação do usuário com o aviso.
 > Preencher apenas após `status: approved`. Mudança estrutural (reverte/substitui requisito)
 > não edita aqui — cria spec nova com `superseded_by`.
 
-| Data | O que mudou | Por quê |
-|------|-------------|---------|
+| Data       | O que mudou                                                 | Por quê                                                                                                                                                                                                                                                                                   |
+| ---------- | ----------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 2026-07-20 | Status alterado de `draft` para `approved`, retroativamente | RF-01 a RF-06 já estavam implementados e testados (17/17 testes unitários passando em `page.spec.tsx`) antes da aprovação formal do texto — desvio do processo padrão (spec aprovada antes do código). Conteúdo revisado nesta aprovação e considerado correto; sem mudança de requisito. |

@@ -42,12 +42,12 @@ Cobre a user story: **US-FIN-B02** (3pts).
 
 ### RF-03 — Labels de cost_type
 
-| cost_type (DB) | Label exibido |
-|---|---|
-| `ipva` | IPVA |
-| `crlv` | CRLV |
-| `insurance` | Seguro |
-| `other` | Doc. Recorrente |
+| cost_type (DB) | Label exibido   |
+| -------------- | --------------- |
+| `ipva`         | IPVA            |
+| `crlv`         | CRLV            |
+| `insurance`    | Seguro          |
+| `other`        | Doc. Recorrente |
 
 ---
 
@@ -61,10 +61,10 @@ Cobre a user story: **US-FIN-B02** (3pts).
 
 ## Casos de Teste
 
-| ID | Cenário | Resultado esperado |
-|---|---|---|
+| ID                  | Cenário                                          | Resultado esperado                    |
+| ------------------- | ------------------------------------------------ | ------------------------------------- |
 | CT-001 valida RF-01 | IPVA com `due_date` em 5 dias, `paid_at IS NULL` | Aparece na tab Próximas com badge 0-7 |
-| CT-002 valida RF-01 | CRLV com `paid_at` preenchido | Não aparece na tab Próximas |
-| CT-003 valida RF-02 | 3 itens vencendo em ≤ 7 dias | Badge "3" na sidebar item Despesas |
-| CT-004 valida RF-02 | Nenhum item urgente | Sem badge na sidebar |
-| CT-005 valida RF-02 | 1 item vencido (due_date < hoje) | Badge vermelho (danger) |
+| CT-002 valida RF-01 | CRLV com `paid_at` preenchido                    | Não aparece na tab Próximas           |
+| CT-003 valida RF-02 | 3 itens vencendo em ≤ 7 dias                     | Badge "3" na sidebar item Despesas    |
+| CT-004 valida RF-02 | Nenhum item urgente                              | Sem badge na sidebar                  |
+| CT-005 valida RF-02 | 1 item vencido (due_date < hoje)                 | Badge vermelho (danger)               |

@@ -14,7 +14,12 @@ import {
   UseGuards,
   UsePipes,
 } from "@nestjs/common";
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from "@nestjs/swagger";
 import type { Request } from "express";
 import { UserId } from "../../common/decorators/user-id.decorator";
 import { SupabaseAuthGuard } from "../../common/guards/supabase-auth.guard";
@@ -40,14 +45,20 @@ export class FinesController {
   @ApiResponse({ status: 201, description: "Multa criada" })
   @ApiResponse({ status: 400, description: "Dados inválidos" })
   @ApiResponse({ status: 404, description: "Veículo não encontrado" })
-  async create(@Req() req: Request, @UserId() userId: string, @Body() dto: CreateFineDto) {
+  async create(
+    @Req() req: Request,
+    @UserId() userId: string,
+    @Body() dto: CreateFineDto,
+  ) {
     const accessToken = this.extractAccessToken(req);
     const fine = await this.finesService.create(accessToken, userId, dto);
     return { data: fine };
   }
 
   @Get()
-  @ApiOperation({ summary: "Listar multas ativas do usuário, com filtro opcional por status" })
+  @ApiOperation({
+    summary: "Listar multas ativas do usuário, com filtro opcional por status",
+  })
   @ApiResponse({ status: 200, description: "Lista de multas" })
   async findAll(
     @Req() req: Request,
@@ -55,7 +66,11 @@ export class FinesController {
     @Query(new ZodValidationPipe(listFinesDtoSchema)) query: ListFinesDto,
   ) {
     const accessToken = this.extractAccessToken(req);
-    const fines = await this.finesService.findAll(accessToken, userId, query.status);
+    const fines = await this.finesService.findAll(
+      accessToken,
+      userId,
+      query.status,
+    );
     return { data: fines };
   }
 
@@ -69,7 +84,11 @@ export class FinesController {
     @Param("vehicleId") vehicleId: string,
   ) {
     const accessToken = this.extractAccessToken(req);
-    const fines = await this.finesService.findByVehicle(accessToken, userId, vehicleId);
+    const fines = await this.finesService.findByVehicle(
+      accessToken,
+      userId,
+      vehicleId,
+    );
     return { data: fines };
   }
 
@@ -77,7 +96,11 @@ export class FinesController {
   @ApiOperation({ summary: "Consultar multa por id" })
   @ApiResponse({ status: 200, description: "Dados da multa" })
   @ApiResponse({ status: 404, description: "Multa não encontrada" })
-  async findOne(@Req() req: Request, @UserId() userId: string, @Param("id") id: string) {
+  async findOne(
+    @Req() req: Request,
+    @UserId() userId: string,
+    @Param("id") id: string,
+  ) {
     const accessToken = this.extractAccessToken(req);
     const fine = await this.finesService.findOne(accessToken, userId, id);
     return { data: fine };
@@ -105,7 +128,11 @@ export class FinesController {
   @ApiOperation({ summary: "Remover multa (soft-delete)" })
   @ApiResponse({ status: 204, description: "Multa removida" })
   @ApiResponse({ status: 404, description: "Multa não encontrada" })
-  async remove(@Req() req: Request, @UserId() userId: string, @Param("id") id: string): Promise<void> {
+  async remove(
+    @Req() req: Request,
+    @UserId() userId: string,
+    @Param("id") id: string,
+  ): Promise<void> {
     const accessToken = this.extractAccessToken(req);
     await this.finesService.remove(accessToken, userId, id);
   }
@@ -115,7 +142,9 @@ export class FinesController {
     if (header?.startsWith("Bearer ")) {
       return header.slice("Bearer ".length);
     }
-    const cookieToken = req.cookies?.nave_access_token as string | undefined;
+    const cookieToken = req.cookies?.navestory_access_token as
+      | string
+      | undefined;
     if (cookieToken) {
       return cookieToken;
     }

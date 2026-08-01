@@ -2,7 +2,7 @@ import tailwindcss from "@tailwindcss/vite";
 import type { StorybookConfig } from "@storybook/react-vite";
 
 /**
- * Storybook para os componentes de `@nave/ui`, usando o builder Vite (mesmo bundler já
+ * Storybook para os componentes de `@navestory/ui`, usando o builder Vite (mesmo bundler já
  * usado pelo Vitest do pacote — sem builder duplicado). Reaproveita o Tailwind v4 e os
  * tokens de design já existentes via `.storybook/preview.css` (ver preview.ts).
  */

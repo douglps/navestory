@@ -1,5 +1,10 @@
 import type { ReactNode } from "react";
-import { Badge, Tooltip, VehicleHealthScore, type BadgeProps } from "@nave/ui";
+import {
+  Badge,
+  Tooltip,
+  VehicleHealthScore,
+  type BadgeProps,
+} from "@navestory/ui";
 
 export type DocumentStatus = "ok" | "attention" | "overdue" | "unknown";
 
@@ -13,7 +18,11 @@ export interface VehicleCardData {
   last_fuel_date: string | null;
   last_fuel_amount: number | null;
   last_fuel_odometer_missing: boolean;
-  documents: { ipva: DocumentStatus; insurance: DocumentStatus; crlv: DocumentStatus };
+  documents: {
+    ipva: DocumentStatus;
+    insurance: DocumentStatus;
+    crlv: DocumentStatus;
+  };
 }
 
 export interface HealthFlag {
@@ -27,7 +36,8 @@ export interface HealthFlag {
  * adicional (RF-09), todas consomem este dicionário único.
  */
 export const FLAG_LABEL: Record<string, (flag: HealthFlag) => string> = {
-  maintenance_overdue: (flag) => `${String(flag.count)} manutenção(ões) vencida(s)`,
+  maintenance_overdue: (flag) =>
+    `${String(flag.count)} manutenção(ões) vencida(s)`,
   ipva_expiring: (flag) => `IPVA vence em ${String(flag.days)} dias`,
   insurance_expiring: (flag) => `Seguro vence em ${String(flag.days)} dias`,
   crlv_expiring: (flag) => `CRLV vence em ${String(flag.days)} dias`,
@@ -40,31 +50,47 @@ export const FLAG_LABEL: Record<string, (flag: HealthFlag) => string> = {
  * Detalhamento dos `flags` já retornados por calculate_vehicle_health/calculate_fleet_health —
  * nenhum recálculo de peso aqui, só formatação para leitura humana.
  */
-function flagsTooltip(score: number | undefined, flags: HealthFlag[] | undefined): string {
+function flagsTooltip(
+  score: number | undefined,
+  flags: HealthFlag[] | undefined,
+): string {
   if (score === undefined) return "Calculando saúde…";
-  if (!flags || flags.length === 0) return `Saúde: ${score}/100 — nenhum problema identificado`;
+  if (!flags || flags.length === 0)
+    return `Saúde: ${score}/100 — nenhum problema identificado`;
 
   const lines = flags.map((flag) => FLAG_LABEL[flag.type]?.(flag) ?? flag.type);
   return [`Saúde: ${score}/100`, ...lines].join("\n");
 }
 
 function vehicleLabel(vehicle: VehicleCardData): string {
-  return vehicle.nickname ?? (`${vehicle.make ?? ""} ${vehicle.model ?? ""}`.trim() || vehicle.plate);
+  return (
+    vehicle.nickname ??
+    (`${vehicle.make ?? ""} ${vehicle.model ?? ""}`.trim() || vehicle.plate)
+  );
 }
 
 function currency(value: number): string {
   return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
-const DOCUMENT_BADGE: Record<DocumentStatus, { label: string; variant: NonNullable<BadgeProps["variant"]> } | null> = {
+const DOCUMENT_BADGE: Record<
+  DocumentStatus,
+  { label: string; variant: NonNullable<BadgeProps["variant"]> } | null
+> = {
   ok: null,
   unknown: null,
-  // @spec SPEC-20260730-001 — migrado para variant de `Badge` de `@nave/ui`
+  // @spec SPEC-20260730-001 — migrado para variant de `Badge` de `@navestory/ui`
   attention: { label: "Atenção", variant: "warning" },
   overdue: { label: "Vencido", variant: "danger" },
 };
 
-function DocumentBadge({ label, status }: { label: string; status: DocumentStatus }): ReactNode {
+function DocumentBadge({
+  label,
+  status,
+}: {
+  label: string;
+  status: DocumentStatus;
+}): ReactNode {
   // eslint-disable-next-line security/detect-object-injection -- status é DocumentStatus, union fixa de 4 literais
   const badge = DOCUMENT_BADGE[status];
   if (!badge) return null;
@@ -116,11 +142,17 @@ export function VehicleHealthCard({
       <span className="text-xs text-muted-foreground">{vehicle.plate}</span>
 
       <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
-        <span>{vehicle.odometer != null ? `${vehicle.odometer.toLocaleString("pt-BR")} km` : "Odômetro —"}</span>
+        <span>
+          {vehicle.odometer != null
+            ? `${vehicle.odometer.toLocaleString("pt-BR")} km`
+            : "Odômetro —"}
+        </span>
         <span>
           {vehicle.last_fuel_date
             ? `Abastecido em ${new Date(`${vehicle.last_fuel_date}T00:00:00`).toLocaleDateString("pt-BR")}${
-                vehicle.last_fuel_amount != null ? ` · ${currency(vehicle.last_fuel_amount)}` : ""
+                vehicle.last_fuel_amount != null
+                  ? ` · ${currency(vehicle.last_fuel_amount)}`
+                  : ""
               }`
             : "Sem abastecimentos"}
         </span>

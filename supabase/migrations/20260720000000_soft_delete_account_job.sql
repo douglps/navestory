@@ -54,7 +54,7 @@ revoke execute on function public.hard_delete_expired_accounts() from authentica
 
 -- 4. Agendamento do job diario as 03:00 UTC
 select cron.schedule(
-  'nave_hard_delete_expired_accounts',
+  'navestory_hard_delete_expired_accounts',
   '0 3 * * *',
   $$select public.hard_delete_expired_accounts()$$
 );

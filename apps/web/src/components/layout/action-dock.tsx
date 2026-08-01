@@ -17,27 +17,63 @@ interface DockAction {
 
 // Ícones inline (mesmo padrão do hamburger em header.tsx — sem dependência de biblioteca nova).
 const FuelIcon: DockActionIcon = ({ className }) => (
-  <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round" className={className}>
+  <svg
+    aria-hidden="true"
+    viewBox="0 0 20 20"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth={1.6}
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+  >
     <path d="M4 17V5a1 1 0 0 1 1-1h5a1 1 0 0 1 1 1v12M4 17h6M4 9h6" />
     <path d="M11 8h1.6l2 2v4.5a1.1 1.1 0 0 1-2.2 0V13" />
   </svg>
 );
 
 const ExpenseIcon: DockActionIcon = ({ className }) => (
-  <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round" className={className}>
+  <svg
+    aria-hidden="true"
+    viewBox="0 0 20 20"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth={1.6}
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+  >
     <path d="M5 3h10v14l-2.5-1.5L10 17l-2.5-1.5L5 17V3Z" />
     <path d="M7.5 7h5M7.5 10h5" />
   </svg>
 );
 
 const MaintenanceIcon: DockActionIcon = ({ className }) => (
-  <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round" className={className}>
+  <svg
+    aria-hidden="true"
+    viewBox="0 0 20 20"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth={1.6}
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+  >
     <path d="M13.5 3.5a3 3 0 0 0-3.9 3.9L4 13l3 3 5.6-5.6a3 3 0 0 0 3.9-3.9l-2.1 2.1-1.9-1.9 2.1-2.1Z" />
   </svg>
 );
 
 const OdometerIcon: DockActionIcon = ({ className }) => (
-  <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round" className={className}>
+  <svg
+    aria-hidden="true"
+    viewBox="0 0 20 20"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth={1.6}
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+  >
     <path d="M10 17.5c4.14 0 7.5-3.36 7.5-7.5S14.14 2.5 10 2.5 2.5 5.86 2.5 10c0 1.6.5 3.08 1.36 4.3" />
     <path d="M10 10 13 6.5" />
     <circle cx="10" cy="10" r="1.1" fill="currentColor" stroke="none" />
@@ -78,14 +114,16 @@ function buildActions(activeVehicleId: string | null): DockAction[] {
       icon: OdometerIcon,
       accent: "text-info",
       // Sem veículo em foco não há id para compor a rota — leva à lista para o usuário escolher.
-      href: activeVehicleId ? `/vehicles/${activeVehicleId}/odometer` : "/vehicles",
+      href: activeVehicleId
+        ? `/vehicles/${activeVehicleId}/odometer`
+        : "/vehicles",
     },
   ];
 }
 
 /**
  * @spec SPEC-20260531-001 RF-DC-01, RF-DC-02, RF-DC-02.1, RF-DC-03, RF-DC-04, RF-DC-05, RF-DC-06
- * "Multa" e "IA Nave" ficam de fora do dock 2×2 por decisão da spec (RF-DC-02.1) — não são
+ * "Multa" e "IA navestory" ficam de fora do dock 2×2 por decisão da spec (RF-DC-02.1) — não são
  * omissão. "Novo Veículo" também não entra (RF-DC-03).
  */
 export function ActionDock(): ReactNode {

@@ -1,9 +1,9 @@
-# PRD Oficial v1.0 - Nave SaaS
+# PRD Oficial v1.0 - navestory SaaS
 
 ## 1. Metadados
 
 ```yaml
-Produto: Nave - Gestão Inteligente de Veículos
+Produto: navestory - Gestão Inteligente de Veículos
 Versão: 1.0 (MVP)
 Status: Aprovado
 Data: Março 2026
@@ -109,18 +109,18 @@ Licença: Proprietária/Comercial
 
 ```yaml
 product_health:
-  activation_rate: '> 60% completam cadastro + 1 veículo'
-  retention_d7: '> 40% retornam semana 1'
-  core_action_weekly: '> 3 ações/usuario/semana'
+  activation_rate: "> 60% completam cadastro + 1 veículo"
+  retention_d7: "> 40% retornam semana 1"
+  core_action_weekly: "> 3 ações/usuario/semana"
 
 technical_health:
-  error_rate: '< 1% requests 5xx'
-  p95_latency: '< 500ms endpoints críticos'
-  security_incidents: '0 vazamentos PII'
+  error_rate: "< 1% requests 5xx"
+  p95_latency: "< 500ms endpoints críticos"
+  security_incidents: "0 vazamentos PII"
 
 business:
-  nps_early_adopters: '≥ 40'
-  support_tickets_out_of_scope: '< 5%'
+  nps_early_adopters: "≥ 40"
+  support_tickets_out_of_scope: "< 5%"
 ```
 
 ## 9. Roadmap (35 Dias)

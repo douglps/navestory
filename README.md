@@ -1,14 +1,15 @@
-# Nave - Gestão Inteligente de Veículos
+# navestory - Gestão Inteligente de Veículos
 
-[![CI](https://github.com/douglps/nave/actions/workflows/ci.yml/badge.svg)](https://github.com/douglps/nave/actions/workflows/ci.yml)
+[![CI](https://github.com/douglps/navestory/actions/workflows/ci.yml/badge.svg)](https://github.com/douglps/navestory/actions/workflows/ci.yml)
 
 > SaaS proprietário para gestão de veículos, despesas e manutenções. Mobile-first PWA com isolamento por RLS no banco de dados.
 
 ## Descrição
 
-Nave permite que proprietários de veículos registrem manutenções e despesas em um único lugar, com alertas automáticos e dashboard de KPIs. Desenvolvido como PWA mobile-first com suporte a instalação e acesso offline básico.
+navestory permite que proprietários de veículos registrem manutenções e despesas em um único lugar, com alertas automáticos e dashboard de KPIs. Desenvolvido como PWA mobile-first com suporte a instalação e acesso offline básico.
 
 **Personas principais:**
+
 - Motoristas autônomos (controle de custos operacionais)
 - Gestores de frota pequena (decisões baseadas em dados)
 
@@ -27,8 +28,8 @@ npm install -g pnpm
 
 ```bash
 # 1. Clone o repositório
-git clone git@github.com:douglps/nave.git
-cd nave
+git clone git@github.com:douglps/navestory.git
+cd navestory
 
 # 2. Instale as dependências
 pnpm install
@@ -63,17 +64,17 @@ pnpm test
 pnpm lint
 ```
 
-| Serviço | URL padrão |
-|---------|-----------|
-| Frontend (Next.js) | http://localhost:3000 |
-| Backend (NestJS) | http://localhost:3001 |
-| Supabase Studio | http://localhost:54323 |
-| Storybook | http://localhost:6006 |
+| Serviço            | URL padrão             |
+| ------------------ | ---------------------- |
+| Frontend (Next.js) | http://localhost:3000  |
+| Backend (NestJS)   | http://localhost:3001  |
+| Supabase Studio    | http://localhost:54323 |
+| Storybook          | http://localhost:6006  |
 
 ## Estrutura do Projeto
 
 ```
-nave-saas/
+navestory-saas/
 ├── apps/
 │   ├── api/          # Backend NestJS 11 (auth, vehicles, expenses, maintenance, fines, recurring-costs, categories, dashboard, analytics, users, admin)
 │   └── web/          # Frontend Next.js 16 PWA (React 19, TailwindCSS, TanStack Query, Zustand)
@@ -97,16 +98,16 @@ nave-saas/
 
 ## Stack
 
-| Camada | Tecnologia |
-|--------|-----------|
+| Camada   | Tecnologia                                                                      |
+| -------- | ------------------------------------------------------------------------------- |
 | Frontend | Next.js 16, React 19, TailwindCSS 3.3, TanStack Query + Zustand 5 (ver ADR-008) |
-| Forms | React Hook Form 7 + Zod 3.22 |
-| PWA | Serwist 9.5 (service worker + manifest) |
-| Backend | NestJS 11, TypeScript 5, Passport JWT |
-| Database | PostgreSQL 15.1 via Supabase (RLS multi-tenancy) |
-| Monorepo | Turborepo 2 + pnpm 8.15 |
-| Testes | Jest (api), Vitest + Storybook (web/ui) |
-| Deploy | Vercel (web) + Supabase Edge (api) |
+| Forms    | React Hook Form 7 + Zod 3.22                                                    |
+| PWA      | Serwist 9.5 (service worker + manifest)                                         |
+| Backend  | NestJS 11, TypeScript 5, Passport JWT                                           |
+| Database | PostgreSQL 15.1 via Supabase (RLS multi-tenancy)                                |
+| Monorepo | Turborepo 2 + pnpm 8.15                                                         |
+| Testes   | Jest (api), Vitest + Storybook (web/ui)                                         |
+| Deploy   | Vercel (web) + Supabase Edge (api)                                              |
 
 ## Documentação
 

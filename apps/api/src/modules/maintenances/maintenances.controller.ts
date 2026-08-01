@@ -14,14 +14,28 @@ import {
   UseGuards,
   UsePipes,
 } from "@nestjs/common";
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from "@nestjs/swagger";
 import type { Request } from "express";
 import { UserId } from "../../common/decorators/user-id.decorator";
 import { SupabaseAuthGuard } from "../../common/guards/supabase-auth.guard";
 import { ZodValidationPipe } from "../../common/pipes/zod-validation.pipe";
-import { createMaintenanceDtoSchema, type CreateMaintenanceDto } from "./dto/create-maintenance.dto";
-import { listMaintenancesDtoSchema, type ListMaintenancesDto } from "./dto/list-maintenances.dto";
-import { updateMaintenanceDtoSchema, type UpdateMaintenanceDto } from "./dto/update-maintenance.dto";
+import {
+  createMaintenanceDtoSchema,
+  type CreateMaintenanceDto,
+} from "./dto/create-maintenance.dto";
+import {
+  listMaintenancesDtoSchema,
+  type ListMaintenancesDto,
+} from "./dto/list-maintenances.dto";
+import {
+  updateMaintenanceDtoSchema,
+  type UpdateMaintenanceDto,
+} from "./dto/update-maintenance.dto";
 import { MaintenancesService } from "./maintenances.service";
 
 /**
@@ -47,7 +61,11 @@ export class MaintenancesController {
     @Body() dto: CreateMaintenanceDto,
   ) {
     const accessToken = this.extractAccessToken(req);
-    const maintenance = await this.maintenancesService.create(accessToken, userId, dto);
+    const maintenance = await this.maintenancesService.create(
+      accessToken,
+      userId,
+      dto,
+    );
     return { data: maintenance };
   }
 
@@ -57,10 +75,15 @@ export class MaintenancesController {
   async findAll(
     @Req() req: Request,
     @UserId() userId: string,
-    @Query(new ZodValidationPipe(listMaintenancesDtoSchema)) query: ListMaintenancesDto,
+    @Query(new ZodValidationPipe(listMaintenancesDtoSchema))
+    query: ListMaintenancesDto,
   ) {
     const accessToken = this.extractAccessToken(req);
-    const result = await this.maintenancesService.findAll(accessToken, userId, query);
+    const result = await this.maintenancesService.findAll(
+      accessToken,
+      userId,
+      query,
+    );
     return result;
   }
 
@@ -68,9 +91,17 @@ export class MaintenancesController {
   @ApiOperation({ summary: "Consultar manutenção por id" })
   @ApiResponse({ status: 200, description: "Dados da manutenção" })
   @ApiResponse({ status: 404, description: "Manutenção não encontrada" })
-  async findOne(@Req() req: Request, @UserId() userId: string, @Param("id") id: string) {
+  async findOne(
+    @Req() req: Request,
+    @UserId() userId: string,
+    @Param("id") id: string,
+  ) {
     const accessToken = this.extractAccessToken(req);
-    const maintenance = await this.maintenancesService.findOne(accessToken, userId, id);
+    const maintenance = await this.maintenancesService.findOne(
+      accessToken,
+      userId,
+      id,
+    );
     return { data: maintenance };
   }
 
@@ -80,7 +111,10 @@ export class MaintenancesController {
   @ApiResponse({ status: 200, description: "Manutenção atualizada" })
   @ApiResponse({ status: 404, description: "Manutenção não encontrada" })
   @ApiResponse({ status: 409, description: "Transição de status inválida" })
-  @ApiResponse({ status: 422, description: "odometer_km obrigatório para concluir" })
+  @ApiResponse({
+    status: 422,
+    description: "odometer_km obrigatório para concluir",
+  })
   async update(
     @Req() req: Request,
     @UserId() userId: string,
@@ -88,7 +122,12 @@ export class MaintenancesController {
     @Body() dto: UpdateMaintenanceDto,
   ) {
     const accessToken = this.extractAccessToken(req);
-    const maintenance = await this.maintenancesService.update(accessToken, userId, id, dto);
+    const maintenance = await this.maintenancesService.update(
+      accessToken,
+      userId,
+      id,
+      dto,
+    );
     return { data: maintenance };
   }
 
@@ -97,7 +136,11 @@ export class MaintenancesController {
   @ApiOperation({ summary: "Remover manutenção (soft-delete)" })
   @ApiResponse({ status: 204, description: "Manutenção removida" })
   @ApiResponse({ status: 404, description: "Manutenção não encontrada" })
-  async remove(@Req() req: Request, @UserId() userId: string, @Param("id") id: string): Promise<void> {
+  async remove(
+    @Req() req: Request,
+    @UserId() userId: string,
+    @Param("id") id: string,
+  ): Promise<void> {
     const accessToken = this.extractAccessToken(req);
     await this.maintenancesService.remove(accessToken, userId, id);
   }
@@ -107,7 +150,9 @@ export class MaintenancesController {
     if (header?.startsWith("Bearer ")) {
       return header.slice("Bearer ".length);
     }
-    const cookieToken = req.cookies?.nave_access_token as string | undefined;
+    const cookieToken = req.cookies?.navestory_access_token as
+      | string
+      | undefined;
     if (cookieToken) {
       return cookieToken;
     }

@@ -1,7 +1,7 @@
 -- @spec docs/architecture/entities.md — motoristas e documentos digitalizados
 -- NOTA (2026-07-13): estas 3 tabelas foram removidas pela migration 0016_drop_unspecced_driver_document_tables.sql
 -- porque não têm spec aprovada em specs/ (ver docs/IMPLEMENTATION_STRATEGY.md Tarefa T0.2). Mantido aqui
--- inalterado como registro histórico fiel do que foi de fato aplicado no projeto Supabase `Nave`.
+-- inalterado como registro histórico fiel do que foi de fato aplicado no projeto Supabase `navestory`.
 
 create table public.drivers (
   id uuid primary key default gen_random_uuid(),

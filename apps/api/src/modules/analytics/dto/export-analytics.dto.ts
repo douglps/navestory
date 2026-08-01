@@ -1,4 +1,4 @@
-import { exportAnalyticsQuerySchema } from "@nave/validators";
+import { exportAnalyticsQuerySchema } from "@navestory/validators";
 import type { z } from "zod";
 
 export const exportAnalyticsDtoSchema = exportAnalyticsQuerySchema;

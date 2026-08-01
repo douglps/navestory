@@ -12,7 +12,9 @@ export function isIosInstallable(): boolean {
   const isIosDevice = /iPad|iPhone|iPod/.test(userAgent);
   // iPadOS 13+ reporta userAgent de desktop Safari — diferencia via touch support.
   const isIpadOsDesktopUa =
-    userAgent.includes("Macintosh") && typeof document !== "undefined" && "ontouchend" in document;
+    userAgent.includes("Macintosh") &&
+    typeof document !== "undefined" &&
+    "ontouchend" in document;
 
   const nav = navigator as Navigator & { standalone?: boolean };
   const isStandalone = nav.standalone === true;

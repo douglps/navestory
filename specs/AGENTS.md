@@ -1,4 +1,4 @@
-# Diretrizes para Agentes IA — Nave SaaS
+# Diretrizes para Agentes IA — navestory SaaS
 
 > Leia este arquivo antes de qualquer tarefa de desenvolvimento neste repositório.
 
@@ -45,42 +45,45 @@ Engenheiro Sênior TypeScript/NestJS. Tom direto, sem emoji. Respostas em pt-BR;
 
 ## Restrições de Processo
 
-| Regra | Detalhes |
-|-------|---------|
-| Spec antes do código | Toda feature nova precisa de spec aprovada em `specs/<feature>/` antes da implementação |
-| Atualizar RULES.md junto | Se a implementação adiciona ou muda uma regra de domínio, atualizar `specs/RULES.md` no mesmo commit |
-| ADR para mudanças arquiteturais | Mudar padrão estabelecido (ex: trocar Repository Pattern, mudar estratégia de auth) exige ADR em `docs/architecture/decisions/` |
-| `@spec` obrigatório | Arquivos que implementam requisitos rastreáveis devem ter `// @spec SPEC-ID RF-XX` no topo ou na função |
-| Testes junto com código | Código novo sem teste correspondente não deve ser commitado (exceto Server Actions — cobertura por E2E) |
-| Matrizes atualizadas | Ao concluir uma feature, atualizar `matrices/rastreabilidade.md` com status ✅ |
-| Specimen real no showcase | Componente novo ou variante nova em `packages/ui` só é "pronto" com specimen que importa o componente real (não recriação visual) em `apps/web/.../brand-showcase/_components/*-specimens/`, mesma lógica de "matriz de rastreabilidade não fica pendurada" — ver `specs/design-system/PLANO-MIGRACAO-SHOWCASE-INFRA.md` Rodadas 2/3 como referência de formato |
+| Regra                           | Detalhes                                                                                                                                                                                                                                                                                                                                                        |
+| ------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Spec antes do código            | Toda feature nova precisa de spec aprovada em `specs/<feature>/` antes da implementação                                                                                                                                                                                                                                                                         |
+| Atualizar RULES.md junto        | Se a implementação adiciona ou muda uma regra de domínio, atualizar `specs/RULES.md` no mesmo commit                                                                                                                                                                                                                                                            |
+| ADR para mudanças arquiteturais | Mudar padrão estabelecido (ex: trocar Repository Pattern, mudar estratégia de auth) exige ADR em `docs/architecture/decisions/`                                                                                                                                                                                                                                 |
+| `@spec` obrigatório             | Arquivos que implementam requisitos rastreáveis devem ter `// @spec SPEC-ID RF-XX` no topo ou na função                                                                                                                                                                                                                                                         |
+| Testes junto com código         | Código novo sem teste correspondente não deve ser commitado (exceto Server Actions — cobertura por E2E)                                                                                                                                                                                                                                                         |
+| Matrizes atualizadas            | Ao concluir uma feature, atualizar `matrices/rastreabilidade.md` com status ✅                                                                                                                                                                                                                                                                                  |
+| Specimen real no showcase       | Componente novo ou variante nova em `packages/ui` só é "pronto" com specimen que importa o componente real (não recriação visual) em `apps/web/.../brand-showcase/_components/*-specimens/`, mesma lógica de "matriz de rastreabilidade não fica pendurada" — ver `specs/design-system/PLANO-MIGRACAO-SHOWCASE-INFRA.md` Rodadas 2/3 como referência de formato |
 
 ---
 
 ## Agentes Especializados
 
-| Agente | Propósito | Quando usar |
-|--------|-----------|-------------|
-| `spec-writer` | Criar e refinar specs de features | Antes de implementar qualquer feature nova |
-| `impact-analyzer` | Analisar impacto de mudanças | Antes de refatorar ou adicionar dependências |
-| `reviewer` | Revisar código e specs | Antes de commitar alterações importantes |
-| `tester` | Criar planos de teste | Após implementar uma feature |
-| `doc-keeper` | Manter documentação e matrizes | Após concluir features ou mudar arquitetura |
-| `data-analyst` | Análises de dados, KPIs, séries temporais, anomalias, TCO, manutenção preditiva | Ao modelar analytics, criar RPCs de análise, dashboards de BI, ou insights derivados dos dados da frota |
-| `critico` | Auditar coerência multi-domínio, encontrar contradições entre specs/código/design/regras, delegar a agentes | Auditoria geral, sanity check, antes de releases, ou quando quiser "advogado do diabo" |
+| Agente            | Propósito                                                                                                   | Quando usar                                                                                             |
+| ----------------- | ----------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| `spec-writer`     | Criar e refinar specs de features                                                                           | Antes de implementar qualquer feature nova                                                              |
+| `impact-analyzer` | Analisar impacto de mudanças                                                                                | Antes de refatorar ou adicionar dependências                                                            |
+| `reviewer`        | Revisar código e specs                                                                                      | Antes de commitar alterações importantes                                                                |
+| `tester`          | Criar planos de teste                                                                                       | Após implementar uma feature                                                                            |
+| `doc-keeper`      | Manter documentação e matrizes                                                                              | Após concluir features ou mudar arquitetura                                                             |
+| `data-analyst`    | Análises de dados, KPIs, séries temporais, anomalias, TCO, manutenção preditiva                             | Ao modelar analytics, criar RPCs de análise, dashboards de BI, ou insights derivados dos dados da frota |
+| `critico`         | Auditar coerência multi-domínio, encontrar contradições entre specs/código/design/regras, delegar a agentes | Auditoria geral, sanity check, antes de releases, ou quando quiser "advogado do diabo"                  |
+| `ad-creative`     | Copywriting, tom de voz, conceito de campanha, storytelling de marca, planejamento de mídia                 | Ao criar copy de produto, definir tom de voz, planejar campanha ou revisar texto voltado a usuário/mercado |
+| `brand-designer`  | Identidade visual de marca: logo, paleta, tipografia, brand guidelines                                      | Ao tomar decisões visuais de marca (distinto do `design-system`, que cuida de componentes de produto)     |
+| `growth-marketer` | Métricas de crescimento, CAC/LTV/ROI, pesquisa de concorrência, canais e precificação                       | Ao definir estratégia de aquisição, precificação, ou avaliar performance de canal                          |
 
 ---
 
 ## Onde Encontrar o Quê
 
-| Precisa de | Onde olhar |
-|-----------|------------|
-| Regras de negócio | `specs/RULES.md` |
-| Requisitos de uma feature | `specs/<feature>/SPEC-YYYYMMDD-NNN.md` |
-| Arquitetura e padrões | `docs/architecture/overview.md` |
-| Decisões passadas | `docs/architecture/decisions/` |
-| Tipos de banco | `packages/database/src/types/database.types.ts` |
-| Schemas de validação | `packages/validators/src/` |
-| Convenções de API | `specs/API-SPEC.md` |
-| Estratégia de testes | `specs/TESTS_SPEC.md` |
-| Status de features | `matrices/rastreabilidade.md` |
+| Precisa de                | Onde olhar                                      |
+| ------------------------- | ----------------------------------------------- |
+| Regras de negócio         | `specs/RULES.md`                                |
+| Requisitos de uma feature | `specs/<feature>/SPEC-YYYYMMDD-NNN.md`          |
+| Arquitetura e padrões     | `docs/architecture/overview.md`                 |
+| Decisões passadas         | `docs/architecture/decisions/`                  |
+| Tipos de banco            | `packages/database/src/types/database.types.ts` |
+| Schemas de validação      | `packages/validators/src/`                      |
+| Convenções de API         | `specs/API-SPEC.md`                             |
+| Estratégia de testes      | `specs/TESTS_SPEC.md`                           |
+| Status de features        | `matrices/rastreabilidade.md`                   |

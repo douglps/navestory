@@ -81,7 +81,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
-      - run: pnpm --filter @nave/validators build
+      - run: pnpm --filter @navestory/validators build
       - uses: supabase/setup-cli@v1
         with:
           version: latest
@@ -98,7 +98,7 @@ jobs:
           SUPABASE_SERVICE_ROLE_KEY=${SERVICE_ROLE_KEY}
           SWAGGER_ENABLED=false
           EOF
-      - run: pnpm --filter @nave/api test:integration
+      - run: pnpm --filter @navestory/api test:integration
 
   build:
     name: Build
@@ -184,9 +184,9 @@ jobs:
           EOF
 
       # RF-CI-03: builda dependências na ordem correta
-      - run: pnpm --filter @nave/validators build
-      - run: pnpm --filter @nave/api build
-      - run: pnpm --filter @nave/web build
+      - run: pnpm --filter @navestory/validators build
+      - run: pnpm --filter @navestory/api build
+      - run: pnpm --filter @navestory/web build
 
       # RF-CI-03: inicia a API NestJS em background (script "start" = node dist/main.js)
       - name: Iniciar API NestJS (porta 3001)
@@ -206,11 +206,11 @@ jobs:
 
       # RF-CI-02: instala browsers do Playwright (apenas chromium para reduzir tempo de pipeline)
       - name: Instalar Playwright (chromium)
-        run: pnpm --filter @nave/web exec playwright install --with-deps chromium
+        run: pnpm --filter @navestory/web exec playwright install --with-deps chromium
 
       # Executa a suíte E2E
       - name: Executar testes E2E
-        run: pnpm --filter @nave/web e2e
+        run: pnpm --filter @navestory/web e2e
 
       # RF-CI-05: publica relatório HTML como artefato em caso de falha
       - name: Publicar relatório Playwright

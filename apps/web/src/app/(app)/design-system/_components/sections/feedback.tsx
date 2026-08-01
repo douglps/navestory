@@ -17,7 +17,7 @@ import {
   Skeleton,
   ToastViewport,
   type ToastItem,
-} from "@nave/ui";
+} from "@navestory/ui";
 import { Section, StateRow, Subsection } from "../section-shell";
 
 const ALERT_VARIANTS = ["info", "success", "warning", "error"] as const;
@@ -29,16 +29,35 @@ export function FeedbackSection() {
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [query, setQuery] = useState("");
 
-  function pushToast(variant: ToastItem["variant"], title: string, description?: string) {
+  function pushToast(
+    variant: ToastItem["variant"],
+    title: string,
+    description?: string,
+  ) {
     toastSeq += 1;
     const id = `toast-${toastSeq}`;
     setToasts((current) => [...current, { id, variant, title, description }]);
   }
 
   const paletteItems: CommandPaletteItem[] = [
-    { id: "1", label: "Registrar despesa", category: "Ações", onSelect: () => {} },
-    { id: "2", label: "Agendar manutenção", category: "Ações", onSelect: () => {} },
-    { id: "3", label: "Gol 2020 — ABC-1234", category: "Veículos", onSelect: () => {} },
+    {
+      id: "1",
+      label: "Registrar despesa",
+      category: "Ações",
+      onSelect: () => {},
+    },
+    {
+      id: "2",
+      label: "Agendar manutenção",
+      category: "Ações",
+      onSelect: () => {},
+    },
+    {
+      id: "3",
+      label: "Gol 2020 — ABC-1234",
+      category: "Veículos",
+      onSelect: () => {},
+    },
   ];
 
   return (
@@ -68,20 +87,64 @@ export function FeedbackSection() {
 
       <Subsection title="Toast — dispare para ver a fila real (auto-dismiss em 4s)">
         <div className="flex flex-wrap gap-2">
-          <Button size="sm" onClick={() => pushToast("success", "Despesa registrada", "Seu histórico já está atualizado.")}>
+          <Button
+            size="sm"
+            onClick={() =>
+              pushToast(
+                "success",
+                "Despesa registrada",
+                "Seu histórico já está atualizado.",
+              )
+            }
+          >
             Sucesso
           </Button>
-          <Button size="sm" variant="outline" onClick={() => pushToast("error", "Algo não saiu como devia", "Tente novamente em instantes.")}>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() =>
+              pushToast(
+                "error",
+                "Algo não saiu como devia",
+                "Tente novamente em instantes.",
+              )
+            }
+          >
             Erro
           </Button>
-          <Button size="sm" variant="outline" onClick={() => pushToast("warning", "Manutenção em atraso", "A revisão dos 10.000 km venceu.")}>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() =>
+              pushToast(
+                "warning",
+                "Manutenção em atraso",
+                "A revisão dos 10.000 km venceu.",
+              )
+            }
+          >
             Aviso
           </Button>
-          <Button size="sm" variant="ghost" onClick={() => pushToast("default", "Convite enviado", "Assim que confirmar, verá os veículos compartilhados.")}>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() =>
+              pushToast(
+                "default",
+                "Convite enviado",
+                "Assim que confirmar, verá os veículos compartilhados.",
+              )
+            }
+          >
             Default
           </Button>
         </div>
-        <ToastViewport toasts={toasts} onDismiss={(id) => setToasts((current) => current.filter((t) => t.id !== id))} />
+        <ToastViewport
+          toasts={toasts}
+          onDismiss={(id) =>
+            setToasts((current) => current.filter((t) => t.id !== id))
+          }
+        />
       </Subsection>
 
       <Subsection title="Dialog (motion real — ver aba Motion)">
@@ -92,7 +155,9 @@ export function FeedbackSection() {
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Excluir despesa</DialogTitle>
-              <DialogDescription>Despesa removida. Para desfazer, você tem alguns segundos.</DialogDescription>
+              <DialogDescription>
+                Despesa removida. Para desfazer, você tem alguns segundos.
+              </DialogDescription>
             </DialogHeader>
             <DialogFooter>
               <DialogClose asChild>

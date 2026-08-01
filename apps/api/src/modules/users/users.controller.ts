@@ -11,14 +11,26 @@ import {
   UseGuards,
   UsePipes,
 } from "@nestjs/common";
-import { ApiBearerAuth, ApiBody, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from "@nestjs/swagger";
 import type { Request } from "express";
 import { UserId } from "../../common/decorators/user-id.decorator";
 import { SupabaseAuthGuard } from "../../common/guards/supabase-auth.guard";
 import type { JwtPayload } from "../../modules/auth/jwt.strategy";
 import { ZodValidationPipe } from "../../common/pipes/zod-validation.pipe";
-import { deleteAccountDtoSchema, type DeleteAccountDto } from "./dto/delete-account.dto";
-import { updateProfileDtoSchema, type UpdateProfileDto } from "./dto/update-profile.dto";
+import {
+  deleteAccountDtoSchema,
+  type DeleteAccountDto,
+} from "./dto/delete-account.dto";
+import {
+  updateProfileDtoSchema,
+  type UpdateProfileDto,
+} from "./dto/update-profile.dto";
 import { UsersService } from "./users.service";
 
 /**
@@ -65,7 +77,11 @@ export class UsersController {
     @Body() dto: UpdateProfileDto,
   ) {
     const accessToken = this.extractAccessToken(req);
-    const profile = await this.usersService.updateProfile(accessToken, userId, dto);
+    const profile = await this.usersService.updateProfile(
+      accessToken,
+      userId,
+      dto,
+    );
     return { data: profile };
   }
 
@@ -75,7 +91,10 @@ export class UsersController {
   @Delete("me")
   @HttpCode(HttpStatus.NO_CONTENT)
   @UsePipes(new ZodValidationPipe(deleteAccountDtoSchema))
-  @ApiOperation({ summary: "Excluir a própria conta — soft-delete com retenção de 30 dias (LGPD Art. 18)" })
+  @ApiOperation({
+    summary:
+      "Excluir a própria conta — soft-delete com retenção de 30 dias (LGPD Art. 18)",
+  })
   @ApiBody({
     schema: {
       type: "object",
@@ -85,7 +104,10 @@ export class UsersController {
   })
   @ApiResponse({ status: 204, description: "Conta excluída" })
   @ApiResponse({ status: 400, description: "confirm !== true" })
-  async deleteMe(@UserId() userId: string, @Body() _dto: DeleteAccountDto): Promise<void> {
+  async deleteMe(
+    @UserId() userId: string,
+    @Body() _dto: DeleteAccountDto,
+  ): Promise<void> {
     await this.usersService.deleteAccount(userId);
   }
 
@@ -94,7 +116,9 @@ export class UsersController {
     if (header?.startsWith("Bearer ")) {
       return header.slice("Bearer ".length);
     }
-    const cookieToken = req.cookies?.nave_access_token as string | undefined;
+    const cookieToken = req.cookies?.navestory_access_token as
+      | string
+      | undefined;
     if (cookieToken) {
       return cookieToken;
     }

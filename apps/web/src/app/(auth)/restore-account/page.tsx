@@ -1,6 +1,6 @@
 "use client";
 
-import { Alert, Button, Container } from "@nave/ui";
+import { Alert, Button, Container } from "@navestory/ui";
 import { useMutation } from "@tanstack/react-query";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, type ReactNode } from "react";
@@ -21,8 +21,14 @@ function formatProjectedDeletionDate(deletedAt: string | null): string | null {
   if (!deletedAt) return null;
   const deletedAtDate = new Date(deletedAt);
   if (Number.isNaN(deletedAtDate.getTime())) return null;
-  const projected = new Date(deletedAtDate.getTime() + RETENTION_DAYS * 24 * 60 * 60 * 1000);
-  return projected.toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" });
+  const projected = new Date(
+    deletedAtDate.getTime() + RETENTION_DAYS * 24 * 60 * 60 * 1000,
+  );
+  return projected.toLocaleDateString("pt-BR", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+  });
 }
 
 /**
@@ -30,7 +36,7 @@ function formatProjectedDeletionDate(deletedAt: string | null): string | null {
  * Alcançada após um login bem-sucedido de uma conta em soft-delete (o
  * `SupabaseAuthGuard` retorna 403 `ACCOUNT_PENDING_DELETION` — ver
  * `redirectToRestoreAccount` em `api-client.ts`). Fica no grupo `(auth)`, não `(app)`: o
- * usuário chega aqui com uma conta bloqueada pela API do Nave, mesmo com JWT do Supabase
+ * usuário chega aqui com uma conta bloqueada pela API do navestory, mesmo com JWT do Supabase
  * ainda tecnicamente válido.
  */
 export default function RestoreAccountPage(): ReactNode {
@@ -45,12 +51,21 @@ function RestoreAccountContent(): ReactNode {
   const router = useRouter();
   const searchParams = useSearchParams();
   const pushToast = useUIStore((state) => state.pushToast);
-  const projectedDeletionDate = formatProjectedDeletionDate(searchParams.get("deletedAt"));
+  const projectedDeletionDate = formatProjectedDeletionDate(
+    searchParams.get("deletedAt"),
+  );
 
   const restoreMutation = useMutation({
-    mutationFn: () => apiClient<RestoreAccountResponse>("/users/me/restore", { method: "POST" }),
+    mutationFn: () =>
+      apiClient<RestoreAccountResponse>("/users/me/restore", {
+        method: "POST",
+      }),
     onSuccess: () => {
-      pushToast({ variant: "success", title: "Sua conta foi restaurada com sucesso!", duration: 5000 });
+      pushToast({
+        variant: "success",
+        title: "Sua conta foi restaurada com sucesso!",
+        duration: 5000,
+      });
       router.push("/dashboard");
     },
   });
@@ -65,19 +80,27 @@ function RestoreAccountContent(): ReactNode {
       {/* @spec SPEC-20260731-004 RF-06 */}
       <PublicHeader />
       <Container size="md">
-        <h1 className="text-xl font-semibold">Sua conta está marcada para exclusão</h1>
+        <h1 className="text-xl font-semibold">
+          Sua conta está marcada para exclusão
+        </h1>
 
         <Alert
           variant="warning"
-          title={projectedDeletionDate ? `Exclusão definitiva em ${projectedDeletionDate}` : undefined}
+          title={
+            projectedDeletionDate
+              ? `Exclusão definitiva em ${projectedDeletionDate}`
+              : undefined
+          }
           description={
             "Você solicitou a exclusão da sua conta. Até essa data, você ainda pode cancelar " +
-            "e continuar usando o Nave normalmente."
+            "e continuar usando o navestory normalmente."
           }
         />
 
         <div className="flex flex-col gap-1 rounded-md border border-border bg-card p-4 text-sm text-muted-foreground">
-          <p className="font-medium text-foreground">Ao cancelar a exclusão, você recupera:</p>
+          <p className="font-medium text-foreground">
+            Ao cancelar a exclusão, você recupera:
+          </p>
           <ul className="list-inside list-disc">
             <li>Todos os seus veículos e grupos</li>
             <li>Histórico de despesas, manutenções e multas</li>
@@ -85,7 +108,9 @@ function RestoreAccountContent(): ReactNode {
           </ul>
         </div>
 
-        {restoreMutation.isError && <Alert variant="error" description={errorMessage} />}
+        {restoreMutation.isError && (
+          <Alert variant="error" description={errorMessage} />
+        )}
 
         <Button
           type="button"
@@ -93,7 +118,9 @@ function RestoreAccountContent(): ReactNode {
           disabled={restoreMutation.isPending}
           aria-busy={restoreMutation.isPending}
         >
-          {restoreMutation.isPending ? "Restaurando..." : "Cancelar exclusão e restaurar minha conta"}
+          {restoreMutation.isPending
+            ? "Restaurando..."
+            : "Cancelar exclusão e restaurar minha conta"}
         </Button>
 
         <Button
@@ -106,7 +133,11 @@ function RestoreAccountContent(): ReactNode {
         </Button>
 
         {/* @spec SPEC-20260731-004 RF-10 */}
-        <BackLink fallback="/login" label="Voltar para o login" className="text-sm text-muted-foreground underline" />
+        <BackLink
+          fallback="/login"
+          label="Voltar para o login"
+          className="text-sm text-muted-foreground underline"
+        />
 
         <LegalFooter />
       </Container>

@@ -33,16 +33,16 @@ Formalizar como requisitos rastreáveis: (1) a paleta categórica `--categorical
 
 ## Material de Referência (não duplicar aqui)
 
-| Documento | Conteúdo | Caminho |
-|-----------|----------|---------|
-| ADR-010 | Racional de Okabe-Ito/ColorBrewer/ISO 11064-4, trade-offs | `docs/architecture/decisions/ADR-010-paleta-categorica-e-escala-urgencia.md` |
-| ADR-009 / SPEC-20260729-001 | Adoção da direção Prata (tokens de marca) | `docs/architecture/decisions/ADR-009-adocao-direcao-prata.md` |
+| Documento                   | Conteúdo                                                  | Caminho                                                                      |
+| --------------------------- | --------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| ADR-010                     | Racional de Okabe-Ito/ColorBrewer/ISO 11064-4, trade-offs | `docs/architecture/decisions/ADR-010-paleta-categorica-e-escala-urgencia.md` |
+| ADR-009 / SPEC-20260729-001 | Adoção da direção Prata (tokens de marca)                 | `docs/architecture/decisions/ADR-009-adocao-direcao-prata.md`                |
 
 ---
 
 ## Histórias de Usuário e Critérios de Aceitação
 
-**Persona P1 — Douglas, mantenedor do Nave.**
+**Persona P1 — Douglas, mantenedor do navestory.**
 **Persona P2 — Gestor de frota**, usuário final.
 
 ### US-01 — Indicador de contexto sem apropriar semântica de status
@@ -75,21 +75,21 @@ Formalizar como requisitos rastreáveis: (1) a paleta categórica `--categorical
 
 ## Requisitos Funcionais
 
-| ID | Requisito | Prioridade | História |
-|----|-----------|------------|----------|
-| RF-01 | Realinhar `--surface`/`--surface-elevated`/`--on-surface*` e `--primary` (dark, chroma reforçada) à direção Prata em `globals.css` | Alta | US-04 |
-| RF-02 | Introduzir `--categorical-1..5` (substitui `--chart-1..5`) em `globals.css`/`tailwind.config.ts`; criar `apps/web/src/lib/chart-colors.ts`; migrar `FleetCharts.tsx`, `analytics/page.tsx`, `TcoBreakdownChart`, `FuelTrendChart`, `VehicleContextChip`, `sidebar.tsx` | Alta | US-01, US-02 |
-| RF-03 | Introduzir `--urgency-hot`/`--urgency-hot-pastel`; migrar `urgencyBadge()` em `expenses/page.tsx` para 4 níveis; realinhar `--finance-outgoing` | Alta | US-03 |
-| RF-04 | Migrar badges de status semântico 1:1 (`atividades`, `maintenance`, `fines` list+detail via helper compartilhado, `VehicleSpotlight`) para `success`/`warning`/`danger`/`info` + pastel, seguindo o padrão `bg-{variant}-pastel text-foreground` já usado por `Alert`/`KpiCard` | Alta | US-04 |
-| RF-05 | Migrar chrome estrutural (`vehicle-context-dialog.tsx`, `vehicle-context-sheet.tsx`, `vehicle-switcher-content.tsx`, banners PWA, `offline/page.tsx`, avisos soltos de `register`/`recover-password`, grays de `page.tsx`/`password-input.tsx`) para tokens | Média | US-04 |
-| RF-06 | Recalcular `manifest.ts`/`layout.tsx` (theme-color/background-color) para o hex-fonte da paleta Prata; corrigir comentário de exceção do `gold` em `colors.ts` (protótipos) | Baixa | US-04 |
+| ID    | Requisito                                                                                                                                                                                                                                                                       | Prioridade | História     |
+| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------------ |
+| RF-01 | Realinhar `--surface`/`--surface-elevated`/`--on-surface*` e `--primary` (dark, chroma reforçada) à direção Prata em `globals.css`                                                                                                                                              | Alta       | US-04        |
+| RF-02 | Introduzir `--categorical-1..5` (substitui `--chart-1..5`) em `globals.css`/`tailwind.config.ts`; criar `apps/web/src/lib/chart-colors.ts`; migrar `FleetCharts.tsx`, `analytics/page.tsx`, `TcoBreakdownChart`, `FuelTrendChart`, `VehicleContextChip`, `sidebar.tsx`          | Alta       | US-01, US-02 |
+| RF-03 | Introduzir `--urgency-hot`/`--urgency-hot-pastel`; migrar `urgencyBadge()` em `expenses/page.tsx` para 4 níveis; realinhar `--finance-outgoing`                                                                                                                                 | Alta       | US-03        |
+| RF-04 | Migrar badges de status semântico 1:1 (`atividades`, `maintenance`, `fines` list+detail via helper compartilhado, `VehicleSpotlight`) para `success`/`warning`/`danger`/`info` + pastel, seguindo o padrão `bg-{variant}-pastel text-foreground` já usado por `Alert`/`KpiCard` | Alta       | US-04        |
+| RF-05 | Migrar chrome estrutural (`vehicle-context-dialog.tsx`, `vehicle-context-sheet.tsx`, `vehicle-switcher-content.tsx`, banners PWA, `offline/page.tsx`, avisos soltos de `register`/`recover-password`, grays de `page.tsx`/`password-input.tsx`) para tokens                     | Média      | US-04        |
+| RF-06 | Recalcular `manifest.ts`/`layout.tsx` (theme-color/background-color) para o hex-fonte da paleta Prata; corrigir comentário de exceção do `gold` em `colors.ts` (protótipos)                                                                                                     | Baixa      | US-04        |
 
 ## Requisitos Não-Funcionais
 
-| ID | Requisito | Métrica de Aceite |
-|----|-----------|------------------|
-| RNF-01 | Nenhuma regressão | `tsc --noEmit` limpo e suítes `vitest` completas de `packages/ui` (141 testes) e `apps/web` (329 testes) passando; `pnpm build` sem erros |
-| RNF-02 | Nenhum consumidor órfão de `--chart-1..5` | `grep` confirmando zero ocorrências fora do comentário histórico |
+| ID     | Requisito                                 | Métrica de Aceite                                                                                                                         |
+| ------ | ----------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| RNF-01 | Nenhuma regressão                         | `tsc --noEmit` limpo e suítes `vitest` completas de `packages/ui` (141 testes) e `apps/web` (329 testes) passando; `pnpm build` sem erros |
+| RNF-02 | Nenhum consumidor órfão de `--chart-1..5` | `grep` confirmando zero ocorrências fora do comentário histórico                                                                          |
 
 ---
 
@@ -103,12 +103,12 @@ Formalizar como requisitos rastreáveis: (1) a paleta categórica `--categorical
 
 ## Dependências
 
-| Tipo | Referência |
-|------|-----------|
-| Spec | SPEC-20260729-001 (adoção da direção Prata) |
-| Spec | SPEC-20260721-002 (dashboard v2, origem dos tokens `--surface*`/`--chart-*`/`--finance-outgoing`) |
-| ADR | ADR-009, ADR-010 |
-| Regra | R-DS-03 (paleta decorativa só via `gold`), C-DS-01 (contraste AA) |
+| Tipo  | Referência                                                                                        |
+| ----- | ------------------------------------------------------------------------------------------------- |
+| Spec  | SPEC-20260729-001 (adoção da direção Prata)                                                       |
+| Spec  | SPEC-20260721-002 (dashboard v2, origem dos tokens `--surface*`/`--chart-*`/`--finance-outgoing`) |
+| ADR   | ADR-009, ADR-010                                                                                  |
+| Regra | R-DS-03 (paleta decorativa só via `gold`), C-DS-01 (contraste AA)                                 |
 
 ---
 
@@ -120,6 +120,6 @@ Ver `ADR-010` para a tabela completa de valores OKLCH e o racional de acessibili
 
 ## Changelog (pós-aprovação)
 
-| Data | O que mudou | Por quê |
-|------|-------------|---------|
+| Data       | O que mudou                                                                                                                   | Por quê                                                                                          |
+| ---------- | ----------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
 | 2026-07-29 | Implementação concluída (RF-01 a RF-06) e spec criada já como `approved` — decisão e implementação ocorreram na mesma sessão. | Gate de sincronia exige matriz atualizada com caminhos reais; ver `matrices/rastreabilidade.md`. |

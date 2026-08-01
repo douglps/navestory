@@ -1,4 +1,4 @@
-import { Card, Tooltip } from "@nave/ui";
+import { Card, Tooltip } from "@navestory/ui";
 import { Section, Subsection } from "../section-shell";
 
 export function ElevacaoSection() {
@@ -10,21 +10,30 @@ export function ElevacaoSection() {
       <Subsection title="surface-0 / surface-1 / surface-2">
         <div className="grid gap-3 sm:grid-cols-3">
           <div className="rounded-md border border-border bg-background p-4">
-            <p className="text-xs font-semibold text-muted-foreground">surface-0 — base</p>
+            <p className="text-xs font-semibold text-muted-foreground">
+              surface-0 — base
+            </p>
             <p className="mt-1 text-sm">Fundo de página (grafite dedicado)</p>
           </div>
           <Card padding="md">
-            <p className="text-xs font-semibold text-muted-foreground">surface-1 — elevada</p>
+            <p className="text-xs font-semibold text-muted-foreground">
+              surface-1 — elevada
+            </p>
             <p className="mt-1 text-sm">Card, painel, tabela</p>
           </Card>
           <Card
             padding="md"
-            style={{ background: "linear-gradient(135deg, oklch(var(--card)), oklch(70% 0.10 250 / 0.15))" }}
+            style={{
+              background:
+                "linear-gradient(135deg, oklch(var(--card)), oklch(70% 0.10 250 / 0.15))",
+            }}
           >
-            <p className="text-xs font-semibold text-muted-foreground">surface-2 — destaque</p>
+            <p className="text-xs font-semibold text-muted-foreground">
+              surface-2 — destaque
+            </p>
             <p className="mt-1 text-sm">
-              Card de KPI em destaque, banner de onboarding — degradê decorativo atrás, nunca atrás de texto
-              denso.
+              Card de KPI em destaque, banner de onboarding — degradê decorativo
+              atrás, nunca atrás de texto denso.
             </p>
           </Card>
         </div>
@@ -47,7 +56,9 @@ export function ElevacaoSection() {
                 Passe o mouse (Tooltip)
               </button>
             </Tooltip>
-            <span className="text-xs text-muted-foreground">shadow-md — flutuante</span>
+            <span className="text-xs text-muted-foreground">
+              shadow-md — flutuante
+            </span>
           </div>
         </div>
       </Subsection>

@@ -1,4 +1,4 @@
-import { resetPasswordInputSchema } from "@nave/validators";
+import { resetPasswordInputSchema } from "@navestory/validators";
 import type { z } from "zod";
 
 export const resetPasswordDtoSchema = resetPasswordInputSchema;

@@ -1,5 +1,5 @@
 {
-  "name": "@nave/api",
+  "name": "@navestory/api",
   "private": true,
   "version": "0.0.0",
   "scripts": {
@@ -15,7 +15,7 @@
     "seed:random": "node scripts/seed-random-data.mjs"
   },
   "dependencies": {
-    "@nave/validators": "workspace:*",
+    "@navestory/validators": "workspace:*",
     "@nestjs/common": "^11.0.0",
     "@nestjs/config": "^4.0.0",
     "@nestjs/core": "^11.0.0",

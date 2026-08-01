@@ -1,22 +1,22 @@
 # DevOps — Índice de Specs
 
 Esta pasta agrupa as especificações de infraestrutura de deploy, pipeline de entrega contínua e
-observabilidade em produção do projeto Nave.
+observabilidade em produção do projeto navestory.
 
 ---
 
 ## Specs
 
-| ID | Título | Status | Camadas |
-|----|--------|--------|---------|
-| [SPEC-20260716-001](SPEC-20260716-001-cd-deploy.md) | Deploy Automatizado (CD) | approved | devops, infra |
-| [SPEC-20260716-002](SPEC-20260716-002-observabilidade.md) | Observabilidade em Produção | draft | backend, frontend, devops |
+| ID                                                        | Título                      | Status   | Camadas                   |
+| --------------------------------------------------------- | --------------------------- | -------- | ------------------------- |
+| [SPEC-20260716-001](SPEC-20260716-001-cd-deploy.md)       | Deploy Automatizado (CD)    | approved | devops, infra             |
+| [SPEC-20260716-002](SPEC-20260716-002-observabilidade.md) | Observabilidade em Produção | draft    | backend, frontend, devops |
 
 ---
 
 ## Contexto
 
-As práticas de DevOps do Nave são construídas sobre o pipeline de CI já existente
+As práticas de DevOps do navestory são construídas sobre o pipeline de CI já existente
 (`.github/workflows/ci.yml`), que cobre lint, type-check, testes unitários com gate de cobertura
 88%, testes de integração contra Supabase local, build, secret scanning (gitleaks) e dependency
 scanning (pnpm audit).

@@ -11,10 +11,16 @@ describe("CategoriesController", () => {
       remove: jest.fn().mockResolvedValue(undefined),
       ...overrides,
     } as unknown as CategoriesService;
-    return { controller: new CategoriesController(categoriesService), categoriesService };
+    return {
+      controller: new CategoriesController(categoriesService),
+      categoriesService,
+    };
   }
 
-  const req = { headers: { authorization: "Bearer token-123" }, cookies: {} } as Request;
+  const req = {
+    headers: { authorization: "Bearer token-123" },
+    cookies: {},
+  } as Request;
 
   it("findAll lista categorias do usuário", async () => {
     const { controller, categoriesService } = createController();
@@ -28,7 +34,10 @@ describe("CategoriesController", () => {
   it("create cria a categoria", async () => {
     const { controller, categoriesService } = createController();
 
-    const result = await controller.create(req, "u1", { value: "fuel_premium", label: "X" });
+    const result = await controller.create(req, "u1", {
+      value: "fuel_premium",
+      label: "X",
+    });
 
     expect(categoriesService.create).toHaveBeenCalledWith("token-123", "u1", {
       value: "fuel_premium",
@@ -42,7 +51,11 @@ describe("CategoriesController", () => {
 
     await controller.remove(req, "u1", "c1");
 
-    expect(categoriesService.remove).toHaveBeenCalledWith("token-123", "u1", "c1");
+    expect(categoriesService.remove).toHaveBeenCalledWith(
+      "token-123",
+      "u1",
+      "c1",
+    );
   });
 
   it("lança 401 quando não há token disponível", async () => {
@@ -58,11 +71,14 @@ describe("CategoriesController", () => {
     const { controller, categoriesService } = createController();
     const reqComCookie = {
       headers: {},
-      cookies: { nave_access_token: "cookie-token" },
+      cookies: { navestory_access_token: "cookie-token" },
     } as unknown as Request;
 
     await controller.findAll(reqComCookie, "u1");
 
-    expect(categoriesService.findAll).toHaveBeenCalledWith("cookie-token", "u1");
+    expect(categoriesService.findAll).toHaveBeenCalledWith(
+      "cookie-token",
+      "u1",
+    );
   });
 });

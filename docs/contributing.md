@@ -1,4 +1,4 @@
-# Contribuindo para o Nave SaaS
+# Contribuindo para o navestory SaaS
 
 ## Fluxo de Trabalho
 
@@ -10,14 +10,14 @@
 
 ## Padrão de Commits (Conventional Commits)
 
-| Tipo | Descrição |
-|------|-----------|
-| `feat:` | Nova feature |
-| `fix:` | Bug fix |
-| `docs:` | Documentação |
+| Tipo        | Descrição                                |
+| ----------- | ---------------------------------------- |
+| `feat:`     | Nova feature                             |
+| `fix:`      | Bug fix                                  |
+| `docs:`     | Documentação                             |
 | `refactor:` | Refatoração sem mudança de comportamento |
-| `test:` | Testes |
-| `chore:` | Manutenção (deps, config, CI) |
+| `test:`     | Testes                                   |
+| `chore:`    | Manutenção (deps, config, CI)            |
 
 ## Padrões de Código
 

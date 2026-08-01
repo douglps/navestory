@@ -271,4 +271,53 @@ describe("AnalyticsPage", () => {
     const exportLink = await screen.findByRole("link", { name: "Exportar" });
     expect(exportLink).toHaveAttribute("href", "/api/backend/analytics/export?vehicle_id=v1");
   });
+
+  it("exibe '—' quando tco.cost_per_month é null (branch linha 91)", async () => {
+    mockApi({ tco: { ...TCO, cost_per_month: null } });
+    renderPage();
+
+    // R$ 1.000,00 → total ainda é 1000 (não-zero, não mostra empty state)
+    expect(await screen.findByText("R$ 1.000,00")).toBeInTheDocument();
+    // cost_per_month null → deve mostrar "—" no card de Custo/mês
+    expect(screen.getByText("—")).toBeInTheDocument();
+  });
+
+  it("exibe '—' quando entry.cost_per_km é null no benchmark (branch linha 267)", async () => {
+    mockApi({
+      benchmark: [
+        {
+          vehicle_id: "v1",
+          plate: "ABC1234",
+          vehicle_name: "Fiat Uno",
+          total_expenses: 1000,
+          total_km: 2000,
+          cost_per_km: null,      // ← branch que estava descoberta
+          avg_km_per_liter: 12,
+          maintenance_count: 1,
+          fines_count: 0,
+          health_score: 90,
+          efficiency_rank: 1,
+        },
+        {
+          vehicle_id: "v2",
+          plate: "XYZ9876",
+          vehicle_name: "Onix",
+          total_expenses: 2000,
+          total_km: 2000,
+          cost_per_km: 1,
+          avg_km_per_liter: 10,
+          maintenance_count: 0,
+          fines_count: 1,
+          health_score: 80,
+          efficiency_rank: 2,
+        },
+      ],
+    });
+    renderPage();
+
+    expect(await screen.findByText("Benchmarking — Custo/km por veículo")).toBeInTheDocument();
+    // cost_per_km=null → deve aparecer "—" na coluna do primeiro veículo
+    const dashes = await screen.findAllByText("—");
+    expect(dashes.length).toBeGreaterThanOrEqual(1);
+  });
 });

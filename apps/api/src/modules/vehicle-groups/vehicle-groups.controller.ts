@@ -14,14 +14,28 @@ import {
   UseGuards,
   UsePipes,
 } from "@nestjs/common";
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from "@nestjs/swagger";
 import type { Request } from "express";
 import { UserId } from "../../common/decorators/user-id.decorator";
 import { SupabaseAuthGuard } from "../../common/guards/supabase-auth.guard";
 import { ZodValidationPipe } from "../../common/pipes/zod-validation.pipe";
-import { createGroupDtoSchema, type CreateGroupDto } from "./dto/create-group.dto";
-import { setGroupMembersDtoSchema, type SetGroupMembersDto } from "./dto/set-group-members.dto";
-import { updateGroupDtoSchema, type UpdateGroupDto } from "./dto/update-group.dto";
+import {
+  createGroupDtoSchema,
+  type CreateGroupDto,
+} from "./dto/create-group.dto";
+import {
+  setGroupMembersDtoSchema,
+  type SetGroupMembersDto,
+} from "./dto/set-group-members.dto";
+import {
+  updateGroupDtoSchema,
+  type UpdateGroupDto,
+} from "./dto/update-group.dto";
 import { VehicleGroupsService } from "./vehicle-groups.service";
 
 /**
@@ -39,9 +53,17 @@ export class VehicleGroupsController {
   @ApiOperation({ summary: "Criar grupo de veículos" })
   @ApiResponse({ status: 201, description: "Grupo criado" })
   @ApiResponse({ status: 400, description: "Nome ou cor inválidos" })
-  async create(@Req() req: Request, @UserId() userId: string, @Body() dto: CreateGroupDto) {
+  async create(
+    @Req() req: Request,
+    @UserId() userId: string,
+    @Body() dto: CreateGroupDto,
+  ) {
     const accessToken = this.extractAccessToken(req);
-    const group = await this.vehicleGroupsService.create(accessToken, userId, dto);
+    const group = await this.vehicleGroupsService.create(
+      accessToken,
+      userId,
+      dto,
+    );
     return { data: group };
   }
 
@@ -66,7 +88,12 @@ export class VehicleGroupsController {
     @Body() dto: UpdateGroupDto,
   ) {
     const accessToken = this.extractAccessToken(req);
-    const group = await this.vehicleGroupsService.update(accessToken, userId, id, dto);
+    const group = await this.vehicleGroupsService.update(
+      accessToken,
+      userId,
+      id,
+      dto,
+    );
     return { data: group };
   }
 
@@ -75,14 +102,20 @@ export class VehicleGroupsController {
   @ApiOperation({ summary: "Remover grupo (hard-delete, membros por cascade)" })
   @ApiResponse({ status: 204, description: "Grupo removido" })
   @ApiResponse({ status: 404, description: "Grupo não encontrado" })
-  async remove(@Req() req: Request, @UserId() userId: string, @Param("id") id: string): Promise<void> {
+  async remove(
+    @Req() req: Request,
+    @UserId() userId: string,
+    @Param("id") id: string,
+  ): Promise<void> {
     const accessToken = this.extractAccessToken(req);
     await this.vehicleGroupsService.remove(accessToken, userId, id);
   }
 
   @Put(":id/members")
   @UsePipes(new ZodValidationPipe(setGroupMembersDtoSchema))
-  @ApiOperation({ summary: "Substituir todos os membros do grupo (replace-all)" })
+  @ApiOperation({
+    summary: "Substituir todos os membros do grupo (replace-all)",
+  })
   @ApiResponse({ status: 200, description: "Membros atualizados" })
   @ApiResponse({ status: 404, description: "Grupo não encontrado" })
   async setMembers(
@@ -92,7 +125,12 @@ export class VehicleGroupsController {
     @Body() dto: SetGroupMembersDto,
   ) {
     const accessToken = this.extractAccessToken(req);
-    const result = await this.vehicleGroupsService.setMembers(accessToken, userId, id, dto);
+    const result = await this.vehicleGroupsService.setMembers(
+      accessToken,
+      userId,
+      id,
+      dto,
+    );
     return { data: result };
   }
 
@@ -101,7 +139,9 @@ export class VehicleGroupsController {
     if (header?.startsWith("Bearer ")) {
       return header.slice("Bearer ".length);
     }
-    const cookieToken = req.cookies?.nave_access_token as string | undefined;
+    const cookieToken = req.cookies?.navestory_access_token as
+      | string
+      | undefined;
     if (cookieToken) {
       return cookieToken;
     }

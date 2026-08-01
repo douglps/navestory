@@ -3,8 +3,23 @@
 import type { ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import type { LucideIcon } from "lucide-react";
-import { Car, FileText, Gauge, Receipt, Repeat, ShieldAlert, User, Wrench } from "lucide-react";
-import { Badge, Container, EmptyState, Tooltip, type BadgeProps } from "@nave/ui";
+import {
+  Car,
+  FileText,
+  Gauge,
+  Receipt,
+  Repeat,
+  ShieldAlert,
+  User,
+  Wrench,
+} from "lucide-react";
+import {
+  Badge,
+  Container,
+  EmptyState,
+  Tooltip,
+  type BadgeProps,
+} from "@navestory/ui";
 import { apiClient } from "@/lib/http/api-client";
 
 interface AuditLogRow {
@@ -50,9 +65,11 @@ function actionLabel(action: string, tableName: string): string {
 
 /**
  * @spec SPEC-20260602-005 RF-14
- * @spec SPEC-20260730-001 — migrado para variant de `Badge` de `@nave/ui`.
+ * @spec SPEC-20260730-001 — migrado para variant de `Badge` de `@navestory/ui`.
  */
-function actionBadgeVariant(action: string): NonNullable<BadgeProps["variant"]> {
+function actionBadgeVariant(
+  action: string,
+): NonNullable<BadgeProps["variant"]> {
   if (action.endsWith("_DELETED")) return "danger";
   if (action.endsWith("_UPDATED")) return "warning";
   return "success";
@@ -89,7 +106,13 @@ function detailEntries(changes: Record<string, unknown>): [string, unknown][] {
     .slice(0, 4);
 }
 
-function KpiTile({ label, value }: { label: string; value: number }): ReactNode {
+function KpiTile({
+  label,
+  value,
+}: {
+  label: string;
+  value: number;
+}): ReactNode {
   return (
     <div className="rounded border p-3">
       <p className="text-sm text-muted-foreground">{label}</p>
@@ -113,15 +136,20 @@ export default function AtividadesPage(): ReactNode {
   });
 
   const total = logs?.length ?? 0;
-  const veiculos = logs?.filter((log) => domainInfo(log.table_name).label === "Veículo").length ?? 0;
-  const despesas = logs?.filter((log) => log.table_name === "expenses").length ?? 0;
-  const manutencoes = logs?.filter((log) => log.table_name === "maintenances").length ?? 0;
+  const veiculos =
+    logs?.filter((log) => domainInfo(log.table_name).label === "Veículo")
+      .length ?? 0;
+  const despesas =
+    logs?.filter((log) => log.table_name === "expenses").length ?? 0;
+  const manutencoes =
+    logs?.filter((log) => log.table_name === "maintenances").length ?? 0;
 
   return (
     <Container size="4xl" className="pb-24">
       <h1 className="text-xl font-semibold">Histórico de Atividades</h1>
       <p className="text-sm text-muted-foreground">
-        Últimas {total} operações registradas na sua conta, para acompanhamento pessoal.
+        Últimas {total} operações registradas na sua conta, para acompanhamento
+        pessoal.
       </p>
 
       {logs && logs.length > 0 && (
@@ -133,10 +161,15 @@ export default function AtividadesPage(): ReactNode {
         </div>
       )}
 
-      {isLoading && <p className="text-sm text-muted-foreground">Carregando…</p>}
+      {isLoading && (
+        <p className="text-sm text-muted-foreground">Carregando…</p>
+      )}
 
       {!isLoading && (!logs || logs.length === 0) && (
-        <EmptyState icon={<ShieldAlert size={24} aria-hidden />} title="Nenhuma operação registrada ainda." />
+        <EmptyState
+          icon={<ShieldAlert size={24} aria-hidden />}
+          title="Nenhuma operação registrada ainda."
+        />
       )}
 
       {logs && logs.length > 0 && (
@@ -156,7 +189,11 @@ export default function AtividadesPage(): ReactNode {
                 return (
                   <tr key={log.id} className="border-b last:border-0">
                     <td className="p-2 text-muted-foreground">
-                      <Tooltip content={new Date(log.created_at).toLocaleString("pt-BR")}>
+                      <Tooltip
+                        content={new Date(log.created_at).toLocaleString(
+                          "pt-BR",
+                        )}
+                      >
                         <span>{relativeTime(log.created_at)}</span>
                       </Tooltip>
                     </td>
@@ -166,7 +203,11 @@ export default function AtividadesPage(): ReactNode {
                       </Badge>
                     </td>
                     <td className="p-2">
-                      <domain.icon size={16} aria-hidden className="mr-1 inline" />
+                      <domain.icon
+                        size={16}
+                        aria-hidden
+                        className="mr-1 inline"
+                      />
                       {domain.label}
                     </td>
                     <td className="hidden p-2 text-xs text-muted-foreground sm:table-cell">

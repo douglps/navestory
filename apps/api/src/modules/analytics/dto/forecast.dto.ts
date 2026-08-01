@@ -1,4 +1,4 @@
-import { forecastQuerySchema } from "@nave/validators";
+import { forecastQuerySchema } from "@navestory/validators";
 import type { z } from "zod";
 
 export const forecastDtoSchema = forecastQuerySchema;

@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { ToastViewport } from "@nave/ui";
+import { ToastViewport } from "@navestory/ui";
 import { useUIStore } from "@/lib/stores/ui-store";
 
 /** @spec SPEC-20260525-001 §8.2 — conecta a fila de toasts do ui-store ao `<ToastViewport />`. */

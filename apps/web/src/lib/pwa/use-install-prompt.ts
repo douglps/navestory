@@ -7,7 +7,7 @@ interface BeforeInstallPromptEvent extends Event {
   userChoice: Promise<{ outcome: "accepted" | "dismissed"; platform: string }>;
 }
 
-const VISIT_COUNT_KEY = "nave-pwa-visit-count";
+const VISIT_COUNT_KEY = "navestory-pwa-visit-count";
 const MIN_VISITS_FOR_PROMPT = 2;
 
 /**
@@ -19,8 +19,12 @@ const MIN_VISITS_FOR_PROMPT = 2;
  *
  * @spec SPEC-20260712-001 RF-03
  */
-export function useInstallPrompt(): { canInstall: boolean; promptInstall: () => Promise<void> } {
-  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+export function useInstallPrompt(): {
+  canInstall: boolean;
+  promptInstall: () => Promise<void>;
+} {
+  const [deferredPrompt, setDeferredPrompt] =
+    useState<BeforeInstallPromptEvent | null>(null);
   const [pastFirstVisit, setPastFirstVisit] = useState(false);
 
   useEffect(() => {
@@ -41,7 +45,11 @@ export function useInstallPrompt(): { canInstall: boolean; promptInstall: () => 
     }
 
     window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
-    return () => window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+    return () =>
+      window.removeEventListener(
+        "beforeinstallprompt",
+        handleBeforeInstallPrompt,
+      );
   }, []);
 
   async function promptInstall(): Promise<void> {
@@ -51,5 +59,8 @@ export function useInstallPrompt(): { canInstall: boolean; promptInstall: () => 
     setDeferredPrompt(null);
   }
 
-  return { canInstall: pastFirstVisit && deferredPrompt !== null, promptInstall };
+  return {
+    canInstall: pastFirstVisit && deferredPrompt !== null,
+    promptInstall,
+  };
 }

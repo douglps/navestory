@@ -1,5 +1,5 @@
 import { BadRequestException } from "@nestjs/common";
-import { LICENSE_PLATE_REGEX, normalizePlate } from "@nave/validators";
+import { LICENSE_PLATE_REGEX, normalizePlate } from "@navestory/validators";
 
 /**
  * @spec SPEC-20260602-002 RF-02, R-VEH-02

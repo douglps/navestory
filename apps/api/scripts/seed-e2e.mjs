@@ -16,7 +16,7 @@
 //     o teste RF-E2E-10 ficará marcado como `skip` na suíte
 //
 // Uso:
-//   pnpm --filter @nave/api seed:e2e
+//   pnpm --filter @navestory/api seed:e2e
 //
 // Requer SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY em apps/api/.env (mesmas credenciais
 // já usadas pela API em desenvolvimento). Nunca aponte para o banco de produção real com
@@ -45,13 +45,15 @@ if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
   process.exit(1);
 }
 
-const EMAIL = process.env.E2E_USER_EMAIL ?? "e2e-tester@nave.test";
+const EMAIL = process.env.E2E_USER_EMAIL ?? "e2e-tester@navestory.test";
 const PASSWORD_WAS_GENERATED = !process.env.E2E_USER_PASSWORD;
-const PASSWORD = process.env.E2E_USER_PASSWORD ?? randomBytes(12).toString("base64url");
+const PASSWORD =
+  process.env.E2E_USER_PASSWORD ?? randomBytes(12).toString("base64url");
 const VEHICLE_A_PLATE = process.env.E2E_VEHICLE_A_PLATE ?? "E2E0A01";
 const VEHICLE_B_PLATE = process.env.E2E_VEHICLE_B_PLATE ?? "E2E0B02";
 // RF-E2E-04/05 reaproveitam o mesmo veículo do teste de contexto A por padrão.
-const TEST_VEHICLE_PLATE = process.env.E2E_TEST_VEHICLE_PLATE ?? VEHICLE_A_PLATE;
+const TEST_VEHICLE_PLATE =
+  process.env.E2E_TEST_VEHICLE_PLATE ?? VEHICLE_A_PLATE;
 // RF-E2E-10: usuário sem veículos. Se não definido, o seed apenas pula e o teste fica skip.
 const NO_VEHICLES_EMAIL = process.env.E2E_USER_NO_VEHICLES_EMAIL ?? "";
 
@@ -76,7 +78,9 @@ async function findUserByEmail(email) {
 async function ensureUser() {
   const existing = await findUserByEmail(EMAIL);
   if (existing) {
-    console.log(`Usuário já existe (${EMAIL}) — atualizando senha para o valor configurado.`);
+    console.log(
+      `Usuário já existe (${EMAIL}) — atualizando senha para o valor configurado.`,
+    );
     const { error } = await supabase.auth.admin.updateUserById(existing.id, {
       password: PASSWORD,
     });
@@ -104,7 +108,9 @@ async function ensureUserByEmail(email, password) {
   const existing = await findUserByEmail(email);
   if (existing) {
     console.log(`Usuário já existe (${email}) — atualizando senha.`);
-    const { error } = await supabase.auth.admin.updateUserById(existing.id, { password });
+    const { error } = await supabase.auth.admin.updateUserById(existing.id, {
+      password,
+    });
     if (error) throw error;
     return existing.id;
   }
@@ -124,7 +130,11 @@ async function waitForProfile(userId) {
   // O trigger on_auth_user_created cria o profile de forma assíncrona em relação ao
   // retorno do createUser — pequena espera evita corrida com os inserts seguintes.
   for (let attempt = 0; attempt < 10; attempt += 1) {
-    const { data } = await supabase.from("profiles").select("id").eq("id", userId).maybeSingle();
+    const { data } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("id", userId)
+      .maybeSingle();
     if (data) return;
     await sleep(300);
   }
@@ -135,9 +145,9 @@ async function waitForProfile(userId) {
 
 async function ensureVehicle(userId, plate) {
   // Apelido = a própria placa: os dois veículos de teste têm make/model idênticos
-  // ("Nave" / "E2E Test Car"), e o Combobox de veículo do formulário de despesa exibe
+  // ("navestory" / "E2E Test Car"), e o Combobox de veículo do formulário de despesa exibe
   // `nickname ?? (make + model) ?? plate` — sem nickname, as duas opções ficam com o
-  // mesmo texto visível ("Nave E2E Test Car"), impossíveis de distinguir por seletor de
+  // mesmo texto visível ("navestory E2E Test Car"), impossíveis de distinguir por seletor de
   // texto na suíte E2E (`expense-form.page.ts`/`ExpenseFormPage.selectVehicle`).
   const nickname = plate;
 
@@ -151,7 +161,9 @@ async function ensureVehicle(userId, plate) {
   if (selectError) throw selectError;
   if (existing) {
     if (existing.nickname !== nickname) {
-      console.log(`Veículo ${plate} já existe (${existing.id}) — atualizando nickname.`);
+      console.log(
+        `Veículo ${plate} já existe (${existing.id}) — atualizando nickname.`,
+      );
       const { error: updateError } = await supabase
         .from("vehicles")
         .update({ nickname })
@@ -170,7 +182,7 @@ async function ensureVehicle(userId, plate) {
       user_id: userId,
       plate,
       nickname,
-      make: "Nave",
+      make: "navestory",
       model: "E2E Test Car",
       year: 2024,
       model_year: 2024,
@@ -201,7 +213,9 @@ async function ensureOdometerBaseline(userId, vehicleId) {
     return;
   }
 
-  console.log(`Criando despesa de combustível com odômetro baseline (${BASELINE_ODOMETER_KM} km)...`);
+  console.log(
+    `Criando despesa de combustível com odômetro baseline (${BASELINE_ODOMETER_KM} km)...`,
+  );
   const yesterday = new Date();
   yesterday.setDate(yesterday.getDate() - 1);
   const { error } = await supabase.from("expenses").insert({
@@ -235,21 +249,32 @@ async function main() {
 
   // RF-E2E-10: usuário sem veículos (skip silencioso se a variável não estiver definida)
   if (NO_VEHICLES_EMAIL) {
-    console.log(`\nCriando/verificando usuário sem veículos para RF-E2E-10 (${NO_VEHICLES_EMAIL})...`);
-    const noVehiclesUserId = await ensureUserByEmail(NO_VEHICLES_EMAIL, PASSWORD);
+    console.log(
+      `\nCriando/verificando usuário sem veículos para RF-E2E-10 (${NO_VEHICLES_EMAIL})...`,
+    );
+    const noVehiclesUserId = await ensureUserByEmail(
+      NO_VEHICLES_EMAIL,
+      PASSWORD,
+    );
     await waitForProfile(noVehiclesUserId);
-    console.log("Usuário sem veículos OK — nenhum veículo será criado para esta conta.");
+    console.log(
+      "Usuário sem veículos OK — nenhum veículo será criado para esta conta.",
+    );
   } else {
     console.log(
       "\nAVISO: E2E_USER_NO_VEHICLES_EMAIL não definido — teste RF-E2E-10 ficará marcado como skip.",
     );
     console.log(
-      "Para habilitar, defina E2E_USER_NO_VEHICLES_EMAIL (ex: e2e-no-vehicles@nave.test) e reexecute.",
+      "Para habilitar, defina E2E_USER_NO_VEHICLES_EMAIL (ex: e2e-no-vehicles@navestory.test) e reexecute.",
     );
   }
 
-  console.log("\nSeed E2E concluído. Cadastre estes valores como GitHub Secrets");
-  console.log("(Settings → Secrets and variables → Actions) e não os commite em lugar nenhum:\n");
+  console.log(
+    "\nSeed E2E concluído. Cadastre estes valores como GitHub Secrets",
+  );
+  console.log(
+    "(Settings → Secrets and variables → Actions) e não os commite em lugar nenhum:\n",
+  );
   console.log(`E2E_USER_EMAIL=${EMAIL}`);
   // Só imprime a senha em texto claro quando ela foi gerada agora — se veio de
   // E2E_USER_PASSWORD já configurada no ambiente, evita reimprimir credencial

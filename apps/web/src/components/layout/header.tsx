@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useTheme } from "next-themes";
-import { AvatarDropdown, ThemeToggle } from "@nave/ui";
+import { AvatarDropdown, ThemeToggle } from "@navestory/ui";
 import { VehicleContextChip } from "./vehicle-context-chip";
 import { CommandPaletteTrigger } from "./command-palette-trigger";
 import { MOBILE_NAV_DRAWER_ID } from "./sidebar";
@@ -59,16 +59,34 @@ export function Header(): ReactNode {
         className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-md text-foreground hover:bg-muted md:hidden"
       >
         {isMobileNavOpen ? (
-          <svg aria-hidden="true" width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round">
+          <svg
+            aria-hidden="true"
+            width="20"
+            height="20"
+            viewBox="0 0 20 20"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2}
+            strokeLinecap="round"
+          >
             <path d="M4 4l12 12M16 4L4 16" />
           </svg>
         ) : (
-          <svg aria-hidden="true" width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round">
+          <svg
+            aria-hidden="true"
+            width="20"
+            height="20"
+            viewBox="0 0 20 20"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2}
+            strokeLinecap="round"
+          >
             <path d="M3 5h14M3 10h14M3 15h14" />
           </svg>
         )}
       </button>
-      <span className="text-base font-semibold">Nave</span>
+      <span className="text-base font-semibold">navestory</span>
       <div className="hidden items-center gap-3 md:flex">
         <VehicleContextChip />
         <CommandPaletteTrigger />
@@ -80,7 +98,9 @@ export function Header(): ReactNode {
           {mounted ? (
             <ThemeToggle
               theme={resolvedTheme === "dark" ? "dark" : "light"}
-              onToggle={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
+              onToggle={() =>
+                setTheme(resolvedTheme === "dark" ? "light" : "dark")
+              }
             />
           ) : (
             <span aria-hidden="true" className="h-9 w-9 rounded-md" />
@@ -89,7 +109,11 @@ export function Header(): ReactNode {
         {/* @spec SPEC-20260730-002 RF-04 — visível em todos os breakpoints: era o único ponto
             de identidade/logout ausente do header (sidebar fica atrás do drawer em mobile). */}
         {profile?.name ? (
-          <AvatarDropdown name={profile.name} email={profile.email} onLogout={() => void logout()} />
+          <AvatarDropdown
+            name={profile.name}
+            email={profile.email}
+            onLogout={() => void logout()}
+          />
         ) : (
           <span aria-hidden="true" className="h-9 w-9 rounded-full" />
         )}

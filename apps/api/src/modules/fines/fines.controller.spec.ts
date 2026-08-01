@@ -17,7 +17,10 @@ describe("FinesController", () => {
     return { controller: new FinesController(finesService), finesService };
   }
 
-  const req = { headers: { authorization: "Bearer token-123" }, cookies: {} } as Request;
+  const req = {
+    headers: { authorization: "Bearer token-123" },
+    cookies: {},
+  } as Request;
 
   it("create cria a multa", async () => {
     const { controller, finesService } = createController();
@@ -37,9 +40,15 @@ describe("FinesController", () => {
   it("findAll lista multas do usuário com filtro de status", async () => {
     const { controller, finesService } = createController();
 
-    const result = await controller.findAll(req, "u1", { status: "pending" } as never);
+    const result = await controller.findAll(req, "u1", {
+      status: "pending",
+    } as never);
 
-    expect(finesService.findAll).toHaveBeenCalledWith("token-123", "u1", "pending");
+    expect(finesService.findAll).toHaveBeenCalledWith(
+      "token-123",
+      "u1",
+      "pending",
+    );
     expect(result.data).toEqual([]);
   });
 
@@ -48,7 +57,11 @@ describe("FinesController", () => {
 
     await controller.findByVehicle(req, "u1", "v1");
 
-    expect(finesService.findByVehicle).toHaveBeenCalledWith("token-123", "u1", "v1");
+    expect(finesService.findByVehicle).toHaveBeenCalledWith(
+      "token-123",
+      "u1",
+      "v1",
+    );
   });
 
   it("findOne busca a multa por id", async () => {
@@ -63,9 +76,13 @@ describe("FinesController", () => {
   it("update atualiza a multa", async () => {
     const { controller, finesService } = createController();
 
-    const result = await controller.update(req, "u1", "f1", { status: "paid" } as never);
+    const result = await controller.update(req, "u1", "f1", {
+      status: "paid",
+    } as never);
 
-    expect(finesService.update).toHaveBeenCalledWith("token-123", "u1", "f1", { status: "paid" });
+    expect(finesService.update).toHaveBeenCalledWith("token-123", "u1", "f1", {
+      status: "paid",
+    });
     expect(result.data).toEqual({ id: "f1" });
   });
 
@@ -81,20 +98,24 @@ describe("FinesController", () => {
     const { controller } = createController();
     const reqSemToken = { headers: {}, cookies: {} } as unknown as Request;
 
-    await expect(controller.findOne(reqSemToken, "u1", "f1")).rejects.toBeInstanceOf(
-      UnauthorizedException,
-    );
+    await expect(
+      controller.findOne(reqSemToken, "u1", "f1"),
+    ).rejects.toBeInstanceOf(UnauthorizedException);
   });
 
   it("usa o cookie de sessão quando não há header Authorization", async () => {
     const { controller, finesService } = createController();
     const reqComCookie = {
       headers: {},
-      cookies: { nave_access_token: "cookie-token" },
+      cookies: { navestory_access_token: "cookie-token" },
     } as unknown as Request;
 
     await controller.findOne(reqComCookie, "u1", "f1");
 
-    expect(finesService.findOne).toHaveBeenCalledWith("cookie-token", "u1", "f1");
+    expect(finesService.findOne).toHaveBeenCalledWith(
+      "cookie-token",
+      "u1",
+      "f1",
+    );
   });
 });

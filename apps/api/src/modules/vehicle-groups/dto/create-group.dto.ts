@@ -1,4 +1,4 @@
-import { createGroupInputSchema } from "@nave/validators";
+import { createGroupInputSchema } from "@navestory/validators";
 import type { z } from "zod";
 
 export const createGroupDtoSchema = createGroupInputSchema;

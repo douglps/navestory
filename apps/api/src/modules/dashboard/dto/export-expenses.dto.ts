@@ -1,4 +1,4 @@
-import { exportExpensesQuerySchema } from "@nave/validators";
+import { exportExpensesQuerySchema } from "@navestory/validators";
 import type { z } from "zod";
 
 export const exportExpensesDtoSchema = exportExpensesQuerySchema;

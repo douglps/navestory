@@ -1,4 +1,4 @@
-# Convenções do Projeto Nave
+# Convenções do Projeto navestory
 
 > Preferências pessoais de idioma, git e qualidade de código gerais estão em `~/.claude/CLAUDE.md` e já valem aqui automaticamente. Este arquivo cobre apenas o processo específico deste projeto.
 
@@ -65,12 +65,14 @@ Todo projeto (com processo completo aplicável) deve conter a seguinte estrutura
 ### Organização por feature
 
 Cada domínio/feature tem sua própria subpasta dentro de `specs/`:
+
 ```
 specs/
 ├── <feature>/
 │   ├── README.md         ← índice da feature (obrigatório quando há 2+ specs)
 │   └── SPEC-YYYYMMDD-NNN.md
 ```
+
 Não colocar specs na raiz de `specs/` — toda spec pertence a uma feature.
 
 ### Frontmatter obrigatório
@@ -82,13 +84,13 @@ title: "Título da Feature"
 status: draft | review | approved | deprecated
 date: YYYY-MM-DD
 author: <nome> (<email>)
-rules: [R1, R4]      # IDs de regras de domínio que esta spec implementa
-security: [S1]       # IDs de regras de segurança que esta spec implementa
-camadas: [backend, database]  # camadas técnicas tocadas — vocabulário canônico em ~/.claude/CLAUDE.md
+rules: [R1, R4] # IDs de regras de domínio que esta spec implementa
+security: [S1] # IDs de regras de segurança que esta spec implementa
+camadas: [backend, database] # camadas técnicas tocadas — vocabulário canônico em ~/.claude/CLAUDE.md
 ---
 ```
 
-**Campo `camadas`:** array com pelo menos 1 valor. Permite consulta horizontal ("quais specs tocam backend?") sem quebrar a organização vertical por feature deste projeto. Usar o vocabulário canônico definido em `~/.claude/CLAUDE.md` (`frontend`, `backend`, `database`, `infra`, `devops`, `qa`, `design`, `data`, `mobile`, `security`) — o Nave não precisa estender essa lista hoje.
+**Campo `camadas`:** array com pelo menos 1 valor. Permite consulta horizontal ("quais specs tocam backend?") sem quebrar a organização vertical por feature deste projeto. Usar o vocabulário canônico definido em `~/.claude/CLAUDE.md` (`frontend`, `backend`, `database`, `infra`, `devops`, `qa`, `design`, `data`, `mobile`, `security`) — o navestory não precisa estender essa lista hoje.
 
 **Formato do campo `author`:** `Douglas Lopes (lps.doug@protonmail.com)` — nome completo seguido do e-mail entre parênteses. Este é o autor padrão de toda spec deste projeto, salvo quando outro colaborador estiver devidamente identificado (nome e e-mail próprios registrados no projeto).
 
@@ -110,6 +112,7 @@ Depois que uma spec vira `approved`, qualquer edição de conteúdo (não frontm
 ### Destino de specs `deprecated`
 
 Ao marcar uma spec como `deprecated`, preencher obrigatoriamente um dos campos:
+
 - `superseded_by: SPEC-YYYYMMDD-NNN` — quando há substituição; o prazo de remoção do código antigo entra em `matrices/impacto.md`, não fica implícito.
 - `motivo_remocao: <texto>` — quando é descontinuação sem substituição; nesse caso, verificar se há código com `@spec` apontando para essa spec e tratá-lo (remover ou reatribuir), evitando referências mortas no código.
 
@@ -124,14 +127,14 @@ Ao marcar uma spec como `deprecated`, preencher obrigatoriamente um dos campos:
 
 Todo projeto deve manter estes documentos em `specs/`:
 
-| Arquivo | Propósito | Criar quando |
-|---------|-----------|-------------|
-| `specs/RULES.md` | Regras de domínio (R), segurança (S), performance (P), compliance (C) com IDs estáveis | Antes da 1ª spec aprovada |
-| `specs/TESTS_SPEC.md` | Pirâmide de testes, casos críticos, o que NÃO testar | Antes dos primeiros testes |
-| `specs/AGENTS.md` | Diretrizes para agentes IA: permitido, proibido, output | Antes de usar IA no projeto |
-| `specs/API-SPEC.md` | Convenções de API, tabela de códigos de erro | Quando há API REST |
-| `specs/PRD.md` | Ponteiro para o PRD completo + resumo de 10 linhas | Sempre |
-| `specs/ARCHITECTURE.md` | Ponteiro para docs de arquitetura + resumo de 10 linhas | Sempre |
+| Arquivo                 | Propósito                                                                              | Criar quando                |
+| ----------------------- | -------------------------------------------------------------------------------------- | --------------------------- |
+| `specs/RULES.md`        | Regras de domínio (R), segurança (S), performance (P), compliance (C) com IDs estáveis | Antes da 1ª spec aprovada   |
+| `specs/TESTS_SPEC.md`   | Pirâmide de testes, casos críticos, o que NÃO testar                                   | Antes dos primeiros testes  |
+| `specs/AGENTS.md`       | Diretrizes para agentes IA: permitido, proibido, output                                | Antes de usar IA no projeto |
+| `specs/API-SPEC.md`     | Convenções de API, tabela de códigos de erro                                           | Quando há API REST          |
+| `specs/PRD.md`          | Ponteiro para o PRD completo + resumo de 10 linhas                                     | Sempre                      |
+| `specs/ARCHITECTURE.md` | Ponteiro para docs de arquitetura + resumo de 10 linhas                                | Sempre                      |
 
 **Regra anti-duplicação:** `specs/PRD.md` e `specs/ARCHITECTURE.md` são **ponteiros** (índice de links + resumo), nunca cópias dos documentos que vivem em `docs/`. Uma informação tem exatamente um lugar canônico.
 
@@ -139,12 +142,12 @@ Todo projeto deve manter estes documentos em `specs/`:
 
 Regras de negócio recebem IDs estáveis categorizados:
 
-| Prefixo | Categoria | Exemplos |
-|---------|-----------|---------|
-| `R` | Regras de domínio | R1 odômetro não retrocede, R2 duplicata requer confirmação |
-| `S` | Segurança | S1 JWT obrigatório, S2 RLS ativo |
-| `P` | Performance | P1 listagens paginadas max 100, P2 operações fire-and-forget |
-| `C` | Compliance | C1 LGPD exclusão cascata, C2 audit log em mutações |
+| Prefixo | Categoria         | Exemplos                                                     |
+| ------- | ----------------- | ------------------------------------------------------------ |
+| `R`     | Regras de domínio | R1 odômetro não retrocede, R2 duplicata requer confirmação   |
+| `S`     | Segurança         | S1 JWT obrigatório, S2 RLS ativo                             |
+| `P`     | Performance       | P1 listagens paginadas max 100, P2 operações fire-and-forget |
+| `C`     | Compliance        | C1 LGPD exclusão cascata, C2 audit log em mutações           |
 
 IDs são **estáveis e citáveis** — casos de teste referenciam por ID (`CT-001 valida R1`), código comenta com `// valida R1`.
 
@@ -154,15 +157,17 @@ Cada regra em `RULES.md` mantém um histórico de versões junto da definição 
 
 ```markdown
 ### R1 — Odômetro não retrocede
+
 **Versão atual:** v2 (2026-07-12)
 
-| Versão | Data | Mudança |
-|--------|------|---------|
-| v1 | 2026-03-01 | Criação: odômetro não aceita valor menor que o último registrado |
-| v2 | 2026-07-12 | Passou a permitir exceção com justificativa de manutenção/troca de veículo |
+| Versão | Data       | Mudança                                                                    |
+| ------ | ---------- | -------------------------------------------------------------------------- |
+| v1     | 2026-03-01 | Criação: odômetro não aceita valor menor que o último registrado           |
+| v2     | 2026-07-12 | Passou a permitir exceção com justificativa de manutenção/troca de veículo |
 ```
 
 Specs citam a regra de duas formas, conforme a intenção:
+
 - **Sem versão** (`rules: [R1]`) — adota "sempre a regra vigente"; usar para comportamento genérico que deve acompanhar a evolução da regra.
 - **Com versão fixa** (`rules: [R1@v1]`) — trava o comportamento na versão citada; usar quando a spec documenta uma decisão pontual que não deve mudar sozinha se a regra evoluir.
 
@@ -170,32 +175,32 @@ Ao subir a versão de uma regra (`vN → vN+1`): registrar a linha de histórico
 
 ## Agentes Disponíveis
 
-| Agente            | Quando usar                                                      |
-| ----------------- | ---------------------------------------------------------------- |
-| `spec-writer`     | Criar ou atualizar especificações de features                    |
-| `impact-analyzer` | Analisar impacto antes de mudanças significativas                |
-| `reviewer`        | Revisar código e specs antes de commitar                        |
-| `tester`          | Criar planos de teste e verificar cobertura                     |
-| `e2e-tester`      | Implementar e manter testes E2E com Playwright (Page Object Model, fixtures de auth) conforme `specs/qa/SPEC-20260716-003-e2e-playwright.md` |
-| `doc-keeper`      | Manter documentação, matrizes e RULES.md atualizados            |
-| `design-system`   | Pesquisar tendências, criar/evoluir componentes UI, auditar consistência visual, propor paletas e identidade |
-| `clinical-reviewer` | Revisar specs/telas de sistemas de saúde sob perspectiva de médico/enfermeiro: segurança do paciente, completude clínica e simplicidade de uso |
-| `dba`              | Revisar/projetar schema, índices, queries, migrações, backups e segurança em nível de banco de dados |
-| `data-engineer`    | Projetar/revisar pipelines ETL/ELT, orquestração, transformação e confiabilidade do fluxo de dados |
-| `data-architect`   | Modelar domínios de dado e decidir arquitetura de armazenamento de longo prazo (relacional, warehouse, lake) |
-| `data-steward`     | Governança de dados: classificação, política de acesso/retenção, conformidade LGPD e qualidade de dado |
-| `growth-marketer`  | Estratégia de marketing: análise de mercado, métricas de crescimento (CAC, LTV, ROI, conversão), pesquisa de concorrência, canais e precificação |
-| `ad-creative`      | Publicidade: copywriting, storytelling, tom de voz, conceito de campanha e planejamento de mídia |
-| `brand-designer`   | Identidade visual de marca (logo, paleta, tipografia, brand guidelines) construída do zero — distinto do `design-system`, que cuida de componentes de produto |
+| Agente              | Quando usar                                                                                                                                                   |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `spec-writer`       | Criar ou atualizar especificações de features                                                                                                                 |
+| `impact-analyzer`   | Analisar impacto antes de mudanças significativas                                                                                                             |
+| `reviewer`          | Revisar código e specs antes de commitar                                                                                                                      |
+| `tester`            | Criar planos de teste e verificar cobertura                                                                                                                   |
+| `e2e-tester`        | Implementar e manter testes E2E com Playwright (Page Object Model, fixtures de auth) conforme `specs/qa/SPEC-20260716-003-e2e-playwright.md`                  |
+| `doc-keeper`        | Manter documentação, matrizes e RULES.md atualizados                                                                                                          |
+| `design-system`     | Pesquisar tendências, criar/evoluir componentes UI, auditar consistência visual, propor paletas e identidade                                                  |
+| `clinical-reviewer` | Revisar specs/telas de sistemas de saúde sob perspectiva de médico/enfermeiro: segurança do paciente, completude clínica e simplicidade de uso                |
+| `dba`               | Revisar/projetar schema, índices, queries, migrações, backups e segurança em nível de banco de dados                                                          |
+| `data-engineer`     | Projetar/revisar pipelines ETL/ELT, orquestração, transformação e confiabilidade do fluxo de dados                                                            |
+| `data-architect`    | Modelar domínios de dado e decidir arquitetura de armazenamento de longo prazo (relacional, warehouse, lake)                                                  |
+| `data-steward`      | Governança de dados: classificação, política de acesso/retenção, conformidade LGPD e qualidade de dado                                                        |
+| `growth-marketer`   | Estratégia de marketing: análise de mercado, métricas de crescimento (CAC, LTV, ROI, conversão), pesquisa de concorrência, canais e precificação              |
+| `ad-creative`       | Publicidade: copywriting, storytelling, tom de voz, conceito de campanha e planejamento de mídia                                                              |
+| `brand-designer`    | Identidade visual de marca (logo, paleta, tipografia, brand guidelines) construída do zero — distinto do `design-system`, que cuida de componentes de produto |
 
 > Ao criar uma spec nova, o `spec-writer` preenche automaticamente o frontmatter com `rules:` e `security:` conforme o `RULES.md` do projeto.
 
 ## Comandos Disponíveis
 
-| Comando            | Descrição                         |
-| ------------------ | ---------------------------------- |
-| `/nova-spec`       | Cria uma nova spec de feature     |
-| `/impacto`         | Analisa impacto de uma mudança    |
-| `/iniciar-projeto` | Scaffold completo de projeto novo |
-| `/cleanup`         | Varredura e limpeza de lixo no repositório |
+| Comando            | Descrição                                                                            |
+| ------------------ | ------------------------------------------------------------------------------------ |
+| `/nova-spec`       | Cria uma nova spec de feature                                                        |
+| `/impacto`         | Analisa impacto de uma mudança                                                       |
+| `/iniciar-projeto` | Scaffold completo de projeto novo                                                    |
+| `/cleanup`         | Varredura e limpeza de lixo no repositório                                           |
 | `/design-system`   | Pesquisa de tendências, criação de componentes, auditoria visual ou evolução de tema |

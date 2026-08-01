@@ -1,7 +1,7 @@
 "use client";
 
 import { PackageOpen } from "lucide-react";
-import { Button, EmptyState } from "@nave/ui";
+import { Button, EmptyState } from "@navestory/ui";
 import { Section, StateRow, Subsection } from "../section-shell";
 
 const VARIANTS = ["default", "outline", "ghost", "destructive"] as const;
@@ -9,7 +9,10 @@ const SIZES = ["sm", "md", "lg"] as const;
 
 export function AcoesSection() {
   return (
-    <Section title="Ações" description="Button (packages/ui/src/components/button.tsx) e EmptyState — matriz completa de variant × size e estados.">
+    <Section
+      title="Ações"
+      description="Button (packages/ui/src/components/button.tsx) e EmptyState — matriz completa de variant × size e estados."
+    >
       <Subsection title="Button — variant × size">
         {VARIANTS.map((variant) => (
           <StateRow key={variant} label={variant}>
@@ -33,7 +36,9 @@ export function AcoesSection() {
           <Button loading>Salvando</Button>
         </StateRow>
         <StateRow label="focus-visible">
-          <Button className="ring-2 ring-primary ring-offset-2">Simulação de foco</Button>
+          <Button className="ring-2 ring-primary ring-offset-2">
+            Simulação de foco
+          </Button>
         </StateRow>
       </Subsection>
 

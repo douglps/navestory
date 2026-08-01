@@ -15,31 +15,31 @@ resultado 100% de cobertura real após dois specs novos (`analytics.schemas.spec
 
 Com `.next/` excluído, `apps/web` está em:
 
-| Métrica | Real | Threshold |
-|---|---|---|
-| Statements | 89.53% | 88% ✓ |
-| Lines | 89.53% | 88% ✓ |
-| Branches | 84.42% | 88% ✗ |
-| Functions | 80.62% | 88% ✗ |
+| Métrica    | Real   | Threshold |
+| ---------- | ------ | --------- |
+| Statements | 89.53% | 88% ✓     |
+| Lines      | 89.53% | 88% ✓     |
+| Branches   | 84.42% | 88% ✗     |
+| Functions  | 80.62% | 88% ✗     |
 
 O gap restante é genuíno, mas concentrado em poucas áreas — não espalhado uniformemente pelo app.
 
 ## Onde está o gap (arquivos com 0% ou cobertura muito baixa)
 
-| Arquivo | Cobertura | Observação |
-|---|---|---|
-| `src/components/pwa/pwa-install-prompt-banner.tsx` | 0% | Banner de instalação PWA |
-| `src/components/pwa/pwa-update-banner.tsx` | 0% | Banner de atualização de versão PWA |
-| `src/components/pwa/service-worker-listener.tsx` | 0% | Listener de eventos do Service Worker |
-| `src/lib/pwa/get-cache-age.ts` | 4.34% | Só uma função testada indiretamente via `format-cache-age.spec.ts`; a função principal do arquivo não tem teste próprio |
-| `src/lib/pwa/*-plugin.ts`, `*-prompt.ts` | 0% | Glue de integração com Serwist/Workbox |
-| `src/app/global-error.tsx` | 0% | Error boundary raiz do Next.js (equivalente ao `(app)/error.tsx`, que **foi** resolvido nesta sessão — mesmo padrão de teste deveria servir aqui) |
-| `src/app/(app)/layout.tsx` | 0% | Layout da área autenticada |
-| `src/app/offline/page.tsx` | 0% | Página de fallback offline do PWA |
-| `src/app/serwist/[path]/route.ts` | 0% | Rota gerada pelo Serwist (glue de framework, possivelmente exceção justificada) |
-| `src/app/instrumentation-client.ts`, `instrumentation.ts` | 0% | Setup do Sentry — glue, candidato a exceção justificada |
-| `src/app/manifest.ts`, `sw.ts` | 0% | Geração de manifest.json / entry do service worker — config declarativa, candidato a exceção |
-| Diversos `page.tsx` (dashboard, expenses, maintenance, vehicle-groups/new, etc.) | 60-90% em `functions`/`branches` | Edge cases pontuais não cobertos (branches de erro, estados vazios) — não são arquivos sem teste, só têm lacunas parciais |
+| Arquivo                                                                          | Cobertura                        | Observação                                                                                                                                        |
+| -------------------------------------------------------------------------------- | -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/components/pwa/pwa-install-prompt-banner.tsx`                               | 0%                               | Banner de instalação PWA                                                                                                                          |
+| `src/components/pwa/pwa-update-banner.tsx`                                       | 0%                               | Banner de atualização de versão PWA                                                                                                               |
+| `src/components/pwa/service-worker-listener.tsx`                                 | 0%                               | Listener de eventos do Service Worker                                                                                                             |
+| `src/lib/pwa/get-cache-age.ts`                                                   | 4.34%                            | Só uma função testada indiretamente via `format-cache-age.spec.ts`; a função principal do arquivo não tem teste próprio                           |
+| `src/lib/pwa/*-plugin.ts`, `*-prompt.ts`                                         | 0%                               | Glue de integração com Serwist/Workbox                                                                                                            |
+| `src/app/global-error.tsx`                                                       | 0%                               | Error boundary raiz do Next.js (equivalente ao `(app)/error.tsx`, que **foi** resolvido nesta sessão — mesmo padrão de teste deveria servir aqui) |
+| `src/app/(app)/layout.tsx`                                                       | 0%                               | Layout da área autenticada                                                                                                                        |
+| `src/app/offline/page.tsx`                                                       | 0%                               | Página de fallback offline do PWA                                                                                                                 |
+| `src/app/serwist/[path]/route.ts`                                                | 0%                               | Rota gerada pelo Serwist (glue de framework, possivelmente exceção justificada)                                                                   |
+| `src/app/instrumentation-client.ts`, `instrumentation.ts`                        | 0%                               | Setup do Sentry — glue, candidato a exceção justificada                                                                                           |
+| `src/app/manifest.ts`, `sw.ts`                                                   | 0%                               | Geração de manifest.json / entry do service worker — config declarativa, candidato a exceção                                                      |
+| Diversos `page.tsx` (dashboard, expenses, maintenance, vehicle-groups/new, etc.) | 60-90% em `functions`/`branches` | Edge cases pontuais não cobertos (branches de erro, estados vazios) — não são arquivos sem teste, só têm lacunas parciais                         |
 
 ## Próximo passo sugerido
 
@@ -58,22 +58,22 @@ O gap restante é genuíno, mas concentrado em poucas áreas — não espalhado 
 Nenhuma dessas lacunas foi corrigida nesta sessão — o objetivo aqui foi eliminar o falso-positivo
 de `.next/`/`dist/` no coverage e deixar o gap real, menor e documentado, para a próxima rodada.
 
-## Addendum: `@nave/ui` também abaixo do threshold (branches 87.74% vs 88%)
+## Addendum: `@navestory/ui` também abaixo do threshold (branches 87.74% vs 88%)
 
 Sem bug de config aqui (o pacote não gera `dist/`, `main` aponta direto para `src/index.ts`) —
 é um gap real e pequeno (0,26 ponto percentual), concentrado em poucos branches de edge case:
 
-| Arquivo | % Branch | Linhas descobertas |
-|---|---|---|
-| `src/components/kpi-card.tsx` | 68.57% | 21,23,26,33,37,39 |
-| `src/components/breadcrumb.tsx` | 75% | 27,59,64-67 |
-| `src/components/file-upload.tsx` | 75% | 117-122,142-144 |
-| `src/components/combobox.tsx` | 89.47% | 32-48,111 |
+| Arquivo                          | % Branch | Linhas descobertas |
+| -------------------------------- | -------- | ------------------ |
+| `src/components/kpi-card.tsx`    | 68.57%   | 21,23,26,33,37,39  |
+| `src/components/breadcrumb.tsx`  | 75%      | 27,59,64-67        |
+| `src/components/file-upload.tsx` | 75%      | 117-122,142-144    |
+| `src/components/combobox.tsx`    | 89.47%   | 32-48,111          |
 
 Não corrigido nesta sessão (fora do escopo de investigar o pipeline de CI) — candidato a tarefa
 pontual e rápida numa próxima rodada de QA do design system.
 
-## Addendum: `@nave/api` também abaixo do threshold (branches 70.87% vs 88%)
+## Addendum: `@navestory/api` também abaixo do threshold (branches 70.87% vs 88%)
 
 Descoberto só depois do fix do job `Integration test` (ver `docs/qa/2026-07-20-rls-profiles-sem-grant.md`)
 — antes disso o pipeline nunca chegava a rodar `apps/api` até o fim de forma confiável. Sem bug de

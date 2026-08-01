@@ -1,4 +1,4 @@
-import { listFinesQuerySchema } from "@nave/validators";
+import { listFinesQuerySchema } from "@navestory/validators";
 import type { z } from "zod";
 
 export const listFinesDtoSchema = listFinesQuerySchema;

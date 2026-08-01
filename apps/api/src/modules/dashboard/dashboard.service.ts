@@ -1,4 +1,9 @@
-import { Inject, Injectable, InternalServerErrorException, Logger } from "@nestjs/common";
+import {
+  Inject,
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+} from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import {
   DEFAULT_EXPENSE_CATEGORIES,
@@ -16,12 +21,16 @@ import {
   type VehicleCard,
   type VehicleDocumentsStatus,
   type VehicleHistoryItem,
-} from "@nave/validators";
+} from "@navestory/validators";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { escapeCsvField } from "../../shared/csv/csv.util";
 import { createUserScopedClient } from "../../shared/supabase/create-user-scoped-client";
 import { SUPABASE_ADMIN_CLIENT } from "../../shared/supabase/supabase.constants";
-import { FALLBACK_TIMEZONE, exclusiveDayUpperBoundUtc, toCalendarDay } from "../../shared/utils/date.utils";
+import {
+  FALLBACK_TIMEZONE,
+  exclusiveDayUpperBoundUtc,
+  toCalendarDay,
+} from "../../shared/utils/date.utils";
 import { ExpensesService } from "../expenses/expenses.service";
 import { MaintenancesService } from "../maintenances/maintenances.service";
 import { PreferencesService } from "../preferences/preferences.service";
@@ -59,7 +68,9 @@ function monthKey(date: Date): string {
 }
 
 function addMonthsUtc(date: Date, months: number): Date {
-  return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + months, 1));
+  return new Date(
+    Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + months, 1),
+  );
 }
 
 /**
@@ -68,7 +79,9 @@ function addMonthsUtc(date: Date, months: number): Date {
  * ordem esperada pelo sparkline de `KpiCard` (packages/ui).
  */
 function recentMonthStarts(count: number, from: Date = new Date()): Date[] {
-  const currentMonthStart = new Date(Date.UTC(from.getUTCFullYear(), from.getUTCMonth(), 1));
+  const currentMonthStart = new Date(
+    Date.UTC(from.getUTCFullYear(), from.getUTCMonth(), 1),
+  );
   const months: Date[] = [];
   for (let i = count - 1; i >= 0; i--) {
     months.push(addMonthsUtc(currentMonthStart, -i));
@@ -86,17 +99,25 @@ function daysUntil(dateStr: string, today: Date, tz: string): number {
   // `dateStr` pode ser `DATE` puro (documentos de veículo, fora do escopo da migração — o valor já
   // É o dia calendário, sem reinterpretação de fuso) ou `timestamptz` (manutenções, RF-BD-03) —
   // neste segundo caso o dia calendário é lido no fuso do usuário antes de comparar.
-  const dueDay = /^\d{4}-\d{2}-\d{2}$/.test(dateStr) ? dateStr : toCalendarDay(new Date(dateStr), tz);
+  const dueDay = /^\d{4}-\d{2}-\d{2}$/.test(dateStr)
+    ? dateStr
+    : toCalendarDay(new Date(dateStr), tz);
   const due = Date.parse(`${dueDay}T00:00:00Z`);
   const todayMidnightUtc = Date.parse(`${toCalendarDay(today, tz)}T00:00:00Z`);
   return Math.round((due - todayMidnightUtc) / 86_400_000);
 }
 
 function toKpiResult<T>(settled: PromiseSettledResult<T>): KpiResult<T> {
-  return settled.status === "fulfilled" ? { ok: true, value: settled.value } : { ok: false };
+  return settled.status === "fulfilled"
+    ? { ok: true, value: settled.value }
+    : { ok: false };
 }
 
-function classifyDocument(dateStr: string | null, today: Date, tz: string): DocumentStatus {
+function classifyDocument(
+  dateStr: string | null,
+  today: Date,
+  tz: string,
+): DocumentStatus {
   if (!dateStr) return "unknown";
   const days = daysUntil(dateStr, today, tz);
   if (days < 0) return "overdue";
@@ -149,11 +170,12 @@ const DOCUMENT_FIELD_TO_COST_TYPE = {
   crlv_expires_at: "crlv",
 } as const;
 
-const DOCUMENT_LABEL: Record<keyof typeof DOCUMENT_FIELD_TO_COST_TYPE, string> = {
-  ipva_due_date: "IPVA",
-  insurance_expires_at: "Seguro",
-  crlv_expires_at: "CRLV",
-};
+const DOCUMENT_LABEL: Record<keyof typeof DOCUMENT_FIELD_TO_COST_TYPE, string> =
+  {
+    ipva_due_date: "IPVA",
+    insurance_expires_at: "Seguro",
+    crlv_expires_at: "CRLV",
+  };
 
 /**
  * @spec SPEC-20260722-004 Notas Técnicas — mapeamento category → label é responsabilidade do
@@ -162,12 +184,18 @@ const DOCUMENT_LABEL: Record<keyof typeof DOCUMENT_FIELD_TO_COST_TYPE, string> =
  * fallback capitalizado do próprio slug.
  */
 const CATEGORY_LABELS: Record<string, string> = Object.fromEntries(
-  DEFAULT_EXPENSE_CATEGORIES.map((category) => [category.value, category.label]),
+  DEFAULT_EXPENSE_CATEGORIES.map((category) => [
+    category.value,
+    category.label,
+  ]),
 );
 
 function categoryLabel(category: string): string {
   // eslint-disable-next-line security/detect-object-injection -- category vem de expenses.category (coluna do próprio usuário via RLS), não de input externo não sanitizado
-  return CATEGORY_LABELS[category] ?? category.charAt(0).toUpperCase() + category.slice(1);
+  return (
+    CATEGORY_LABELS[category] ??
+    category.charAt(0).toUpperCase() + category.slice(1)
+  );
 }
 
 interface CategorySpendingRpcRow {
@@ -189,7 +217,10 @@ interface ExpenseExportRow {
   amount: number;
   category: string;
   description: string | null;
-  vehicles: { plate: string; model: string | null } | { plate: string; model: string | null }[] | null;
+  vehicles:
+    | { plate: string; model: string | null }
+    | { plate: string; model: string | null }[]
+    | null;
 }
 
 function lastDayOfMonth(period: string): string {
@@ -201,7 +232,10 @@ function lastDayOfMonth(period: string): string {
   return last.toISOString().slice(0, 10);
 }
 
-function resolveVehicle(row: ExpenseExportRow): { plate: string; model: string | null } {
+function resolveVehicle(row: ExpenseExportRow): {
+  plate: string;
+  model: string | null;
+} {
   const vehicle = Array.isArray(row.vehicles) ? row.vehicles[0] : row.vehicles;
   return vehicle ?? { plate: "", model: null };
 }
@@ -214,7 +248,8 @@ export class DashboardService {
   private readonly logger = new Logger(DashboardService.name);
 
   constructor(
-    @Inject(SUPABASE_ADMIN_CLIENT) private readonly supabaseAdmin: SupabaseClient,
+    @Inject(SUPABASE_ADMIN_CLIENT)
+    private readonly supabaseAdmin: SupabaseClient,
     private readonly configService: ConfigService,
     private readonly expensesService: ExpensesService,
     private readonly maintenancesService: MaintenancesService,
@@ -230,8 +265,14 @@ export class DashboardService {
   }
 
   /** @spec SPEC-20260715-002 R-TZ-01, RF-BK-05 — fallback nomeado, nunca o fuso do processo */
-  private async resolveUserTimezone(accessToken: string, userId: string): Promise<string> {
-    const preferences = await this.preferencesService.findOne(accessToken, userId);
+  private async resolveUserTimezone(
+    accessToken: string,
+    userId: string,
+  ): Promise<string> {
+    const preferences = await this.preferencesService.findOne(
+      accessToken,
+      userId,
+    );
     return preferences.timezone ?? FALLBACK_TIMEZONE;
   }
 
@@ -248,7 +289,9 @@ export class DashboardService {
 
     let builder = client
       .from("expenses")
-      .select("occurred_at, amount, category, description, vehicles(plate, model)")
+      .select(
+        "occurred_at, amount, category, description, vehicles(plate, model)",
+      )
       .eq("user_id", userId)
       .is("deleted_at", null)
       .gte("occurred_at", `${period}-01`)
@@ -258,7 +301,9 @@ export class DashboardService {
       builder = builder.eq("vehicle_id", vehicleId);
     }
 
-    const { data, error } = await builder.order("occurred_at", { ascending: false }).limit(CSV_MAX_ROWS);
+    const { data, error } = await builder
+      .order("occurred_at", { ascending: false })
+      .limit(CSV_MAX_ROWS);
 
     if (error) {
       return `${CSV_HEADER}\n`;
@@ -284,14 +329,22 @@ export class DashboardService {
    * Consome a RPC já corrigida (20260712172220_fix_fleet_health_double_call.sql) — não recalcula
    * pesos no backend nem no frontend.
    */
-  async getFleetHealth(accessToken: string, userId: string): Promise<FleetHealthEntry[]> {
-    const { data, error } = await this.clientForUser(accessToken).rpc("calculate_fleet_health", {
-      p_user_id: userId,
-    });
+  async getFleetHealth(
+    accessToken: string,
+    userId: string,
+  ): Promise<FleetHealthEntry[]> {
+    const { data, error } = await this.clientForUser(accessToken).rpc(
+      "calculate_fleet_health",
+      {
+        p_user_id: userId,
+      },
+    );
 
     if (error) {
       this.logger.error("Falha ao calcular saúde da frota", error.message);
-      throw new InternalServerErrorException("Não foi possível calcular a saúde da frota");
+      throw new InternalServerErrorException(
+        "Não foi possível calcular a saúde da frota",
+      );
     }
     return (data ?? []) as FleetHealthEntry[];
   }
@@ -325,17 +378,33 @@ export class DashboardService {
         .eq("user_id", userId)
         .is("deleted_at", null)
         .in("status", ["scheduled", "in_progress"])
-        .lt("scheduled_date", exclusiveDayUpperBoundUtc(toCalendarDay(horizon, tz)))
+        .lt(
+          "scheduled_date",
+          exclusiveDayUpperBoundUtc(toCalendarDay(horizon, tz)),
+        )
         .order("scheduled_date", { ascending: true }),
-      this.getDocumentOverdueAlerts(client, userId, today, tz, options?.includeUpcomingDocuments ?? false),
+      this.getDocumentOverdueAlerts(
+        client,
+        userId,
+        today,
+        tz,
+        options?.includeUpcomingDocuments ?? false,
+      ),
     ]);
 
     if (maintenanceResult.error) {
-      this.logger.error("Falha ao carregar alertas de manutenção", maintenanceResult.error.message);
-      throw new InternalServerErrorException("Não foi possível carregar os alertas da frota");
+      this.logger.error(
+        "Falha ao carregar alertas de manutenção",
+        maintenanceResult.error.message,
+      );
+      throw new InternalServerErrorException(
+        "Não foi possível carregar os alertas da frota",
+      );
     }
 
-    const maintenanceAlerts = ((maintenanceResult.data ?? []) as MaintenanceAlertRow[]).map((row) => {
+    const maintenanceAlerts = (
+      (maintenanceResult.data ?? []) as MaintenanceAlertRow[]
+    ).map((row) => {
       const daysUntilDue = daysUntil(row.scheduled_date, today, tz);
       return {
         id: row.id,
@@ -372,19 +441,27 @@ export class DashboardService {
     const [vehiclesResult, paidDocuments] = await Promise.all([
       client
         .from("vehicles")
-        .select("id, plate, ipva_due_date, insurance_expires_at, crlv_expires_at")
+        .select(
+          "id, plate, ipva_due_date, insurance_expires_at, crlv_expires_at",
+        )
         .eq("user_id", userId)
         .is("deleted_at", null),
       this.getPaidDocumentsCurrentYear(client, userId, today),
     ]);
 
     if (vehiclesResult.error) {
-      this.logger.error("Falha ao carregar veículos para alertas de documentos", vehiclesResult.error.message);
-      throw new InternalServerErrorException("Não foi possível carregar os alertas da frota");
+      this.logger.error(
+        "Falha ao carregar veículos para alertas de documentos",
+        vehiclesResult.error.message,
+      );
+      throw new InternalServerErrorException(
+        "Não foi possível carregar os alertas da frota",
+      );
     }
 
     const alerts: FleetAlert[] = [];
-    for (const vehicle of (vehiclesResult.data ?? []) as VehicleDocumentDatesRow[]) {
+    for (const vehicle of (vehiclesResult.data ??
+      []) as VehicleDocumentDatesRow[]) {
       for (const field of Object.keys(DOCUMENT_FIELD_TO_COST_TYPE) as Array<
         keyof typeof DOCUMENT_FIELD_TO_COST_TYPE
       >) {
@@ -394,7 +471,8 @@ export class DashboardService {
 
         const daysUntilDue = daysUntil(dueDate, today, tz);
         const isOverdue = daysUntilDue < 0;
-        const isUpcoming = !isOverdue && daysUntilDue <= DOCUMENT_ATTENTION_DAYS;
+        const isUpcoming =
+          !isOverdue && daysUntilDue <= DOCUMENT_ATTENTION_DAYS;
         if (!isOverdue && !(includeUpcoming && isUpcoming)) continue;
 
         // eslint-disable-next-line security/detect-object-injection -- field é keyof fixo, união de 3 literais
@@ -408,7 +486,9 @@ export class DashboardService {
           type: isOverdue ? "document_overdue" : "document_upcoming",
           vehicle_id: vehicle.id,
           vehicle_plate: vehicle.plate,
-          description: isOverdue ? `${label} vencido` : `${label} vence em breve`,
+          description: isOverdue
+            ? `${label} vencido`
+            : `${label} vence em breve`,
           due_date: dueDate,
           days_until_due: daysUntilDue,
         });
@@ -432,11 +512,15 @@ export class DashboardService {
 
     if (error) {
       this.logger.error("Falha ao carregar documentos pagos", error.message);
-      throw new InternalServerErrorException("Não foi possível carregar os alertas da frota");
+      throw new InternalServerErrorException(
+        "Não foi possível carregar os alertas da frota",
+      );
     }
 
     return new Set(
-      ((data ?? []) as PaidRecurringCostRow[]).map((row) => `${row.vehicle_id}:${row.cost_type}`),
+      ((data ?? []) as PaidRecurringCostRow[]).map(
+        (row) => `${row.vehicle_id}:${row.cost_type}`,
+      ),
     );
   }
 
@@ -454,14 +538,15 @@ export class DashboardService {
     const client = this.clientForUser(accessToken);
     const tz = await this.resolveUserTimezone(accessToken, userId);
 
-    const [totalThisMonth, urgentCount, costPerKm, nextMaintenance] = await Promise.allSettled([
-      this.expensesService
-        .getKpis(accessToken, userId, { vehicle_id: undefined })
-        .then((kpis) => kpis.total_this_month),
-      this.countUrgentMaintenances(client, userId, tz),
-      this.getFleetCostPerKm(client, userId),
-      this.getNextMaintenance(client, userId, activeVehicleId),
-    ]);
+    const [totalThisMonth, urgentCount, costPerKm, nextMaintenance] =
+      await Promise.allSettled([
+        this.expensesService
+          .getKpis(accessToken, userId, { vehicle_id: undefined })
+          .then((kpis) => kpis.total_this_month),
+        this.countUrgentMaintenances(client, userId, tz),
+        this.getFleetCostPerKm(client, userId),
+        this.getNextMaintenance(client, userId, activeVehicleId),
+      ]);
 
     return {
       total_this_month: toKpiResult(totalThisMonth),
@@ -523,13 +608,21 @@ export class DashboardService {
    * `null` (sem seta de tendência) quando a amostra do mês anterior é pequena demais para um
    * percentual ser informativo, ou quando o mês anterior é zero (divisão por zero).
    */
-  private deltaPct(current: number, previous: number, previousSampleCount: number): number | null {
-    if (previousSampleCount < DELTA_SUPPRESSION_MIN_SAMPLE || previous === 0) return null;
+  private deltaPct(
+    current: number,
+    previous: number,
+    previousSampleCount: number,
+  ): number | null {
+    if (previousSampleCount < DELTA_SUPPRESSION_MIN_SAMPLE || previous === 0)
+      return null;
     return round2(((current - previous) / previous) * 100);
   }
 
   /** @spec SPEC-20260721-002 RF-01 — série de 6 meses agregada em uma única query (sem RPC dedicada) */
-  private async getExpensesMonthSeries(client: SupabaseClient, userId: string): Promise<KpiSeriesValue> {
+  private async getExpensesMonthSeries(
+    client: SupabaseClient,
+    userId: string,
+  ): Promise<KpiSeriesValue> {
     const months = recentMonthStarts(KPI_SERIES_MONTHS);
     const rangeStart = toDateString(months[0]!);
     const rangeEnd = lastDayOfMonth(monthKey(months[months.length - 1]!));
@@ -547,22 +640,34 @@ export class DashboardService {
     }
 
     const buckets = new Map<string, { sum: number; count: number }>();
-    for (const month of months) buckets.set(monthKey(month), { sum: 0, count: 0 });
+    for (const month of months)
+      buckets.set(monthKey(month), { sum: 0, count: 0 });
 
-    for (const row of (data ?? []) as { occurred_at: string; amount: number }[]) {
+    for (const row of (data ?? []) as {
+      occurred_at: string;
+      amount: number;
+    }[]) {
       const bucket = buckets.get(row.occurred_at.slice(0, 7));
       if (!bucket) continue;
       bucket.sum += row.amount;
       bucket.count += 1;
     }
 
-    const history = months.map((month) => round2(buckets.get(monthKey(month))!.sum));
+    const history = months.map((month) =>
+      round2(buckets.get(monthKey(month))!.sum),
+    );
     const current = history[history.length - 1]!;
     // KPI_SERIES_MONTHS é 6 (constante) — o índice anterior sempre existe, sem fallback necessário.
     const previous = history[history.length - 2]!;
-    const previousCount = buckets.get(monthKey(months[months.length - 2]!))!.count;
+    const previousCount = buckets.get(
+      monthKey(months[months.length - 2]!),
+    )!.count;
 
-    return { value: current, delta_pct: this.deltaPct(current, previous, previousCount), history_6mo: history };
+    return {
+      value: current,
+      delta_pct: this.deltaPct(current, previous, previousCount),
+      history_6mo: history,
+    };
   }
 
   /**
@@ -570,7 +675,10 @@ export class DashboardService {
    * Reaproveita `get_vehicle_cost_per_km` (já suporta `p_month_start`) por veículo/mês — mesma
    * RPC de `getFleetCostPerKm`, generalizada para os últimos 6 meses.
    */
-  private async getCostPerKmSeries(client: SupabaseClient, userId: string): Promise<KpiSeriesValue> {
+  private async getCostPerKmSeries(
+    client: SupabaseClient,
+    userId: string,
+  ): Promise<KpiSeriesValue> {
     const { data: vehiclesData, error: vehiclesError } = await client
       .from("vehicles")
       .select("id")
@@ -581,7 +689,9 @@ export class DashboardService {
       throw new Error(vehiclesError.message);
     }
 
-    const vehicleIds = ((vehiclesData ?? []) as { id: string }[]).map((vehicle) => vehicle.id);
+    const vehicleIds = ((vehiclesData ?? []) as { id: string }[]).map(
+      (vehicle) => vehicle.id,
+    );
     const months = recentMonthStarts(KPI_SERIES_MONTHS);
 
     const monthlyTotals = await Promise.all(
@@ -590,7 +700,10 @@ export class DashboardService {
 
         const results = await Promise.all(
           vehicleIds.map((id) =>
-            client.rpc("get_vehicle_cost_per_km", { p_vehicle_id: id, p_month_start: toDateString(month) }),
+            client.rpc("get_vehicle_cost_per_km", {
+              p_vehicle_id: id,
+              p_month_start: toDateString(month),
+            }),
           ),
         );
 
@@ -601,7 +714,12 @@ export class DashboardService {
           if (result.error) {
             throw new Error(result.error.message);
           }
-          const row = ((result.data ?? []) as { total_spent: number | null; total_km: number | null }[])[0];
+          const row = (
+            (result.data ?? []) as {
+              total_spent: number | null;
+              total_km: number | null;
+            }[]
+          )[0];
           if (!row) continue;
           spent += row.total_spent ?? 0;
           km += row.total_km ?? 0;
@@ -611,7 +729,9 @@ export class DashboardService {
       }),
     );
 
-    const history = monthlyTotals.map((month) => (month.km > 0 ? round2(month.spent / month.km) : 0));
+    const history = monthlyTotals.map((month) =>
+      month.km > 0 ? round2(month.spent / month.km) : 0,
+    );
     const current = history[history.length - 1]!;
     // KPI_SERIES_MONTHS é 6 (constante) — o índice anterior sempre existe, sem fallback necessário.
     const previousIndex = history.length - 2;
@@ -620,21 +740,35 @@ export class DashboardService {
     // eslint-disable-next-line security/detect-object-injection -- mesmo índice numérico interno acima
     const previousCount = monthlyTotals[previousIndex]!.count;
 
-    return { value: current, delta_pct: this.deltaPct(current, previous, previousCount), history_6mo: history };
+    return {
+      value: current,
+      delta_pct: this.deltaPct(current, previous, previousCount),
+      history_6mo: history,
+    };
   }
 
   /** @spec SPEC-20260721-002 RF-01 — média simples dos scores por veículo, sem recálculo de peso */
-  private async getFleetHealthAverage(client: SupabaseClient, userId: string): Promise<number | null> {
-    const { data, error } = await client.rpc("calculate_fleet_health", { p_user_id: userId });
+  private async getFleetHealthAverage(
+    client: SupabaseClient,
+    userId: string,
+  ): Promise<number | null> {
+    const { data, error } = await client.rpc("calculate_fleet_health", {
+      p_user_id: userId,
+    });
     if (error) {
       throw new Error(error.message);
     }
     const rows = (data ?? []) as { score: number }[];
     if (rows.length === 0) return null;
-    return Math.round(rows.reduce((sum, row) => sum + row.score, 0) / rows.length);
+    return Math.round(
+      rows.reduce((sum, row) => sum + row.score, 0) / rows.length,
+    );
   }
 
-  private async countActiveVehicles(client: SupabaseClient, userId: string): Promise<number> {
+  private async countActiveVehicles(
+    client: SupabaseClient,
+    userId: string,
+  ): Promise<number> {
     const { count, error } = await client
       .from("vehicles")
       .select("id", { count: "exact", head: true })
@@ -648,7 +782,9 @@ export class DashboardService {
   }
 
   /** @spec SPEC-20260721-002 RF-01 — reaproveita a RPC get_upcoming_costs (já existente, resolve o gap de RF-09) */
-  private async getUpcomingCostsSummary(accessToken: string): Promise<{ total: number; count: number }> {
+  private async getUpcomingCostsSummary(
+    accessToken: string,
+  ): Promise<{ total: number; count: number }> {
     const items = await this.expensesService.getUpcomingCosts(accessToken, {
       vehicle_id: undefined,
       horizon_days: UPCOMING_COSTS_KPI_HORIZON_DAYS,
@@ -663,7 +799,10 @@ export class DashboardService {
    * @spec SPEC-20260721-002 RF-01 — conta anomalias (z-score) do mês corrente; RLS já isola por auth.uid() (R-ANA-05)
    * @spec SPEC-20260715-002 R-TZ-01 — "mês corrente" no fuso do usuário
    */
-  private async countMonthlyAnomalies(client: SupabaseClient, tz: string): Promise<number> {
+  private async countMonthlyAnomalies(
+    client: SupabaseClient,
+    tz: string,
+  ): Promise<number> {
     const { data, error } = await client.rpc("detect_expense_anomalies", {
       p_threshold: ANOMALY_Z_SCORE_THRESHOLD,
     });
@@ -671,11 +810,17 @@ export class DashboardService {
       throw new Error(error.message);
     }
     const startOfMonth = toCalendarDay(new Date(), tz).slice(0, 7) + "-01";
-    return ((data ?? []) as { date: string }[]).filter((row) => row.date >= startOfMonth).length;
+    return ((data ?? []) as { date: string }[]).filter(
+      (row) => row.date >= startOfMonth,
+    ).length;
   }
 
   /** @spec SPEC-20260715-002 RF-BK-03, R-TZ-01 — horizonte de urgência calculado no fuso do usuário */
-  private async countUrgentMaintenances(client: SupabaseClient, userId: string, tz: string): Promise<number> {
+  private async countUrgentMaintenances(
+    client: SupabaseClient,
+    userId: string,
+    tz: string,
+  ): Promise<number> {
     const horizon = addDays(new Date(), ALERT_HORIZON_DAYS);
 
     const { count, error } = await client
@@ -684,7 +829,10 @@ export class DashboardService {
       .eq("user_id", userId)
       .is("deleted_at", null)
       .in("status", ["scheduled", "in_progress"])
-      .lt("scheduled_date", exclusiveDayUpperBoundUtc(toCalendarDay(horizon, tz)));
+      .lt(
+        "scheduled_date",
+        exclusiveDayUpperBoundUtc(toCalendarDay(horizon, tz)),
+      );
 
     if (error) {
       throw new Error(error.message);
@@ -692,7 +840,10 @@ export class DashboardService {
     return count ?? 0;
   }
 
-  private async getFleetCostPerKm(client: SupabaseClient, userId: string): Promise<number | null> {
+  private async getFleetCostPerKm(
+    client: SupabaseClient,
+    userId: string,
+  ): Promise<number | null> {
     const { data: vehicles, error: vehiclesError } = await client
       .from("vehicles")
       .select("id")
@@ -703,13 +854,17 @@ export class DashboardService {
       throw new Error(vehiclesError.message);
     }
 
-    const vehicleIds = ((vehicles ?? []) as { id: string }[]).map((vehicle) => vehicle.id);
+    const vehicleIds = ((vehicles ?? []) as { id: string }[]).map(
+      (vehicle) => vehicle.id,
+    );
     if (vehicleIds.length === 0) {
       return null;
     }
 
     const results = await Promise.all(
-      vehicleIds.map((id) => client.rpc("get_vehicle_cost_per_km", { p_vehicle_id: id })),
+      vehicleIds.map((id) =>
+        client.rpc("get_vehicle_cost_per_km", { p_vehicle_id: id }),
+      ),
     );
 
     let totalSpent = 0;
@@ -718,7 +873,12 @@ export class DashboardService {
       if (result.error) {
         throw new Error(result.error.message);
       }
-      const row = ((result.data ?? []) as { total_spent: number | null; total_km: number | null }[])[0];
+      const row = (
+        (result.data ?? []) as {
+          total_spent: number | null;
+          total_km: number | null;
+        }[]
+      )[0];
       if (!row) continue;
       totalSpent += row.total_spent ?? 0;
       totalKm += row.total_km ?? 0;
@@ -743,13 +903,17 @@ export class DashboardService {
       builder = builder.eq("vehicle_id", vehicleId);
     }
 
-    const { data, error } = await builder.order("scheduled_date", { ascending: true }).limit(1);
+    const { data, error } = await builder
+      .order("scheduled_date", { ascending: true })
+      .limit(1);
     if (error) {
       throw new Error(error.message);
     }
 
     const row = ((data ?? []) as MaintenanceAlertRow[])[0];
-    return row ? { date: row.scheduled_date, vehicle_plate: resolvePlate(row) } : null;
+    return row
+      ? { date: row.scheduled_date, vehicle_plate: resolvePlate(row) }
+      : null;
   }
 
   /**
@@ -757,7 +921,10 @@ export class DashboardService {
    * Reconciliação com `vehicle_recurring_costs` (RF-DB-06) é escopo da Sprint 3 — aqui o status
    * do documento é derivado apenas das datas em `vehicles.*`.
    */
-  async getVehicleCards(accessToken: string, userId: string): Promise<VehicleCard[]> {
+  async getVehicleCards(
+    accessToken: string,
+    userId: string,
+  ): Promise<VehicleCard[]> {
     const client = this.clientForUser(accessToken);
     const tz = await this.resolveUserTimezone(accessToken, userId);
 
@@ -772,7 +939,9 @@ export class DashboardService {
 
     if (error) {
       this.logger.error("Falha ao carregar veículos da frota", error.message);
-      throw new InternalServerErrorException("Não foi possível carregar os veículos da frota");
+      throw new InternalServerErrorException(
+        "Não foi possível carregar os veículos da frota",
+      );
     }
 
     const today = new Date();
@@ -780,7 +949,11 @@ export class DashboardService {
 
     return Promise.all(
       rows.map(async (vehicle) => {
-        const lastFuel = await this.getLastFuelExpense(client, userId, vehicle.id);
+        const lastFuel = await this.getLastFuelExpense(
+          client,
+          userId,
+          vehicle.id,
+        );
         return {
           id: vehicle.id,
           plate: vehicle.plate,
@@ -790,10 +963,15 @@ export class DashboardService {
           odometer: vehicle.odometer,
           last_fuel_date: lastFuel?.occurred_at ?? null,
           last_fuel_amount: lastFuel?.amount ?? null,
-          last_fuel_odometer_missing: lastFuel != null && lastFuel.odometer_km == null,
+          last_fuel_odometer_missing:
+            lastFuel != null && lastFuel.odometer_km == null,
           documents: {
             ipva: classifyDocument(vehicle.ipva_due_date, today, tz),
-            insurance: classifyDocument(vehicle.insurance_expires_at, today, tz),
+            insurance: classifyDocument(
+              vehicle.insurance_expires_at,
+              today,
+              tz,
+            ),
             crlv: classifyDocument(vehicle.crlv_expires_at, today, tz),
           } satisfies VehicleDocumentsStatus,
         } satisfies VehicleCard;
@@ -837,13 +1015,15 @@ export class DashboardService {
       amount: expense.amount,
     }));
 
-    const maintenanceItems: VehicleHistoryItem[] = maintenances.data.map((maintenance) => ({
-      id: maintenance.id,
-      type: "maintenance",
-      date: maintenance.completion_date ?? maintenance.scheduled_date,
-      description: maintenance.description,
-      amount: maintenance.cost,
-    }));
+    const maintenanceItems: VehicleHistoryItem[] = maintenances.data.map(
+      (maintenance) => ({
+        id: maintenance.id,
+        type: "maintenance",
+        date: maintenance.completion_date ?? maintenance.scheduled_date,
+        description: maintenance.description,
+        amount: maintenance.cost,
+      }),
+    );
 
     return [...expenseItems, ...maintenanceItems]
       .sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0))
@@ -859,7 +1039,11 @@ export class DashboardService {
     client: SupabaseClient,
     userId: string,
     vehicleId: string,
-  ): Promise<{ occurred_at: string; amount: number; odometer_km: number | null } | null> {
+  ): Promise<{
+    occurred_at: string;
+    amount: number;
+    odometer_km: number | null;
+  } | null> {
     const { data, error } = await client
       .from("expenses")
       .select("occurred_at, amount, odometer_km")
@@ -874,7 +1058,13 @@ export class DashboardService {
       throw new Error(error.message);
     }
     return (
-      ((data ?? []) as { occurred_at: string; amount: number; odometer_km: number | null }[])[0] ?? null
+      (
+        (data ?? []) as {
+          occurred_at: string;
+          amount: number;
+          odometer_km: number | null;
+        }[]
+      )[0] ?? null
     );
   }
 
@@ -916,7 +1106,10 @@ export class DashboardService {
    * os demais (mesmo padrão de isolamento de `getFleetKpiCatalog`, aqui via `Promise.all` porque
    * nenhum dos três tem fallback "sem dado" que valha a pena distinguir de erro real).
    */
-  async getFleetCharts(accessToken: string, userId: string): Promise<FleetChartsResponse> {
+  async getFleetCharts(
+    accessToken: string,
+    userId: string,
+  ): Promise<FleetChartsResponse> {
     const client = this.clientForUser(accessToken);
 
     const [costPerKm, fuelLiters, categoryBreakdown] = await Promise.all([
@@ -925,7 +1118,11 @@ export class DashboardService {
       this.getFullCategoryBreakdown(client),
     ]);
 
-    return { cost_per_km: costPerKm, fuel_liters: fuelLiters, category_breakdown: categoryBreakdown };
+    return {
+      cost_per_km: costPerKm,
+      fuel_liters: fuelLiters,
+      category_breakdown: categoryBreakdown,
+    };
   }
 
   /**
@@ -949,16 +1146,22 @@ export class DashboardService {
       throw new Error(vehiclesError.message);
     }
 
-    const vehicleIds = ((vehiclesData ?? []) as { id: string }[]).map((vehicle) => vehicle.id);
+    const vehicleIds = ((vehiclesData ?? []) as { id: string }[]).map(
+      (vehicle) => vehicle.id,
+    );
     const months = recentMonthStarts(KPI_SERIES_MONTHS);
 
     return Promise.all(
       months.map(async (month) => {
-        if (vehicleIds.length === 0) return { month: monthKey(month), value: 0 };
+        if (vehicleIds.length === 0)
+          return { month: monthKey(month), value: 0 };
 
         const results = await Promise.all(
           vehicleIds.map((id) =>
-            client.rpc("get_vehicle_cost_per_km", { p_vehicle_id: id, p_month_start: toDateString(month) }),
+            client.rpc("get_vehicle_cost_per_km", {
+              p_vehicle_id: id,
+              p_month_start: toDateString(month),
+            }),
           ),
         );
 
@@ -968,13 +1171,21 @@ export class DashboardService {
           if (result.error) {
             throw new Error(result.error.message);
           }
-          const row = ((result.data ?? []) as { total_spent: number | null; total_km: number | null }[])[0];
+          const row = (
+            (result.data ?? []) as {
+              total_spent: number | null;
+              total_km: number | null;
+            }[]
+          )[0];
           if (!row) continue;
           spent += row.total_spent ?? 0;
           km += row.total_km ?? 0;
         }
 
-        return { month: monthKey(month), value: km > 0 ? round2(spent / km) : 0 };
+        return {
+          month: monthKey(month),
+          value: km > 0 ? round2(spent / km) : 0,
+        };
       }),
     );
   }
@@ -982,7 +1193,7 @@ export class DashboardService {
   /**
    * @spec SPEC-20260721-002 RF-08
    * Volume de combustível abastecido por mês (soma de `expenses.liters`), não eficiência km/L —
-   * ver nota em `FleetChartsResponse` (`@nave/validators`) sobre por que km/L não agrega
+   * ver nota em `FleetChartsResponse` (`@navestory/validators`) sobre por que km/L não agrega
    * significativamente numa frota mista. Uma única query cobre os 6 meses (mesmo padrão de
    * `getExpensesMonthSeries`), sem RPC dedicada.
    */
@@ -1011,13 +1222,19 @@ export class DashboardService {
     const buckets = new Map<string, number>();
     for (const month of months) buckets.set(monthKey(month), 0);
 
-    for (const row of (data ?? []) as { occurred_at: string; liters: number }[]) {
+    for (const row of (data ?? []) as {
+      occurred_at: string;
+      liters: number;
+    }[]) {
       const key = row.occurred_at.slice(0, 7);
       if (!buckets.has(key)) continue;
       buckets.set(key, buckets.get(key)! + row.liters);
     }
 
-    return months.map((month) => ({ month: monthKey(month), value: round2(buckets.get(monthKey(month))!) }));
+    return months.map((month) => ({
+      month: monthKey(month),
+      value: round2(buckets.get(monthKey(month))!),
+    }));
   }
 
   /**
@@ -1027,12 +1244,17 @@ export class DashboardService {
    * alto o bastante para nunca truncar o catálogo real de categorias (ver migration
    * `20260722130000_fleet_charts.sql`), em vez de duplicar a RPC usada por `getSpendingHighlights`.
    */
-  private async getFullCategoryBreakdown(client: SupabaseClient): Promise<CategorySummaryItem[]> {
-    const { data, error } = await client.rpc("get_category_spending_highlights", {
-      p_vehicle_id: null,
-      p_group_vehicle_ids: null,
-      p_limit: 50,
-    });
+  private async getFullCategoryBreakdown(
+    client: SupabaseClient,
+  ): Promise<CategorySummaryItem[]> {
+    const { data, error } = await client.rpc(
+      "get_category_spending_highlights",
+      {
+        p_vehicle_id: null,
+        p_group_vehicle_ids: null,
+        p_limit: 50,
+      },
+    );
 
     if (error) {
       throw new Error(error.message);
@@ -1051,8 +1273,13 @@ export class DashboardService {
    * Única passagem na RPC (`COUNT` + `MIN(due_date) FILTER (WHERE status = 'pending')`) —
    * a classificação overdue/open só compara datas aqui, sem query adicional.
    */
-  async getFinesStatus(accessToken: string, userId: string): Promise<FinesStatusResponse> {
-    const { data, error } = await this.clientForUser(accessToken).rpc("get_fines_status_summary");
+  async getFinesStatus(
+    accessToken: string,
+    userId: string,
+  ): Promise<FinesStatusResponse> {
+    const { data, error } = await this.clientForUser(accessToken).rpc(
+      "get_fines_status_summary",
+    );
 
     if (error) {
       throw new Error(error.message);
@@ -1068,7 +1295,9 @@ export class DashboardService {
     const tz = await this.resolveUserTimezone(accessToken, userId);
 
     const today = toCalendarDay(new Date(), tz);
-    const isOverdue = row?.earliest_pending_due_date != null && row.earliest_pending_due_date < today;
+    const isOverdue =
+      row?.earliest_pending_due_date != null &&
+      row.earliest_pending_due_date < today;
 
     return { status: isOverdue ? "overdue" : "open", count };
   }

@@ -1,14 +1,17 @@
 "use client";
 
 import { useState, type InputHTMLAttributes, type ReactNode } from "react";
-import { cn, inputBaseClass } from "@nave/ui";
+import { cn, inputBaseClass } from "@navestory/ui";
 
 type PasswordInputProps = Omit<InputHTMLAttributes<HTMLInputElement>, "type">;
 
 /**
  * @spec SPEC-20260524-001 RNF-04 (WCAG 2.1 AA)
  */
-export function PasswordInput({ className, ...props }: PasswordInputProps): ReactNode {
+export function PasswordInput({
+  className,
+  ...props
+}: PasswordInputProps): ReactNode {
   const [visible, setVisible] = useState(false);
 
   return (

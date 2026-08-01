@@ -3,7 +3,12 @@
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { Alert, Container, EmptyState, VehicleHealthScore } from "@nave/ui";
+import {
+  Alert,
+  Container,
+  EmptyState,
+  VehicleHealthScore,
+} from "@navestory/ui";
 import { apiClient } from "@/lib/http/api-client";
 
 interface Vehicle {
@@ -42,7 +47,11 @@ function byScoreAscending(scores: Map<string, number | undefined>) {
  * @spec SPEC-20260730-001 RF-13, RF-14, RF-15, RF-16
  */
 export default function VehiclesPage(): ReactNode {
-  const { data: vehicles, isLoading, isError } = useQuery({
+  const {
+    data: vehicles,
+    isLoading,
+    isError,
+  } = useQuery({
     queryKey: ["vehicles"],
     queryFn: () => apiClient<Vehicle[]>("/vehicles"),
     retry: false,
@@ -60,7 +69,9 @@ export default function VehiclesPage(): ReactNode {
     fleetHealth?.map((entry) => [entry.vehicle_id, entry.score]),
   );
 
-  const sortedVehicles = vehicles ? [...vehicles].sort(byScoreAscending(scores)) : vehicles;
+  const sortedVehicles = vehicles
+    ? [...vehicles].sort(byScoreAscending(scores))
+    : vehicles;
 
   return (
     <Container size="2xl">
@@ -70,17 +81,29 @@ export default function VehiclesPage(): ReactNode {
       </div>
 
       {isLoading && <p>Carregando...</p>}
-      {isError && <Alert variant="error" description="Não foi possível carregar os veículos." />}
+      {isError && (
+        <Alert
+          variant="error"
+          description="Não foi possível carregar os veículos."
+        />
+      )}
       {!isLoading && !isError && vehicles?.length === 0 && (
-        <EmptyState size="sm" title="Você ainda não cadastrou nenhum veículo." />
+        <EmptyState
+          size="sm"
+          title="Você ainda não cadastrou nenhum veículo."
+        />
       )}
 
       <ul className="flex flex-col gap-2">
         {sortedVehicles?.map((vehicle) => (
           <li key={vehicle.id}>
-            <Link href={`/vehicles/${vehicle.id}`} className="flex items-center gap-2">
+            <Link
+              href={`/vehicles/${vehicle.id}`}
+              className="flex items-center gap-2"
+            >
               <VehicleHealthScore score={scores.get(vehicle.id)} size={28} />
-              {vehicle.nickname ?? `${vehicle.make} ${vehicle.model}`} — {vehicle.plate}
+              {vehicle.nickname ?? `${vehicle.make} ${vehicle.model}`} —{" "}
+              {vehicle.plate}
             </Link>
           </li>
         ))}

@@ -1,10 +1,10 @@
 "use client";
 
-import { updateGroupInputSchema } from "@nave/validators";
+import { updateGroupInputSchema } from "@navestory/validators";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
-import { Alert, Button, Checkbox, Container, Input } from "@nave/ui";
+import { Alert, Button, Checkbox, Container, Input } from "@navestory/ui";
 import { apiClient } from "@/lib/http/api-client";
 
 interface VehicleGroup {
@@ -36,7 +36,11 @@ export default function VehicleGroupDetailPage({
     void params.then((resolved) => setId(resolved.id));
   }, [params]);
 
-  const { data: group, isLoading, isError } = useQuery({
+  const {
+    data: group,
+    isLoading,
+    isError,
+  } = useQuery({
     queryKey: ["vehicle-groups", id],
     queryFn: () =>
       apiClient<VehicleGroup[]>("/vehicle-groups").then(
@@ -66,10 +70,11 @@ export default function VehicleGroupDetailPage({
   }, [group]);
 
   const updateMutation = useMutation({
-    mutationFn: () => apiClient<VehicleGroup>(`/vehicle-groups/${id}`, {
-      method: "PATCH",
-      body: { name, color },
-    }),
+    mutationFn: () =>
+      apiClient<VehicleGroup>(`/vehicle-groups/${id}`, {
+        method: "PATCH",
+        body: { name, color },
+      }),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["vehicle-groups"] });
     },
@@ -84,7 +89,8 @@ export default function VehicleGroupDetailPage({
   });
 
   const deleteMutation = useMutation({
-    mutationFn: () => apiClient<void>(`/vehicle-groups/${id}`, { method: "DELETE" }),
+    mutationFn: () =>
+      apiClient<void>(`/vehicle-groups/${id}`, { method: "DELETE" }),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["vehicle-groups"] });
       router.push("/vehicle-groups");
@@ -113,12 +119,17 @@ export default function VehicleGroupDetailPage({
   }
 
   function handleDelete(): void {
-    if (window.confirm("Remover este grupo? Os veículos membros não serão afetados.")) {
+    if (
+      window.confirm(
+        "Remover este grupo? Os veículos membros não serão afetados.",
+      )
+    ) {
       deleteMutation.mutate();
     }
   }
 
-  if (id === null || isLoading) return <main className="p-8">Carregando...</main>;
+  if (id === null || isLoading)
+    return <main className="p-8">Carregando...</main>;
   if (isError || !group)
     return (
       <main className="p-8">
@@ -132,14 +143,25 @@ export default function VehicleGroupDetailPage({
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-3">
         <label htmlFor="name">Nome</label>
-        <Input id="name" value={name} onChange={(event) => setName(event.target.value)} />
+        <Input
+          id="name"
+          value={name}
+          onChange={(event) => setName(event.target.value)}
+        />
 
         <label htmlFor="color">Cor</label>
-        <Input id="color" value={color} onChange={(event) => setColor(event.target.value)} />
+        <Input
+          id="color"
+          value={color}
+          onChange={(event) => setColor(event.target.value)}
+        />
 
         {fieldError && <Alert variant="error" description={fieldError} />}
         {updateMutation.isError && (
-          <Alert variant="error" description="Não foi possível atualizar o grupo." />
+          <Alert
+            variant="error"
+            description="Não foi possível atualizar o grupo."
+          />
         )}
         {updateMutation.isSuccess && <p>Grupo atualizado.</p>}
 
@@ -165,18 +187,31 @@ export default function VehicleGroupDetailPage({
           onClick={() => setMembersMutation.mutate()}
           disabled={setMembersMutation.isPending}
         >
-          {setMembersMutation.isPending ? "Salvando membros..." : "Salvar membros"}
+          {setMembersMutation.isPending
+            ? "Salvando membros..."
+            : "Salvar membros"}
         </Button>
         {setMembersMutation.isError && (
-          <Alert variant="error" description="Não foi possível atualizar os membros do grupo." />
+          <Alert
+            variant="error"
+            description="Não foi possível atualizar os membros do grupo."
+          />
         )}
       </fieldset>
 
-      <Button type="button" variant="destructive" onClick={handleDelete} disabled={deleteMutation.isPending}>
+      <Button
+        type="button"
+        variant="destructive"
+        onClick={handleDelete}
+        disabled={deleteMutation.isPending}
+      >
         {deleteMutation.isPending ? "Removendo..." : "Remover grupo"}
       </Button>
       {deleteMutation.isError && (
-        <Alert variant="error" description="Não foi possível remover o grupo." />
+        <Alert
+          variant="error"
+          description="Não foi possível remover o grupo."
+        />
       )}
     </Container>
   );

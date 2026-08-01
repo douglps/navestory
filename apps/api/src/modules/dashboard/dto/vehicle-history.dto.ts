@@ -1,4 +1,4 @@
-import { vehicleHistoryQuerySchema } from "@nave/validators";
+import { vehicleHistoryQuerySchema } from "@navestory/validators";
 import type { z } from "zod";
 
 export const vehicleHistoryDtoSchema = vehicleHistoryQuerySchema;

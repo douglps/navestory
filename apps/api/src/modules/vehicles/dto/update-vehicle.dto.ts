@@ -1,4 +1,4 @@
-import { updateVehicleInputSchema } from "@nave/validators";
+import { updateVehicleInputSchema } from "@navestory/validators";
 import type { z } from "zod";
 
 export const updateVehicleDtoSchema = updateVehicleInputSchema;

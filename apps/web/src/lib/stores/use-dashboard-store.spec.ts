@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { useDashboardStore } from "./use-dashboard-store";
 
 function getPersisted(): { state: { selectionMode: string } } | null {
-  const raw = sessionStorage.getItem("nave-dashboard-context");
+  const raw = sessionStorage.getItem("navestory-dashboard-context");
   return raw ? JSON.parse(raw) : null;
 }
 
@@ -61,7 +61,9 @@ describe("useDashboardStore", () => {
   });
 
   it("R-CTX-02: não persiste attribute (efêmero) em sessionStorage", () => {
-    useDashboardStore.getState().setAttributeFilter({ attribute: "tipo", value: "carro" });
+    useDashboardStore
+      .getState()
+      .setAttributeFilter({ attribute: "tipo", value: "carro" });
 
     expect(getPersisted()?.state.selectionMode).toBe("none");
   });
@@ -80,7 +82,9 @@ describe("useDashboardStore", () => {
     useDashboardStore.getState().setActiveVehicle("v1");
     useDashboardStore.getState().setDockOpen(true);
 
-    const persisted = getPersisted() as { state: { dockOpen?: boolean } } | null;
+    const persisted = getPersisted() as {
+      state: { dockOpen?: boolean };
+    } | null;
     expect(persisted?.state.dockOpen).toBeUndefined();
   });
 });

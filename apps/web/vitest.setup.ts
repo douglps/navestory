@@ -12,7 +12,8 @@ class ResizeObserverStub {
   unobserve(): void {}
   disconnect(): void {}
 }
-globalThis.ResizeObserver = globalThis.ResizeObserver ?? (ResizeObserverStub as never);
+globalThis.ResizeObserver =
+  globalThis.ResizeObserver ?? (ResizeObserverStub as never);
 
 // jsdom não faz layout real — getBoundingClientRect() sempre retorna 0. O ResponsiveContainer do
 // recharts@3 usa exatamente esse valor para dimensionar o gráfico (ver ResponsiveContainer.js),
@@ -32,7 +33,7 @@ Element.prototype.getBoundingClientRect = (): DOMRect => ({
   },
 });
 
-// jsdom não implementa Pointer Capture; `@radix-ui/react-popover`/`cmdk` (Combobox de @nave/ui)
+// jsdom não implementa Pointer Capture; `@radix-ui/react-popover`/`cmdk` (Combobox de @navestory/ui)
 // dependem deles em runtime (mesmo stub usado em packages/ui/vitest.setup.ts).
 if (!Element.prototype.hasPointerCapture) {
   Element.prototype.hasPointerCapture = (): boolean => false;

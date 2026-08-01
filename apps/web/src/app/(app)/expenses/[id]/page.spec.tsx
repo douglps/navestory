@@ -232,4 +232,64 @@ describe("ExpenseDetailPage", () => {
     expect(confirmSpy).not.toHaveBeenCalled();
     expect(pushMock).toHaveBeenCalledWith("/expenses");
   });
+
+  it("altera o campo de descrição (onChange da descrição)", async () => {
+    mockApi();
+    renderPage();
+
+    await screen.findByLabelText("Valor (R$) *");
+    const descInput = screen.getByLabelText("Descrição", { selector: "input" });
+    fireEvent.change(descInput, { target: { value: "Abastecimento extra" } });
+
+    expect(descInput).toHaveValue("Abastecimento extra");
+  });
+
+  it("clica no botão 'Sim' de tanque cheio altera o estado (isFuel)", async () => {
+    mockApi({ expense: { ...baseExpense, category: "fuel" } });
+    renderPage();
+
+    await screen.findByLabelText("Valor (R$) *");
+    const simBtn = screen.getByRole("button", { name: "Sim" });
+    expect(simBtn).toBeInTheDocument();
+    fireEvent.click(simBtn);
+
+    // Após clicar, o botão fica "pressionado"
+    expect(simBtn).toHaveAttribute("aria-pressed", "true");
+  });
+
+  it("clica no botão 'Não' de tanque cheio (isFuel)", async () => {
+    mockApi({ expense: { ...baseExpense, category: "fuel" } });
+    renderPage();
+
+    await screen.findByLabelText("Valor (R$) *");
+    const naoBtn = screen.getByRole("button", { name: "Não" });
+    fireEvent.click(naoBtn);
+
+    expect(naoBtn).toHaveAttribute("aria-pressed", "true");
+  });
+
+  it("exibe sugestões de fornecedores quando a API retorna suppliers (isFuel)", async () => {
+    vi.mocked(apiClient).mockImplementation((path: string, options?: { method?: string }) => {
+      if (path === "/expenses/e1" && (!options || options.method === undefined))
+        return Promise.resolve({ ...baseExpense, category: "fuel" }) as never;
+      if (path === "/preferences") return Promise.resolve({ timezone: "UTC" }) as never;
+      if (path === "/expenses/suppliers")
+        return Promise.resolve({ data: ["Posto Shell", "Posto Ipiranga"] }) as never;
+      if (path === "/expenses/e1?strict=true" && options?.method === "PATCH")
+        return Promise.resolve(baseExpense) as never;
+      if (path === "/expenses/e1" && options?.method === "DELETE")
+        return Promise.resolve(undefined) as never;
+      if (path === "/expense-templates" && options?.method === "POST")
+        return Promise.resolve({ data: { id: "t1", name: "x" } }) as never;
+      return Promise.resolve(undefined) as never;
+    });
+    renderPage();
+
+    await screen.findByLabelText("Valor (R$) *");
+    // Aguarda os suppliers carregarem no DOM (datalist options)
+    await waitFor(() => {
+      const option = document.querySelector('datalist option[value="Posto Shell"]');
+      expect(option).toBeInTheDocument();
+    });
+  });
 });

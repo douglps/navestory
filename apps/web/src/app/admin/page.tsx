@@ -1,6 +1,6 @@
 "use client";
 
-import { Container, Tabs } from "@nave/ui";
+import { Container, Tabs } from "@navestory/ui";
 import { useRouter, useSearchParams } from "next/navigation";
 import type { ReactNode } from "react";
 import { AdminAuditLogsTable } from "./admin-audit-logs-table";
@@ -28,7 +28,12 @@ export default function AdminPage(): ReactNode {
   return (
     <Container size="5xl" gap={8}>
       <h2 className="text-lg font-semibold">Gestão de usuários e auditoria</h2>
-      <Tabs items={TABS} value={tab} onValueChange={handleTabChange} aria-label="Seções do painel admin" />
+      <Tabs
+        items={TABS}
+        value={tab}
+        onValueChange={handleTabChange}
+        aria-label="Seções do painel admin"
+      />
       {tab === "audit-logs" ? <AdminAuditLogsTable /> : <AdminUsersTable />}
     </Container>
   );

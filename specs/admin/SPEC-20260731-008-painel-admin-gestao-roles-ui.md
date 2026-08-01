@@ -20,6 +20,7 @@ camadas: [backend, frontend, security]
 ## Contexto
 
 O módulo `admin` do backend (`apps/api/src/modules/admin/`) expõe três endpoints funcionais e aprovados em [`SPEC-20260521-004`](SPEC-20260521-004.md):
+
 - `GET /admin/users` — lista paginada de usuários
 - `GET /admin/audit-logs` — lista paginada de audit logs com filtros
 - `DELETE /admin/users/:id` — exclusão imediata de conta (LGPD compliance)
@@ -95,40 +96,40 @@ Esta spec implementa o escopo postergado da Fase 2 da SPEC-20260521-004: endpoin
 
 ### Backend
 
-| ID | Requisito | Prioridade |
-|----|-----------|------------|
-| RF-01 | `PATCH /admin/users/:id/role` — endpoint novo protegido por `@UseGuards(SupabaseAuthGuard, RolesGuard)` + `@Roles("admin")`, idêntico aos demais endpoints do `AdminController` | Alta |
-| RF-02 | Body do `PATCH /admin/users/:id/role`: `{ role: "admin" \| null }` — validado por schema Zod; qualquer valor fora desse domínio retorna 400 | Alta |
-| RF-03 | O endpoint chama `AdminSupabaseService.client.auth.admin.updateUserById(userId, { app_metadata: { role: role \| undefined } })` para gravar em `app_metadata` (campo gravável apenas com service role key — S3, S12) | Alta |
-| RF-04 | Bloqueio de auto-rebaixamento: se `params.id === req.user.sub` e `body.role === null`, retornar HTTP 422 com `{ error: "Admin não pode revogar o próprio role" }` — sem alterar banco, sem audit log (S14) | Alta |
-| RF-05 | Auditoria obrigatória: toda alteração de role concluída com sucesso registra em `audit_logs` via `AuditService`: `action = "ADMIN_ROLE_GRANTED"` (promoção) ou `action = "ADMIN_ROLE_REVOKED"` (rebaixamento), `table_name = "auth.users"`, `record_id = userId`, `changes = { role_before, role_after }` — aplica C2 e S14 | Alta |
-| RF-06 | Se o usuário alvo não existir no Supabase Auth, o endpoint retorna HTTP 404 | Média |
-| RF-07 | Auto-promoção (admin promove a si mesmo para admin novamente) é idempotente — sem erro, sem audit log redundante quando o role já é o mesmo antes e depois | Baixa |
+| ID    | Requisito                                                                                                                                                                                                                                                                                                                   | Prioridade |
+| ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- |
+| RF-01 | `PATCH /admin/users/:id/role` — endpoint novo protegido por `@UseGuards(SupabaseAuthGuard, RolesGuard)` + `@Roles("admin")`, idêntico aos demais endpoints do `AdminController`                                                                                                                                             | Alta       |
+| RF-02 | Body do `PATCH /admin/users/:id/role`: `{ role: "admin" \| null }` — validado por schema Zod; qualquer valor fora desse domínio retorna 400                                                                                                                                                                                 | Alta       |
+| RF-03 | O endpoint chama `AdminSupabaseService.client.auth.admin.updateUserById(userId, { app_metadata: { role: role \| undefined } })` para gravar em `app_metadata` (campo gravável apenas com service role key — S3, S12)                                                                                                        | Alta       |
+| RF-04 | Bloqueio de auto-rebaixamento: se `params.id === req.user.sub` e `body.role === null`, retornar HTTP 422 com `{ error: "Admin não pode revogar o próprio role" }` — sem alterar banco, sem audit log (S14)                                                                                                                  | Alta       |
+| RF-05 | Auditoria obrigatória: toda alteração de role concluída com sucesso registra em `audit_logs` via `AuditService`: `action = "ADMIN_ROLE_GRANTED"` (promoção) ou `action = "ADMIN_ROLE_REVOKED"` (rebaixamento), `table_name = "auth.users"`, `record_id = userId`, `changes = { role_before, role_after }` — aplica C2 e S14 | Alta       |
+| RF-06 | Se o usuário alvo não existir no Supabase Auth, o endpoint retorna HTTP 404                                                                                                                                                                                                                                                 | Média      |
+| RF-07 | Auto-promoção (admin promove a si mesmo para admin novamente) é idempotente — sem erro, sem audit log redundante quando o role já é o mesmo antes e depois                                                                                                                                                                  | Baixa      |
 
 ### Frontend
 
-| ID | Requisito | Prioridade |
-|----|-----------|------------|
-| RF-08 | Rota `/admin` em `apps/web` — layout dedicado (sem sidebar de usuário comum); acessível exclusivamente por usuários com `app_metadata.role === "admin"` | Alta |
-| RF-09 | Proteção de rota no frontend: middleware ou layout server-side verifica `app_metadata.role` do usuário autenticado via Supabase Auth client e redireciona para `/403` se não for admin; segurança real permanece no backend (RolesGuard) | Alta |
-| RF-10 | Tabela de usuários paginada consumindo `GET /admin/users`; colunas: email, nome, role, status da conta, data de cadastro; botões de ação: "Promover a admin" / "Revogar admin" / "Excluir conta" | Alta |
-| RF-11 | Botão "Revogar admin" do próprio usuário autenticado exibido como desabilitado com tooltip explicativo (S14 — prevenção de lockout de UI) | Alta |
-| RF-12 | Tabela de audit logs paginada consumindo `GET /admin/audit-logs`; colunas: ação, tabela, ID do registro, usuário executor, timestamp; filtros: `user_id` (input de texto) e período (`from`/`to`, date pickers) | Alta |
-| RF-13 | Modal de confirmação de exclusão de conta (`Dialog` de `@nave/ui` — não existe `AlertDialog` no pacote; mesmo padrão de `DeleteAccountDialog`) com email do usuário no texto de confirmação, conforme US-05 | Alta |
-| RF-14 | Ação de alteração de role usa loading state no botão durante a chamada; exibe toast de sucesso ou erro ao concluir; revalida a tabela de usuários após sucesso | Média |
-| RF-15 | Estados de carregamento das tabelas usam `Skeleton` de `@nave/ui` (R-DS-10) | Baixa |
-| RF-16 | Estado vazio das tabelas (nenhum resultado retornado) exibe mensagem textual explicativa em vez de tabela em branco | Baixa |
+| ID    | Requisito                                                                                                                                                                                                                                | Prioridade |
+| ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- |
+| RF-08 | Rota `/admin` em `apps/web` — layout dedicado (sem sidebar de usuário comum); acessível exclusivamente por usuários com `app_metadata.role === "admin"`                                                                                  | Alta       |
+| RF-09 | Proteção de rota no frontend: middleware ou layout server-side verifica `app_metadata.role` do usuário autenticado via Supabase Auth client e redireciona para `/403` se não for admin; segurança real permanece no backend (RolesGuard) | Alta       |
+| RF-10 | Tabela de usuários paginada consumindo `GET /admin/users`; colunas: email, nome, role, status da conta, data de cadastro; botões de ação: "Promover a admin" / "Revogar admin" / "Excluir conta"                                         | Alta       |
+| RF-11 | Botão "Revogar admin" do próprio usuário autenticado exibido como desabilitado com tooltip explicativo (S14 — prevenção de lockout de UI)                                                                                                | Alta       |
+| RF-12 | Tabela de audit logs paginada consumindo `GET /admin/audit-logs`; colunas: ação, tabela, ID do registro, usuário executor, timestamp; filtros: `user_id` (input de texto) e período (`from`/`to`, date pickers)                          | Alta       |
+| RF-13 | Modal de confirmação de exclusão de conta (`Dialog` de `@navestory/ui` — não existe `AlertDialog` no pacote; mesmo padrão de `DeleteAccountDialog`) com email do usuário no texto de confirmação, conforme US-05                         | Alta       |
+| RF-14 | Ação de alteração de role usa loading state no botão durante a chamada; exibe toast de sucesso ou erro ao concluir; revalida a tabela de usuários após sucesso                                                                           | Média      |
+| RF-15 | Estados de carregamento das tabelas usam `Skeleton` de `@navestory/ui` (R-DS-10)                                                                                                                                                         | Baixa      |
+| RF-16 | Estado vazio das tabelas (nenhum resultado retornado) exibe mensagem textual explicativa em vez de tabela em branco                                                                                                                      | Baixa      |
 
 ---
 
 ## Requisitos Não-Funcionais
 
-| ID | Requisito | Métrica de Aceite |
-|----|-----------|------------------|
-| RNF-01 | Segurança | `PATCH /admin/users/:id/role` retorna 403 para qualquer chamada sem `app_metadata.role = "admin"` — mesma garantia já existente nos demais endpoints admin |
-| RNF-02 | Auditoria | 100% das promoções e rebaixamentos bem-sucedidos têm registro correspondente em `audit_logs` — nenhuma alteração de role ocorre sem rastro |
-| RNF-03 | Idempotência | Chamar o endpoint duas vezes com o mesmo role não cria dois registros de audit; se o role não mudou, não há audit log (RF-07) |
-| RNF-04 | Isolamento | Frontend admin não reutiliza componentes de contexto de frota (FleetAside, VehicleContextChip) — é um layout independente |
+| ID     | Requisito    | Métrica de Aceite                                                                                                                                          |
+| ------ | ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| RNF-01 | Segurança    | `PATCH /admin/users/:id/role` retorna 403 para qualquer chamada sem `app_metadata.role = "admin"` — mesma garantia já existente nos demais endpoints admin |
+| RNF-02 | Auditoria    | 100% das promoções e rebaixamentos bem-sucedidos têm registro correspondente em `audit_logs` — nenhuma alteração de role ocorre sem rastro                 |
+| RNF-03 | Idempotência | Chamar o endpoint duas vezes com o mesmo role não cria dois registros de audit; se o role não mudou, não há audit log (RF-07)                              |
+| RNF-04 | Isolamento   | Frontend admin não reutiliza componentes de contexto de frota (FleetAside, VehicleContextChip) — é um layout independente                                  |
 
 ---
 
@@ -162,16 +163,16 @@ Esta spec implementa o escopo postergado da Fase 2 da SPEC-20260521-004: endpoin
 
 ## Dependências
 
-| Tipo | Referência | Descrição |
-|------|-----------|-----------|
-| Spec | [SPEC-20260521-004](SPEC-20260521-004.md) | Define `AdminSupabaseService`, `AdminController`, `RolesGuard` e `@Roles("admin")` — infraestrutura reutilizada integralmente |
-| Spec | [SPEC-20260731-006](../security/SPEC-20260731-006-correcao-role-user-metadata.md) | Correção do `RolesGuard` para `app_metadata.role`; S12 define o contrato que RF-03 deve seguir |
-| Regra | C2 | Auditoria obrigatória em toda mutação sensível — aplica-se a RF-05 |
-| Regra | S3 | `SUPABASE_SERVICE_ROLE_KEY` somente no backend; `AdminSupabaseService` é o único ponto de uso |
-| Regra | S12 | `app_metadata` como única fonte de claims de autorização — RF-03 deve gravar em `app_metadata`, nunca em `user_metadata` |
-| Regra | S14 | Bloqueio de auto-rebaixamento e auditoria obrigatória de gestão de role — implementada em RF-04 e RF-05 |
-| Serviço externo | Supabase Auth (GoTrue) | `auth.admin.updateUserById(userId, { app_metadata })` é a API usada em RF-03; requer `SUPABASE_SERVICE_ROLE_KEY` |
-| Componentes | `@nave/ui` | `Dialog` (RF-13), `Skeleton` (RF-15), `Button`, `Badge`, `Tooltip` — usar componentes canônicos (R-DS-09, R-DS-10) |
+| Tipo            | Referência                                                                        | Descrição                                                                                                                     |
+| --------------- | --------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| Spec            | [SPEC-20260521-004](SPEC-20260521-004.md)                                         | Define `AdminSupabaseService`, `AdminController`, `RolesGuard` e `@Roles("admin")` — infraestrutura reutilizada integralmente |
+| Spec            | [SPEC-20260731-006](../security/SPEC-20260731-006-correcao-role-user-metadata.md) | Correção do `RolesGuard` para `app_metadata.role`; S12 define o contrato que RF-03 deve seguir                                |
+| Regra           | C2                                                                                | Auditoria obrigatória em toda mutação sensível — aplica-se a RF-05                                                            |
+| Regra           | S3                                                                                | `SUPABASE_SERVICE_ROLE_KEY` somente no backend; `AdminSupabaseService` é o único ponto de uso                                 |
+| Regra           | S12                                                                               | `app_metadata` como única fonte de claims de autorização — RF-03 deve gravar em `app_metadata`, nunca em `user_metadata`      |
+| Regra           | S14                                                                               | Bloqueio de auto-rebaixamento e auditoria obrigatória de gestão de role — implementada em RF-04 e RF-05                       |
+| Serviço externo | Supabase Auth (GoTrue)                                                            | `auth.admin.updateUserById(userId, { app_metadata })` é a API usada em RF-03; requer `SUPABASE_SERVICE_ROLE_KEY`              |
+| Componentes     | `@navestory/ui`                                                                   | `Dialog` (RF-13), `Skeleton` (RF-15), `Button`, `Badge`, `Tooltip` — usar componentes canônicos (R-DS-09, R-DS-10)            |
 
 ---
 
@@ -207,7 +208,7 @@ Após promoção, rebaixamento ou exclusão, usar `router.refresh()` do Next.js 
   (backend: endpoint `PATCH /admin/users/:id/role`, `AdminSupabaseService.getUserById`/
   `updateUserRole`, enriquecimento de `GET /admin/users` com `name`/`deleted_at` de `profiles`
   para atender RF-10; frontend: rota `/admin`, `/403`, middleware com checagem de role). Correção
-  pequena de conteúdo (RF-13, Dependências): a spec original citava `AlertDialog` de `@nave/ui`,
+  pequena de conteúdo (RF-13, Dependências): a spec original citava `AlertDialog` de `@navestory/ui`,
   componente que não existe no pacote — corrigido para `Dialog` (componente real usado no
   repositório para confirmação destrutiva, mesmo padrão de `DeleteAccountDialog`). Ver
   `matrices/rastreabilidade.md` (seção da spec) e `matrices/impacto.md` (IMPACTO-048) para

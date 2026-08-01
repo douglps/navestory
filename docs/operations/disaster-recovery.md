@@ -1,4 +1,4 @@
-# Disaster Recovery — Nave SaaS
+# Disaster Recovery — navestory SaaS
 
 > Runbook mínimo de recuperação de desastres. Documentos operacionais mais detalhados (runbooks gerais) ficam em `docs/operations/runbooks.md` — arquivo ainda não criado (pendente).
 
@@ -26,12 +26,12 @@ Como referência para essa decisão futura:
 
 O Supabase realiza backups automáticos do PostgreSQL gerenciado. O comportamento varia por plano:
 
-| Plano Supabase | Tipo de backup | Frequência | Retenção |
-|----------------|---------------|------------|---------|
-| Free | Diário (snapshot) | 1x ao dia | 7 dias |
-| Pro / Team | PITR (Point-in-Time Recovery) | Contínuo (WAL streaming) | 7 dias (configurável até 90) |
+| Plano Supabase | Tipo de backup                | Frequência               | Retenção                     |
+| -------------- | ----------------------------- | ------------------------ | ---------------------------- |
+| Free           | Diário (snapshot)             | 1x ao dia                | 7 dias                       |
+| Pro / Team     | PITR (Point-in-Time Recovery) | Contínuo (WAL streaming) | 7 dias (configurável até 90) |
 
-**Recomendação:** o projeto `Nave` deve usar plano Pro ou superior para ter PITR disponível antes do lançamento público. A decisão de plano não está formalmente registrada em ADR.
+**Recomendação:** o projeto `navestory` deve usar plano Pro ou superior para ter PITR disponível antes do lançamento público. A decisão de plano não está formalmente registrada em ADR.
 
 ### O que é coberto pelo backup do Supabase
 
@@ -50,8 +50,8 @@ O Supabase realiza backups automáticos do PostgreSQL gerenciado. O comportament
 
 ### Restore via PITR (plano Pro)
 
-1. Acessar o Dashboard do Supabase → projeto `Nave` (`sfkefpoanmoiagwxbwld`)
-2. Navegar para **Database → Backups → Point in Time**
+1. Acessar o Dashboard do Supabase → projeto `navestory` (`sfkefpoanmoiagwxbwld`)
+2. navegar para **Database → Backups → Point in Time**
 3. Selecionar o timestamp de restore desejado
 4. Iniciar o restore — o Supabase cria um novo projeto com os dados do ponto selecionado
 5. Atualizar `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` e `NEXT_PUBLIC_SUPABASE_ANON_KEY` no ambiente de produção para apontar para o novo projeto
@@ -106,7 +106,7 @@ Se uma migration causou regressão e precisa ser revertida fora do pipeline:
 
 ### Frontend (`apps/web` — Vercel)
 
-1. Acessar Vercel Dashboard → projeto `nave-web`
+1. Acessar Vercel Dashboard → projeto `navestory-web`
 2. **Deployments** → localizar o último deploy estável
 3. Clicar em **Promote to Production**
 4. Verificar o endpoint `/health` da API após o rollback
@@ -124,7 +124,7 @@ Em caso de vazamento de credenciais (ex: `SUPABASE_SERVICE_ROLE_KEY` exposta):
 5. Notificar usuários afetados se dados pessoais foram potencialmente acessados (obrigação LGPD — C1, `docs/legal/lgpd-compliance.md`)
 6. Registrar o incidente em `matrices/impacto.md`
 
-Contato de segurança: **seguranca@nave.app** (conforme `docs/legal/privacy-policy.md`)
+Contato de segurança: **seguranca@navestory.app** (conforme `docs/legal/privacy-policy.md`)
 
 ---
 

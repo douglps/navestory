@@ -9,7 +9,7 @@
  * pela direção "Azul-Índigo" (H≈250), adotada em `SPEC-20260731-001`/`ADR-011` — pesquisa de
  * mercado (fintech + frota) mostrou que a direção anterior ("Prata", azul-prata-cinza)
  * reforçava o padrão visual quase universal da categoria de frota (Samsara, Motive) sem
- * diferenciar o Nave. `background`/`foreground`/`card`/`cardForeground`/`border`/`muted` agora
+ * diferenciar o navestory. `background`/`foreground`/`card`/`cardForeground`/`border`/`muted` agora
  * vivem numa escala de **grafite dedicada**, independente da família de `primary` — o azul
  * aparece só em `primary`/`secondary`, nunca "tingindo" o fundo neutro. Valores convertidos e
  * validados em `apps/web/src/app/(app)/design-system/_lib/tokens.ts` (`PROPOSED_TOKENS`),

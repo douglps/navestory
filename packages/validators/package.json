@@ -1,5 +1,5 @@
 {
-  "name": "@nave/validators",
+  "name": "@navestory/validators",
   "private": true,
   "version": "0.0.0",
   "main": "./dist/index.js",

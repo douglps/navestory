@@ -1,7 +1,10 @@
 "use client";
 
-import { createVehicleInputSchema, type CreateVehicleInput } from "@nave/validators";
-import { Alert, Button, Combobox, Container, Input } from "@nave/ui";
+import {
+  createVehicleInputSchema,
+  type CreateVehicleInput,
+} from "@navestory/validators";
+import { Alert, Button, Combobox, Container, Input } from "@navestory/ui";
 import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent, type ReactNode } from "react";
@@ -29,7 +32,8 @@ export default function NewVehiclePage(): ReactNode {
   const [make, setMake] = useState("");
   const [model, setModel] = useState("");
   const [year, setYear] = useState("");
-  const [vehicleType, setVehicleType] = useState<CreateVehicleInput["vehicle_type"]>("carro");
+  const [vehicleType, setVehicleType] =
+    useState<CreateVehicleInput["vehicle_type"]>("carro");
   const [fieldError, setFieldError] = useState<string | null>(null);
 
   const mutation = useMutation({
@@ -70,7 +74,12 @@ export default function NewVehiclePage(): ReactNode {
         />
 
         <label htmlFor="make">Marca</label>
-        <Input id="make" value={make} onChange={(event) => setMake(event.target.value)} required />
+        <Input
+          id="make"
+          value={make}
+          onChange={(event) => setMake(event.target.value)}
+          required
+        />
 
         <label htmlFor="model">Modelo</label>
         <Input
@@ -92,7 +101,10 @@ export default function NewVehiclePage(): ReactNode {
         <span className="text-sm font-medium">Tipo</span>
         <Combobox
           aria-label="Tipo"
-          options={VEHICLE_TYPES.map((type) => ({ value: type.value, label: type.label }))}
+          options={VEHICLE_TYPES.map((type) => ({
+            value: type.value,
+            label: type.label,
+          }))}
           value={vehicleType}
           onValueChange={(value) =>
             setVehicleType(value as CreateVehicleInput["vehicle_type"])
@@ -103,7 +115,12 @@ export default function NewVehiclePage(): ReactNode {
         />
 
         {fieldError && <Alert variant="error" description={fieldError} />}
-        {mutation.isError && <Alert variant="error" description="Não foi possível cadastrar o veículo." />}
+        {mutation.isError && (
+          <Alert
+            variant="error"
+            description="Não foi possível cadastrar o veículo."
+          />
+        )}
 
         <Button type="submit" disabled={mutation.isPending}>
           {mutation.isPending ? "Salvando..." : "Cadastrar"}

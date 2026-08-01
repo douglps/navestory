@@ -1,6 +1,14 @@
 import type { ReactNode } from "react";
-import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import type { VehicleTco } from "@nave/validators";
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
+import type { VehicleTco } from "@navestory/validators";
 import { CHART_CATEGORY_COLORS } from "@/lib/chart-colors";
 
 function currency(value: number): string {
@@ -21,15 +29,25 @@ const BREAKDOWN_LABEL: Record<keyof VehicleTco["breakdown"], string> = {
  * Extraído de apps/web/src/app/(app)/analytics/page.tsx (T6.1) para ser reaproveitado pelo
  * VehicleSpotlight (Sprint 2 do dashboard) sem duplicar a lógica de apresentação do breakdown.
  */
-export function TcoBreakdownChart({ breakdown }: { breakdown: VehicleTco["breakdown"] }): ReactNode {
+export function TcoBreakdownChart({
+  breakdown,
+}: {
+  breakdown: VehicleTco["breakdown"];
+}): ReactNode {
   // Defesa contra `breakdown` ausente/malformado (ex: resposta de API antiga presa no cache do
   // Service Worker — StaleWhileRevalidate, SPEC-20260712-001 RF-08 — servida antes de um fix de
   // contrato de API): o TypeScript garante o formato em tempo de build, não em runtime.
   if (!breakdown) {
-    return <p className="text-sm text-muted-foreground">Não foi possível carregar o breakdown de custos.</p>;
+    return (
+      <p className="text-sm text-muted-foreground">
+        Não foi possível carregar o breakdown de custos.
+      </p>
+    );
   }
 
-  const data = (Object.keys(breakdown) as Array<keyof VehicleTco["breakdown"]>).map(
+  const data = (
+    Object.keys(breakdown) as Array<keyof VehicleTco["breakdown"]>
+  ).map(
     // eslint-disable-next-line security/detect-object-injection -- key é keyof VehicleTco["breakdown"], união fixa de 5 literais
     (key) => ({ category: BREAKDOWN_LABEL[key], amount: breakdown[key] }),
   );
@@ -39,7 +57,10 @@ export function TcoBreakdownChart({ breakdown }: { breakdown: VehicleTco["breakd
       <div aria-hidden="true" className="h-64">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data}>
-            <CartesianGrid strokeDasharray="3 3" stroke="oklch(var(--chart-grid))" />
+            <CartesianGrid
+              strokeDasharray="3 3"
+              stroke="oklch(var(--chart-grid))"
+            />
             <XAxis dataKey="category" />
             <YAxis />
             <Tooltip formatter={(value) => currency(Number(value))} />
@@ -49,9 +70,13 @@ export function TcoBreakdownChart({ breakdown }: { breakdown: VehicleTco["breakd
       </div>
 
       <details>
-        <summary className="cursor-pointer text-sm text-muted-foreground">Ver dados em tabela</summary>
+        <summary className="cursor-pointer text-sm text-muted-foreground">
+          Ver dados em tabela
+        </summary>
         <table className="mt-2 w-full text-sm">
-          <caption className="sr-only">Breakdown de custo por categoria</caption>
+          <caption className="sr-only">
+            Breakdown de custo por categoria
+          </caption>
           <thead>
             <tr className="text-left text-muted-foreground">
               <th scope="col">Categoria</th>

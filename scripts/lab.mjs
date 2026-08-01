@@ -6,7 +6,7 @@
  * idempotente) e então inicia api+web em paralelo (turbo run dev).
  *
  * Decisão de 2026-07-19: o dev local passou a apontar para o projeto Supabase remoto
- * (`Nave`) por padrão — o banco local via Docker causava drift de migrations/dados
+ * (`navestory`) por padrão — o banco local via Docker causava drift de migrations/dados
  * temporários difíceis de reproduzir. `supabase start` só roda se `SUPABASE_URL` em
  * `apps/api/.env` apontar para localhost/127.0.0.1 (ou o arquivo não existir ainda),
  * então o script continua funcionando para quem preferir voltar ao banco local.
@@ -29,7 +29,9 @@ const isWindows = process.platform === "win32";
 function killPort(port) {
   try {
     if (isWindows) {
-      const output = execSync(`netstat -ano | findstr :${port}`, { encoding: "utf-8" });
+      const output = execSync(`netstat -ano | findstr :${port}`, {
+        encoding: "utf-8",
+      });
       const pids = new Set(
         output
           .split("\n")
@@ -81,7 +83,9 @@ if (usesLocalSupabase()) {
     process.exit(1);
   }
 } else {
-  console.log("\napps/api/.env aponta para um Supabase remoto — pulando `supabase start`.");
+  console.log(
+    "\napps/api/.env aponta para um Supabase remoto — pulando `supabase start`.",
+  );
 }
 
 console.log("\nSubindo apps/api + apps/web (turbo run dev)...\n");

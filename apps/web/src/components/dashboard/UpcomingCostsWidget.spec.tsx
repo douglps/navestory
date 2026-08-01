@@ -1,6 +1,6 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { UpcomingCostItem } from "@nave/validators";
+import type { UpcomingCostItem } from "@navestory/validators";
 import { QueryProvider } from "@/lib/query/providers";
 import { UpcomingCostsWidget } from "./UpcomingCostsWidget";
 
@@ -36,7 +36,8 @@ function isoInDays(days: number): string {
 
 function mockApi(items: UpcomingCostItem[]) {
   vi.mocked(apiClient).mockImplementation((path: string) => {
-    if (path.startsWith("/expenses/upcoming")) return Promise.resolve(items) as never;
+    if (path.startsWith("/expenses/upcoming"))
+      return Promise.resolve(items) as never;
     return Promise.reject(new Error(`unmocked path: ${path}`));
   });
 }
@@ -59,7 +60,9 @@ describe("UpcomingCostsWidget", () => {
     renderWidget();
 
     await waitFor(() => {
-      expect(apiClient).toHaveBeenCalledWith("/expenses/upcoming?horizon_days=7&limit=10");
+      expect(apiClient).toHaveBeenCalledWith(
+        "/expenses/upcoming?horizon_days=7&limit=10",
+      );
     });
   });
 
@@ -67,14 +70,21 @@ describe("UpcomingCostsWidget", () => {
     mockApi([]);
     renderWidget();
 
-    expect(await screen.findByText("Nenhum compromisso nos próximos 7 dias.")).toBeInTheDocument();
+    expect(
+      await screen.findByText("Nenhum compromisso nos próximos 7 dias."),
+    ).toBeInTheDocument();
   });
 
   it("US-09: exibe título, veículo e valor total agregado", async () => {
-    mockApi([item({ due_date: isoInDays(1), amount: 100 }), item({ source_id: "m2", due_date: isoInDays(4), amount: 50 })]);
+    mockApi([
+      item({ due_date: isoInDays(1), amount: 100 }),
+      item({ source_id: "m2", due_date: isoInDays(4), amount: 50 }),
+    ]);
     renderWidget();
 
-    expect((await screen.findAllByText(/Troca de óleo/)).length).toBeGreaterThan(0);
+    expect(
+      (await screen.findAllByText(/Troca de óleo/)).length,
+    ).toBeGreaterThan(0);
     expect(screen.getByText("R$ 150,00")).toBeInTheDocument();
   });
 
@@ -104,7 +114,9 @@ describe("UpcomingCostsWidget", () => {
 
   it("US-09, P6: exibe link 'Ver todos' quando atinge o teto de 10 itens", async () => {
     mockApi(
-      Array.from({ length: 10 }, (_, i) => item({ source_id: `m${i}`, due_date: isoInDays(i % 7) })),
+      Array.from({ length: 10 }, (_, i) =>
+        item({ source_id: `m${i}`, due_date: isoInDays(i % 7) }),
+      ),
     );
     renderWidget();
 
@@ -117,6 +129,8 @@ describe("UpcomingCostsWidget", () => {
     renderWidget();
 
     await screen.findByText(/Troca de óleo/);
-    expect(screen.queryByRole("link", { name: "Ver todos" })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("link", { name: "Ver todos" }),
+    ).not.toBeInTheDocument();
   });
 });

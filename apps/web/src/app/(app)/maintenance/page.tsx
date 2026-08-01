@@ -3,7 +3,13 @@
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { Alert, Badge, Container, EmptyState, type BadgeProps } from "@nave/ui";
+import {
+  Alert,
+  Badge,
+  Container,
+  EmptyState,
+  type BadgeProps,
+} from "@navestory/ui";
 import { apiClient } from "@/lib/http/api-client";
 import { useVehicleContext } from "@/lib/context/use-vehicle-context";
 import { formatDateInTz } from "@/lib/datetime-tz";
@@ -28,7 +34,10 @@ interface Vehicle {
 
 function vehicleLabel(vehicle: Vehicle | undefined): string {
   if (!vehicle) return "—";
-  return vehicle.nickname ?? (`${vehicle.make ?? ""} ${vehicle.model ?? ""}`.trim() || vehicle.plate);
+  return (
+    vehicle.nickname ??
+    (`${vehicle.make ?? ""} ${vehicle.model ?? ""}`.trim() || vehicle.plate)
+  );
 }
 
 function currency(value: number): string {
@@ -42,7 +51,10 @@ const STATUS_LABEL: Record<Maintenance["status"], string> = {
   cancelled: "Cancelada",
 };
 
-const STATUS_VARIANT: Record<Maintenance["status"], NonNullable<BadgeProps["variant"]>> = {
+const STATUS_VARIANT: Record<
+  Maintenance["status"],
+  NonNullable<BadgeProps["variant"]>
+> = {
   scheduled: "info",
   in_progress: "warning",
   completed: "success",
@@ -72,13 +84,17 @@ export default function MaintenancePage(): ReactNode {
   const { data: preferences } = usePreferences();
   const tz = preferences?.timezone;
 
-  const vehicleById = new Map((vehicles ?? []).map((vehicle) => [vehicle.id, vehicle]));
+  const vehicleById = new Map(
+    (vehicles ?? []).map((vehicle) => [vehicle.id, vehicle]),
+  );
 
   // @spec SPEC-20260721-001 RF-05 — filtra pela seleção global de veículo em foco (modo "single").
   const { selectionMode, activeVehicleId } = useVehicleContext();
   const visibleMaintenances =
     selectionMode === "single" && activeVehicleId != null
-      ? maintenances?.filter((maintenance) => maintenance.vehicle_id === activeVehicleId)
+      ? maintenances?.filter(
+          (maintenance) => maintenance.vehicle_id === activeVehicleId,
+        )
       : maintenances;
 
   return (
@@ -89,7 +105,12 @@ export default function MaintenancePage(): ReactNode {
       </div>
 
       {isLoading && <p>Carregando...</p>}
-      {isError && <Alert variant="error" description="Não foi possível carregar as manutenções." />}
+      {isError && (
+        <Alert
+          variant="error"
+          description="Não foi possível carregar as manutenções."
+        />
+      )}
       {!isLoading && !isError && visibleMaintenances?.length === 0 && (
         <EmptyState size="sm" title="Nenhuma manutenção agendada ainda." />
       )}
@@ -97,17 +118,23 @@ export default function MaintenancePage(): ReactNode {
       <ul className="flex flex-col gap-2">
         {visibleMaintenances?.map((maintenance) => (
           <li key={maintenance.id}>
-            <Link href={`/maintenance/${maintenance.id}`} className="flex items-center justify-between gap-4">
+            <Link
+              href={`/maintenance/${maintenance.id}`}
+              className="flex items-center justify-between gap-4"
+            >
               <div>
                 <p>
-                  {formatDateInTz(maintenance.scheduled_date, tz)} — {maintenance.description}
+                  {formatDateInTz(maintenance.scheduled_date, tz)} —{" "}
+                  {maintenance.description}
                 </p>
                 <p className="text-xs text-muted-foreground">
                   {vehicleLabel(vehicleById.get(maintenance.vehicle_id))}
                 </p>
               </div>
               <div className="flex items-center gap-2">
-                {maintenance.cost != null && <span>{currency(maintenance.cost)}</span>}
+                {maintenance.cost != null && (
+                  <span>{currency(maintenance.cost)}</span>
+                )}
                 <Badge variant={STATUS_VARIANT[maintenance.status]}>
                   {STATUS_LABEL[maintenance.status]}
                 </Badge>

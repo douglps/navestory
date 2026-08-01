@@ -10,7 +10,12 @@ import {
   UseGuards,
   UsePipes,
 } from "@nestjs/common";
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from "@nestjs/swagger";
 import type { Request } from "express";
 import { UserId } from "../../common/decorators/user-id.decorator";
 import { SupabaseAuthGuard } from "../../common/guards/supabase-auth.guard";
@@ -43,7 +48,12 @@ export class OdometerCyclesController {
     @Body() dto: CreateOdometerCycleDto,
   ) {
     const accessToken = this.extractAccessToken(req);
-    const cycle = await this.odometerCyclesService.create(accessToken, userId, vehicleId, dto);
+    const cycle = await this.odometerCyclesService.create(
+      accessToken,
+      userId,
+      vehicleId,
+      dto,
+    );
     return { data: cycle };
   }
 
@@ -73,7 +83,9 @@ export class OdometerCyclesController {
     if (header?.startsWith("Bearer ")) {
       return header.slice("Bearer ".length);
     }
-    const cookieToken = req.cookies?.nave_access_token as string | undefined;
+    const cookieToken = req.cookies?.navestory_access_token as
+      | string
+      | undefined;
     if (cookieToken) {
       return cookieToken;
     }

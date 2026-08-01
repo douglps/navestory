@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Tabs } from "@nave/ui";
+import { Tabs } from "@navestory/ui";
 import { DesignSystemScope } from "./_components/design-system-scope";
 import { FundamentosSection } from "./_components/sections/fundamentos";
 import { CoresTokensSection } from "./_components/sections/cores-tokens";
@@ -59,16 +59,21 @@ export default function DesignSystemPage() {
       <div className="mx-auto flex max-w-6xl flex-col gap-6 p-6">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Design System</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Design System
+            </p>
             <h1 className="text-2xl font-bold">Azul-Índigo</h1>
             <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-              Direção aprovada em 2026-07-30. Componentes reais de @nave/ui, re-temizados localmente —
-              nenhum token de produção foi alterado.
+              Direção aprovada em 2026-07-30. Componentes reais de
+              @navestory/ui, re-temizados localmente — nenhum token de produção
+              foi alterado.
             </p>
           </div>
           <button
             type="button"
-            onClick={() => setMode((current) => (current === "light" ? "dark" : "light"))}
+            onClick={() =>
+              setMode((current) => (current === "light" ? "dark" : "light"))
+            }
             className="inline-flex items-center gap-2 rounded-md border border-border bg-card px-3 py-1.5 text-sm font-medium"
           >
             {mode === "dark" ? "🌙 Escuro" : "☀️ Claro"}
@@ -76,7 +81,13 @@ export default function DesignSystemPage() {
         </div>
 
         <div className="overflow-x-auto">
-          <Tabs items={[...TABS]} value={tab} onValueChange={(v) => setTab(v as TabValue)} variant="underline" aria-label="Seções do design system" />
+          <Tabs
+            items={[...TABS]}
+            value={tab}
+            onValueChange={(v) => setTab(v as TabValue)}
+            variant="underline"
+            aria-label="Seções do design system"
+          />
         </div>
 
         <div className="pb-16">
@@ -90,7 +101,12 @@ export default function DesignSystemPage() {
           {tab === "dados" && <DadosSection />}
           {tab === "navegacao" && <NavegacaoSection />}
           {tab === "iconografia" && <IconografiaSection />}
-          {tab === "motion" && <MotionSection reducedMotion={reducedMotion} onToggleReducedMotion={setReducedMotion} />}
+          {tab === "motion" && (
+            <MotionSection
+              reducedMotion={reducedMotion}
+              onToggleReducedMotion={setReducedMotion}
+            />
+          )}
           {tab === "voz" && <VozSection />}
           {tab === "acessibilidade" && <AcessibilidadeSection />}
           {tab === "governanca" && <GovernancaSection />}

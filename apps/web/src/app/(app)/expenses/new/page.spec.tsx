@@ -21,8 +21,19 @@ vi.mock("@/lib/http/api-client", async () => {
 import { apiClient } from "@/lib/http/api-client";
 
 const VEHICLE_ID = "11111111-1111-4111-8111-111111111111";
-const vehicles = [{ id: VEHICLE_ID, plate: "ABC1234", make: "Fiat", model: "Uno", nickname: null }];
-const categories = { default: [{ value: "fuel", label: "Combustível" }], custom: [] };
+const vehicles = [
+  {
+    id: VEHICLE_ID,
+    plate: "ABC1234",
+    make: "Fiat",
+    model: "Uno",
+    nickname: null,
+  },
+];
+const categories = {
+  default: [{ value: "fuel", label: "Combustível" }],
+  custom: [],
+};
 
 const TEMPLATE_ID = "22222222-2222-4222-8222-222222222222";
 const templates = [
@@ -44,7 +55,10 @@ function typeDigits(input: HTMLElement, digits: string): void {
 }
 
 /** Abre o Combobox pelo aria-label e seleciona a opção com o texto informado. */
-async function selectCombobox(label: string, optionText: string): Promise<void> {
+async function selectCombobox(
+  label: string,
+  optionText: string,
+): Promise<void> {
   const user = userEvent.setup();
   await user.click(screen.getByLabelText(label));
   await user.click(await screen.findByRole("option", { name: optionText }));
@@ -52,7 +66,11 @@ async function selectCombobox(label: string, optionText: string): Promise<void> 
 
 /** Aguarda a lista de veículos carregar (Combobox sai do estado "Carregando..."). */
 async function waitForVehiclesLoaded(): Promise<void> {
-  await waitFor(() => expect(screen.getByLabelText("Veículo *")).not.toHaveTextContent("Carregando"));
+  await waitFor(() =>
+    expect(screen.getByLabelText("Veículo *")).not.toHaveTextContent(
+      "Carregando",
+    ),
+  );
 }
 
 function mockLookups(options?: { templates?: typeof templates }) {
@@ -62,7 +80,8 @@ function mockLookups(options?: { templates?: typeof templates }) {
     if (path === "/expense-templates") {
       return Promise.resolve({ data: options?.templates ?? [] }) as never;
     }
-    if (path === "/expenses/suppliers") return Promise.resolve({ data: [] }) as never;
+    if (path === "/expenses/suppliers")
+      return Promise.resolve({ data: [] }) as never;
     return Promise.resolve({ id: "e1" }) as never;
   });
 }
@@ -102,7 +121,9 @@ describe("NewExpensePage", () => {
 
     await fillValidForm();
     for (let i = 0; i < 5; i++) {
-      fireEvent.keyDown(screen.getByLabelText("Valor (R$) *"), { key: "Backspace" });
+      fireEvent.keyDown(screen.getByLabelText("Valor (R$) *"), {
+        key: "Backspace",
+      });
     }
     typeDigits(screen.getByLabelText("Valor (R$) *"), "0");
     fireEvent.click(screen.getByRole("button", { name: "Registrar" }));
@@ -122,7 +143,11 @@ describe("NewExpensePage", () => {
       "/expenses?strict=true",
       expect.objectContaining({
         method: "POST",
-        body: expect.objectContaining({ vehicle_id: VEHICLE_ID, category: "fuel", amount: 150 }),
+        body: expect.objectContaining({
+          vehicle_id: VEHICLE_ID,
+          category: "fuel",
+          amount: 150,
+        }),
       }),
     );
   });
@@ -131,7 +156,9 @@ describe("NewExpensePage", () => {
     mockLookups();
     renderPage();
 
-    expect(await screen.findByText("Nenhum modelo ainda. Toque em + para criar.")).toBeInTheDocument();
+    expect(
+      await screen.findByText("Nenhum modelo ainda. Toque em + para criar."),
+    ).toBeInTheDocument();
   });
 
   it("aplica modelo preenchendo os campos e dispara touch (RF-03, RF-04, RF-08)", async () => {
@@ -144,12 +171,17 @@ describe("NewExpensePage", () => {
     fireEvent.click(card);
 
     await waitFor(() =>
-      expect(apiClient).toHaveBeenCalledWith(`/expense-templates/${TEMPLATE_ID}/touch`, {
-        method: "PATCH",
-      }),
+      expect(apiClient).toHaveBeenCalledWith(
+        `/expense-templates/${TEMPLATE_ID}/touch`,
+        {
+          method: "PATCH",
+        },
+      ),
     );
     expect(screen.getByLabelText("Veículo *")).toHaveTextContent("Fiat Uno");
-    expect(screen.getByLabelText("Categoria *")).toHaveTextContent("Combustível");
+    expect(screen.getByLabelText("Categoria *")).toHaveTextContent(
+      "Combustível",
+    );
     expect(screen.getByLabelText("Valor (R$) *")).toHaveValue("120,00");
   });
 
@@ -161,9 +193,15 @@ describe("NewExpensePage", () => {
     vi.mocked(apiClient).mockImplementation((path: string) => {
       if (path === "/vehicles") return Promise.resolve(vehicles) as never;
       if (path === "/categories") return Promise.resolve(categories) as never;
-      if (path === "/expense-templates") return Promise.resolve({ data: [] }) as never;
-      if (path === "/expenses/suppliers") return Promise.resolve({ data: [] }) as never;
-      return Promise.resolve({ id: "e1", duplicate_warning: true, duplicate_id: DUPLICATE_ID }) as never;
+      if (path === "/expense-templates")
+        return Promise.resolve({ data: [] }) as never;
+      if (path === "/expenses/suppliers")
+        return Promise.resolve({ data: [] }) as never;
+      return Promise.resolve({
+        id: "e1",
+        duplicate_warning: true,
+        duplicate_id: DUPLICATE_ID,
+      }) as never;
     });
     renderPage();
 
@@ -173,10 +211,9 @@ describe("NewExpensePage", () => {
     const alert = await screen.findByRole("alert");
     expect(alert).toHaveTextContent("já existe");
     expect(pushMock).not.toHaveBeenCalled();
-    expect(screen.getByRole("link", { name: "Ver despesa duplicada" })).toHaveAttribute(
-      "href",
-      `/expenses/${DUPLICATE_ID}`,
-    );
+    expect(
+      screen.getByRole("link", { name: "Ver despesa duplicada" }),
+    ).toHaveAttribute("href", `/expenses/${DUPLICATE_ID}`);
 
     fireEvent.click(screen.getByRole("button", { name: "Entendido" }));
     expect(pushMock).toHaveBeenCalledWith("/expenses");
@@ -193,9 +230,13 @@ describe("NewExpensePage", () => {
     fireEvent.change(screen.getByLabelText("Data e hora *"), {
       target: { value: "2026-06-12T10:00" },
     });
-    fireEvent.change(screen.getByLabelText("Ano"), { target: { value: "2023" } });
+    fireEvent.change(screen.getByLabelText("Ano"), {
+      target: { value: "2023" },
+    });
 
-    expect(screen.getByLabelText("Data e hora *")).toHaveValue("2023-06-12T10:00");
+    expect(screen.getByLabelText("Data e hora *")).toHaveValue(
+      "2023-06-12T10:00",
+    );
   });
 
   /**
@@ -263,7 +304,10 @@ describe("NewExpensePage", () => {
         "/expense-templates",
         expect.objectContaining({
           method: "POST",
-          body: expect.objectContaining({ name: "Modelo Teste", vehicle_id: VEHICLE_ID }),
+          body: expect.objectContaining({
+            name: "Modelo Teste",
+            vehicle_id: VEHICLE_ID,
+          }),
         }),
       ),
     );
@@ -280,7 +324,9 @@ describe("NewExpensePage", () => {
     });
     renderPage();
 
-    expect(await screen.findByText("Nenhum veículo cadastrado")).toBeInTheDocument();
+    expect(
+      await screen.findByText("Nenhum veículo cadastrado"),
+    ).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Cadastrar veículo" }));
     expect(pushMock).toHaveBeenCalledWith("/vehicles/new");
     expect(screen.queryByLabelText("Veículo *")).not.toBeInTheDocument();
@@ -339,19 +385,28 @@ describe("NewExpensePage", () => {
     await waitForVehiclesLoaded();
     await selectCombobox("Veículo *", "Fiat Uno");
 
-    expect(await screen.findByText(/Selecionado manualmente/)).toBeInTheDocument();
-    expect(screen.queryByText(/Herdado do contexto em foco/)).not.toBeInTheDocument();
+    expect(
+      await screen.findByText(/Selecionado manualmente/),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText(/Herdado do contexto em foco/),
+    ).not.toBeInTheDocument();
   });
 
   /**
    * @spec SPEC-20260602-001 RF-12
    */
   it("modo none: exibe os veículos recentes como atalhos", async () => {
-    localStorage.setItem("nave-recent-vehicle-ids", JSON.stringify([VEHICLE_ID]));
+    localStorage.setItem(
+      "navestory-recent-vehicle-ids",
+      JSON.stringify([VEHICLE_ID]),
+    );
     mockLookups();
     renderPage();
 
-    expect(await screen.findByRole("button", { name: "Fiat Uno" })).toBeInTheDocument();
+    expect(
+      await screen.findByRole("button", { name: "Fiat Uno" }),
+    ).toBeInTheDocument();
   });
 
   /**
@@ -365,12 +420,18 @@ describe("NewExpensePage", () => {
     await selectCombobox("Veículo *", "Fiat Uno");
     expect(screen.getByLabelText("Veículo *")).toHaveTextContent("Fiat Uno");
 
-    useDashboardStore.getState().setActiveVehicle("99999999-9999-4999-8999-999999999999");
+    useDashboardStore
+      .getState()
+      .setActiveVehicle("99999999-9999-4999-8999-999999999999");
 
-    expect(await screen.findByText("O contexto ativo mudou.")).toBeInTheDocument();
+    expect(
+      await screen.findByText("O contexto ativo mudou."),
+    ).toBeInTheDocument();
     expect(screen.getByLabelText("Veículo *")).toHaveTextContent("Fiat Uno");
 
     fireEvent.click(screen.getByRole("button", { name: "Atualizar campo" }));
-    expect(screen.queryByText("O contexto ativo mudou.")).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("O contexto ativo mudou."),
+    ).not.toBeInTheDocument();
   });
 });

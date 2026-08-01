@@ -13,13 +13,13 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
 // @spec SPEC-20260712-001 RF-01
 export const metadata: Metadata = {
-  title: "Nave",
+  title: "navestory",
   description: "Gestão inteligente de veículos",
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "Nave",
+    title: "navestory",
   },
 };
 
@@ -29,7 +29,11 @@ export const viewport: Viewport = {
   themeColor: "#004FB5",
 };
 
-export default function RootLayout({ children }: { children: ReactNode }): ReactNode {
+export default function RootLayout({
+  children,
+}: {
+  children: ReactNode;
+}): ReactNode {
   return (
     // @spec SPEC-20260721-001 RF-03 — `suppressHydrationWarning`: o next-themes injeta a
     // classe `.dark` no <html> antes da hidratação para evitar flash de tema errado, o que

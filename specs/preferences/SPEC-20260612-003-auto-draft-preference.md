@@ -24,13 +24,16 @@ Pedido do usuário (2026-06-12): o rascunho automático (`useFormDraftGuard`/`Fo
 ## 3. RF-01 — Nova preferência `auto_draft_enabled`
 
 **RF-01.1** — Nova coluna em `user_preferences`:
+
 ```sql
 alter table public.user_preferences
   add column auto_draft_enabled boolean not null default false;
 ```
+
 Migração nova em `supabase/migrations/`, seguindo o padrão de `20260604000000_user_preferences.sql` (RLS já cobre a tabela — sem novas policies).
 
 **RF-01.2** — `packages/validators/src/display-preferences.schema.ts` recebe novo campo:
+
 ```ts
 export const displayPreferencesSchema = z.object({
   vehicle_chip_fields: chipFieldsSchema,
@@ -58,7 +61,8 @@ export const DEFAULT_AUTO_DRAFT_ENABLED = false;
 **RF-03.1** — `ExpenseForm` recebe a preferência `auto_draft_enabled` (via prop, carregada pelo server component/page que renderiza o formulário, mesmo padrão de `customCategories`/`templates`).
 
 **RF-03.2** — Quando `auto_draft_enabled === false` (default):
-- `useFormDraftGuard` não é chamado (ou é chamado em modo no-op) — nenhum listener de `beforeunload`/`nave:session-expiring` é registrado, nenhuma leitura/escrita em `sessionStorage`.
+
+- `useFormDraftGuard` não é chamado (ou é chamado em modo no-op) — nenhum listener de `beforeunload`/`navestory:session-expiring` é registrado, nenhuma leitura/escrita em `sessionStorage`.
 - `<FormDraftGuard wasRestored={...} />` não é renderizado.
 
 **RF-03.3** — Quando `auto_draft_enabled === true`, o comportamento atual (restaurar/salvar rascunho em `sessionStorage`) é mantido sem alterações.
@@ -66,16 +70,17 @@ export const DEFAULT_AUTO_DRAFT_ENABLED = false;
 **RF-03.4** — `clearDraft()` (chamado em `onSubmit` e no botão "Cancelar") continua sendo seguro de chamar mesmo com a preferência desativada (no-op se nunca houve rascunho).
 
 **Critério de aceite:**
-- Preferência desativada (default): preencher parcialmente o formulário de Nova Despesa e recarregar a página → formulário aparece vazio, nenhuma chave `nave_form_draft_*` é criada em `sessionStorage`.
+
+- Preferência desativada (default): preencher parcialmente o formulário de Nova Despesa e recarregar a página → formulário aparece vazio, nenhuma chave `navestory_form_draft_*` é criada em `sessionStorage`.
 - Preferência ativada: mesmo cenário restaura os dados preenchidos (comportamento atual).
 
 ---
 
 ## 6. Regras Novas (specs/RULES.md)
 
-| ID | Regra | Mudança |
-|----|-------|---------|
-| **R-PREF-02** (novo) | `auto_draft_enabled` controla se formulários (iniciando por `ExpenseForm`) persistem rascunho em `sessionStorage`; default `false` (sem rascunho). Aplica R-PREF-01 (default seguro, ausência de registro não causa erro) | Novo |
+| ID                   | Regra                                                                                                                                                                                                                     | Mudança |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
+| **R-PREF-02** (novo) | `auto_draft_enabled` controla se formulários (iniciando por `ExpenseForm`) persistem rascunho em `sessionStorage`; default `false` (sem rascunho). Aplica R-PREF-01 (default seguro, ausência de registro não causa erro) | Novo    |
 
 ---
 
@@ -92,7 +97,8 @@ export const DEFAULT_AUTO_DRAFT_ENABLED = false;
 ---
 
 ## Histórico de Revisões
-| Versão | Data | Autor | Mudanças |
-|--------|------|-------|---------|
-| 1.0 | 2026-06-12 | douglps | Criação inicial |
-| 1.1 | 2026-07-14 | Douglas Lopes (lps.doug@protonmail.com) | RF-01 (coluna `auto_draft_enabled`) e RF-02 (toggle em Preferências) implementados. A coluna já existia na migration consolidada `20260712171846_grouping_templates_preferences.sql` (RF-01.1 satisfeito antecipadamente). RF-01.2/RF-01.3 implementados como `packages/validators/src/preferences.schemas.ts` + módulo NestJS REST `apps/api/src/modules/preferences` (`GET`/`PATCH /preferences`), não como server actions Next.js — decisão confirmada com o usuário para manter consistência com o padrão REST + React Query já estabelecido em T2.1–T2.4 (ver changelog de SPEC-20260603-004). RF-02 implementado em `apps/web/src/app/settings/preferences/page.tsx`. RF-03 (integração com `ExpenseForm`) permanece ⏳ — `ExpenseForm` ainda não existe (depende da Fase 3, módulo de despesas). |
+
+| Versão | Data       | Autor                                   | Mudanças                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| ------ | ---------- | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1.0    | 2026-06-12 | douglps                                 | Criação inicial                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| 1.1    | 2026-07-14 | Douglas Lopes (lps.doug@protonmail.com) | RF-01 (coluna `auto_draft_enabled`) e RF-02 (toggle em Preferências) implementados. A coluna já existia na migration consolidada `20260712171846_grouping_templates_preferences.sql` (RF-01.1 satisfeito antecipadamente). RF-01.2/RF-01.3 implementados como `packages/validators/src/preferences.schemas.ts` + módulo NestJS REST `apps/api/src/modules/preferences` (`GET`/`PATCH /preferences`), não como server actions Next.js — decisão confirmada com o usuário para manter consistência com o padrão REST + React Query já estabelecido em T2.1–T2.4 (ver changelog de SPEC-20260603-004). RF-02 implementado em `apps/web/src/app/settings/preferences/page.tsx`. RF-03 (integração com `ExpenseForm`) permanece ⏳ — `ExpenseForm` ainda não existe (depende da Fase 3, módulo de despesas). |

@@ -4,7 +4,14 @@ import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState, type ReactNode } from "react";
-import { Alert, Button, Container, EmptyState, KpiCard, Tabs } from "@nave/ui";
+import {
+  Alert,
+  Button,
+  Container,
+  EmptyState,
+  KpiCard,
+  Tabs,
+} from "@navestory/ui";
 import { apiClient } from "@/lib/http/api-client";
 import { useVehicleContext } from "@/lib/context/use-vehicle-context";
 import { formatDateInTz } from "@/lib/datetime-tz";
@@ -49,7 +56,10 @@ interface ExpenseKpis {
 
 function vehicleLabel(vehicle: Vehicle | undefined): string {
   if (!vehicle) return "—";
-  return vehicle.nickname ?? (`${vehicle.make ?? ""} ${vehicle.model ?? ""}`.trim() || vehicle.plate);
+  return (
+    vehicle.nickname ??
+    (`${vehicle.make ?? ""} ${vehicle.model ?? ""}`.trim() || vehicle.plate)
+  );
 }
 
 function currency(value: number): string {
@@ -75,10 +85,26 @@ function daysUntil(dueDate: string): number {
  */
 function urgencyBadge(dueDate: string): { className: string; label: string } {
   const days = daysUntil(dueDate);
-  if (days < 0) return { className: "border-danger bg-danger-pastel text-foreground", label: "Vencido" };
-  if (days <= 7) return { className: "border-urgency-hot bg-urgency-hot-pastel text-foreground", label: `${days}d` };
-  if (days <= 30) return { className: "border-warning bg-warning-pastel text-foreground", label: `${days}d` };
-  if (days <= 60) return { className: "border-info bg-info-pastel text-foreground", label: `${days}d` };
+  if (days < 0)
+    return {
+      className: "border-danger bg-danger-pastel text-foreground",
+      label: "Vencido",
+    };
+  if (days <= 7)
+    return {
+      className: "border-urgency-hot bg-urgency-hot-pastel text-foreground",
+      label: `${days}d`,
+    };
+  if (days <= 30)
+    return {
+      className: "border-warning bg-warning-pastel text-foreground",
+      label: `${days}d`,
+    };
+  if (days <= 60)
+    return {
+      className: "border-info bg-info-pastel text-foreground",
+      label: `${days}d`,
+    };
   return { className: "border-muted text-muted-foreground", label: `${days}d` };
 }
 
@@ -101,11 +127,18 @@ function KpiCards({ kpis }: { kpis: ExpenseKpis | undefined }): ReactNode {
       <KpiCard
         title="Total este mês"
         value={currency(kpis.total_this_month)}
-        trend={kpis.delta_percent === null ? undefined : { value: kpis.delta_percent }}
+        trend={
+          kpis.delta_percent === null
+            ? undefined
+            : { value: kpis.delta_percent }
+        }
         reverseTrend
       />
       <div className="flex flex-col gap-1">
-        <KpiCard title="Próximos 30 dias" value={currency(kpis.upcoming_30_days_total)} />
+        <KpiCard
+          title="Próximos 30 dias"
+          value={currency(kpis.upcoming_30_days_total)}
+        />
         <p className="text-xs text-muted-foreground">
           {kpis.upcoming_30_days_count === 0
             ? "nenhum gasto previsto"
@@ -125,9 +158,18 @@ function KpiCards({ kpis }: { kpis: ExpenseKpis | undefined }): ReactNode {
  * já existe). `/maintenance` e `/settings` (Documentos) ainda não têm tela própria — mesma
  * técnica que a spec original previa para `recurring_cost` ("Em breve").
  */
-function UpcomingCostsTab({ items }: { items: UpcomingCostItem[] | undefined }): ReactNode {
+function UpcomingCostsTab({
+  items,
+}: {
+  items: UpcomingCostItem[] | undefined;
+}): ReactNode {
   if (!items || items.length === 0) {
-    return <EmptyState size="sm" title="Nenhuma despesa prevista no horizonte selecionado." />;
+    return (
+      <EmptyState
+        size="sm"
+        title="Nenhuma despesa prevista no horizonte selecionado."
+      />
+    );
   }
   return (
     <ul className="flex flex-col gap-2">
@@ -162,7 +204,13 @@ function UpcomingCostsTab({ items }: { items: UpcomingCostItem[] | undefined }):
                   Ver
                 </Link>
               ) : (
-                <Button type="button" variant="ghost" size="sm" disabled title="Em breve">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  disabled
+                  title="Em breve"
+                >
                   Ver
                 </Button>
               )}
@@ -183,7 +231,10 @@ interface VehicleGroup {
 /**
  * @spec SPEC-20260609-002 RF-02, RF-03
  */
-function groupByVehicle(expenses: Expense[], vehicleById: Map<string, Vehicle>): VehicleGroup[] {
+function groupByVehicle(
+  expenses: Expense[],
+  vehicleById: Map<string, Vehicle>,
+): VehicleGroup[] {
   const groups = new Map<string, VehicleGroup>();
   for (const expense of expenses) {
     if (!groups.has(expense.vehicle_id)) {
@@ -226,25 +277,35 @@ function ByVehicleTab({
         <p className="text-sm text-muted-foreground">Total geral</p>
         <p className="text-lg font-semibold">{currency(total)}</p>
         <p className="text-xs text-muted-foreground">
-          {groups.length} {groups.length === 1 ? "veículo" : "veículos"} · {expenses.length} registros
+          {groups.length} {groups.length === 1 ? "veículo" : "veículos"} ·{" "}
+          {expenses.length} registros
         </p>
       </div>
 
       {groups.map((group) => (
-        <details key={group.vehicle?.id ?? "sem-veiculo"} className="rounded border p-3">
+        <details
+          key={group.vehicle?.id ?? "sem-veiculo"}
+          className="rounded border p-3"
+        >
           <summary className="flex cursor-pointer items-center justify-between font-medium">
             <span>{vehicleLabel(group.vehicle)}</span>
             <span className="flex items-center gap-2">
-              <span className="rounded-full bg-muted px-1.5 text-xs">{group.items.length}</span>
+              <span className="rounded-full bg-muted px-1.5 text-xs">
+                {group.items.length}
+              </span>
               <span>{currency(group.subtotal)}</span>
             </span>
           </summary>
           <ul className="mt-2 flex flex-col gap-2">
             {group.items.map((expense) => (
               <li key={expense.id}>
-                <Link href={`/expenses/${expense.id}`} className="flex justify-between gap-4">
+                <Link
+                  href={`/expenses/${expense.id}`}
+                  className="flex justify-between gap-4"
+                >
                   <span>
-                    {formatDateInTz(expense.occurred_at, tz)} — {expense.category}
+                    {formatDateInTz(expense.occurred_at, tz)} —{" "}
+                    {expense.category}
                   </span>
                   <span>{currency(expense.amount)}</span>
                 </Link>
@@ -278,8 +339,11 @@ function ExpensesPageContent(): ReactNode {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const [activeTab, setActiveTab] = useState<"lista" | "proximas" | "por-veiculo">(
-    searchParams.get("tab") === "proximas" || searchParams.get("tab") === "por-veiculo"
+  const [activeTab, setActiveTab] = useState<
+    "lista" | "proximas" | "por-veiculo"
+  >(
+    searchParams.get("tab") === "proximas" ||
+      searchParams.get("tab") === "por-veiculo"
       ? (searchParams.get("tab") as "proximas" | "por-veiculo")
       : "lista",
   );
@@ -334,13 +398,16 @@ function ExpensesPageContent(): ReactNode {
     enabled: activeTab === "por-veiculo",
   });
 
-  const vehicleById = new Map((vehicles ?? []).map((vehicle) => [vehicle.id, vehicle]));
+  const vehicleById = new Map(
+    (vehicles ?? []).map((vehicle) => [vehicle.id, vehicle]),
+  );
 
   // @spec SPEC-20260721-001 RF-05 — quando o contexto global tem um único veículo em foco,
   // as listagens filtram automaticamente por ele. Nos demais modos (grupo/multi/atributo/nenhum)
   // a listagem não é restringida aqui — esses modos já têm resolução própria fora do escopo desta spec.
   const { selectionMode, activeVehicleId } = useVehicleContext();
-  const filterByActiveVehicle = selectionMode === "single" && activeVehicleId != null;
+  const filterByActiveVehicle =
+    selectionMode === "single" && activeVehicleId != null;
   const visibleExpenses = filterByActiveVehicle
     ? expenses?.filter((expense) => expense.vehicle_id === activeVehicleId)
     : expenses;
@@ -356,7 +423,10 @@ function ExpensesPageContent(): ReactNode {
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold">Despesas</h1>
         <div className="flex items-center gap-3">
-          <a href="/api/backend/expenses/export" download="nave-despesas-completo.csv">
+          <a
+            href="/api/backend/expenses/export"
+            download="navestory-despesas-completo.csv"
+          >
             Exportar CSV Completo
           </a>
           <Link href="/expenses/new">Nova despesa</Link>
@@ -371,12 +441,17 @@ function ExpensesPageContent(): ReactNode {
           {
             value: "proximas",
             label: "Próximas",
-            badge: kpis && kpis.upcoming_30_days_count > 0 ? kpis.upcoming_30_days_count : undefined,
+            badge:
+              kpis && kpis.upcoming_30_days_count > 0
+                ? kpis.upcoming_30_days_count
+                : undefined,
           },
           { value: "por-veiculo", label: "Por veículo" },
         ]}
         value={activeTab}
-        onValueChange={(value) => setTab(value as "lista" | "proximas" | "por-veiculo")}
+        onValueChange={(value) =>
+          setTab(value as "lista" | "proximas" | "por-veiculo")
+        }
         variant="underline"
         aria-label="Seções de despesas"
       />
@@ -384,7 +459,12 @@ function ExpensesPageContent(): ReactNode {
       {activeTab === "lista" && (
         <>
           {isLoading && <p>Carregando...</p>}
-          {isError && <Alert variant="error" description="Não foi possível carregar as despesas." />}
+          {isError && (
+            <Alert
+              variant="error"
+              description="Não foi possível carregar as despesas."
+            />
+          )}
           {!isLoading && !isError && visibleExpenses?.length === 0 && (
             <EmptyState size="sm" title="Nenhuma despesa registrada ainda." />
           )}
@@ -392,9 +472,14 @@ function ExpensesPageContent(): ReactNode {
           <ul className="flex flex-col gap-2">
             {visibleExpenses?.map((expense) => (
               <li key={expense.id}>
-                <Link href={`/expenses/${expense.id}`} className="flex justify-between gap-4">
+                <Link
+                  href={`/expenses/${expense.id}`}
+                  className="flex justify-between gap-4"
+                >
                   <span>
-                    {formatDateInTz(expense.occurred_at, tz)} — {expense.category} — {vehicleLabel(vehicleById.get(expense.vehicle_id))}
+                    {formatDateInTz(expense.occurred_at, tz)} —{" "}
+                    {expense.category} —{" "}
+                    {vehicleLabel(vehicleById.get(expense.vehicle_id))}
                   </span>
                   <span>{currency(expense.amount)}</span>
                 </Link>
@@ -407,7 +492,11 @@ function ExpensesPageContent(): ReactNode {
       {activeTab === "proximas" && <UpcomingCostsTab items={visibleUpcoming} />}
 
       {activeTab === "por-veiculo" && (
-        <ByVehicleTab expenses={visibleAllExpenses} vehicleById={vehicleById} tz={tz} />
+        <ByVehicleTab
+          expenses={visibleAllExpenses}
+          vehicleById={vehicleById}
+          tz={tz}
+        />
       )}
     </Container>
   );

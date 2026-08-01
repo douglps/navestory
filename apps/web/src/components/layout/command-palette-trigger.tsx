@@ -4,14 +4,17 @@ import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
-import type { CommandPaletteItem } from "@nave/ui";
+import type { CommandPaletteItem } from "@navestory/ui";
 import { apiClient } from "@/lib/http/api-client";
 
 // RNF-03: `CommandPalette` (e suas dependências `cmdk`/`@radix-ui/react-dialog`) fica em
 // chunk separado, buscado só na primeira abertura — não entra no bundle inicial do shell.
-const CommandPalette = dynamic(() => import("@nave/ui").then((mod) => mod.CommandPalette), {
-  ssr: false,
-});
+const CommandPalette = dynamic(
+  () => import("@navestory/ui").then((mod) => mod.CommandPalette),
+  {
+    ssr: false,
+  },
+);
 
 interface VehicleSummary {
   id: string;
@@ -66,7 +69,8 @@ export function CommandPaletteTrigger(): ReactNode {
 
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent): void {
-      const isShortcut = (event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k";
+      const isShortcut =
+        (event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k";
       if (!isShortcut) return;
       event.preventDefault();
       setOpen((current) => {
@@ -112,29 +116,38 @@ export function CommandPaletteTrigger(): ReactNode {
   });
 
   const allItems = useMemo<CommandPaletteItem[]>(() => {
-    const vehicleItems: CommandPaletteItem[] = (vehicles ?? []).map((vehicle) => ({
-      id: `vehicle-${vehicle.id}`,
-      category: "Veículos",
-      label: vehicle.nickname ?? (`${vehicle.make ?? ""} ${vehicle.model ?? ""}`.trim() || vehicle.plate),
-      description: vehicle.plate,
-      onSelect: () => router.push(`/vehicles/${vehicle.id}`),
-    }));
+    const vehicleItems: CommandPaletteItem[] = (vehicles ?? []).map(
+      (vehicle) => ({
+        id: `vehicle-${vehicle.id}`,
+        category: "Veículos",
+        label:
+          vehicle.nickname ??
+          (`${vehicle.make ?? ""} ${vehicle.model ?? ""}`.trim() ||
+            vehicle.plate),
+        description: vehicle.plate,
+        onSelect: () => router.push(`/vehicles/${vehicle.id}`),
+      }),
+    );
 
-    const expenseItems: CommandPaletteItem[] = (expenses ?? []).map((expense) => ({
-      id: `expense-${expense.id}`,
-      category: "Despesas",
-      label: expense.category,
-      description: expense.occurred_at.slice(0, 10),
-      onSelect: () => router.push(`/expenses/${expense.id}`),
-    }));
+    const expenseItems: CommandPaletteItem[] = (expenses ?? []).map(
+      (expense) => ({
+        id: `expense-${expense.id}`,
+        category: "Despesas",
+        label: expense.category,
+        description: expense.occurred_at.slice(0, 10),
+        onSelect: () => router.push(`/expenses/${expense.id}`),
+      }),
+    );
 
-    const maintenanceItems: CommandPaletteItem[] = (maintenances ?? []).map((maintenance) => ({
-      id: `maintenance-${maintenance.id}`,
-      category: "Manutenções",
-      label: maintenance.description,
-      description: maintenance.scheduled_date,
-      onSelect: () => router.push(`/maintenance/${maintenance.id}`),
-    }));
+    const maintenanceItems: CommandPaletteItem[] = (maintenances ?? []).map(
+      (maintenance) => ({
+        id: `maintenance-${maintenance.id}`,
+        category: "Manutenções",
+        label: maintenance.description,
+        description: maintenance.scheduled_date,
+        onSelect: () => router.push(`/maintenance/${maintenance.id}`),
+      }),
+    );
 
     const fineItems: CommandPaletteItem[] = (fines ?? []).map((fine) => ({
       id: `fine-${fine.id}`,
@@ -144,14 +157,21 @@ export function CommandPaletteTrigger(): ReactNode {
       onSelect: () => router.push(`/fines/${fine.id}`),
     }));
 
-    return [...vehicleItems, ...expenseItems, ...maintenanceItems, ...fineItems];
+    return [
+      ...vehicleItems,
+      ...expenseItems,
+      ...maintenanceItems,
+      ...fineItems,
+    ];
   }, [vehicles, expenses, maintenances, fines, router]);
 
   const filteredItems = useMemo(() => {
     if (query.length < 2) return [];
     const needle = normalize(query);
     return allItems.filter(
-      (item) => normalize(item.label).includes(needle) || normalize(item.description ?? "").includes(needle),
+      (item) =>
+        normalize(item.label).includes(needle) ||
+        normalize(item.description ?? "").includes(needle),
     );
   }, [allItems, query]);
 
@@ -167,7 +187,9 @@ export function CommandPaletteTrigger(): ReactNode {
       >
         <span aria-hidden="true">🔍</span>
         <span className="hidden sm:inline">Buscar...</span>
-        <kbd className="hidden rounded border border-border px-1.5 py-0.5 text-xs sm:inline">Ctrl K</kbd>
+        <kbd className="hidden rounded border border-border px-1.5 py-0.5 text-xs sm:inline">
+          Ctrl K
+        </kbd>
       </button>
 
       {hasOpenedOnce && (
@@ -181,7 +203,9 @@ export function CommandPaletteTrigger(): ReactNode {
           query={query}
           onQueryChange={setQuery}
           emptyMessage={
-            query.length < 2 ? "Digite ao menos 2 caracteres" : `Nenhum resultado para "${query}"`
+            query.length < 2
+              ? "Digite ao menos 2 caracteres"
+              : `Nenhum resultado para "${query}"`
           }
         />
       )}

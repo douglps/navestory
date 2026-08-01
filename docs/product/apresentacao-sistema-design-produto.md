@@ -1,6 +1,6 @@
-# Apresentação do Sistema Nave — Referência para Design e Produto
+# Apresentação do Sistema navestory — Referência para Design e Produto
 
-> **Propósito deste documento:** dar ao time de design e produto um retrato completo e honesto do que o Nave já faz hoje — backend, dados, telas e regras de negócio que moldam a experiência — como ponto de partida para desenhar uma solução mais graciosa (visual e de fluxo) sobre a base funcional existente.
+> **Propósito deste documento:** dar ao time de design e produto um retrato completo e honesto do que o navestory já faz hoje — backend, dados, telas e regras de negócio que moldam a experiência — como ponto de partida para desenhar uma solução mais graciosa (visual e de fluxo) sobre a base funcional existente.
 >
 > Este documento **não substitui** as fontes canônicas — ele sintetiza e aponta para elas. Sempre que precisar do detalhe técnico completo de algo citado aqui, siga os links.
 >
@@ -9,7 +9,7 @@
 
 ---
 
-## 1. O que é o Nave
+## 1. O que é o navestory
 
 **Visão de produto (declarada em `specs/PRD.md`):**
 
@@ -19,11 +19,11 @@
 
 ### Personas alvo
 
-| ID | Persona | Perfil | Prioridade |
-|----|---------|--------|-----------|
-| P-001 | Carlos, Motorista Autônomo | 35–50 anos, usa o veículo para trabalho, controla custo individual pelo celular | MVP |
-| P-002 | Ana, Gestora de Frota Pequena | 28–45 anos, gerencia 3–10 veículos, decide com dados, usa desktop e mobile | MVP |
-| P-003 | Roberto, Gestor de Grande Frota | 40–55 anos, 50–500 veículos, precisa de dashboards consolidados | Fase 2 |
+| ID    | Persona                         | Perfil                                                                          | Prioridade |
+| ----- | ------------------------------- | ------------------------------------------------------------------------------- | ---------- |
+| P-001 | Carlos, Motorista Autônomo      | 35–50 anos, usa o veículo para trabalho, controla custo individual pelo celular | MVP        |
+| P-002 | Ana, Gestora de Frota Pequena   | 28–45 anos, gerencia 3–10 veículos, decide com dados, usa desktop e mobile      | MVP        |
+| P-003 | Roberto, Gestor de Grande Frota | 40–55 anos, 50–500 veículos, precisa de dashboards consolidados                 | Fase 2     |
 
 ### Jobs to be done (o que o usuário está tentando resolver)
 
@@ -41,19 +41,20 @@ GPS/rastreamento em tempo real, integração com seguradoras/financeiras, app na
 
 ## 2. Modelo de negócio (o que muda a UI por plano)
 
-O Nave tem um modelo de assinatura em camadas. Isso é relevante para design porque **vários pontos da UI precisam comunicar limite de plano sem bloquear a ação do usuário** — a regra de produto é clara: *"limites de plano nunca bloqueiam criação de registros — apenas restringem visibilidade do histórico e export"* (R-BIZ-02).
+O navestory tem um modelo de assinatura em camadas. Isso é relevante para design porque **vários pontos da UI precisam comunicar limite de plano sem bloquear a ação do usuário** — a regra de produto é clara: _"limites de plano nunca bloqueiam criação de registros — apenas restringem visibilidade do histórico e export"_ (R-BIZ-02).
 
-| Recurso | Grátis (pós-beta) | Pro Mensal | Pro Anual | Frota |
-|---|---|---|---|---|
-| Veículos | 3 | Ilimitado | Ilimitado | Ilimitado |
-| Histórico detalhado | Mês corrente + 1 anterior | Tudo | Tudo | Tudo |
-| Meses antigos | Consolidados em resumo | Detalhado | Detalhado | Detalhado |
-| Export CSV | Bloqueado | Rate limited | Ilimitado | Ilimitado |
-| Templates / categorias | 5 | 20 | 20 | 50 |
-| Grupos de veículos | 1 | 10 | 10 | Ilimitados |
-| Multi-usuário (workspace) | — | — | — | Sim |
+| Recurso                   | Grátis (pós-beta)         | Pro Mensal   | Pro Anual | Frota      |
+| ------------------------- | ------------------------- | ------------ | --------- | ---------- |
+| Veículos                  | 3                         | Ilimitado    | Ilimitado | Ilimitado  |
+| Histórico detalhado       | Mês corrente + 1 anterior | Tudo         | Tudo      | Tudo       |
+| Meses antigos             | Consolidados em resumo    | Detalhado    | Detalhado | Detalhado  |
+| Export CSV                | Bloqueado                 | Rate limited | Ilimitado | Ilimitado  |
+| Templates / categorias    | 5                         | 20           | 20        | 50         |
+| Grupos de veículos        | 1                         | 10           | 10        | Ilimitados |
+| Multi-usuário (workspace) | —                         | —            | —         | Sim        |
 
 Pontos que a UI precisa cobrir (hoje ainda em construção):
+
 - **Trial Pro de 14 dias** em toda conta nova, com downgrade automático ao expirar.
 - **Banner de upgrade contextual** (nunca popup intrusivo) quando o usuário esbarra num limite — ex. tenta ver um mês consolidado.
 - **Grace period visual** no downgrade: countdown "seus dados detalhados serão consolidados em X dias", com ofertas de win-back.
@@ -94,19 +95,19 @@ Usuário (perfil)
 
 ### Entidades principais (resumo — detalhe campo a campo em `docs/architecture/entities.md`)
 
-| Entidade | O que representa | Observação de produto |
-|---|---|---|
-| **Veículo** | Carro/moto/caminhão do usuário: placa, marca, modelo, foto, odômetro, combustível, documentos (IPVA/seguro/CRLV), `health_score` (0–100) | Entidade central — praticamente tudo pendura nela |
-| **Despesa** | Qualquer gasto vinculado a um veículo (combustível, manutenção, pedágio, seguro, etc.) | Pode nascer manual ou ser **gerada automaticamente** por manutenção/multa/custo recorrente (ver 6.4) |
-| **Manutenção** | Serviço agendado ou realizado, com máquina de estados (agendado → em andamento → concluído/cancelado) | Concluir com custo gera despesa automaticamente |
-| **Multa** | Infração de trânsito: valor, desconto, prazo de recurso, status | Criar multa gera despesa automaticamente |
-| **Custo recorrente** | IPVA, CRLV, seguro — um registro por veículo/tipo/ano | Marcar como pago gera despesa automaticamente |
-| **Ciclo de odômetro** | Marco de "reset" da contagem de km (troca de painel, revenda) | Existe porque o odômetro nunca pode retroceder — isso precisa de uma válvula de escape auditável |
-| **Grupo de veículos** | Agrupamento arbitrário (até 200 veículos) para visão agregada | Usado no seletor de contexto global (seção 6.1) |
-| **Template de despesa** | Atalho de lançamento rápido (máx. 20 por usuário) | Não guarda data nem odômetro — só o "molde" |
-| **Categoria personalizada** | Categoria de despesa além das 9 padrão (máx. 20 por usuário) | Categorias padrão: combustível, manutenção, lavagem, pedágio, seguro, IPVA, estacionamento, multa, outros |
-| **Preferências do usuário** | Campos do chip de veículo, fuso horário, rascunho automático | 1:1 por usuário, sempre tem default seguro |
-| **Log de auditoria** | Toda mutação relevante, imutável, sem PII | Exibido ao usuário em `/atividades` |
+| Entidade                    | O que representa                                                                                                                         | Observação de produto                                                                                     |
+| --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| **Veículo**                 | Carro/moto/caminhão do usuário: placa, marca, modelo, foto, odômetro, combustível, documentos (IPVA/seguro/CRLV), `health_score` (0–100) | Entidade central — praticamente tudo pendura nela                                                         |
+| **Despesa**                 | Qualquer gasto vinculado a um veículo (combustível, manutenção, pedágio, seguro, etc.)                                                   | Pode nascer manual ou ser **gerada automaticamente** por manutenção/multa/custo recorrente (ver 6.4)      |
+| **Manutenção**              | Serviço agendado ou realizado, com máquina de estados (agendado → em andamento → concluído/cancelado)                                    | Concluir com custo gera despesa automaticamente                                                           |
+| **Multa**                   | Infração de trânsito: valor, desconto, prazo de recurso, status                                                                          | Criar multa gera despesa automaticamente                                                                  |
+| **Custo recorrente**        | IPVA, CRLV, seguro — um registro por veículo/tipo/ano                                                                                    | Marcar como pago gera despesa automaticamente                                                             |
+| **Ciclo de odômetro**       | Marco de "reset" da contagem de km (troca de painel, revenda)                                                                            | Existe porque o odômetro nunca pode retroceder — isso precisa de uma válvula de escape auditável          |
+| **Grupo de veículos**       | Agrupamento arbitrário (até 200 veículos) para visão agregada                                                                            | Usado no seletor de contexto global (seção 6.1)                                                           |
+| **Template de despesa**     | Atalho de lançamento rápido (máx. 20 por usuário)                                                                                        | Não guarda data nem odômetro — só o "molde"                                                               |
+| **Categoria personalizada** | Categoria de despesa além das 9 padrão (máx. 20 por usuário)                                                                             | Categorias padrão: combustível, manutenção, lavagem, pedágio, seguro, IPVA, estacionamento, multa, outros |
+| **Preferências do usuário** | Campos do chip de veículo, fuso horário, rascunho automático                                                                             | 1:1 por usuário, sempre tem default seguro                                                                |
+| **Log de auditoria**        | Toda mutação relevante, imutável, sem PII                                                                                                | Exibido ao usuário em `/atividades`                                                                       |
 
 **Um detalhe de histórico importante:** já existiu um modelo mais amplo de "motoristas" (`drivers`) e "documentos genéricos" (`documents`), que foi **removido do banco** por não ter spec aprovada. Ou seja, hoje o sistema **não** modela múltiplos motoristas por veículo nem upload de documentos — apenas campos de vencimento (data) direto na ficha do veículo (IPVA, seguro, CRLV). Se o time de design cogitar desenhar telas de "motorista" ou "central de documentos", é greenfield, não retrabalho.
 
@@ -192,7 +193,7 @@ Formulários transacionais (despesa, manutenção) **sempre** exigem um veículo
 
 ### 6.2 Ledger financeiro unificado
 
-Manutenção concluída com custo, multa criada, e custo recorrente pago **geram automaticamente** uma despesa vinculada e somente-leitura (não editável nem deletável diretamente — só via a origem). Isso significa que `/expenses` é, na prática, a "central financeira" de tudo — o usuário não lança a mesma coisa duas vezes, mas também precisa entender visualmente *por que* uma despesa não pode ser editada ali (ela "pertence" a outra tela).
+Manutenção concluída com custo, multa criada, e custo recorrente pago **geram automaticamente** uma despesa vinculada e somente-leitura (não editável nem deletável diretamente — só via a origem). Isso significa que `/expenses` é, na prática, a "central financeira" de tudo — o usuário não lança a mesma coisa duas vezes, mas também precisa entender visualmente _por que_ uma despesa não pode ser editada ali (ela "pertence" a outra tela).
 
 ### 6.3 PWA / Offline
 
@@ -208,29 +209,29 @@ Abaixo de 768px a barra lateral vira um drawer overlay (nunca fica inline); toda
 
 ### Público / não autenticado
 
-| Rota | Função |
-|---|---|
-| `/login` | Login |
-| `/register` | Cadastro self-service (nome, email, senha, tipo de perfil) |
-| `/recover-password` | Solicitar recuperação de senha |
-| `/reset-password` | Definir nova senha a partir do link recebido |
-| `/restore-account` | Restaurar conta em soft-delete (dentro dos 30 dias) |
-| `/privacidade`, `/termos` | Páginas estáticas |
-| `/offline` | Fallback quando sem conexão (PWA) |
+| Rota                      | Função                                                     |
+| ------------------------- | ---------------------------------------------------------- |
+| `/login`                  | Login                                                      |
+| `/register`               | Cadastro self-service (nome, email, senha, tipo de perfil) |
+| `/recover-password`       | Solicitar recuperação de senha                             |
+| `/reset-password`         | Definir nova senha a partir do link recebido               |
+| `/restore-account`        | Restaurar conta em soft-delete (dentro dos 30 dias)        |
+| `/privacidade`, `/termos` | Páginas estáticas                                          |
+| `/offline`                | Fallback quando sem conexão (PWA)                          |
 
 ### Autenticado
 
-| Área | Rotas | Função |
-|---|---|---|
-| **Dashboard** | `/dashboard` (+ `/dashboard/concept`, protótipo paralelo) | Visão geral: KPIs configuráveis, alertas de frota, grade de veículos com health score, painel de detalhe do veículo selecionado, próximos custos, gráficos, export CSV |
-| **Veículos** | `/vehicles`, `/vehicles/new`, `/vehicles/[id]`, `/vehicles/[id]/odometer` | CRUD de veículo + tela dedicada de registro rápido de odômetro |
-| **Grupos** | `/vehicle-groups`, `/vehicle-groups/new`, `/vehicle-groups/[id]` | CRUD de grupo + gestão de membros |
-| **Despesas** | `/expenses`, `/expenses/new`, `/expenses/[id]` | Central financeira: listagem com abas, filtros por contexto, KPIs, export |
-| **Manutenções** | `/maintenance`, `/maintenance/new`, `/maintenance/[id]` | Listagem por status + agendamento + atualização de status |
-| **Multas** | `/fines`, `/fines/new`, `/fines/[id]` | Listagem com indicador de vencidas + registro + atualização de status |
-| **Analytics** | `/analytics` | TCO, tendência de consumo, anomalias, benchmark, forecast, sazonalidade, insights |
-| **Atividades** | `/atividades` | Histórico de auditoria do usuário |
-| **Configurações** | `/settings/account`, `/settings/preferences`, `/settings/vehicles/[vehicleId]/odometer-cycles` | Dados da conta + exclusão de conta, preferências de exibição/fuso/rascunho, histórico de ciclos de odômetro |
+| Área              | Rotas                                                                                          | Função                                                                                                                                                                 |
+| ----------------- | ---------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Dashboard**     | `/dashboard` (+ `/dashboard/concept`, protótipo paralelo)                                      | Visão geral: KPIs configuráveis, alertas de frota, grade de veículos com health score, painel de detalhe do veículo selecionado, próximos custos, gráficos, export CSV |
+| **Veículos**      | `/vehicles`, `/vehicles/new`, `/vehicles/[id]`, `/vehicles/[id]/odometer`                      | CRUD de veículo + tela dedicada de registro rápido de odômetro                                                                                                         |
+| **Grupos**        | `/vehicle-groups`, `/vehicle-groups/new`, `/vehicle-groups/[id]`                               | CRUD de grupo + gestão de membros                                                                                                                                      |
+| **Despesas**      | `/expenses`, `/expenses/new`, `/expenses/[id]`                                                 | Central financeira: listagem com abas, filtros por contexto, KPIs, export                                                                                              |
+| **Manutenções**   | `/maintenance`, `/maintenance/new`, `/maintenance/[id]`                                        | Listagem por status + agendamento + atualização de status                                                                                                              |
+| **Multas**        | `/fines`, `/fines/new`, `/fines/[id]`                                                          | Listagem com indicador de vencidas + registro + atualização de status                                                                                                  |
+| **Analytics**     | `/analytics`                                                                                   | TCO, tendência de consumo, anomalias, benchmark, forecast, sazonalidade, insights                                                                                      |
+| **Atividades**    | `/atividades`                                                                                  | Histórico de auditoria do usuário                                                                                                                                      |
+| **Configurações** | `/settings/account`, `/settings/preferences`, `/settings/vehicles/[vehicleId]/odometer-cycles` | Dados da conta + exclusão de conta, preferências de exibição/fuso/rascunho, histórico de ciclos de odômetro                                                            |
 
 **Total: ~30 rotas navegáveis**, cobrindo 8 domínios de negócio (veículos, grupos, despesas, manutenções, multas, custos recorrentes via despesas, analytics, conta/preferências) mais autenticação.
 
@@ -246,13 +247,13 @@ Já existe um design system em construção ativa (`packages/ui`) com fundamento
 
 Princípios já fixados como regra (não são sugestão, já estão em produção):
 
-| Regra | Resumo |
-|---|---|
+| Regra   | Resumo                                                                                                                                                                                  |
+| ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | R-DS-03 | Cor semântica (`success`/`warning`/`danger`/`info`) só comunica status real de dado; `gold` é o único elemento decorativo/destaque de marca — nada de paleta multicolor sem significado |
-| R-DS-04 | `rounded-full` é exclusivo de badge/tag/filtro; qualquer botão de ação usa raio máximo `rounded-md` |
-| R-DS-05 | Proporção cromática de referência: ~70% neutro / ~15% primary / ~10% semântico / ~5% gold — desvio relevante é sinalizado em revisão |
-| C-DS-01 | Contraste mínimo WCAG AA (4.5:1 texto normal / 3:1 texto grande) em ambos os temas, sem exceção por hierarquia visual |
-| R-DS-01 | Badge de contagem nunca mostra mais de 2 caracteres visuais ("9+" acima de 9, oculto em 0) |
+| R-DS-04 | `rounded-full` é exclusivo de badge/tag/filtro; qualquer botão de ação usa raio máximo `rounded-md`                                                                                     |
+| R-DS-05 | Proporção cromática de referência: ~70% neutro / ~15% primary / ~10% semântico / ~5% gold — desvio relevante é sinalizado em revisão                                                    |
+| C-DS-01 | Contraste mínimo WCAG AA (4.5:1 texto normal / 3:1 texto grande) em ambos os temas, sem exceção por hierarquia visual                                                                   |
+| R-DS-01 | Badge de contagem nunca mostra mais de 2 caracteres visuais ("9+" acima de 9, oculto em 0)                                                                                              |
 
 14 componentes já implementados em `packages/ui` com testes de acessibilidade (`jest-axe`). O dashboard já passou por uma rodada de evolução visual recente (KPI cards com sparkline, anel de health score em SVG, tokens de superfície/chart, grid de veículos mais denso).
 
@@ -264,25 +265,25 @@ Princípios já fixados como regra (não são sugestão, já estão em produçã
 
 Coisas que já estão documentadas como gap real, não achismo — relevantes porque afetam o que uma tela pode prometer ao usuário:
 
-| Área | Situação |
-|---|---|
-| Sessão / login | O middleware SSR que renova o token automaticamente no lado web está ausente do repositório — sessão pode expirar sem aviso claro ao usuário (achado crítico registrado) |
-| Alertas de manutenção por e-mail | Adiado para a Fase 9 do produto (depende de domínio de e-mail próprio, vinculado ao lançamento da monetização) |
-| Motoristas / documentos genéricos | Removidos do banco por falta de spec aprovada — não existem hoje, apesar de aparecerem em versões antigas de documentação |
-| Anonimização de PII na exclusão de conta | Estratégia definitiva ainda não definida — fica para spec dedicada futura, não decidir isso ad hoc numa tela |
-| Offline / PWA | Sem fila de sincronização — usuário no posto sem sinal não consegue lançar despesa até recuperar conexão (bloqueio explícito, não silencioso) |
+| Área                                     | Situação                                                                                                                                                                 |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Sessão / login                           | O middleware SSR que renova o token automaticamente no lado web está ausente do repositório — sessão pode expirar sem aviso claro ao usuário (achado crítico registrado) |
+| Alertas de manutenção por e-mail         | Adiado para a Fase 9 do produto (depende de domínio de e-mail próprio, vinculado ao lançamento da monetização)                                                           |
+| Motoristas / documentos genéricos        | Removidos do banco por falta de spec aprovada — não existem hoje, apesar de aparecerem em versões antigas de documentação                                                |
+| Anonimização de PII na exclusão de conta | Estratégia definitiva ainda não definida — fica para spec dedicada futura, não decidir isso ad hoc numa tela                                                             |
+| Offline / PWA                            | Sem fila de sincronização — usuário no posto sem sinal não consegue lançar despesa até recuperar conexão (bloqueio explícito, não silencioso)                            |
 
 ---
 
 ## 10. Onde ir a partir daqui
 
-| Preciso de... | Ir para... |
-|---|---|
-| Campo a campo de cada entidade, enums, funções do banco | `docs/architecture/entities.md` |
-| Toda regra de negócio com ID citável (R/S/P/C) | `specs/RULES.md` |
-| Visão de produto completa, métricas de sucesso, riscos | `docs/PRD/PRD-v1.0.md` |
+| Preciso de...                                                                                                     | Ir para...                                                                                                                                                                                           |
+| ----------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Campo a campo de cada entidade, enums, funções do banco                                                           | `docs/architecture/entities.md`                                                                                                                                                                      |
+| Toda regra de negócio com ID citável (R/S/P/C)                                                                    | `specs/RULES.md`                                                                                                                                                                                     |
+| Visão de produto completa, métricas de sucesso, riscos                                                            | `docs/PRD/PRD-v1.0.md`                                                                                                                                                                               |
 | Jornadas de usuário simuladas passo a passo (auth, veículos, despesas, manutenções, dashboard, export, LGPD etc.) | `docs/user-stories.md` — **atenção:** documento de 2026-06-17, anterior a multas, custos recorrentes, analytics, PWA e dashboard v2; use para entender jornada, não para confirmar o que existe hoje |
-| Regras de monetização e planos | `specs/business/SPEC-20260620-001-business-strategy-stories.md` |
-| Tokens, componentes e racional visual atual | `specs/design-system/` e `Design.md` (raiz) |
-| Arquitetura técnica completa | `docs/architecture/overview.md` |
-| Specs individuais por feature (histórias de usuário em BDD) | `specs/<feature>/` — índice geral em `specs/README.md` |
+| Regras de monetização e planos                                                                                    | `specs/business/SPEC-20260620-001-business-strategy-stories.md`                                                                                                                                      |
+| Tokens, componentes e racional visual atual                                                                       | `specs/design-system/` e `Design.md` (raiz)                                                                                                                                                          |
+| Arquitetura técnica completa                                                                                      | `docs/architecture/overview.md`                                                                                                                                                                      |
+| Specs individuais por feature (histórias de usuário em BDD)                                                       | `specs/<feature>/` — índice geral em `specs/README.md`                                                                                                                                               |

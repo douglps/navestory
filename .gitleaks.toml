@@ -1,4 +1,4 @@
-title = "Nave gitleaks config"
+title = "navestory gitleaks config"
 
 [extend]
 useDefault = true

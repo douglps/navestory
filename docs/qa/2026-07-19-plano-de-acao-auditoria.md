@@ -1,6 +1,6 @@
-# Plano de Ação — Auditoria Completa do Nave (2026-07-19)
+# Plano de Ação — Auditoria Completa do navestory (2026-07-19)
 
-**Origem:** [`docs/qa/2026-07-19-auditoria-completa-nave.md`](./2026-07-19-auditoria-completa-nave.md)
+**Origem:** [`docs/qa/2026-07-19-auditoria-completa-navestory.md`](./2026-07-19-auditoria-completa-navestory.md)
 **Objetivo:** transformar os 8 achados da auditoria em tarefas executáveis, respeitando o processo
 de governança do projeto (`specs/` obrigatórias para regra de negócio, dado sensível ou impacto em
 produção — ver `.claude/CLAUDE.md`).
@@ -13,6 +13,7 @@ sugerido, critério de "pronto" e dependências.
 ## Onda 1 — Bloqueadores de conformidade (🔴🟠)
 
 ### T1 — Tela de exclusão de conta (LGPD Art. 18) — ✅ Concluído (2026-07-20)
+
 - **Severidade:** 🔴 Alto
 - **Achado:** #1
 - **Specs:** [`SPEC-20260719-002`](../../specs/admin/SPEC-20260719-002-soft-delete-retencao-conta.md) (backend — soft-delete real, restore, guard) e [`SPEC-20260719-001`](../../specs/security/SPEC-20260719-001-exclusao-conta-ui.md) (UI) — ambas `status: approved`, gate de sincronia satisfeito em `matrices/rastreabilidade.md`.
@@ -21,6 +22,7 @@ sugerido, critério de "pronto" e dependências.
 - **Pronto quando:** usuário consegue excluir a própria conta pela UI sem intervenção manual de dev. **✅ Atingido.**
 
 ### T2 — Política de privacidade e termos de uso — ✅ Concluído (2026-07-20)
+
 - **Severidade:** 🟠 Médio-Alto
 - **Achado:** #2
 - **Spec:** [`SPEC-20260720-001`](../../specs/security/SPEC-20260720-001-paginas-privacidade-termos.md) — `status: approved`.
@@ -33,6 +35,7 @@ sugerido, critério de "pronto" e dependências.
 ## Onda 2 — Lacunas de teste que já causaram bugs reais (🟡)
 
 ### T3 — Teste dedicado para `supabase-auth.guard.ts` — ✅ Concluído (2026-07-20)
+
 - **Severidade:** 🟡 Médio
 - **Achado:** #3
 - **Spec:** não precisa de spec nova — é cobertura de teste sobre comportamento já especificado (S1, autenticação). Referencia a spec de auth existente e `RULES.md` S1 no topo do arquivo de teste.
@@ -42,6 +45,7 @@ sugerido, critério de "pronto" e dependências.
 - **Agente:** `tester`.
 
 ### T4 — Promover spec E2E de `draft` para implementação
+
 - **Severidade:** 🟡 Médio
 - **Achado:** #4
 - **Spec:** já existe — `specs/qa/SPEC-20260716-003-e2e-playwright.md` (status `draft`). Não criar nova; revisar, aprovar (`status: review` → `approved`, respeitando o gate de sincronia) e implementar.
@@ -51,6 +55,7 @@ sugerido, critério de "pronto" e dependências.
 - **Agentes:** `spec-writer` (revisão) → implementação → `doc-keeper`.
 
 ### T5 — Confirmar filtro por dono nas consultas de "veículo existe?" — ✅ Concluído (2026-07-20)
+
 - **Severidade:** 🟡 Médio (risco teórico, não confirmado)
 - **Achado:** #5
 - **Spec:** não precisa de spec nova — é verificação/correção pontual de regra de segurança já existente (isolamento de dados por RLS + filtro de aplicação), não uma feature nova.
@@ -69,11 +74,13 @@ sugerido, critério de "pronto" e dependências.
 ## Onda 3 — Baixo risco / cosmético (🟢) — fazer quando houver folga
 
 ### T6 — Tela raiz (`/`) como stub de diagnóstico — ✅ Concluído (2026-07-19)
+
 - **Severidade:** 🟢 Baixo
 - **Resolvido junto com T9:** o stub de diagnóstico (`(app)/page.tsx` + `health-status.tsx`, leftover de scaffolding) foi removido. A rota raiz `/` agora é a landing pública criada em `apps/web/src/app/page.tsx`. Usuário autenticado que acessa `/` é redirecionado para `/dashboard` pelo middleware (`AUTHENTICATED_HOME`); usuário deslogado vê a landing com "Entrar"/"Criar conta".
 - **Arquivos alterados:** `apps/web/src/app/page.tsx` (novo), `apps/web/src/app/(app)/page.tsx` + `health-status.tsx` + `health-status.spec.tsx` (removidos), `apps/web/middleware.ts`, `apps/web/middleware.spec.ts`, `(auth)/login/page.tsx` (+spec) — default de redirect pós-login trocado de `/` para `/dashboard`.
 
 ### T7 — Tela de multas (`fines`)
+
 - **Severidade:** 🟢 Baixo
 - **Achado:** backend pronto, sem UI.
 - **Spec:** nova, em `specs/fines/` (pasta já existe — conferir se já não há spec parcial lá antes de criar).
@@ -81,6 +88,7 @@ sugerido, critério de "pronto" e dependências.
 - **Nota:** tratar como feature nova de negócio — precisa do processo completo (spec → RULES.md se houver regra nova → matriz).
 
 ### T8 — Comentário desatualizado em `middleware.ts`
+
 - **Severidade:** 🟢 Informativo
 - **Ação:** correção trivial de comentário — não precisa de spec, PR direto. Pode ser feito junto de qualquer outra tarefa que toque o arquivo (ex: T4).
 
@@ -89,6 +97,7 @@ sugerido, critério de "pronto" e dependências.
 ## Onda 0 — Achados adicionais (não estavam na auditoria original, encontrados em revisão de código)
 
 ### T9 — Cadastro órfão: não há como chegar em `/register` pela UI — ✅ Concluído (2026-07-19)
+
 - **Severidade:** 🔴 Alto (bloqueia aquisição de novos usuários na prática, mesmo a rota existindo)
 - **Causa raiz confirmada:** `apps/web/src/app/(auth)/login/page.tsx` não tinha nenhum `<Link>` para `/register`; não existe `(auth)/layout.tsx` compartilhado nem nenhuma outra tela linkando para lá.
 - **Reforçava achado #6** da auditoria original — resolvido junto (ver T6).
@@ -99,16 +108,17 @@ sugerido, critério de "pronto" e dependências.
 - **Pronto quando:** um usuário que nunca usou o sistema consegue ir de "abrir o site" até "criar conta" sem digitar URL manualmente. **✅ Atingido.**
 
 ### T10 — Cache de navegação do Service Worker preserva o shell de rotas protegidas após logout — 🟡 Corrigido, falta confirmação manual (2026-07-20)
+
 - **Severidade:** 🟡 Médio — **causa raiz confirmada em código**; o sintoma em si (tela protegida aparecendo sem dados após logout) foi relatado pelo usuário, ainda não reproduzido por mim em navegador real.
-- **Causa raiz confirmada:** `apps/web/src/lib/pwa/clear-api-cache.ts` só apaga o cache `nave-api-data` no logout. O comentário do arquivo justifica preservar `nave-pages` alegando que ele contém só "assets estáticos públicos" e "não contém dado de usuário" — **essa premissa está incorreta**: em `apps/web/src/app/sw.ts`, o cache `nave-pages` é populado por `NetworkFirst` para **qualquer navegação** (`request.mode === "navigate"`, sem filtro de path), incluindo as rotas protegidas do grupo `(app)` (dashboard, vehicles, expenses, etc.). Ou seja, o shell HTML dessas telas fica cacheado normalmente, e o logout não o remove.
-- **Mecanismo do bypass percebido:** com o shell de `/vehicles` (por exemplo) já em `nave-pages` de uma visita anterior, e havendo uma limitação conhecida de Service Workers ao repassar para a página uma `Response` que passou por redirect (o middleware redireciona `/vehicles` deslogado para `/login`), o `NetworkFirst` pode tratar essa falha como "rede indisponível" e servir a versão cacheada do shell em vez do redirect — exibindo a tela protegida (sem dados, pois as chamadas de API continuam exigindo auth e falhando). Este último passo ainda depende de comportamento específico do navegador e precisa ser confirmado na prática (item 1 do escopo), mas a causa raiz — cache de shell autenticado nunca invalidado no logout — já está confirmada no código.
-- **Por que isso não invalida a seção 5 da auditoria original:** os dados continuam protegidos (API + RLS recusam sem token válido) — o que vaza é só o *shell visual* da página, não informação de outro usuário. Ainda assim, é uma falha real de UX/segurança percebida: um usuário em dispositivo compartilhado que faz logout pode ver a casca de uma tela que deveria estar bloqueada.
+- **Causa raiz confirmada:** `apps/web/src/lib/pwa/clear-api-cache.ts` só apaga o cache `navestory-api-data` no logout. O comentário do arquivo justifica preservar `navestory-pages` alegando que ele contém só "assets estáticos públicos" e "não contém dado de usuário" — **essa premissa está incorreta**: em `apps/web/src/app/sw.ts`, o cache `navestory-pages` é populado por `NetworkFirst` para **qualquer navegação** (`request.mode === "navigate"`, sem filtro de path), incluindo as rotas protegidas do grupo `(app)` (dashboard, vehicles, expenses, etc.). Ou seja, o shell HTML dessas telas fica cacheado normalmente, e o logout não o remove.
+- **Mecanismo do bypass percebido:** com o shell de `/vehicles` (por exemplo) já em `navestory-pages` de uma visita anterior, e havendo uma limitação conhecida de Service Workers ao repassar para a página uma `Response` que passou por redirect (o middleware redireciona `/vehicles` deslogado para `/login`), o `NetworkFirst` pode tratar essa falha como "rede indisponível" e servir a versão cacheada do shell em vez do redirect — exibindo a tela protegida (sem dados, pois as chamadas de API continuam exigindo auth e falhando). Este último passo ainda depende de comportamento específico do navegador e precisa ser confirmado na prática (item 1 do escopo), mas a causa raiz — cache de shell autenticado nunca invalidado no logout — já está confirmada no código.
+- **Por que isso não invalida a seção 5 da auditoria original:** os dados continuam protegidos (API + RLS recusam sem token válido) — o que vaza é só o _shell visual_ da página, não informação de outro usuário. Ainda assim, é uma falha real de UX/segurança percebida: um usuário em dispositivo compartilhado que faz logout pode ver a casca de uma tela que deveria estar bloqueada.
 - **Escopo:**
   1. Confirmar em navegador real (Chrome + Firefox): logar, visitar `/vehicles`, fazer logout, navegar direto para `/vehicles` de novo — verificar se aparece o shell cacheado.
-  2. Corrigir `clearApiCache` (ou criar função irmã) para também apagar/filtrar `nave-pages` no logout — no mínimo removendo as entradas de rotas do grupo `(app)`; mais simples: `caches.delete("nave-pages")` também no logout, aceitando que a próxima navegação repopula o cache com o conteúdo correto (o custo é perder cache offline de páginas públicas até a próxima visita, que é baixo).
-  3. Corrigir o comentário de `clear-api-cache.ts`, que hoje descreve incorretamente o conteúdo de `nave-pages`.
+  2. Corrigir `clearApiCache` (ou criar função irmã) para também apagar/filtrar `navestory-pages` no logout — no mínimo removendo as entradas de rotas do grupo `(app)`; mais simples: `caches.delete("navestory-pages")` também no logout, aceitando que a próxima navegação repopula o cache com o conteúdo correto (o custo é perder cache offline de páginas públicas até a próxima visita, que é baixo).
+  3. Corrigir o comentário de `clear-api-cache.ts`, que hoje descreve incorretamente o conteúdo de `navestory-pages`.
 - **Pronto quando:** teste manual (ou e2e, ver T4) confirma que, após logout, navegar direto para uma rota protegida não exibe nenhum shell cacheado — só a tela de login.
-- **Feito:** `clearApiCache()` (`apps/web/src/lib/pwa/clear-api-cache.ts`) passou a apagar `nave-pages` inteiro além de `nave-api-data` no logout, em vez de preservá-lo — a premissa original de que esse cache só continha assets públicos estava incorreta (ver diagnóstico acima). Comentário do arquivo corrigido; testes atualizados e passando; `specs/pwa/SPEC-20260712-001-pwa-offline.md` ganhou changelog v0.6 registrando que o critério de aceite de RF-16 não reflete mais o comportamento implementado.
+- **Feito:** `clearApiCache()` (`apps/web/src/lib/pwa/clear-api-cache.ts`) passou a apagar `navestory-pages` inteiro além de `navestory-api-data` no logout, em vez de preservá-lo — a premissa original de que esse cache só continha assets públicos estava incorreta (ver diagnóstico acima). Comentário do arquivo corrigido; testes atualizados e passando; `specs/pwa/SPEC-20260712-001-pwa-offline.md` ganhou changelog v0.6 registrando que o critério de aceite de RF-16 não reflete mais o comportamento implementado.
 - **Pendente:** item 1 do escopo (confirmar em Chrome + Firefox: logar, visitar rota protegida, logout, navegar direto de novo) — só o usuário pode fazer essa verificação manual. T10 só pode ser marcada 100% concluída depois disso.
 - **Agentes:** verificação manual → implementação → `tester`.
 

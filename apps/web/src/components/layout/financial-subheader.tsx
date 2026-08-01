@@ -3,8 +3,11 @@
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { NavBadge, Skeleton } from "@nave/ui";
-import type { CategorySummaryItem, FinesStatusResponse } from "@nave/validators";
+import { NavBadge, Skeleton } from "@navestory/ui";
+import type {
+  CategorySummaryItem,
+  FinesStatusResponse,
+} from "@navestory/validators";
 import { apiClient } from "@/lib/http/api-client";
 import { useDashboardStore } from "@/lib/stores/use-dashboard-store";
 
@@ -38,11 +41,18 @@ function buildSpendingHighlightsPath(
     }
   }
   const query = params.toString();
-  return query ? `/dashboard/spending-highlights?${query}` : "/dashboard/spending-highlights";
+  return query
+    ? `/dashboard/spending-highlights?${query}`
+    : "/dashboard/spending-highlights";
 }
 
 /** RF-01 — o link do chip propaga o mesmo contexto ativo usado na agregação (R-SUB-02). */
-function buildChipHref(category: string, selectionMode: string, activeVehicleId: string | null, groupVehicleIds: string[]): string {
+function buildChipHref(
+  category: string,
+  selectionMode: string,
+  activeVehicleId: string | null,
+  groupVehicleIds: string[],
+): string {
   const params = new URLSearchParams({ category });
   if (selectionMode === "single" && activeVehicleId) {
     params.set("vehicleId", activeVehicleId);
@@ -83,15 +93,28 @@ export function FinancialSubheader(): ReactNode {
 
   const groupVehicleIds =
     selectionMode === "group"
-      ? (groups?.find((group) => group.id === activeGroupId)?.vehicle_group_members ?? []).map(
-          (member) => member.vehicle_id,
-        )
+      ? (
+          groups?.find((group) => group.id === activeGroupId)
+            ?.vehicle_group_members ?? []
+        ).map((member) => member.vehicle_id)
       : [];
 
   const { data: highlights, isLoading: isLoadingHighlights } = useQuery({
-    queryKey: ["spending-highlights", selectionMode, activeVehicleId, activeGroupId, groupVehicleIds.join(",")],
+    queryKey: [
+      "spending-highlights",
+      selectionMode,
+      activeVehicleId,
+      activeGroupId,
+      groupVehicleIds.join(","),
+    ],
     queryFn: () =>
-      apiClient<CategorySummaryItem[]>(buildSpendingHighlightsPath(selectionMode, activeVehicleId, groupVehicleIds)),
+      apiClient<CategorySummaryItem[]>(
+        buildSpendingHighlightsPath(
+          selectionMode,
+          activeVehicleId,
+          groupVehicleIds,
+        ),
+      ),
     staleTime: QUERY_STALE_TIME_MS,
     refetchOnWindowFocus: true,
   });
@@ -111,33 +134,52 @@ export function FinancialSubheader(): ReactNode {
       <div className="flex flex-1 items-center gap-2 overflow-hidden">
         {isLoadingHighlights
           ? Array.from({ length: CHIP_SKELETON_COUNT }, (_, index) => (
-              <Skeleton key={index} className="h-6 w-20 shrink-0 rounded-[6px]" />
+              <Skeleton
+                key={index}
+                className="h-6 w-20 shrink-0 rounded-[6px]"
+              />
             ))
           : highlights?.map((item) => (
               <Link
                 key={item.category}
-                href={buildChipHref(item.category, selectionMode, activeVehicleId, groupVehicleIds)}
+                href={buildChipHref(
+                  item.category,
+                  selectionMode,
+                  activeVehicleId,
+                  groupVehicleIds,
+                )}
                 className="flex shrink-0 items-center gap-1.5 rounded-[6px] border border-border/60 bg-muted/30 px-2.5 py-1 text-xs text-foreground transition-colors hover:bg-muted/60"
               >
                 <span className="font-medium">{item.label}</span>
-                <span className="text-muted-foreground">{formatChipAmount(item.total_amount)}</span>
+                <span className="text-muted-foreground">
+                  {formatChipAmount(item.total_amount)}
+                </span>
                 <NavBadge count={item.count} />
               </Link>
             ))}
       </div>
 
       <div className="flex shrink-0 items-center gap-3 text-sm">
-        <Link href="/expenses" className="text-muted-foreground transition-colors hover:text-foreground">
+        <Link
+          href="/expenses"
+          className="text-muted-foreground transition-colors hover:text-foreground"
+        >
           Despesas
         </Link>
-        <Link href="/maintenance" className="text-muted-foreground transition-colors hover:text-foreground">
+        <Link
+          href="/maintenance"
+          className="text-muted-foreground transition-colors hover:text-foreground"
+        >
           Manutenções
         </Link>
 
         <div aria-hidden="true" className="h-[18px] w-px bg-border/20" />
 
         {/* eslint-disable-next-line security/detect-object-injection -- status é union fixa de 3 literais (FinesStatusResponse["status"]) */}
-        <Link href="/fines" className={`flex items-center gap-1.5 transition-colors ${FINES_STYLE[status]}`}>
+        <Link
+          href="/fines"
+          className={`flex items-center gap-1.5 transition-colors ${FINES_STYLE[status]}`}
+        >
           Multas
           <NavBadge count={finesCount} />
         </Link>

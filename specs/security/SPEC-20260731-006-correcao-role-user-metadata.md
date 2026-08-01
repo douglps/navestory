@@ -30,13 +30,13 @@ Esta vulnerabilidade tem origem na decisão de implementação do RF-09 de `SPEC
 
 ## Problemas
 
-| # | Problema | Severidade | Arquivo |
-|---|----------|-----------|---------|
-| P1 | `RolesGuard` lê `user_metadata.role` — campo gravável pelo próprio usuário via API pública do Supabase | Crítico | `apps/api/src/common/guards/roles.guard.ts:25` |
-| P2 | `SupabaseAuthGuard` popula `request.user.user_metadata` a partir de `data.user.user_metadata`, sem migrar para `app_metadata` | Crítico | `apps/api/src/common/guards/supabase-auth.guard.ts:41-45` |
-| P3 | `JwtPayload` não declara `app_metadata` — campo não tipado no contrato de autenticação | Alto | `apps/api/src/modules/auth/jwt.strategy.ts` |
-| P4 | Teste de regressão do `RolesGuard` cobre apenas `user_metadata.role` — passou a ser cobertura de caminho incorreto | Alto | `apps/api/src/common/guards/roles.guard.spec.ts` |
-| P5 | Contas admin existentes têm `user_metadata.role = "admin"` — precisam de migração manual para `app_metadata.role` | Operacional | Supabase Dashboard (sem arquivo de código) |
+| #   | Problema                                                                                                                      | Severidade  | Arquivo                                                   |
+| --- | ----------------------------------------------------------------------------------------------------------------------------- | ----------- | --------------------------------------------------------- |
+| P1  | `RolesGuard` lê `user_metadata.role` — campo gravável pelo próprio usuário via API pública do Supabase                        | Crítico     | `apps/api/src/common/guards/roles.guard.ts:25`            |
+| P2  | `SupabaseAuthGuard` popula `request.user.user_metadata` a partir de `data.user.user_metadata`, sem migrar para `app_metadata` | Crítico     | `apps/api/src/common/guards/supabase-auth.guard.ts:41-45` |
+| P3  | `JwtPayload` não declara `app_metadata` — campo não tipado no contrato de autenticação                                        | Alto        | `apps/api/src/modules/auth/jwt.strategy.ts`               |
+| P4  | Teste de regressão do `RolesGuard` cobre apenas `user_metadata.role` — passou a ser cobertura de caminho incorreto            | Alto        | `apps/api/src/common/guards/roles.guard.spec.ts`          |
+| P5  | Contas admin existentes têm `user_metadata.role = "admin"` — precisam de migração manual para `app_metadata.role`             | Operacional | Supabase Dashboard (sem arquivo de código)                |
 
 ## Objetivo
 
@@ -115,11 +115,11 @@ Eliminar o vetor de escalação de privilégio substituindo a fonte do claim de 
 
 ## Requisitos Não-Funcionais
 
-| ID | Requisito | Métrica de Aceite |
-|----|-----------|------------------|
-| RNF-01 | Segurança | Nenhum usuário não-admin pode acessar `/admin/*` via manipulação de `user_metadata` — 100% das requests sem `app_metadata.role = "admin"` devem retornar 403 |
-| RNF-02 | Retrocompatibilidade | Nenhuma outra funcionalidade que consuma `user_metadata` (ex: display de nome, avatar) deve ser quebrada pela mudança |
-| RNF-03 | Zero downtime de admin | Admin legítimo não pode perder acesso durante a janela de deploy — a migração operacional (RF-SEC-004) é pré-requisito do deploy |
+| ID     | Requisito              | Métrica de Aceite                                                                                                                                            |
+| ------ | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| RNF-01 | Segurança              | Nenhum usuário não-admin pode acessar `/admin/*` via manipulação de `user_metadata` — 100% das requests sem `app_metadata.role = "admin"` devem retornar 403 |
+| RNF-02 | Retrocompatibilidade   | Nenhuma outra funcionalidade que consuma `user_metadata` (ex: display de nome, avatar) deve ser quebrada pela mudança                                        |
+| RNF-03 | Zero downtime de admin | Admin legítimo não pode perder acesso durante a janela de deploy — a migração operacional (RF-SEC-004) é pré-requisito do deploy                             |
 
 ## Fora de Escopo
 
@@ -131,17 +131,18 @@ Eliminar o vetor de escalação de privilégio substituindo a fonte do claim de 
 
 ## Dependências
 
-| Tipo | Referência | Descrição |
-|------|-----------|-----------|
-| Spec (corrige) | [SPEC-20260521-004](../admin/SPEC-20260521-004.md) | RF-09 — decisão de implementação que adotou `user_metadata.role`; o comportamento descrito ali para o `RolesGuard` é substituído por esta spec |
-| Segurança | S12 (esta spec) | Regra de segurança criada para formalizar a proibição de `user_metadata` como fonte de autorização |
-| Compliance | C2 | Mutação de `app_metadata` de contas admin é operação sensível — deve ser auditada via `AuditService` |
-| Serviço externo | Supabase Auth (GoTrue) | `app_metadata` é gravável apenas via `auth.admin.updateUserById()` com service role key — confirmar na documentação do Supabase que esse comportamento não muda com atualizações do GoTrue |
+| Tipo            | Referência                                         | Descrição                                                                                                                                                                                  |
+| --------------- | -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Spec (corrige)  | [SPEC-20260521-004](../admin/SPEC-20260521-004.md) | RF-09 — decisão de implementação que adotou `user_metadata.role`; o comportamento descrito ali para o `RolesGuard` é substituído por esta spec                                             |
+| Segurança       | S12 (esta spec)                                    | Regra de segurança criada para formalizar a proibição de `user_metadata` como fonte de autorização                                                                                         |
+| Compliance      | C2                                                 | Mutação de `app_metadata` de contas admin é operação sensível — deve ser auditada via `AuditService`                                                                                       |
+| Serviço externo | Supabase Auth (GoTrue)                             | `app_metadata` é gravável apenas via `auth.admin.updateUserById()` com service role key — confirmar na documentação do Supabase que esse comportamento não muda com atualizações do GoTrue |
 
 ## Notas Técnicas
 
 **Por que `app_metadata` e não `user_metadata`:**
 O Supabase Auth distingue dois campos de dados customizados no registro de usuário:
+
 - `user_metadata`: gravável pelo próprio usuário autenticado via `supabase.auth.updateUser()` com o access token comum. Projetado para preferências e dados de perfil controlados pelo usuário.
 - `app_metadata`: gravável apenas via API administrativa (`supabase.auth.admin.updateUserById()`) com a `SUPABASE_SERVICE_ROLE_KEY`. Projetado explicitamente para dados de autorização que o usuário não deve controlar.
 
@@ -154,6 +155,7 @@ Tanto `user_metadata` quanto `app_metadata` são incluídos no JWT emitido pelo 
 Antes de remover `user_metadata` do objeto `request.user`, verificar no código se algum consumidor (ex: endpoint que retorna dados de perfil, log de auditoria) acessa `request.user.user_metadata` para finalidade não relacionada a autorização. Se existir, manter ambos os campos no payload — remoção desnecessária pode quebrar funcionalidade não relacionada a esta correção.
 
 **Ordem das operações no deploy:**
+
 1. Migrar contas admin existentes para `app_metadata.role = "admin"` no Supabase Dashboard (RF-SEC-004)
 2. Fazer deploy do código alterado (RF-SEC-001, 002, 003)
 3. Validar que o admin legítimo ainda acessa `/admin/*` corretamente
@@ -166,8 +168,8 @@ A mudança nesta spec é classificada como **mudança estrutural** (reverte um r
 
 > Mudança estrutural (reverte/substitui requisito) não edita aqui — cria spec nova com `superseded_by`.
 
-| Data | O que mudou | Por quê |
-|------|-------------|---------|
+| Data       | O que mudou                                                                                          | Por quê                                                                                                                    |
+| ---------- | ---------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
 | 2026-07-31 | Status alterado de `draft` para `approved`; implementação concluída (RF-SEC-001, 002, 003, 005, 006) | Aprovação de Douglas; RF-SEC-004 (migração manual das contas admin) segue pendente de execução operacional antes do deploy |
 
 ---

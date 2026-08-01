@@ -1,35 +1,35 @@
-# Conformidade com a LGPD — Nave SaaS
+# Conformidade com a LGPD — navestory SaaS
 
-> Este documento consolida as obrigações legais e técnicas do projeto Nave em relação à Lei Geral de Proteção de Dados (LGPD — Lei 13.709/2018). As fontes são `docs/legal/privacy-policy.md` (documento voltado ao usuário final) e as regras C1, C2 e R-BIZ-05 de `specs/RULES.md`.
+> Este documento consolida as obrigações legais e técnicas do projeto navestory em relação à Lei Geral de Proteção de Dados (LGPD — Lei 13.709/2018). As fontes são `docs/legal/privacy-policy.md` (documento voltado ao usuário final) e as regras C1, C2 e R-BIZ-05 de `specs/RULES.md`.
 
 **Última atualização:** 2026-07-13  
-**Controlador de dados:** Nave Tecnologia Ltda.  
-**Encarregado (DPO):** privacidade@nave.app  
+**Controlador de dados:** navestory Tecnologia Ltda.  
+**Encarregado (DPO):** privacidade@navestory.app
 
 ---
 
-## 1. Papel da Nave no tratamento de dados
+## 1. Papel da navestory no tratamento de dados
 
-A **Nave Tecnologia Ltda.** é o **controlador** dos dados pessoais dos usuários da plataforma, conforme definido pelo art. 5º, VI da LGPD. O Supabase Inc. atua como **operador** (subprocessador), processando dados por instrução da Nave.
+A **navestory Tecnologia Ltda.** é o **controlador** dos dados pessoais dos usuários da plataforma, conforme definido pelo art. 5º, VI da LGPD. O Supabase Inc. atua como **operador** (subprocessador), processando dados por instrução da navestory.
 
 ---
 
 ## 2. Bases legais de tratamento
 
-Toda operação de tratamento de dados pessoais na Nave possui base legal identificada:
+Toda operação de tratamento de dados pessoais na navestory possui base legal identificada:
 
-| Operação de tratamento | Base legal (LGPD) | Artigo |
-|------------------------|-------------------|--------|
-| Criar e gerenciar conta de usuário | Execução de contrato | Art. 7º, V |
-| Exibir veículos, despesas e manutenções | Execução de contrato | Art. 7º, V |
-| Enviar alertas de manutenção por e-mail | Execução de contrato | Art. 7º, V |
-| Proteger a plataforma contra acessos indevidos | Legítimo interesse | Art. 7º, IX |
-| Gerar logs de auditoria de segurança | Legítimo interesse | Art. 7º, IX |
-| Enviar comunicados sobre mudanças no serviço | Legítimo interesse | Art. 7º, IX |
-| Melhorar a plataforma com dados de uso agregados e anônimos | Legítimo interesse | Art. 7º, IX |
-| Cumprir obrigações legais (ex: ordem judicial) | Cumprimento de obrigação legal | Art. 7º, II |
+| Operação de tratamento                                      | Base legal (LGPD)              | Artigo      |
+| ----------------------------------------------------------- | ------------------------------ | ----------- |
+| Criar e gerenciar conta de usuário                          | Execução de contrato           | Art. 7º, V  |
+| Exibir veículos, despesas e manutenções                     | Execução de contrato           | Art. 7º, V  |
+| Enviar alertas de manutenção por e-mail                     | Execução de contrato           | Art. 7º, V  |
+| Proteger a plataforma contra acessos indevidos              | Legítimo interesse             | Art. 7º, IX |
+| Gerar logs de auditoria de segurança                        | Legítimo interesse             | Art. 7º, IX |
+| Enviar comunicados sobre mudanças no serviço                | Legítimo interesse             | Art. 7º, IX |
+| Melhorar a plataforma com dados de uso agregados e anônimos | Legítimo interesse             | Art. 7º, IX |
+| Cumprir obrigações legais (ex: ordem judicial)              | Cumprimento de obrigação legal | Art. 7º, II |
 
-A Nave **não usa dados pessoais para publicidade de terceiros**.
+A navestory **não usa dados pessoais para publicidade de terceiros**.
 
 ---
 
@@ -37,7 +37,7 @@ A Nave **não usa dados pessoais para publicidade de terceiros**.
 
 ### 3.1 Dados fornecidos pelo usuário
 
-- Identificação: nome completo, e-mail, senha (armazenada como hash bcrypt pelo Supabase GoTrue — a Nave nunca vê o hash)
+- Identificação: nome completo, e-mail, senha (armazenada como hash bcrypt pelo Supabase GoTrue — a navestory nunca vê o hash)
 - Dados de veículo: placa, marca, modelo, ano, cor, fotos, odômetro
 - Dados financeiros: despesas por categoria, valores, datas, fornecedores de combustível
 - Dados de manutenção: tipo de serviço, data agendada, custo realizado
@@ -63,35 +63,35 @@ A Nave **não usa dados pessoais para publicidade de terceiros**.
 
 ## 4. Medidas técnicas de proteção
 
-| Medida | Implementação |
-|--------|--------------|
-| Isolamento por usuário | Row Level Security (RLS) no PostgreSQL — `auth.uid() = user_id` em todas as tabelas (regra S2) |
-| Criptografia em repouso | Gerenciada pela infraestrutura Supabase/AWS |
-| Criptografia em trânsito | HTTPS/TLS obrigatório em todos os endpoints |
-| Autenticação stateless | JWT com access token de 15min; refresh token de 7 dias (ADR-003) |
-| Rate limiting | 100 req/60s global; 5 req/15min para registro; 10 req/15min para login (regra S4) |
-| Logs sem PII | `audit_logs.changes` omite campos sensíveis: `user_id`, `photo_url`, tokens (regra R-MON-02) |
-| Stack trace oculto | `HttpExceptionFilter` não expõe stack em `NODE_ENV=production` (regra S5) |
-| Chave de serviço isolada | `SUPABASE_SERVICE_ROLE_KEY` apenas no backend; nunca exposta como `NEXT_PUBLIC_*` (regra S3) |
-| Limpeza de cache offline | Cache do Service Worker limpo no evento `SIGNED_OUT` do Supabase Auth (regra S6) |
-| Auditoria completa | Toda mutação registrada em `audit_logs` com `action`, `table_name`, `record_id`, `changes` (regra C2) |
+| Medida                   | Implementação                                                                                         |
+| ------------------------ | ----------------------------------------------------------------------------------------------------- |
+| Isolamento por usuário   | Row Level Security (RLS) no PostgreSQL — `auth.uid() = user_id` em todas as tabelas (regra S2)        |
+| Criptografia em repouso  | Gerenciada pela infraestrutura Supabase/AWS                                                           |
+| Criptografia em trânsito | HTTPS/TLS obrigatório em todos os endpoints                                                           |
+| Autenticação stateless   | JWT com access token de 15min; refresh token de 7 dias (ADR-003)                                      |
+| Rate limiting            | 100 req/60s global; 5 req/15min para registro; 10 req/15min para login (regra S4)                     |
+| Logs sem PII             | `audit_logs.changes` omite campos sensíveis: `user_id`, `photo_url`, tokens (regra R-MON-02)          |
+| Stack trace oculto       | `HttpExceptionFilter` não expõe stack em `NODE_ENV=production` (regra S5)                             |
+| Chave de serviço isolada | `SUPABASE_SERVICE_ROLE_KEY` apenas no backend; nunca exposta como `NEXT_PUBLIC_*` (regra S3)          |
+| Limpeza de cache offline | Cache do Service Worker limpo no evento `SIGNED_OUT` do Supabase Auth (regra S6)                      |
+| Auditoria completa       | Toda mutação registrada em `audit_logs` com `action`, `table_name`, `record_id`, `changes` (regra C2) |
 
 ---
 
 ## 5. Direitos do titular de dados
 
-Os usuários podem exercer os seguintes direitos via **privacidade@nave.app** (prazo de resposta: 5 dias úteis):
+Os usuários podem exercer os seguintes direitos via **privacidade@navestory.app** (prazo de resposta: 5 dias úteis):
 
-| Direito | Como é atendido |
-|---------|----------------|
-| Acesso (art. 18, I) | Solicitação por e-mail; dados exibidos na própria plataforma |
-| Correção (art. 18, III) | Direto nas configurações do perfil ou por e-mail |
-| Exclusão (art. 18, VI) | Self-service: Configurações da conta → "Excluir conta" (ver Seção 6) |
-| Portabilidade (art. 18, V) | Export CSV disponível no Dashboard (SPEC-20260521-003); também por e-mail |
-| Revogação de consentimento (art. 18, IX) | Por e-mail; pode limitar funcionalidades |
+| Direito                                          | Como é atendido                                                                        |
+| ------------------------------------------------ | -------------------------------------------------------------------------------------- |
+| Acesso (art. 18, I)                              | Solicitação por e-mail; dados exibidos na própria plataforma                           |
+| Correção (art. 18, III)                          | Direto nas configurações do perfil ou por e-mail                                       |
+| Exclusão (art. 18, VI)                           | Self-service: Configurações da conta → "Excluir conta" (ver Seção 6)                   |
+| Portabilidade (art. 18, V)                       | Export CSV disponível no Dashboard (SPEC-20260521-003); também por e-mail              |
+| Revogação de consentimento (art. 18, IX)         | Por e-mail; pode limitar funcionalidades                                               |
 | Informação sobre compartilhamento (art. 18, VII) | Por e-mail; ver lista de subprocessadores em `docs/legal/data-processing-agreement.md` |
-| Oposição (art. 18, XI) | Por e-mail para tratamento baseado em legítimo interesse |
-| Revisão de decisão automatizada | Por e-mail; aplicável quando relevante |
+| Oposição (art. 18, XI)                           | Por e-mail para tratamento baseado em legítimo interesse                               |
+| Revisão de decisão automatizada                  | Por e-mail; aplicável quando relevante                                                 |
 
 Reclamações podem ser encaminhadas à **ANPD** em gov.br/anpd.
 
@@ -124,13 +124,13 @@ Reclamações podem ser encaminhadas à **ANPD** em gov.br/anpd.
 
 ## 7. Retenção de dados
 
-| Situação | Prazo |
-|----------|-------|
-| Conta ativa | Enquanto o usuário usar o serviço |
-| Após solicitação de exclusão | 30 dias de graça (R-BIZ-05) |
-| Após o período de graça | Exclusão definitiva ou anonimização |
-| Logs de segurança (sem PII) | Até 12 meses |
-| Dados exigidos por obrigação legal | Conforme a legislação aplicável |
+| Situação                                                    | Prazo                                                                                                                                                           |
+| ----------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Conta ativa                                                 | Enquanto o usuário usar o serviço                                                                                                                               |
+| Após solicitação de exclusão                                | 30 dias de graça (R-BIZ-05)                                                                                                                                     |
+| Após o período de graça                                     | Exclusão definitiva ou anonimização                                                                                                                             |
+| Logs de segurança (sem PII)                                 | Até 12 meses                                                                                                                                                    |
+| Dados exigidos por obrigação legal                          | Conforme a legislação aplicável                                                                                                                                 |
 | Resumos mensais consolidados (plano Gratuito pós-downgrade) | Retidos indefinidamente enquanto a conta existir (R-BIZ-09); detalhes fora da janela do plano são consolidados, nunca deletados durante grace period (R-BIZ-10) |
 
 ---
@@ -144,18 +144,18 @@ Em caso de incidente que coloque dados pessoais em risco:
 3. Comunicar à ANPD quando aplicável (art. 48 da LGPD)
 4. Registrar o incidente internamente com data, descrição, dados afetados e medidas tomadas
 
-Contato: **seguranca@nave.app**
+Contato: **seguranca@navestory.app**
 
 ---
 
 ## 9. Cookies e armazenamento local
 
-| Recurso | Conteúdo | Finalidade |
-|---------|----------|------------|
-| Cookie de sessão (httpOnly) | JWT de autenticação | Manter sessão segura |
-| Service Worker cache | Assets do app e respostas da API (dados removidos no logout — S6) | Funcionamento offline e performance |
-| localStorage | Preferências de interface; contexto de veículo "Em Foco" (R-CTX-02) | Experiência personalizada |
-| sessionStorage | Rascunho automático de formulários quando `auto_draft_enabled = true` (R-PREF-02) | Recuperação de dados em caso de fechamento acidental |
+| Recurso                     | Conteúdo                                                                          | Finalidade                                           |
+| --------------------------- | --------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| Cookie de sessão (httpOnly) | JWT de autenticação                                                               | Manter sessão segura                                 |
+| Service Worker cache        | Assets do app e respostas da API (dados removidos no logout — S6)                 | Funcionamento offline e performance                  |
+| localStorage                | Preferências de interface; contexto de veículo "Em Foco" (R-CTX-02)               | Experiência personalizada                            |
+| sessionStorage              | Rascunho automático de formulários quando `auto_draft_enabled = true` (R-PREF-02) | Recuperação de dados em caso de fechamento acidental |
 
 Não são usados cookies de rastreamento publicitário nem ferramentas de analytics que identifiquem o usuário individualmente.
 

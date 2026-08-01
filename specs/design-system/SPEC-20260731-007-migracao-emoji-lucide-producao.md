@@ -11,7 +11,7 @@ camadas: [frontend, design]
 
 ## Contexto
 
-O design system do Nave define formalmente o padrão de iconografia em `specs/design-system/PROPOSTA-BRAND-DESIGN-SYSTEM-2026-07-30.md` §8 e exemplifica o padrão na vitrine em `apps/web/src/app/(app)/design-system/_components/sections/iconografia.tsx`: biblioteca Lucide (`lucide-react`), stroke-based, grid 24×24px, traço 1.5–2px, cor via `currentColor`, proibido ícone multicolor "sticker".
+O design system do navestory define formalmente o padrão de iconografia em `specs/design-system/PROPOSTA-BRAND-DESIGN-SYSTEM-2026-07-30.md` §8 e exemplifica o padrão na vitrine em `apps/web/src/app/(app)/design-system/_components/sections/iconografia.tsx`: biblioteca Lucide (`lucide-react`), stroke-based, grid 24×24px, traço 1.5–2px, cor via `currentColor`, proibido ícone multicolor "sticker".
 
 No entanto, dois pontos de produção — as telas de maior visibilidade do produto — ainda utilizam emojis crus como ícone funcional:
 
@@ -58,30 +58,30 @@ Substituir todos os emojis usados como ícones funcionais em `kpi-catalog.ts` e 
 
 ## Requisitos Funcionais
 
-| ID | Requisito | Prioridade | História relacionada |
-|----|-----------|------------|----------------------|
-| RF-01 | Em `kpi-catalog.ts`, o campo `icon` muda de `string` (emoji) para `LucideIcon` (import de tipo de `lucide-react`). O arquivo permanece `.ts` (sem virar `.tsx`) — `LucideIcon` é import de tipo, sem JSX no arquivo. | Alta | US-01, US-03 |
-| RF-02 | Os 8 emojis do catálogo de KPI são substituídos pelos componentes Lucide conforme a tabela de mapeamento da seção "Notas Técnicas". | Alta | US-01 |
-| RF-03 | Em `DashboardKpiGrid.tsx`, o render de `meta.icon` (atualmente `<span aria-hidden>{meta.icon}</span>`) é atualizado para instanciar o componente Lucide dinamicamente (ex.: `<meta.Icon size={16} aria-hidden />`), usando `size={16}` adequado ao contexto de card compacto. | Alta | US-01 |
-| RF-04 | O `<span aria-hidden>⚠</span>` hardcoded em `DashboardKpiGrid.tsx` (estado "unavailable" do KPI, aprox. linha 120) é substituído por `<TriangleAlert size={16} aria-hidden />`. | Alta | US-01 |
-| RF-05 | Em `KpiPicker.tsx`, o render do campo `icon` da lista de checkboxes é atualizado de interpolação de string para instância Lucide com `size={16}` (contexto de label/checkbox — menor que o padrão de 24px da vitrine). | Alta | US-01 |
-| RF-06 | Em `atividades/page.tsx`, o campo `icon` de `DOMAIN_LABELS` muda de `string` (emoji) para `LucideIcon`. A função `domainInfo()` tem seu tipo de retorno atualizado de forma correspondente. | Alta | US-02, US-03 |
-| RF-07 | Os 9 domínios de `DOMAIN_LABELS` (vehicles, expenses, maintenances, fines, recurring_costs, vehicle_odometer_cycles, auth, users, fallback) são substituídos pelos componentes Lucide conforme a tabela de mapeamento da seção "Notas Técnicas". | Alta | US-02 |
-| RF-08 | O render site do campo `icon` na tabela de atividades é atualizado para instanciar o componente Lucide com tamanho adequado ao contexto de tabela. | Alta | US-02 |
-| RF-09 | O `<EmptyState icon="🛡️" .../>` em `atividades/page.tsx` é atualizado para `<EmptyState icon={<ShieldAlert size={24} aria-hidden />} .../>` (ou prop equivalente que o componente `EmptyState` aceite como `ReactNode`). | Média | US-02 |
-| RF-10 | Todos os arquivos alterados recebem comentário de rastreabilidade `// @spec SPEC-20260731-007 RF-XX` no topo ou na função correspondente, usando a sintaxe nativa de TS. | Baixa | — |
+| ID    | Requisito                                                                                                                                                                                                                                                                     | Prioridade | História relacionada |
+| ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | -------------------- |
+| RF-01 | Em `kpi-catalog.ts`, o campo `icon` muda de `string` (emoji) para `LucideIcon` (import de tipo de `lucide-react`). O arquivo permanece `.ts` (sem virar `.tsx`) — `LucideIcon` é import de tipo, sem JSX no arquivo.                                                          | Alta       | US-01, US-03         |
+| RF-02 | Os 8 emojis do catálogo de KPI são substituídos pelos componentes Lucide conforme a tabela de mapeamento da seção "Notas Técnicas".                                                                                                                                           | Alta       | US-01                |
+| RF-03 | Em `DashboardKpiGrid.tsx`, o render de `meta.icon` (atualmente `<span aria-hidden>{meta.icon}</span>`) é atualizado para instanciar o componente Lucide dinamicamente (ex.: `<meta.Icon size={16} aria-hidden />`), usando `size={16}` adequado ao contexto de card compacto. | Alta       | US-01                |
+| RF-04 | O `<span aria-hidden>⚠</span>` hardcoded em `DashboardKpiGrid.tsx` (estado "unavailable" do KPI, aprox. linha 120) é substituído por `<TriangleAlert size={16} aria-hidden />`.                                                                                               | Alta       | US-01                |
+| RF-05 | Em `KpiPicker.tsx`, o render do campo `icon` da lista de checkboxes é atualizado de interpolação de string para instância Lucide com `size={16}` (contexto de label/checkbox — menor que o padrão de 24px da vitrine).                                                        | Alta       | US-01                |
+| RF-06 | Em `atividades/page.tsx`, o campo `icon` de `DOMAIN_LABELS` muda de `string` (emoji) para `LucideIcon`. A função `domainInfo()` tem seu tipo de retorno atualizado de forma correspondente.                                                                                   | Alta       | US-02, US-03         |
+| RF-07 | Os 9 domínios de `DOMAIN_LABELS` (vehicles, expenses, maintenances, fines, recurring_costs, vehicle_odometer_cycles, auth, users, fallback) são substituídos pelos componentes Lucide conforme a tabela de mapeamento da seção "Notas Técnicas".                              | Alta       | US-02                |
+| RF-08 | O render site do campo `icon` na tabela de atividades é atualizado para instanciar o componente Lucide com tamanho adequado ao contexto de tabela.                                                                                                                            | Alta       | US-02                |
+| RF-09 | O `<EmptyState icon="🛡️" .../>` em `atividades/page.tsx` é atualizado para `<EmptyState icon={<ShieldAlert size={24} aria-hidden />} .../>` (ou prop equivalente que o componente `EmptyState` aceite como `ReactNode`).                                                      | Média      | US-02                |
+| RF-10 | Todos os arquivos alterados recebem comentário de rastreabilidade `// @spec SPEC-20260731-007 RF-XX` no topo ou na função correspondente, usando a sintaxe nativa de TS.                                                                                                      | Baixa      | —                    |
 
 ---
 
 ## Requisitos Não-Funcionais
 
-| ID | Requisito | Métrica de Aceite |
-|----|-----------|------------------|
-| RNF-01 | Sem regressão de build | `next build` e `tsc --noEmit` terminam sem erro após a migração |
-| RNF-02 | Sem regressão de testes existentes | `pnpm test` (unit + component) continua verde; nenhum teste precisa ser alterado pois nenhum verifica emoji |
-| RNF-03 | Consistência de tamanho de ícone | KPI cards e KpiPicker usam `size={16}`; tabela de atividades usa o tamanho definido na linha de render existente (verificar contexto e documentar decisão no PR); EmptyState usa `size={24}` (padrão do design system para empty states) |
-| RNF-04 | Acessibilidade | Todos os ícones decorativos mantêm `aria-hidden` (já presente nos emojis — não regredir) |
-| RNF-05 | Sem dependência nova | `lucide-react@^1.25.0` já está em `apps/web/package.json`; nenhum `npm install` adicional é necessário |
+| ID     | Requisito                          | Métrica de Aceite                                                                                                                                                                                                                        |
+| ------ | ---------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| RNF-01 | Sem regressão de build             | `next build` e `tsc --noEmit` terminam sem erro após a migração                                                                                                                                                                          |
+| RNF-02 | Sem regressão de testes existentes | `pnpm test` (unit + component) continua verde; nenhum teste precisa ser alterado pois nenhum verifica emoji                                                                                                                              |
+| RNF-03 | Consistência de tamanho de ícone   | KPI cards e KpiPicker usam `size={16}`; tabela de atividades usa o tamanho definido na linha de render existente (verificar contexto e documentar decisão no PR); EmptyState usa `size={24}` (padrão do design system para empty states) |
+| RNF-04 | Acessibilidade                     | Todos os ícones decorativos mantêm `aria-hidden` (já presente nos emojis — não regredir)                                                                                                                                                 |
+| RNF-05 | Sem dependência nova               | `lucide-react@^1.25.0` já está em `apps/web/package.json`; nenhum `npm install` adicional é necessário                                                                                                                                   |
 
 ---
 
@@ -98,14 +98,14 @@ Substituir todos os emojis usados como ícones funcionais em `kpi-catalog.ts` e 
 
 ## Dependências
 
-| Tipo | Referência | Descrição |
-|------|-----------|-----------|
-| Biblioteca | `lucide-react@^1.25.0` | Já declarada em `apps/web/package.json`; import de tipo `LucideIcon` e componentes individuais |
-| Spec | SPEC-20260525-001 | Design System — Componentes UI; `KpiCard` em `packages/ui` já aceita `icon: ReactNode?` |
-| Spec | SPEC-20260721-001 | Design System — Fundamentos de Marca; define Lucide como padrão de iconografia |
-| Análise de Impacto | IMPACTO-046 | `matrices/impacto.md` — avaliação de risco e mapeamento de módulos afetados, 2026-07-31 |
-| Documento | `specs/design-system/PROPOSTA-BRAND-DESIGN-SYSTEM-2026-07-30.md` §8 | Seção "Iconografia e Ilustração" — regras de uso Lucide no Nave |
-| Vitrine | `apps/web/src/app/(app)/design-system/_components/sections/iconografia.tsx` | Specimen de referência do padrão de iconografia em produção |
+| Tipo               | Referência                                                                  | Descrição                                                                                      |
+| ------------------ | --------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| Biblioteca         | `lucide-react@^1.25.0`                                                      | Já declarada em `apps/web/package.json`; import de tipo `LucideIcon` e componentes individuais |
+| Spec               | SPEC-20260525-001                                                           | Design System — Componentes UI; `KpiCard` em `packages/ui` já aceita `icon: ReactNode?`        |
+| Spec               | SPEC-20260721-001                                                           | Design System — Fundamentos de Marca; define Lucide como padrão de iconografia                 |
+| Análise de Impacto | IMPACTO-046                                                                 | `matrices/impacto.md` — avaliação de risco e mapeamento de módulos afetados, 2026-07-31        |
+| Documento          | `specs/design-system/PROPOSTA-BRAND-DESIGN-SYSTEM-2026-07-30.md` §8         | Seção "Iconografia e Ilustração" — regras de uso Lucide no navestory                           |
+| Vitrine            | `apps/web/src/app/(app)/design-system/_components/sections/iconografia.tsx` | Specimen de referência do padrão de iconografia em produção                                    |
 
 ---
 
@@ -115,23 +115,23 @@ Substituir todos os emojis usados como ícones funcionais em `kpi-catalog.ts` e 
 
 A tabela abaixo é a decisão de mapeamento adotada nesta spec. Não reabrir para discussão durante a implementação — desvios exigem atualização da spec antes de commitar.
 
-| Emoji | Contexto | Componente Lucide |
-|-------|----------|-------------------|
-| 💰 | Gastos do mês (KPI) | `Wallet` |
-| ⛽ | Custo/km (KPI) | `Fuel` |
-| ❤️ | Saúde da frota (KPI) | `HeartPulse` |
-| 🔧 | Manutenções urgentes (KPI) / Manutenção (domínio) | `Wrench` |
-| 🚗 | Total de veículos (KPI) / Veículo (domínio) | `Car` |
-| 📅 | Próxima manutenção (KPI) | `CalendarClock` |
-| ⏳ | Próximos 7 dias (KPI) | `Timer` |
-| ⚠️ / ⚠ | Anomalias de gasto (KPI) / estado "unavailable" hardcoded | `TriangleAlert` |
-| 🧾 | Despesa (domínio) | `Receipt` |
-| 🚓 | Multa (domínio) | `ShieldAlert` |
-| 🔁 | Custo Recorrente (domínio) | `Repeat` |
-| 📍 | Ciclo de Odômetro (domínio) | `Gauge` |
-| 👤 | Conta/usuário — domínios `auth` e `users` | `User` |
-| 📄 | Fallback (domínio desconhecido) | `FileText` |
-| 🛡️ | EmptyState de atividades | `ShieldAlert` |
+| Emoji  | Contexto                                                  | Componente Lucide |
+| ------ | --------------------------------------------------------- | ----------------- |
+| 💰     | Gastos do mês (KPI)                                       | `Wallet`          |
+| ⛽     | Custo/km (KPI)                                            | `Fuel`            |
+| ❤️     | Saúde da frota (KPI)                                      | `HeartPulse`      |
+| 🔧     | Manutenções urgentes (KPI) / Manutenção (domínio)         | `Wrench`          |
+| 🚗     | Total de veículos (KPI) / Veículo (domínio)               | `Car`             |
+| 📅     | Próxima manutenção (KPI)                                  | `CalendarClock`   |
+| ⏳     | Próximos 7 dias (KPI)                                     | `Timer`           |
+| ⚠️ / ⚠ | Anomalias de gasto (KPI) / estado "unavailable" hardcoded | `TriangleAlert`   |
+| 🧾     | Despesa (domínio)                                         | `Receipt`         |
+| 🚓     | Multa (domínio)                                           | `ShieldAlert`     |
+| 🔁     | Custo Recorrente (domínio)                                | `Repeat`          |
+| 📍     | Ciclo de Odômetro (domínio)                               | `Gauge`           |
+| 👤     | Conta/usuário — domínios `auth` e `users`                 | `User`            |
+| 📄     | Fallback (domínio desconhecido)                           | `FileText`        |
+| 🛡️     | EmptyState de atividades                                  | `ShieldAlert`     |
 
 ### Tipagem de `LucideIcon` sem JSX no arquivo `.ts`
 
@@ -142,7 +142,7 @@ A tabela abaixo é a decisão de mapeamento adotada nesta spec. Não reabrir par
 ```tsx
 // Assumindo que meta.Icon é o componente Lucide armazenado no catálogo
 const Icon = meta.icon;
-<Icon size={16} aria-hidden />
+<Icon size={16} aria-hidden />;
 ```
 
 Ou inline com a prop diretamente (TypeScript infere corretamente quando `icon: LucideIcon`):
@@ -158,18 +158,19 @@ Verificar qual forma o linter/ESLint do projeto aceita para JSX com variável mi
 Não existe ESLint rule no projeto que bloqueie automaticamente o uso de emoji em campos de tipo `LucideIcon` ou `ReactNode`. Embora tecnicamente possível (regra de `no-restricted-syntax` para literais de string com faixa Unicode de emoji em determinadas posições de AST), a relação custo/benefício foi avaliada como desfavorável: a regra seria frágil (string emoji em contextos legítimos — ex: labels de usuário, textos de UI, toasts) e exigiria manutenção contínua.
 
 **A convenção é reforçada por:**
+
 1. O tipo `LucideIcon` em si — TypeScript rejeita em tempo de compilação qualquer `string` atribuída ao campo após a migração.
 2. Os exemplos Lucide já presentes no catálogo como referência visual para quem adicionar nova entrada.
 3. Esta spec como documentação de decisão, citável em code review.
 
 ### Tamanho de ícone por contexto
 
-| Contexto | Tamanho (`size` prop) | Justificativa |
-|----------|----------------------|---------------|
-| Cards de KPI (`DashboardKpiGrid`) | 16px | Contexto de informação densa; KpiCard já define espaço visual compacto |
-| Seletor de KPI (`KpiPicker`) | 16px | Inline com label/checkbox — ícone decorativo, não o foco |
-| Tabela de atividades | A verificar no contexto de linha da tabela; sugerido 16px | Manter proporção com o texto da célula |
-| EmptyState de atividades | 24px | Padrão do design system para empty states — é o foco visual da tela |
+| Contexto                          | Tamanho (`size` prop)                                     | Justificativa                                                          |
+| --------------------------------- | --------------------------------------------------------- | ---------------------------------------------------------------------- |
+| Cards de KPI (`DashboardKpiGrid`) | 16px                                                      | Contexto de informação densa; KpiCard já define espaço visual compacto |
+| Seletor de KPI (`KpiPicker`)      | 16px                                                      | Inline com label/checkbox — ícone decorativo, não o foco               |
+| Tabela de atividades              | A verificar no contexto de linha da tabela; sugerido 16px | Manter proporção com o texto da célula                                 |
+| EmptyState de atividades          | 24px                                                      | Padrão do design system para empty states — é o foco visual da tela    |
 
 ---
 
@@ -199,5 +200,5 @@ por revisão visual pós-implementação.
 > Preencher apenas após `status: approved`. Mudança estrutural (reverte/substitui requisito) não edita aqui — cria spec nova com `superseded_by`.
 
 | Data | O que mudou | Por quê |
-|------|-------------|---------|
-| | | |
+| ---- | ----------- | ------- |
+|      |             |         |

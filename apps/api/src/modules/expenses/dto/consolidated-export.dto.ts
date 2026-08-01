@@ -1,4 +1,4 @@
-import { consolidatedExportQuerySchema } from "@nave/validators";
+import { consolidatedExportQuerySchema } from "@navestory/validators";
 import type { z } from "zod";
 
 export const consolidatedExportDtoSchema = consolidatedExportQuerySchema;

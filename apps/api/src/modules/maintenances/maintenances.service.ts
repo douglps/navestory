@@ -7,12 +7,19 @@ import {
   UnprocessableEntityException,
 } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
-import { MAINTENANCE_STATUS_TRANSITIONS, type Maintenance, type MaintenanceStatus } from "@nave/validators";
+import {
+  MAINTENANCE_STATUS_TRANSITIONS,
+  type Maintenance,
+  type MaintenanceStatus,
+} from "@navestory/validators";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { AuditService } from "../../shared/audit/audit.service";
 import { createUserScopedClient } from "../../shared/supabase/create-user-scoped-client";
 import { SUPABASE_ADMIN_CLIENT } from "../../shared/supabase/supabase.constants";
-import { FALLBACK_TIMEZONE, resolveDateTimeInput } from "../../shared/utils/date.utils";
+import {
+  FALLBACK_TIMEZONE,
+  resolveDateTimeInput,
+} from "../../shared/utils/date.utils";
 import { ExpensesService } from "../expenses/expenses.service";
 import { PreferencesService } from "../preferences/preferences.service";
 import type { CreateMaintenanceDto } from "./dto/create-maintenance.dto";
@@ -44,7 +51,8 @@ export class MaintenancesService {
   private readonly logger = new Logger(MaintenancesService.name);
 
   constructor(
-    @Inject(SUPABASE_ADMIN_CLIENT) private readonly supabaseAdmin: SupabaseClient,
+    @Inject(SUPABASE_ADMIN_CLIENT)
+    private readonly supabaseAdmin: SupabaseClient,
     private readonly configService: ConfigService,
     private readonly auditService: AuditService,
     private readonly expensesService: ExpensesService,
@@ -60,8 +68,14 @@ export class MaintenancesService {
   }
 
   /** @spec SPEC-20260715-002 R-TZ-01, RF-BK-05 */
-  private async resolveUserTimezone(accessToken: string, userId: string): Promise<string> {
-    const preferences = await this.preferencesService.findOne(accessToken, userId);
+  private async resolveUserTimezone(
+    accessToken: string,
+    userId: string,
+  ): Promise<string> {
+    const preferences = await this.preferencesService.findOne(
+      accessToken,
+      userId,
+    );
     return preferences.timezone ?? FALLBACK_TIMEZONE;
   }
 
@@ -124,18 +138,31 @@ export class MaintenancesService {
     vehicleId: string,
     odometerKm: number | null | undefined,
     excludeMaintenanceId?: string,
-  ): Promise<Pick<MaintenanceWithOdometerWarning, "odometer_warning" | "odometer_previous_max_km">> {
+  ): Promise<
+    Pick<
+      MaintenanceWithOdometerWarning,
+      "odometer_warning" | "odometer_previous_max_km"
+    >
+  > {
     if (odometerKm == null) {
       return {};
     }
 
     try {
-      const maxKm = await this.findMaxOdometerByVehicle(client, vehicleId, userId, excludeMaintenanceId);
+      const maxKm = await this.findMaxOdometerByVehicle(
+        client,
+        vehicleId,
+        userId,
+        excludeMaintenanceId,
+      );
       if (maxKm != null && odometerKm < maxKm) {
         return { odometer_warning: true, odometer_previous_max_km: maxKm };
       }
     } catch (err) {
-      this.logger.error("Falha ao verificar sequência de odômetro", err as Error);
+      this.logger.error(
+        "Falha ao verificar sequência de odômetro",
+        err as Error,
+      );
     }
     return {};
   }
@@ -160,7 +187,10 @@ export class MaintenancesService {
       ...dto,
       user_id: userId,
       scheduled_date: resolveDateTimeInput(dto.scheduled_date, tz),
-      completion_date: dto.completion_date != null ? resolveDateTimeInput(dto.completion_date, tz) : null,
+      completion_date:
+        dto.completion_date != null
+          ? resolveDateTimeInput(dto.completion_date, tz)
+          : null,
     };
     delete insertPayload.status;
 
@@ -230,14 +260,23 @@ export class MaintenancesService {
     const total = count ?? 0;
     return {
       data: (data ?? []) as Maintenance[],
-      meta: { total, page, limit, has_next: from + (data?.length ?? 0) < total },
+      meta: {
+        total,
+        page,
+        limit,
+        has_next: from + (data?.length ?? 0) < total,
+      },
     };
   }
 
   /**
    * @spec SPEC-20260715-001 RF-05
    */
-  async findOne(accessToken: string, userId: string, maintenanceId: string): Promise<Maintenance> {
+  async findOne(
+    accessToken: string,
+    userId: string,
+    maintenanceId: string,
+  ): Promise<Maintenance> {
     const { data, error } = await this.clientForUser(accessToken)
       .from("maintenances")
       .select(MAINTENANCE_COLUMNS)
@@ -267,12 +306,18 @@ export class MaintenancesService {
     const tz = await this.resolveUserTimezone(accessToken, userId);
 
     if (dto.status) {
-      const allowed: MaintenanceStatus[] = MAINTENANCE_STATUS_TRANSITIONS[existing.status];
+      const allowed: MaintenanceStatus[] =
+        MAINTENANCE_STATUS_TRANSITIONS[existing.status];
       if (!allowed.includes(dto.status)) {
-        throw new ConflictException(`Transição inválida: ${existing.status} → ${dto.status}`);
+        throw new ConflictException(
+          `Transição inválida: ${existing.status} → ${dto.status}`,
+        );
       }
 
-      if (dto.status === "completed" && (dto.odometer_km ?? existing.odometer_km) == null) {
+      if (
+        dto.status === "completed" &&
+        (dto.odometer_km ?? existing.odometer_km) == null
+      ) {
         throw new UnprocessableEntityException(
           "odometer_km é obrigatório para concluir uma manutenção",
         );
@@ -287,14 +332,17 @@ export class MaintenancesService {
 
     if (dto.completion_date !== undefined) {
       const resolvedCompletionDate =
-        dto.completion_date != null ? resolveDateTimeInput(dto.completion_date, tz) : null;
+        dto.completion_date != null
+          ? resolveDateTimeInput(dto.completion_date, tz)
+          : null;
 
       // @spec SPEC-20260715-002 RF-BK-10, R-TZ-04 — completion_date não pode exceder "agora" em
       // mais de 24h (dia/hora calendário do usuário); diferente de RF-BK-09 (despesa futura), aqui
       // a operação é bloqueada, não apenas sinalizada.
       if (
         resolvedCompletionDate != null &&
-        new Date(resolvedCompletionDate).getTime() - Date.now() > COMPLETION_DATE_FUTURE_TOLERANCE_MS
+        new Date(resolvedCompletionDate).getTime() - Date.now() >
+          COMPLETION_DATE_FUTURE_TOLERANCE_MS
       ) {
         throw new UnprocessableEntityException(
           "completion_date não pode exceder a data/hora atual em mais de 24 horas",
@@ -339,7 +387,12 @@ export class MaintenancesService {
           description: updated.description,
         });
       } else if (updated.status === "cancelled") {
-        await this.expensesService.softDeleteBySource(accessToken, userId, "maintenance", updated.id);
+        await this.expensesService.softDeleteBySource(
+          accessToken,
+          userId,
+          "maintenance",
+          updated.id,
+        );
       }
     }
 
@@ -357,7 +410,11 @@ export class MaintenancesService {
   /**
    * @spec SPEC-20260715-001 RF-12, R5, R-HUB-01
    */
-  async remove(accessToken: string, userId: string, maintenanceId: string): Promise<void> {
+  async remove(
+    accessToken: string,
+    userId: string,
+    maintenanceId: string,
+  ): Promise<void> {
     await this.findOne(accessToken, userId, maintenanceId);
 
     const { error } = await this.clientForUser(accessToken)
@@ -378,6 +435,11 @@ export class MaintenancesService {
       recordId: maintenanceId,
     });
 
-    await this.expensesService.softDeleteBySource(accessToken, userId, "maintenance", maintenanceId);
+    await this.expensesService.softDeleteBySource(
+      accessToken,
+      userId,
+      "maintenance",
+      maintenanceId,
+    );
   }
 }

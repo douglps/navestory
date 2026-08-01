@@ -1,7 +1,10 @@
 "use client";
 
-import { createGroupInputSchema, PRESET_GROUP_COLORS } from "@nave/validators";
-import { Alert, Button, Checkbox, Container, Input } from "@nave/ui";
+import {
+  createGroupInputSchema,
+  PRESET_GROUP_COLORS,
+} from "@navestory/validators";
+import { Alert, Button, Checkbox, Container, Input } from "@navestory/ui";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent, type ReactNode } from "react";
@@ -77,7 +80,12 @@ export default function NewVehicleGroupPage(): ReactNode {
       <h1 className="text-xl font-semibold">Novo grupo de veículos</h1>
       <form onSubmit={handleSubmit} className="flex flex-col gap-3">
         <label htmlFor="name">Nome</label>
-        <Input id="name" value={name} onChange={(event) => setName(event.target.value)} required />
+        <Input
+          id="name"
+          value={name}
+          onChange={(event) => setName(event.target.value)}
+          required
+        />
 
         <label htmlFor="color">Cor</label>
         <div className="flex gap-2">
@@ -93,7 +101,11 @@ export default function NewVehicleGroupPage(): ReactNode {
             />
           ))}
         </div>
-        <Input id="color" value={color} onChange={(event) => setColor(event.target.value)} />
+        <Input
+          id="color"
+          value={color}
+          onChange={(event) => setColor(event.target.value)}
+        />
 
         <fieldset className="flex flex-col gap-1">
           <legend>Veículos membros</legend>
@@ -109,7 +121,12 @@ export default function NewVehicleGroupPage(): ReactNode {
         </fieldset>
 
         {fieldError && <Alert variant="error" description={fieldError} />}
-        {mutation.isError && <Alert variant="error" description="Não foi possível criar o grupo." />}
+        {mutation.isError && (
+          <Alert
+            variant="error"
+            description="Não foi possível criar o grupo."
+          />
+        )}
 
         <Button type="submit" disabled={mutation.isPending}>
           {mutation.isPending ? "Salvando..." : "Criar grupo"}

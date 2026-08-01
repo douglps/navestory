@@ -8,7 +8,7 @@ import type {
   MonthlyForecastPoint,
   SeasonalHeatmapCell,
   VehicleTco,
-} from "@nave/validators";
+} from "@navestory/validators";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { escapeCsvField } from "../../shared/csv/csv.util";
 import { createUserScopedClient } from "../../shared/supabase/create-user-scoped-client";
@@ -46,7 +46,8 @@ function monthsBetween(startDateStr: string, endDateStr: string): number {
   const start = new Date(startDateStr);
   const end = new Date(endDateStr);
   const months =
-    (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth());
+    (end.getFullYear() - start.getFullYear()) * 12 +
+    (end.getMonth() - start.getMonth());
   return Math.max(months, 1);
 }
 
@@ -98,9 +99,12 @@ export class AnalyticsService {
    * @spec SPEC-20260622-001 RF-01, RF-07
    */
   async getTco(accessToken: string, vehicleId: string): Promise<VehicleTco> {
-    const { data, error } = await this.clientForUser(accessToken).rpc("calculate_vehicle_tco", {
-      p_vehicle_id: vehicleId,
-    });
+    const { data, error } = await this.clientForUser(accessToken).rpc(
+      "calculate_vehicle_tco",
+      {
+        p_vehicle_id: vehicleId,
+      },
+    );
 
     if (error) {
       throw new NotFoundException("Veículo não encontrado");
@@ -116,10 +120,13 @@ export class AnalyticsService {
     vehicleId: string,
     limit: number,
   ): Promise<FuelTrendPoint[]> {
-    const { data, error } = await this.clientForUser(accessToken).rpc("fuel_consumption_trend", {
-      p_vehicle_id: vehicleId,
-      p_limit: limit,
-    });
+    const { data, error } = await this.clientForUser(accessToken).rpc(
+      "fuel_consumption_trend",
+      {
+        p_vehicle_id: vehicleId,
+        p_limit: limit,
+      },
+    );
 
     if (error) {
       throw new NotFoundException("Veículo não encontrado");
@@ -135,25 +142,33 @@ export class AnalyticsService {
     threshold: number,
     vehicleId?: string,
   ): Promise<ExpenseAnomaly[]> {
-    const { data, error } = await this.clientForUser(accessToken).rpc("detect_expense_anomalies", {
-      p_threshold: threshold,
-    });
+    const { data, error } = await this.clientForUser(accessToken).rpc(
+      "detect_expense_anomalies",
+      {
+        p_threshold: threshold,
+      },
+    );
 
     if (error) {
       throw new NotFoundException("Não foi possível calcular anomalias");
     }
     const anomalies = (data ?? []) as ExpenseAnomaly[];
-    return vehicleId ? anomalies.filter((anomaly) => anomaly.vehicle_id === vehicleId) : anomalies;
+    return vehicleId
+      ? anomalies.filter((anomaly) => anomaly.vehicle_id === vehicleId)
+      : anomalies;
   }
 
   /**
    * @spec SPEC-20260622-001 RF-04, RF-10
    */
   async getBenchmark(accessToken: string): Promise<FleetBenchmarkEntry[]> {
-    const { data, error } = await this.clientForUser(accessToken).rpc("fleet_benchmark");
+    const { data, error } =
+      await this.clientForUser(accessToken).rpc("fleet_benchmark");
 
     if (error) {
-      throw new NotFoundException("Não foi possível calcular o benchmark da frota");
+      throw new NotFoundException(
+        "Não foi possível calcular o benchmark da frota",
+      );
     }
     return (data ?? []) as FleetBenchmarkEntry[];
   }
@@ -166,13 +181,18 @@ export class AnalyticsService {
     vehicleId: string | undefined,
     months: number,
   ): Promise<MonthlyForecastPoint[]> {
-    const { data, error } = await this.clientForUser(accessToken).rpc("forecast_monthly_costs", {
-      p_vehicle_id: vehicleId ?? null,
-      p_months_ahead: months,
-    });
+    const { data, error } = await this.clientForUser(accessToken).rpc(
+      "forecast_monthly_costs",
+      {
+        p_vehicle_id: vehicleId ?? null,
+        p_months_ahead: months,
+      },
+    );
 
     if (error) {
-      throw new NotFoundException("Não foi possível calcular a projeção de custos");
+      throw new NotFoundException(
+        "Não foi possível calcular a projeção de custos",
+      );
     }
     return (data ?? []) as MonthlyForecastPoint[];
   }
@@ -180,13 +200,21 @@ export class AnalyticsService {
   /**
    * @spec SPEC-20260622-001 RF-06, RF-12, R-ANA-07
    */
-  async getSeasonal(accessToken: string, vehicleId?: string): Promise<SeasonalHeatmapCell[]> {
-    const { data, error } = await this.clientForUser(accessToken).rpc("seasonal_expense_heatmap", {
-      p_vehicle_id: vehicleId ?? null,
-    });
+  async getSeasonal(
+    accessToken: string,
+    vehicleId?: string,
+  ): Promise<SeasonalHeatmapCell[]> {
+    const { data, error } = await this.clientForUser(accessToken).rpc(
+      "seasonal_expense_heatmap",
+      {
+        p_vehicle_id: vehicleId ?? null,
+      },
+    );
 
     if (error) {
-      throw new NotFoundException("Não foi possível calcular a sazonalidade de gastos");
+      throw new NotFoundException(
+        "Não foi possível calcular a sazonalidade de gastos",
+      );
     }
     return (data ?? []) as SeasonalHeatmapCell[];
   }
@@ -210,9 +238,10 @@ export class AnalyticsService {
     ]);
 
     const benchmark = (benchmarkResult.data ?? []) as FleetBenchmarkEntry[];
-    const scopedVehicles = (vehicleId
-      ? benchmark.filter((entry) => entry.vehicle_id === vehicleId)
-      : benchmark
+    const scopedVehicles = (
+      vehicleId
+        ? benchmark.filter((entry) => entry.vehicle_id === vehicleId)
+        : benchmark
     ).map((entry) => ({ vehicle_id: entry.vehicle_id, plate: entry.plate }));
 
     const [fuelInsights, finesInsight, supplierInsight] = await Promise.all([
@@ -311,14 +340,19 @@ export class AnalyticsService {
     vehicleId: string | undefined,
   ): AnalyticsInsight[] {
     const withCost = benchmark.filter(
-      (entry): entry is FleetBenchmarkEntry & { cost_per_km: number } => entry.cost_per_km != null,
+      (entry): entry is FleetBenchmarkEntry & { cost_per_km: number } =>
+        entry.cost_per_km != null,
     );
     if (withCost.length === 0) return [];
 
-    const avg = withCost.reduce((sum, entry) => sum + entry.cost_per_km, 0) / withCost.length;
+    const avg =
+      withCost.reduce((sum, entry) => sum + entry.cost_per_km, 0) /
+      withCost.length;
     if (avg <= 0) return [];
 
-    const scoped = vehicleId ? withCost.filter((entry) => entry.vehicle_id === vehicleId) : withCost;
+    const scoped = vehicleId
+      ? withCost.filter((entry) => entry.vehicle_id === vehicleId)
+      : withCost;
 
     return scoped
       .filter((entry) => entry.cost_per_km > avg * EFFICIENCY_THRESHOLD)
@@ -349,14 +383,18 @@ export class AnalyticsService {
       if (error) continue;
 
       const withRolling = ((data ?? []) as FuelTrendPoint[]).filter(
-        (point): point is FuelTrendPoint & { rolling_avg_kpl: number } => point.rolling_avg_kpl != null,
+        (point): point is FuelTrendPoint & { rolling_avg_kpl: number } =>
+          point.rolling_avg_kpl != null,
       );
       if (withRolling.length < 2) continue;
 
       const latest = withRolling[0];
       const previous = withRolling[1];
       if (!latest || !previous) continue;
-      if (latest.rolling_avg_kpl < previous.rolling_avg_kpl * FUEL_DEGRADATION_THRESHOLD) {
+      if (
+        latest.rolling_avg_kpl <
+        previous.rolling_avg_kpl * FUEL_DEGRADATION_THRESHOLD
+      ) {
         insights.push({
           type: "fuel_degradation",
           vehicle_id: vehicle.vehicle_id,
@@ -402,7 +440,10 @@ export class AnalyticsService {
     const rows = data as FineRow[];
     const firstRow = rows[0];
     if (!firstRow) return null;
-    const total = rows.reduce((sum, row) => sum + (row.amount_with_discount ?? row.amount), 0);
+    const total = rows.reduce(
+      (sum, row) => sum + (row.amount_with_discount ?? row.amount),
+      0,
+    );
     const nearestDueDate = rows.reduce(
       (min, row) => (row.due_date < min ? row.due_date : min),
       firstRow.due_date,
@@ -439,7 +480,9 @@ export class AnalyticsService {
       builder = builder.eq("vehicle_id", vehicleId);
     }
 
-    const { data, error } = await builder.order("occurred_at", { ascending: false }).limit(200);
+    const { data, error } = await builder
+      .order("occurred_at", { ascending: false })
+      .limit(200);
     if (error || !data) return null;
 
     const bySupplier = new Map<string, SupplierAggregate>();
@@ -463,7 +506,8 @@ export class AnalyticsService {
 
     if (bySupplier.size < 2) return null;
 
-    let mostUsed: { supplier: string; avgPrice: number; count: number } | null = null;
+    let mostUsed: { supplier: string; avgPrice: number; count: number } | null =
+      null;
     let cheapest: { supplier: string; avgPrice: number } | null = null;
 
     for (const [supplier, entry] of bySupplier) {
@@ -476,15 +520,21 @@ export class AnalyticsService {
       }
     }
 
-    if (!mostUsed || !cheapest || cheapest.supplier === mostUsed.supplier) return null;
+    if (!mostUsed || !cheapest || cheapest.supplier === mostUsed.supplier)
+      return null;
     if (cheapest.avgPrice >= mostUsed.avgPrice) return null;
 
     const currentEntry = bySupplier.get(mostUsed.supplier);
     if (!currentEntry) return null;
 
-    const monthsSpan = monthsBetween(currentEntry.firstDate, currentEntry.lastDate);
+    const monthsSpan = monthsBetween(
+      currentEntry.firstDate,
+      currentEntry.lastDate,
+    );
     const litersPerMonth = currentEntry.totalLiters / monthsSpan;
-    const monthlySavings = round2((mostUsed.avgPrice - cheapest.avgPrice) * litersPerMonth);
+    const monthlySavings = round2(
+      (mostUsed.avgPrice - cheapest.avgPrice) * litersPerMonth,
+    );
     if (monthlySavings <= 0) return null;
 
     return {
@@ -499,16 +549,20 @@ export class AnalyticsService {
   /**
    * @spec SPEC-20260622-001 RF-14 — trigger "projeção > 120% do mês anterior"
    */
-  private buildForecastInsight(points: MonthlyForecastPoint[]): AnalyticsInsight | null {
+  private buildForecastInsight(
+    points: MonthlyForecastPoint[],
+  ): AnalyticsInsight | null {
     const firstForecastIndex = points.findIndex((point) => point.is_forecast);
     if (firstForecastIndex <= 0) return null;
 
     // eslint-disable-next-line security/detect-object-injection -- índice derivado de findIndex/aritmética, não de input externo
     const forecastPoint = points[firstForecastIndex];
     const previousPoint = points[firstForecastIndex - 1];
-    if (!forecastPoint || !previousPoint || previousPoint.projected_amount <= 0) return null;
+    if (!forecastPoint || !previousPoint || previousPoint.projected_amount <= 0)
+      return null;
 
-    const ratio = forecastPoint.projected_amount / previousPoint.projected_amount;
+    const ratio =
+      forecastPoint.projected_amount / previousPoint.projected_amount;
     if (ratio <= FORECAST_INCREASE_THRESHOLD) return null;
 
     const pct = Math.round((ratio - 1) * 100);

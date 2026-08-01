@@ -9,7 +9,12 @@ import {
   UnauthorizedException,
   UseGuards,
 } from "@nestjs/common";
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from "@nestjs/swagger";
 import { Throttle } from "@nestjs/throttler";
 import type { Request, Response } from "express";
 import { UserId } from "../../common/decorators/user-id.decorator";
@@ -17,7 +22,10 @@ import { SupabaseAuthGuard } from "../../common/guards/supabase-auth.guard";
 import { ZodValidationPipe } from "../../common/pipes/zod-validation.pipe";
 import { AnalyticsService } from "./analytics.service";
 import { anomaliesDtoSchema, type AnomaliesDto } from "./dto/anomalies.dto";
-import { exportAnalyticsDtoSchema, type ExportAnalyticsDto } from "./dto/export-analytics.dto";
+import {
+  exportAnalyticsDtoSchema,
+  type ExportAnalyticsDto,
+} from "./dto/export-analytics.dto";
 import { forecastDtoSchema, type ForecastDto } from "./dto/forecast.dto";
 import { fuelTrendDtoSchema, type FuelTrendDto } from "./dto/fuel-trend.dto";
 import { insightsDtoSchema, type InsightsDto } from "./dto/insights.dto";
@@ -38,9 +46,15 @@ export class AnalyticsController {
 
   @Get("tco/:vehicleId")
   @Header("Cache-Control", CACHE_HEADER)
-  @ApiOperation({ summary: "TCO (Total Cost of Ownership) do veículo com breakdown por categoria" })
+  @ApiOperation({
+    summary:
+      "TCO (Total Cost of Ownership) do veículo com breakdown por categoria",
+  })
   @ApiResponse({ status: 200, description: "VehicleTco" })
-  @ApiResponse({ status: 404, description: "Veículo não encontrado ou não pertence ao usuário" })
+  @ApiResponse({
+    status: 404,
+    description: "Veículo não encontrado ou não pertence ao usuário",
+  })
   async getTco(@Req() req: Request, @Param("vehicleId") vehicleId: string) {
     const accessToken = this.extractAccessToken(req);
     const data = await this.analyticsService.getTco(accessToken, vehicleId);
@@ -49,16 +63,26 @@ export class AnalyticsController {
 
   @Get("fuel-trend/:vehicleId")
   @Header("Cache-Control", CACHE_HEADER)
-  @ApiOperation({ summary: "Tendência de consumo de combustível com rolling average (janela de 5)" })
+  @ApiOperation({
+    summary:
+      "Tendência de consumo de combustível com rolling average (janela de 5)",
+  })
   @ApiResponse({ status: 200, description: "Lista de FuelTrendPoint" })
-  @ApiResponse({ status: 404, description: "Veículo não encontrado ou não pertence ao usuário" })
+  @ApiResponse({
+    status: 404,
+    description: "Veículo não encontrado ou não pertence ao usuário",
+  })
   async getFuelTrend(
     @Req() req: Request,
     @Param("vehicleId") vehicleId: string,
     @Query(new ZodValidationPipe(fuelTrendDtoSchema)) query: FuelTrendDto,
   ) {
     const accessToken = this.extractAccessToken(req);
-    const data = await this.analyticsService.getFuelTrend(accessToken, vehicleId, query.limit);
+    const data = await this.analyticsService.getFuelTrend(
+      accessToken,
+      vehicleId,
+      query.limit,
+    );
     return { data };
   }
 
@@ -81,7 +105,9 @@ export class AnalyticsController {
 
   @Get("benchmark")
   @Header("Cache-Control", CACHE_HEADER)
-  @ApiOperation({ summary: "Ranking comparativo de eficiência entre veículos da frota" })
+  @ApiOperation({
+    summary: "Ranking comparativo de eficiência entre veículos da frota",
+  })
   @ApiResponse({ status: 200, description: "Lista de FleetBenchmarkEntry" })
   async getBenchmark(@Req() req: Request) {
     const accessToken = this.extractAccessToken(req);
@@ -91,14 +117,21 @@ export class AnalyticsController {
 
   @Get("forecast")
   @Header("Cache-Control", CACHE_HEADER)
-  @ApiOperation({ summary: "Projeção de custos futuros (média móvel de 3 meses, banda de ±1σ)" })
+  @ApiOperation({
+    summary:
+      "Projeção de custos futuros (média móvel de 3 meses, banda de ±1σ)",
+  })
   @ApiResponse({ status: 200, description: "Lista de MonthlyForecastPoint" })
   async getForecast(
     @Req() req: Request,
     @Query(new ZodValidationPipe(forecastDtoSchema)) query: ForecastDto,
   ) {
     const accessToken = this.extractAccessToken(req);
-    const data = await this.analyticsService.getForecast(accessToken, query.vehicle_id, query.months);
+    const data = await this.analyticsService.getForecast(
+      accessToken,
+      query.vehicle_id,
+      query.months,
+    );
     return { data };
   }
 
@@ -111,7 +144,10 @@ export class AnalyticsController {
     @Query(new ZodValidationPipe(seasonalDtoSchema)) query: SeasonalDto,
   ) {
     const accessToken = this.extractAccessToken(req);
-    const data = await this.analyticsService.getSeasonal(accessToken, query.vehicle_id);
+    const data = await this.analyticsService.getSeasonal(
+      accessToken,
+      query.vehicle_id,
+    );
     return { data };
   }
 
@@ -125,25 +161,39 @@ export class AnalyticsController {
     @Query(new ZodValidationPipe(insightsDtoSchema)) query: InsightsDto,
   ) {
     const accessToken = this.extractAccessToken(req);
-    const data = await this.analyticsService.getInsights(accessToken, userId, query.vehicle_id);
+    const data = await this.analyticsService.getInsights(
+      accessToken,
+      userId,
+      query.vehicle_id,
+    );
     return { data };
   }
 
   @Get("export")
   @Throttle({ default: { limit: 10, ttl: 300_000 } })
   @ApiOperation({ summary: "Exportar TCO e projeção de custos em CSV" })
-  @ApiResponse({ status: 200, description: "Arquivo CSV com TCO breakdown + forecast mensal" })
+  @ApiResponse({
+    status: 200,
+    description: "Arquivo CSV com TCO breakdown + forecast mensal",
+  })
   async exportCsv(
     @Req() req: Request,
-    @Query(new ZodValidationPipe(exportAnalyticsDtoSchema)) query: ExportAnalyticsDto,
+    @Query(new ZodValidationPipe(exportAnalyticsDtoSchema))
+    query: ExportAnalyticsDto,
     @Res() res: Response,
   ): Promise<void> {
     const accessToken = this.extractAccessToken(req);
-    const csv = await this.analyticsService.exportCsv(accessToken, query.vehicle_id);
+    const csv = await this.analyticsService.exportCsv(
+      accessToken,
+      query.vehicle_id,
+    );
 
     const date = new Date().toISOString().slice(0, 10);
     res.setHeader("Content-Type", "text/csv; charset=utf-8");
-    res.setHeader("Content-Disposition", `attachment; filename="analytics-${date}.csv"`);
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="analytics-${date}.csv"`,
+    );
     res.send(CSV_BOM + csv);
   }
 
@@ -152,7 +202,9 @@ export class AnalyticsController {
     if (header?.startsWith("Bearer ")) {
       return header.slice("Bearer ".length);
     }
-    const cookieToken = req.cookies?.nave_access_token as string | undefined;
+    const cookieToken = req.cookies?.navestory_access_token as
+      | string
+      | undefined;
     if (cookieToken) {
       return cookieToken;
     }

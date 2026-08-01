@@ -19,17 +19,27 @@ describe("VehicleGroupsController", () => {
     };
   }
 
-  const req = { headers: { authorization: "Bearer token-123" }, cookies: {} } as Request;
+  const req = {
+    headers: { authorization: "Bearer token-123" },
+    cookies: {},
+  } as Request;
 
   it("create extrai o token e cria o grupo", async () => {
     const { controller, vehicleGroupsService } = createController();
 
-    const result = await controller.create(req, "u1", { name: "Motos", color: "#ef4444" });
-
-    expect(vehicleGroupsService.create).toHaveBeenCalledWith("token-123", "u1", {
+    const result = await controller.create(req, "u1", {
       name: "Motos",
       color: "#ef4444",
     });
+
+    expect(vehicleGroupsService.create).toHaveBeenCalledWith(
+      "token-123",
+      "u1",
+      {
+        name: "Motos",
+        color: "#ef4444",
+      },
+    );
     expect(result.data).toEqual({ id: "g1" });
   });
 
@@ -38,18 +48,28 @@ describe("VehicleGroupsController", () => {
 
     const result = await controller.findAll(req, "u1");
 
-    expect(vehicleGroupsService.findAll).toHaveBeenCalledWith("token-123", "u1");
+    expect(vehicleGroupsService.findAll).toHaveBeenCalledWith(
+      "token-123",
+      "u1",
+    );
     expect(result.data).toEqual([{ id: "g1" }]);
   });
 
   it("update atualiza o grupo", async () => {
     const { controller, vehicleGroupsService } = createController();
 
-    const result = await controller.update(req, "u1", "g1", { name: "Frota SP" });
-
-    expect(vehicleGroupsService.update).toHaveBeenCalledWith("token-123", "u1", "g1", {
+    const result = await controller.update(req, "u1", "g1", {
       name: "Frota SP",
     });
+
+    expect(vehicleGroupsService.update).toHaveBeenCalledWith(
+      "token-123",
+      "u1",
+      "g1",
+      {
+        name: "Frota SP",
+      },
+    );
     expect(result.data).toEqual({ id: "g1", name: "Frota SP" });
   });
 
@@ -58,17 +78,28 @@ describe("VehicleGroupsController", () => {
 
     await controller.remove(req, "u1", "g1");
 
-    expect(vehicleGroupsService.remove).toHaveBeenCalledWith("token-123", "u1", "g1");
+    expect(vehicleGroupsService.remove).toHaveBeenCalledWith(
+      "token-123",
+      "u1",
+      "g1",
+    );
   });
 
   it("setMembers substitui os membros do grupo", async () => {
     const { controller, vehicleGroupsService } = createController();
 
-    const result = await controller.setMembers(req, "u1", "g1", { vehicleIds: ["v1"] });
-
-    expect(vehicleGroupsService.setMembers).toHaveBeenCalledWith("token-123", "u1", "g1", {
+    const result = await controller.setMembers(req, "u1", "g1", {
       vehicleIds: ["v1"],
     });
+
+    expect(vehicleGroupsService.setMembers).toHaveBeenCalledWith(
+      "token-123",
+      "u1",
+      "g1",
+      {
+        vehicleIds: ["v1"],
+      },
+    );
     expect(result.data).toEqual({ vehicleIds: ["v1"] });
   });
 
@@ -85,11 +116,14 @@ describe("VehicleGroupsController", () => {
     const { controller, vehicleGroupsService } = createController();
     const reqComCookie = {
       headers: {},
-      cookies: { nave_access_token: "cookie-token" },
+      cookies: { navestory_access_token: "cookie-token" },
     } as unknown as Request;
 
     await controller.findAll(reqComCookie, "u1");
 
-    expect(vehicleGroupsService.findAll).toHaveBeenCalledWith("cookie-token", "u1");
+    expect(vehicleGroupsService.findAll).toHaveBeenCalledWith(
+      "cookie-token",
+      "u1",
+    );
   });
 });

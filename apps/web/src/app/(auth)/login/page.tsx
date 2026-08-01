@@ -1,6 +1,6 @@
 "use client";
 
-import { Alert, Button, Checkbox, Container, Input } from "@nave/ui";
+import { Alert, Button, Checkbox, Container, Input } from "@navestory/ui";
 import { useMutation } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -50,7 +50,10 @@ function LoginForm(): ReactNode {
       try {
         await apiClient("/users/me");
       } catch (error) {
-        if (error instanceof ApiError && error.code === "ACCOUNT_PENDING_DELETION") {
+        if (
+          error instanceof ApiError &&
+          error.code === "ACCOUNT_PENDING_DELETION"
+        ) {
           return;
         }
       }
@@ -68,7 +71,8 @@ function LoginForm(): ReactNode {
     mutation.error instanceof ApiError && mutation.error.statusCode === 403;
 
   // @spec SPEC-20260719-001 RF-09, US-03
-  const showAccountDeletedNotice = searchParams.get("message") === "conta_excluida";
+  const showAccountDeletedNotice =
+    searchParams.get("message") === "conta_excluida";
 
   return (
     <>

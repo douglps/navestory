@@ -9,7 +9,7 @@ import type {
   MonthlyForecastPoint,
   SeasonalHeatmapCell,
   VehicleTco,
-} from "@nave/validators";
+} from "@navestory/validators";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
 import {
@@ -24,7 +24,13 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { Alert, ChartWrapper, Combobox, Container, EmptyState } from "@nave/ui";
+import {
+  Alert,
+  ChartWrapper,
+  Combobox,
+  Container,
+  EmptyState,
+} from "@navestory/ui";
 import { apiClient } from "@/lib/http/api-client";
 import { useDashboardStore } from "@/lib/stores/use-dashboard-store";
 import { TcoBreakdownChart } from "@/components/charts/tco-breakdown-chart";
@@ -41,7 +47,10 @@ interface Vehicle {
 
 function vehicleLabel(vehicle: Vehicle | undefined): string {
   if (!vehicle) return "—";
-  return vehicle.nickname ?? (`${vehicle.make ?? ""} ${vehicle.model ?? ""}`.trim() || vehicle.plate);
+  return (
+    vehicle.nickname ??
+    (`${vehicle.make ?? ""} ${vehicle.model ?? ""}`.trim() || vehicle.plate)
+  );
 }
 
 function currency(value: number): string {
@@ -78,7 +87,9 @@ function TcoSection({ tco }: { tco: VehicleTco | undefined }): ReactNode {
             <div className="rounded border p-3">
               <p className="text-sm text-muted-foreground">Custo/mês</p>
               <p className="text-lg font-semibold">
-                {tco.cost_per_month == null ? "—" : currency(tco.cost_per_month)}
+                {tco.cost_per_month == null
+                  ? "—"
+                  : currency(tco.cost_per_month)}
               </p>
             </div>
           </div>
@@ -94,7 +105,11 @@ function TcoSection({ tco }: { tco: VehicleTco | undefined }): ReactNode {
  * @spec SPEC-20260622-001 RF-02, RF-13, R-ANA-01, R-FUEL-02, R-FUEL-03
  * @spec SPEC-20260525-001 §5.2 — migrado para `ChartWrapper` de `packages/ui`.
  */
-function FuelTrendSection({ points }: { points: FuelTrendPoint[] | undefined }): ReactNode {
+function FuelTrendSection({
+  points,
+}: {
+  points: FuelTrendPoint[] | undefined;
+}): ReactNode {
   if (!points) return null;
 
   return (
@@ -126,7 +141,11 @@ function categoryLabel(category: string): string {
 /**
  * @spec SPEC-20260622-001 RF-03, RF-09, RF-13, R-ANA-02
  */
-function AnomaliesSection({ anomalies }: { anomalies: ExpenseAnomaly[] | undefined }): ReactNode {
+function AnomaliesSection({
+  anomalies,
+}: {
+  anomalies: ExpenseAnomaly[] | undefined;
+}): ReactNode {
   if (!anomalies) return null;
 
   if (anomalies.length === 0) {
@@ -144,7 +163,10 @@ function AnomaliesSection({ anomalies }: { anomalies: ExpenseAnomaly[] | undefin
   const top5 = anomalies.slice(0, 5);
 
   return (
-    <section aria-label="Despesas anômalas" className="flex flex-col gap-3 rounded border p-4">
+    <section
+      aria-label="Despesas anômalas"
+      className="flex flex-col gap-3 rounded border p-4"
+    >
       <h2 className="font-semibold">Anomalias — Despesas fora do padrão</h2>
       <ul className="flex flex-col gap-2">
         {top5.map((anomaly) => (
@@ -164,18 +186,28 @@ function AnomaliesSection({ anomalies }: { anomalies: ExpenseAnomaly[] | undefin
 /**
  * @spec SPEC-20260622-001 RF-04, RF-10, RF-13, R-ANA-05
  */
-function BenchmarkSection({ entries }: { entries: FleetBenchmarkEntry[] | undefined }): ReactNode {
+function BenchmarkSection({
+  entries,
+}: {
+  entries: FleetBenchmarkEntry[] | undefined;
+}): ReactNode {
   const router = useRouter();
   if (!entries) return null;
 
   if (entries.length < 2) {
     return (
-      <section aria-label="Comparativo de eficiência da frota" className="rounded border p-4">
+      <section
+        aria-label="Comparativo de eficiência da frota"
+        className="rounded border p-4"
+      >
         <EmptyState
           size="sm"
           title="Benchmarking"
           description="Adicione pelo menos 2 veículos para comparar eficiência."
-          action={{ label: "Adicionar veículo", onClick: () => router.push("/vehicles/new") }}
+          action={{
+            label: "Adicionar veículo",
+            onClick: () => router.push("/vehicles/new"),
+          }}
         />
       </section>
     );
@@ -196,7 +228,10 @@ function BenchmarkSection({ entries }: { entries: FleetBenchmarkEntry[] | undefi
       <div aria-hidden="true" className="h-64">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={chartData} layout="vertical">
-            <CartesianGrid strokeDasharray="3 3" stroke="oklch(var(--chart-grid))" />
+            <CartesianGrid
+              strokeDasharray="3 3"
+              stroke="oklch(var(--chart-grid))"
+            />
             <XAxis type="number" />
             <YAxis type="category" dataKey="name" width={100} />
             <Tooltip formatter={(value) => currency(Number(value))} />
@@ -206,9 +241,13 @@ function BenchmarkSection({ entries }: { entries: FleetBenchmarkEntry[] | undefi
       </div>
 
       <details>
-        <summary className="cursor-pointer text-sm text-muted-foreground">Ver dados em tabela</summary>
+        <summary className="cursor-pointer text-sm text-muted-foreground">
+          Ver dados em tabela
+        </summary>
         <table className="mt-2 w-full text-sm">
-          <caption className="sr-only">Ranking de eficiência entre veículos</caption>
+          <caption className="sr-only">
+            Ranking de eficiência entre veículos
+          </caption>
           <thead>
             <tr className="text-left text-muted-foreground">
               <th scope="col">#</th>
@@ -223,7 +262,11 @@ function BenchmarkSection({ entries }: { entries: FleetBenchmarkEntry[] | undefi
               <tr key={entry.vehicle_id}>
                 <td>{entry.efficiency_rank}</td>
                 <td>{entry.vehicle_name}</td>
-                <td>{entry.cost_per_km == null ? "—" : currency(entry.cost_per_km)}</td>
+                <td>
+                  {entry.cost_per_km == null
+                    ? "—"
+                    : currency(entry.cost_per_km)}
+                </td>
                 <td>{entry.avg_km_per_liter ?? "—"}</td>
                 <td>{entry.health_score ?? "—"}</td>
               </tr>
@@ -235,14 +278,31 @@ function BenchmarkSection({ entries }: { entries: FleetBenchmarkEntry[] | undefi
   );
 }
 
-const MONTH_LABELS = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+const MONTH_LABELS = [
+  "Jan",
+  "Fev",
+  "Mar",
+  "Abr",
+  "Mai",
+  "Jun",
+  "Jul",
+  "Ago",
+  "Set",
+  "Out",
+  "Nov",
+  "Dez",
+];
 
 /**
  * @spec SPEC-20260622-001 RF-05, RF-11, RF-13, RF-15, R-ANA-03
  * Empty state quando nenhum ponto tem is_forecast=true — indica que a RPC não teve os 6 meses
  * de histórico exigidos por R-ANA-03 e retornou apenas dados reais.
  */
-function ForecastSection({ points }: { points: MonthlyForecastPoint[] | undefined }): ReactNode {
+function ForecastSection({
+  points,
+}: {
+  points: MonthlyForecastPoint[] | undefined;
+}): ReactNode {
   if (!points) return null;
 
   const hasForecast = points.some((point) => point.is_forecast);
@@ -265,13 +325,19 @@ function ForecastSection({ points }: { points: MonthlyForecastPoint[] | undefine
   }));
 
   return (
-    <section aria-label="Projeção de custos" className="flex flex-col gap-3 rounded border p-4">
+    <section
+      aria-label="Projeção de custos"
+      className="flex flex-col gap-3 rounded border p-4"
+    >
       <h2 className="font-semibold">Projeção — Custos futuros</h2>
 
       <div aria-hidden="true" className="h-64">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={chartData}>
-            <CartesianGrid strokeDasharray="3 3" stroke="oklch(var(--chart-grid))" />
+            <CartesianGrid
+              strokeDasharray="3 3"
+              stroke="oklch(var(--chart-grid))"
+            />
             <XAxis dataKey="month" />
             <YAxis />
             <Tooltip formatter={(value) => currency(Number(value))} />
@@ -283,13 +349,21 @@ function ForecastSection({ points }: { points: MonthlyForecastPoint[] | undefine
               fill={CHART_CATEGORY_COLORS[0]}
               fillOpacity={0.2}
             />
-            <Line type="monotone" dataKey="amount" name="Projeção" stroke={CHART_CATEGORY_COLORS[0]} dot={false} />
+            <Line
+              type="monotone"
+              dataKey="amount"
+              name="Projeção"
+              stroke={CHART_CATEGORY_COLORS[0]}
+              dot={false}
+            />
           </AreaChart>
         </ResponsiveContainer>
       </div>
 
       <details>
-        <summary className="cursor-pointer text-sm text-muted-foreground">Ver dados em tabela</summary>
+        <summary className="cursor-pointer text-sm text-muted-foreground">
+          Ver dados em tabela
+        </summary>
         <table className="mt-2 w-full text-sm">
           <caption className="sr-only">Projeção mensal de custos</caption>
           <thead>
@@ -321,12 +395,19 @@ function ForecastSection({ points }: { points: MonthlyForecastPoint[] | undefine
 /**
  * @spec SPEC-20260622-001 RF-06, RF-12, RF-13, RF-15, R-ANA-07
  */
-function SeasonalitySection({ cells }: { cells: SeasonalHeatmapCell[] | undefined }): ReactNode {
+function SeasonalitySection({
+  cells,
+}: {
+  cells: SeasonalHeatmapCell[] | undefined;
+}): ReactNode {
   if (!cells) return null;
 
   if (cells.length === 0) {
     return (
-      <section aria-label="Sazonalidade de gastos" className="rounded border p-4">
+      <section
+        aria-label="Sazonalidade de gastos"
+        className="rounded border p-4"
+      >
         <EmptyState
           size="sm"
           title="Sazonalidade"
@@ -338,18 +419,24 @@ function SeasonalitySection({ cells }: { cells: SeasonalHeatmapCell[] | undefine
 
   const categories = [...new Set(cells.map((cell) => cell.category))].sort();
   const maxAmount = Math.max(...cells.map((cell) => cell.avg_amount));
-  const cellByKey = new Map(cells.map((cell) => [`${cell.month_number}-${cell.category}`, cell]));
+  const cellByKey = new Map(
+    cells.map((cell) => [`${cell.month_number}-${cell.category}`, cell]),
+  );
 
   return (
     <section
       aria-label="Sazonalidade de gastos"
       className="flex flex-col gap-3 rounded border p-4"
     >
-      <h2 className="font-semibold">Sazonalidade — Gastos por mês e categoria</h2>
+      <h2 className="font-semibold">
+        Sazonalidade — Gastos por mês e categoria
+      </h2>
 
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
-          <caption className="sr-only">Média de gastos por mês do calendário e categoria</caption>
+          <caption className="sr-only">
+            Média de gastos por mês do calendário e categoria
+          </caption>
           <thead>
             <tr className="text-left text-muted-foreground">
               <th scope="col">Mês</th>
@@ -368,7 +455,8 @@ function SeasonalitySection({ cells }: { cells: SeasonalHeatmapCell[] | undefine
                   <td>{label}</td>
                   {categories.map((category) => {
                     const cell = cellByKey.get(`${monthNumber}-${category}`);
-                    const intensity = cell && maxAmount > 0 ? cell.avg_amount / maxAmount : 0;
+                    const intensity =
+                      cell && maxAmount > 0 ? cell.avg_amount / maxAmount : 0;
                     return (
                       <td
                         key={category}
@@ -377,7 +465,9 @@ function SeasonalitySection({ cells }: { cells: SeasonalHeatmapCell[] | undefine
                             ? `${label}, ${categoryLabel(category)}: ${currency(cell.avg_amount)}`
                             : `${label}, ${categoryLabel(category)}: sem dados`
                         }
-                        style={{ backgroundColor: `rgba(37, 99, 235, ${intensity * 0.6})` }}
+                        style={{
+                          backgroundColor: `rgba(37, 99, 235, ${intensity * 0.6})`,
+                        }}
                         className="px-2 py-1 text-center"
                       >
                         {cell ? currency(cell.avg_amount) : "—"}
@@ -405,7 +495,11 @@ const INSIGHT_LABEL: Record<AnalyticsInsight["type"], string> = {
 /**
  * @spec SPEC-20260622-001 RF-14, RF-13, RF-15
  */
-function InsightsSection({ insights }: { insights: AnalyticsInsight[] | undefined }): ReactNode {
+function InsightsSection({
+  insights,
+}: {
+  insights: AnalyticsInsight[] | undefined;
+}): ReactNode {
   if (!insights) return null;
 
   if (insights.length === 0) {
@@ -421,11 +515,17 @@ function InsightsSection({ insights }: { insights: AnalyticsInsight[] | undefine
   }
 
   return (
-    <section aria-label="Insights" className="flex flex-col gap-3 rounded border p-4">
+    <section
+      aria-label="Insights"
+      className="flex flex-col gap-3 rounded border p-4"
+    >
       <h2 className="font-semibold">Insights — Recomendações</h2>
       <ul className="flex flex-col gap-2">
         {insights.map((insight, index) => (
-          <li key={`${insight.type}-${index}`} className="rounded border bg-muted/30 p-3 text-sm">
+          <li
+            key={`${insight.type}-${index}`}
+            className="rounded border bg-muted/30 p-3 text-sm"
+          >
             <p className="font-medium">{INSIGHT_LABEL[insight.type]}</p>
             <p className="text-muted-foreground">{insight.message}</p>
           </li>
@@ -461,7 +561,9 @@ function ExportButton({ vehicleId }: { vehicleId: string }): ReactNode {
  */
 export default function AnalyticsPage(): ReactNode {
   const router = useRouter();
-  const storeActiveVehicleId = useDashboardStore((state) => state.activeVehicleId);
+  const storeActiveVehicleId = useDashboardStore(
+    (state) => state.activeVehicleId,
+  );
   const [selectedVehicleId, setSelectedVehicleId] = useState<string>("");
 
   const { data: vehicles } = useQuery({
@@ -493,7 +595,10 @@ export default function AnalyticsPage(): ReactNode {
     isError: isFuelError,
   } = useQuery({
     queryKey: ["analytics", "fuel-trend", selectedVehicleId],
-    queryFn: () => apiClient<FuelTrendPoint[]>(`/analytics/fuel-trend/${selectedVehicleId}?limit=20`),
+    queryFn: () =>
+      apiClient<FuelTrendPoint[]>(
+        `/analytics/fuel-trend/${selectedVehicleId}?limit=20`,
+      ),
     enabled: Boolean(selectedVehicleId),
     retry: false,
   });
@@ -505,7 +610,9 @@ export default function AnalyticsPage(): ReactNode {
   } = useQuery({
     queryKey: ["analytics", "anomalies", selectedVehicleId],
     queryFn: () =>
-      apiClient<ExpenseAnomaly[]>(`/analytics/anomalies?vehicle_id=${selectedVehicleId}`),
+      apiClient<ExpenseAnomaly[]>(
+        `/analytics/anomalies?vehicle_id=${selectedVehicleId}`,
+      ),
     enabled: Boolean(selectedVehicleId),
     retry: false,
   });
@@ -527,7 +634,9 @@ export default function AnalyticsPage(): ReactNode {
   } = useQuery({
     queryKey: ["analytics", "forecast", selectedVehicleId],
     queryFn: () =>
-      apiClient<MonthlyForecastPoint[]>(`/analytics/forecast?vehicle_id=${selectedVehicleId}`),
+      apiClient<MonthlyForecastPoint[]>(
+        `/analytics/forecast?vehicle_id=${selectedVehicleId}`,
+      ),
     enabled: Boolean(selectedVehicleId),
     retry: false,
   });
@@ -539,7 +648,9 @@ export default function AnalyticsPage(): ReactNode {
   } = useQuery({
     queryKey: ["analytics", "seasonal", selectedVehicleId],
     queryFn: () =>
-      apiClient<SeasonalHeatmapCell[]>(`/analytics/seasonal?vehicle_id=${selectedVehicleId}`),
+      apiClient<SeasonalHeatmapCell[]>(
+        `/analytics/seasonal?vehicle_id=${selectedVehicleId}`,
+      ),
     enabled: Boolean(selectedVehicleId),
     retry: false,
   });
@@ -551,7 +662,9 @@ export default function AnalyticsPage(): ReactNode {
   } = useQuery({
     queryKey: ["analytics", "insights", selectedVehicleId],
     queryFn: () =>
-      apiClient<AnalyticsInsight[]>(`/analytics/insights?vehicle_id=${selectedVehicleId}`),
+      apiClient<AnalyticsInsight[]>(
+        `/analytics/insights?vehicle_id=${selectedVehicleId}`,
+      ),
     enabled: Boolean(selectedVehicleId),
     retry: false,
   });
@@ -585,7 +698,10 @@ export default function AnalyticsPage(): ReactNode {
         <EmptyState
           title="Nenhum veículo cadastrado"
           description="Cadastre um veículo para ver as análises da frota."
-          action={{ label: "Cadastrar veículo", onClick: () => router.push("/vehicles/new") }}
+          action={{
+            label: "Cadastrar veículo",
+            onClick: () => router.push("/vehicles/new"),
+          }}
         />
       )}
 
@@ -603,13 +719,18 @@ export default function AnalyticsPage(): ReactNode {
         isForecastError ||
         isSeasonalError ||
         isInsightsError) && (
-        <Alert variant="error" description="Não foi possível carregar os dados de analytics." />
+        <Alert
+          variant="error"
+          description="Não foi possível carregar os dados de analytics."
+        />
       )}
 
       {!isTcoError && <TcoSection tco={tco} />}
       {!isFuelError && <FuelTrendSection points={fuelTrend} />}
       {!isAnomaliesError && <AnomaliesSection anomalies={anomalies} />}
-      {!isBenchmarkError && !isBenchmarkLoading && <BenchmarkSection entries={benchmark} />}
+      {!isBenchmarkError && !isBenchmarkLoading && (
+        <BenchmarkSection entries={benchmark} />
+      )}
       {!isForecastError && <ForecastSection points={forecast} />}
       {!isSeasonalError && <SeasonalitySection cells={seasonal} />}
       {!isInsightsError && <InsightsSection insights={insights} />}

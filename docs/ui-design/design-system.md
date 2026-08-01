@@ -1,4 +1,4 @@
-# Design System — Nave SaaS (v3.1 Calm UI)
+# Design System — navestory SaaS (v3.1 Calm UI)
 
 **Stack:** Next.js + Tailwind CSS + OKLCH | **Foco:** Dashboards Anti-Fadiga Visual
 

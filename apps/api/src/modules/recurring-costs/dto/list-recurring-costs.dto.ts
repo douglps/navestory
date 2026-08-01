@@ -1,4 +1,4 @@
-import { listRecurringCostsQuerySchema } from "@nave/validators";
+import { listRecurringCostsQuerySchema } from "@navestory/validators";
 import type { z } from "zod";
 
 export const listRecurringCostsDtoSchema = listRecurringCostsQuerySchema;

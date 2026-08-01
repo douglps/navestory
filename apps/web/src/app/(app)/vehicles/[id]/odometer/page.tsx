@@ -1,7 +1,10 @@
 "use client";
 
-import { updateVehicleInputSchema, type UpdateVehicleInput } from "@nave/validators";
-import { Alert, Button, Container, OdometerInput } from "@nave/ui";
+import {
+  updateVehicleInputSchema,
+  type UpdateVehicleInput,
+} from "@navestory/validators";
+import { Alert, Button, Container, OdometerInput } from "@navestory/ui";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
@@ -17,7 +20,10 @@ interface Vehicle {
 }
 
 function vehicleLabel(vehicle: Vehicle): string {
-  return vehicle.nickname ?? (`${vehicle.make ?? ""} ${vehicle.model ?? ""}`.trim() || vehicle.plate);
+  return (
+    vehicle.nickname ??
+    (`${vehicle.make ?? ""} ${vehicle.model ?? ""}`.trim() || vehicle.plate)
+  );
 }
 
 /**
@@ -71,7 +77,9 @@ export default function VehicleOdometerPage({
     event.preventDefault();
     setFieldError(null);
 
-    const result = updateVehicleInputSchema.safeParse({ odometer: odometer ?? null });
+    const result = updateVehicleInputSchema.safeParse({
+      odometer: odometer ?? null,
+    });
     if (!result.success) {
       setFieldError(result.error.issues[0]?.message ?? "Dados inválidos");
       return;
@@ -90,22 +98,36 @@ export default function VehicleOdometerPage({
 
   return (
     <Container size="sm">
-      <h1 className="text-xl font-semibold">Registrar KM — {vehicleLabel(vehicle)}</h1>
+      <h1 className="text-xl font-semibold">
+        Registrar KM — {vehicleLabel(vehicle)}
+      </h1>
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-3">
         <label htmlFor="odometer">Odômetro atual (km) *</label>
-        <OdometerInput id="odometer" value={odometer} onChange={setOdometer} required />
+        <OdometerInput
+          id="odometer"
+          value={odometer}
+          onChange={setOdometer}
+          required
+        />
 
         {fieldError && <Alert variant="error" description={fieldError} />}
         {mutation.isError && !fieldError && (
-          <Alert variant="error" description="Não foi possível atualizar o odômetro." />
+          <Alert
+            variant="error"
+            description="Não foi possível atualizar o odômetro."
+          />
         )}
 
         <div className="flex gap-2">
           <Button type="submit" disabled={mutation.isPending}>
             {mutation.isPending ? "Salvando..." : "Salvar"}
           </Button>
-          <Button type="button" variant="outline" onClick={() => router.push("/dashboard")}>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => router.push("/dashboard")}
+          >
             Cancelar
           </Button>
         </div>

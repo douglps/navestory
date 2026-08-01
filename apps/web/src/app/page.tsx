@@ -15,8 +15,10 @@ export default function LandingPage(): ReactNode {
       <PublicHeader />
       <main className="mx-auto flex min-h-[calc(100vh-3.5rem)] max-w-sm flex-col items-center justify-center gap-6 p-8 text-center">
         <div className="flex flex-col gap-2">
-          <h1 className="text-3xl font-semibold">Nave</h1>
-          <p className="text-sm text-muted-foreground">Gestão inteligente de veículos e frota.</p>
+          <h1 className="text-3xl font-semibold">navestory</h1>
+          <p className="text-sm text-muted-foreground">
+            Gestão inteligente de veículos e frota.
+          </p>
         </div>
 
         <div className="flex w-full flex-col gap-3">

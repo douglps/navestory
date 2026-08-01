@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState, type ReactNode } from "react";
-import { Skeleton } from "@nave/ui";
+import { Skeleton } from "@navestory/ui";
 import { CONTEXT_LABELS } from "@/lib/context/context-labels";
 import { useVehicleContext } from "@/lib/context/use-vehicle-context";
 import { useMediaQuery } from "@/lib/hooks/use-media-query";
@@ -49,8 +49,15 @@ function getModeStyles(mode: SelectionMode): string {
 export function VehicleContextChip(): ReactNode {
   const [isOpen, setIsOpen] = useState(false);
   const isDesktop = useMediaQuery("(min-width: 768px)");
-  const { hasHydrated, selectionMode, label, ariaLabel, clearAllSelection, vehicles, vehiclesQuery } =
-    useVehicleContext();
+  const {
+    hasHydrated,
+    selectionMode,
+    label,
+    ariaLabel,
+    clearAllSelection,
+    vehicles,
+    vehiclesQuery,
+  } = useVehicleContext();
 
   // RF-24: skeleton estático enquanto o store não hidratou — nunca exibe `none` transitório.
   if (!hasHydrated) {
@@ -60,7 +67,9 @@ export function VehicleContextChip(): ReactNode {
   // @spec SPEC-20260721-001 RF-05 — sem veículo cadastrado, o seletor vira CTA
   // "Adicionar veículo" em vez de abrir um Dialog/Sheet sem nada para listar.
   const hasNoVehicles =
-    selectionMode === "none" && vehiclesQuery.isSuccess && (vehicles?.length ?? 0) === 0;
+    selectionMode === "none" &&
+    vehiclesQuery.isSuccess &&
+    (vehicles?.length ?? 0) === 0;
 
   if (hasNoVehicles) {
     return (

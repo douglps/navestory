@@ -1,4 +1,4 @@
-import { loginInputSchema } from "@nave/validators";
+import { loginInputSchema } from "@navestory/validators";
 import type { z } from "zod";
 
 export const loginDtoSchema = loginInputSchema;

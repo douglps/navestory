@@ -1,6 +1,6 @@
 ---
 id: SPEC-20260731-004
-title: "Shell de Rotas Públicas: PublicHeader, Footer Consistente e Navegação de Retorno"
+title: "Shell de Rotas Públicas: PublicHeader, Footer Consistente e navegação de Retorno"
 status: approved
 date: 2026-07-31
 author: Douglas Lopes (lps.doug@protonmail.com)
@@ -11,7 +11,7 @@ camadas: [frontend]
 
 ## Contexto
 
-Todas as rotas acessíveis sem autenticação no Nave carecem de um shell visual coerente. Os três problemas identificados são:
+Todas as rotas acessíveis sem autenticação no navestory carecem de um shell visual coerente. Os três problemas identificados são:
 
 1. **Ausência de header**: nenhuma rota pública tem um cabeçalho próprio. O único `header.tsx` do projeto (`apps/web/src/components/layout/header.tsx`) está acoplado ao app-shell autenticado (sidebar, contexto de veículo, command palette) e não é reutilizável nessas rotas. Consequência: o visitante não tem âncora visual de marca nem orientação de navegação primária.
 
@@ -21,17 +21,17 @@ Todas as rotas acessíveis sem autenticação no Nave carecem de um shell visual
 
 Rotas públicas afetadas (escopo desta spec):
 
-| Rota | Grupo | Header atual | Footer atual | Voltar |
-|------|-------|-------------|-------------|--------|
-| `/` (landing) | raiz | — | `LegalFooter` | N/A |
-| `/login` | `(auth)` | — | `LegalFooter` | N/A |
-| `/register` | `(auth)` | — | `LegalFooter` | N/A |
-| `/recover-password` | `(auth)` | — | **ausente** | **ausente** |
-| `/reset-password` | `(auth)` | — | **ausente** | **ausente** |
-| `/restore-account` | `(auth)` | — | **ausente** | **ausente** |
-| `/termos` | raiz | — | **ausente** | **ausente** |
-| `/privacidade` | raiz | — | **ausente** | **ausente** |
-| `/offline` | raiz | — | **ausente** | N/A |
+| Rota                | Grupo    | Header atual | Footer atual  | Voltar      |
+| ------------------- | -------- | ------------ | ------------- | ----------- |
+| `/` (landing)       | raiz     | —            | `LegalFooter` | N/A         |
+| `/login`            | `(auth)` | —            | `LegalFooter` | N/A         |
+| `/register`         | `(auth)` | —            | `LegalFooter` | N/A         |
+| `/recover-password` | `(auth)` | —            | **ausente**   | **ausente** |
+| `/reset-password`   | `(auth)` | —            | **ausente**   | **ausente** |
+| `/restore-account`  | `(auth)` | —            | **ausente**   | **ausente** |
+| `/termos`           | raiz     | —            | **ausente**   | **ausente** |
+| `/privacidade`      | raiz     | —            | **ausente**   | **ausente** |
+| `/offline`          | raiz     | —            | **ausente**   | N/A         |
 
 ## Objetivo
 
@@ -41,12 +41,12 @@ Criar um `PublicHeader` reutilizável com logotipo e, quando aplicável, um link
 
 ### US-01: Identificação de marca em todas as páginas públicas
 
-**Como** visitante não autenticado, **quero** ver o nome/logotipo do Nave em todas as páginas públicas, **para** saber em qual sistema estou e ter um ponto de orientação visual consistente.
+**Como** visitante não autenticado, **quero** ver o nome/logotipo do navestory em todas as páginas públicas, **para** saber em qual sistema estou e ter um ponto de orientação visual consistente.
 
-- **Dado que** estou em `/` (landing), **quando** acesso a página, **então** vejo o `PublicHeader` exibindo o nome "Nave" como marca; os CTAs "Entrar" e "Criar conta" continuam no corpo da página e o header não duplica esses links.
-- **Dado que** estou em `/login`, **quando** acesso a página, **então** vejo o `PublicHeader` com o nome "Nave" e um link secundário "Criar conta" apontando para `/register`.
-- **Dado que** estou em `/register`, **quando** acesso a página, **então** vejo o `PublicHeader` com o nome "Nave" e um link secundário "Entrar" apontando para `/login`.
-- **Dado que** estou em `/recover-password`, `/reset-password`, `/restore-account`, `/termos`, `/privacidade` ou `/offline`, **quando** acesso a página, **então** vejo o `PublicHeader` com o nome "Nave" e sem links de navegação secundária (a navegação de retorno, quando pertinente, aparece no corpo da página).
+- **Dado que** estou em `/` (landing), **quando** acesso a página, **então** vejo o `PublicHeader` exibindo o nome "navestory" como marca; os CTAs "Entrar" e "Criar conta" continuam no corpo da página e o header não duplica esses links.
+- **Dado que** estou em `/login`, **quando** acesso a página, **então** vejo o `PublicHeader` com o nome "navestory" e um link secundário "Criar conta" apontando para `/register`.
+- **Dado que** estou em `/register`, **quando** acesso a página, **então** vejo o `PublicHeader` com o nome "navestory" e um link secundário "Entrar" apontando para `/login`.
+- **Dado que** estou em `/recover-password`, `/reset-password`, `/restore-account`, `/termos`, `/privacidade` ou `/offline`, **quando** acesso a página, **então** vejo o `PublicHeader` com o nome "navestory" e sem links de navegação secundária (a navegação de retorno, quando pertinente, aparece no corpo da página).
 
 ### US-02: Acesso consistente aos documentos legais
 
@@ -84,50 +84,50 @@ Criar um `PublicHeader` reutilizável com logotipo e, quando aplicável, um link
 
 ## Requisitos Funcionais
 
-| ID | Requisito | Prioridade | História relacionada |
-|----|-----------|------------|----------------------|
-| RF-01 | Criar componente `PublicHeader` em `apps/web/src/components/public-header.tsx`, exibindo o nome/logotipo textual "Nave" como marca. | Alta | US-01 |
-| RF-02 | O `PublicHeader` aceita uma prop opcional `navLink?: { label: string; href: string }`. Quando fornecida, renderiza o link ao lado do logotipo (lado direito ou segundo elemento). Quando omitida, exibe apenas o logotipo. | Alta | US-01 |
-| RF-03 | Adicionar `PublicHeader` em todas as rotas públicas: `/`, `/login`, `/register`, `/recover-password`, `/reset-password`, `/restore-account`, `/termos`, `/privacidade`, `/offline`. | Alta | US-01 |
-| RF-04 | Em `/login`, o `PublicHeader` recebe `navLink={{ label: "Criar conta", href: "/register" }}`. | Alta | US-01 |
-| RF-05 | Em `/register`, o `PublicHeader` recebe `navLink={{ label: "Entrar", href: "/login" }}`. | Alta | US-01 |
-| RF-06 | Em `/`, `/recover-password`, `/reset-password`, `/restore-account`, `/termos`, `/privacidade` e `/offline`, o `PublicHeader` é usado sem `navLink`. | Média | US-01 |
-| RF-07 | Garantir que `LegalFooter` apareça em todas as rotas públicas. As rotas atualmente sem footer são: `/recover-password`, `/reset-password`, `/restore-account`, `/termos`, `/privacidade`, `/offline`. | Alta | US-02 |
-| RF-08 | Adicionar link/botão "Voltar para o login" (→ `/login`) em `/recover-password`, posicionado abaixo do botão de submissão do formulário. | Alta | US-03 |
-| RF-09 | Adicionar link/botão "Voltar para o login" (→ `/login`) em `/reset-password`, posicionado abaixo do botão de submissão do formulário. | Alta | US-03 |
-| RF-10 | Adicionar link/botão "Voltar para o login" (→ `/login`) em `/restore-account`, posicionado abaixo dos dois botões de CTA existentes ("Cancelar exclusão" e "Continuar com a exclusão"). O elemento deve ser visualmente mais discreto (link simples, não botão primário nem outline). | Alta | US-04 |
-| RF-11 | Criar componente `BackLink` (ou equivalente) em `apps/web/src/components/back-link.tsx`, que executa `router.back()` com fallback para um `href` fornecido via prop quando `window.history.length <= 1`. | Alta | US-05 |
-| RF-12 | Adicionar `BackLink` com `fallback="/"` e rótulo "Voltar" em `/termos` e `/privacidade`, posicionado acima do conteúdo do documento (antes de `<LegalDocument />`). | Alta | US-05 |
-| RF-13 | `PublicHeader` inclui `ThemeToggle` (`@nave/ui`) alinhado à direita, replicando o padrão `useTheme`/`resolvedTheme` do header autenticado (`apps/web/src/components/layout/header.tsx`), para alternar `light`/`dark` manualmente em todas as rotas públicas. | Média | US-06 |
+| ID    | Requisito                                                                                                                                                                                                                                                                             | Prioridade | História relacionada |
+| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | -------------------- |
+| RF-01 | Criar componente `PublicHeader` em `apps/web/src/components/public-header.tsx`, exibindo o nome/logotipo textual "navestory" como marca.                                                                                                                                              | Alta       | US-01                |
+| RF-02 | O `PublicHeader` aceita uma prop opcional `navLink?: { label: string; href: string }`. Quando fornecida, renderiza o link ao lado do logotipo (lado direito ou segundo elemento). Quando omitida, exibe apenas o logotipo.                                                            | Alta       | US-01                |
+| RF-03 | Adicionar `PublicHeader` em todas as rotas públicas: `/`, `/login`, `/register`, `/recover-password`, `/reset-password`, `/restore-account`, `/termos`, `/privacidade`, `/offline`.                                                                                                   | Alta       | US-01                |
+| RF-04 | Em `/login`, o `PublicHeader` recebe `navLink={{ label: "Criar conta", href: "/register" }}`.                                                                                                                                                                                         | Alta       | US-01                |
+| RF-05 | Em `/register`, o `PublicHeader` recebe `navLink={{ label: "Entrar", href: "/login" }}`.                                                                                                                                                                                              | Alta       | US-01                |
+| RF-06 | Em `/`, `/recover-password`, `/reset-password`, `/restore-account`, `/termos`, `/privacidade` e `/offline`, o `PublicHeader` é usado sem `navLink`.                                                                                                                                   | Média      | US-01                |
+| RF-07 | Garantir que `LegalFooter` apareça em todas as rotas públicas. As rotas atualmente sem footer são: `/recover-password`, `/reset-password`, `/restore-account`, `/termos`, `/privacidade`, `/offline`.                                                                                 | Alta       | US-02                |
+| RF-08 | Adicionar link/botão "Voltar para o login" (→ `/login`) em `/recover-password`, posicionado abaixo do botão de submissão do formulário.                                                                                                                                               | Alta       | US-03                |
+| RF-09 | Adicionar link/botão "Voltar para o login" (→ `/login`) em `/reset-password`, posicionado abaixo do botão de submissão do formulário.                                                                                                                                                 | Alta       | US-03                |
+| RF-10 | Adicionar link/botão "Voltar para o login" (→ `/login`) em `/restore-account`, posicionado abaixo dos dois botões de CTA existentes ("Cancelar exclusão" e "Continuar com a exclusão"). O elemento deve ser visualmente mais discreto (link simples, não botão primário nem outline). | Alta       | US-04                |
+| RF-11 | Criar componente `BackLink` (ou equivalente) em `apps/web/src/components/back-link.tsx`, que executa `router.back()` com fallback para um `href` fornecido via prop quando `window.history.length <= 1`.                                                                              | Alta       | US-05                |
+| RF-12 | Adicionar `BackLink` com `fallback="/"` e rótulo "Voltar" em `/termos` e `/privacidade`, posicionado acima do conteúdo do documento (antes de `<LegalDocument />`).                                                                                                                   | Alta       | US-05                |
+| RF-13 | `PublicHeader` inclui `ThemeToggle` (`@navestory/ui`) alinhado à direita, replicando o padrão `useTheme`/`resolvedTheme` do header autenticado (`apps/web/src/components/layout/header.tsx`), para alternar `light`/`dark` manualmente em todas as rotas públicas.                    | Média      | US-06                |
 
 ## Requisitos Não-Funcionais
 
-| ID | Requisito | Métrica de Aceite |
-|----|-----------|------------------|
-| RNF-01 | Sem cores hardcoded — todos os tokens dos novos componentes devem usar a paleta Azul-Índigo (`text-foreground`, `bg-background`, `border-border`, `text-muted-foreground` etc.) conforme SPEC-20260731-001. | Nenhum hex literal, `oklch()` avulso ou classe `bg-white`/`text-black` fora de tokens — verificável via `pnpm check:hardcoded-colors`. |
+| ID     | Requisito                                                                                                                                                                                                                                                                                                          | Métrica de Aceite                                                                                                                                                    |
+| ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| RNF-01 | Sem cores hardcoded — todos os tokens dos novos componentes devem usar a paleta Azul-Índigo (`text-foreground`, `bg-background`, `border-border`, `text-muted-foreground` etc.) conforme SPEC-20260731-001.                                                                                                        | Nenhum hex literal, `oklch()` avulso ou classe `bg-white`/`text-black` fora de tokens — verificável via `pnpm check:hardcoded-colors`.                               |
 | RNF-02 | `PublicHeader` é Client Component (`"use client"`) por conter o `ThemeToggle` (RF-13), que depende de `useTheme`/`resolvedTheme` do `next-themes`, resolvidos apenas no cliente. `BackLink` é Client Component por usar `router.back()`. Demais componentes novos sem interatividade permanecem Server Components. | `public-header.tsx` guarda o mount com `useState`/`useEffect` antes de renderizar o `ThemeToggle`, mesmo padrão de `layout/header.tsx`, evitando hydration mismatch. |
-| RNF-03 | `<header>` semântico com `role="banner"` implícito; links de navegação com texto acessível e descritivo. | Sem violações de `jest-axe` ao adicionar os novos componentes nos testes existentes das páginas afetadas. |
-| RNF-04 | Nenhuma regressão nas suítes existentes (`packages/ui` e `apps/web`). | `pnpm test` verde após a implementação. |
+| RNF-03 | `<header>` semântico com `role="banner"` implícito; links de navegação com texto acessível e descritivo.                                                                                                                                                                                                      | Sem violações de `jest-axe` ao adicionar os novos componentes nos testes existentes das páginas afetadas.                                                            |
+| RNF-04 | Nenhuma regressão nas suítes existentes (`packages/ui` e `apps/web`).                                                                                                                                                                                                                                              | `pnpm test` verde após a implementação.                                                                                                                              |
 
 ## Fora de Escopo
 
 - O header autenticado (`apps/web/src/components/layout/header.tsx`) — não será alterado nem referenciado pelos novos componentes.
 - Alterações no conteúdo ou estilo do `LegalFooter` (copyright, e-mail de contato, links extras) — esta spec apenas garante a presença consistente do componente já existente.
-- Logotipo SVG ou imagético — o logotipo textual "Nave" já usado em `apps/web/src/app/page.tsx` é suficiente por ora.
+- Logotipo SVG ou imagético — o logotipo textual "navestory" já usado em `apps/web/src/app/page.tsx` é suficiente por ora.
 - Mega-menu, dropdown de idioma, navegação multi-nível ou qualquer funcionalidade além de logotipo + link contextual + toggle de tema.
 - Testes unitários novos para os componentes introduzidos — decisão de cobertura registrada em `specs/TEST_DECISIONS.md`.
 
 ## Dependências
 
-| Tipo | Referência | Descrição |
-|------|-----------|-----------|
-| Spec | SPEC-20260731-001 | Paleta Azul-Índigo — tokens de cor que `PublicHeader` e `BackLink` devem respeitar |
-| Spec | SPEC-20260720-001 | `LegalFooter` e páginas de documentos legais — garantir RF-07 e RF-12 sem duplicar lógica |
-| Componente | `@nave/ui` — `Button`, `Container` | Disponíveis; usar `Button variant="ghost"` ou link simples para o `BackLink` |
-| Biblioteca | `next/link` | `Link` do Next.js para todos os links estáticos (RF-04, RF-05, RF-08, RF-09, RF-10) |
-| Biblioteca | `next/navigation` — `useRouter` | Para `router.back()` no `BackLink` (RF-11); requer `"use client"` |
-| Componente | `@nave/ui` — `ThemeToggle` | Puramente apresentacional (RF-13); `PublicHeader` fornece `theme`/`onToggle` via `next-themes`, mesmo padrão de `layout/header.tsx` |
-| Biblioteca | `next-themes` — `useTheme` | Resolve `resolvedTheme` e persiste a escolha entre navegações (RF-13); requer `"use client"` |
+| Tipo       | Referência                              | Descrição                                                                                                                           |
+| ---------- | --------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| Spec       | SPEC-20260731-001                       | Paleta Azul-Índigo — tokens de cor que `PublicHeader` e `BackLink` devem respeitar                                                  |
+| Spec       | SPEC-20260720-001                       | `LegalFooter` e páginas de documentos legais — garantir RF-07 e RF-12 sem duplicar lógica                                           |
+| Componente | `@navestory/ui` — `Button`, `Container` | Disponíveis; usar `Button variant="ghost"` ou link simples para o `BackLink`                                                        |
+| Biblioteca | `next/link`                             | `Link` do Next.js para todos os links estáticos (RF-04, RF-05, RF-08, RF-09, RF-10)                                                 |
+| Biblioteca | `next/navigation` — `useRouter`         | Para `router.back()` no `BackLink` (RF-11); requer `"use client"`                                                                   |
+| Componente | `@navestory/ui` — `ThemeToggle`         | Puramente apresentacional (RF-13); `PublicHeader` fornece `theme`/`onToggle` via `next-themes`, mesmo padrão de `layout/header.tsx` |
+| Biblioteca | `next-themes` — `useTheme`              | Resolve `resolvedTheme` e persiste a escolha entre navegações (RF-13); requer `"use client"`                                   |
 
 ## Notas Técnicas
 
@@ -143,6 +143,6 @@ Criar um `PublicHeader` reutilizável com logotipo e, quando aplicável, um link
 
 ## Changelog (pós-aprovação)
 
-| Data | O que mudou | Por quê |
-|------|-------------|---------|
+| Data       | O que mudou                                                                                                                                                              | Por quê                                                                                                                                                |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | 2026-07-31 | Adicionado RF-13/US-06 (`ThemeToggle` no `PublicHeader`); removida a exclusão de tema switcher do escopo; `PublicHeader` passa a ser Client Component (RNF-02 revisado). | Usuário pediu explicitamente após a implementação inicial: visitante não autenticado ficava sem controle manual de tema, diferente do app autenticado. |

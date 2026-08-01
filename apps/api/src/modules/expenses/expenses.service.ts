@@ -8,7 +8,11 @@ import {
   NotFoundException,
 } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
-import type { ConsolidatedExportQuery, ExpenseKpis, UpcomingCostItem } from "@nave/validators";
+import type {
+  ConsolidatedExportQuery,
+  ExpenseKpis,
+  UpcomingCostItem,
+} from "@navestory/validators";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { AuditService } from "../../shared/audit/audit.service";
 import { escapeCsvField } from "../../shared/csv/csv.util";
@@ -82,7 +86,8 @@ export class ExpensesService {
   private readonly logger = new Logger(ExpensesService.name);
 
   constructor(
-    @Inject(SUPABASE_ADMIN_CLIENT) private readonly supabaseAdmin: SupabaseClient,
+    @Inject(SUPABASE_ADMIN_CLIENT)
+    private readonly supabaseAdmin: SupabaseClient,
     private readonly configService: ConfigService,
     private readonly auditService: AuditService,
     private readonly preferencesService: PreferencesService,
@@ -97,8 +102,14 @@ export class ExpensesService {
   }
 
   /** @spec SPEC-20260715-002 R-TZ-01, RF-BK-05 — fallback nomeado, nunca o fuso do processo */
-  private async resolveUserTimezone(accessToken: string, userId: string): Promise<string> {
-    const preferences = await this.preferencesService.findOne(accessToken, userId);
+  private async resolveUserTimezone(
+    accessToken: string,
+    userId: string,
+  ): Promise<string> {
+    const preferences = await this.preferencesService.findOne(
+      accessToken,
+      userId,
+    );
     return preferences.timezone ?? FALLBACK_TIMEZONE;
   }
 
@@ -226,18 +237,31 @@ export class ExpensesService {
     vehicleId: string,
     odometerKm: number | null | undefined,
     excludeExpenseId?: string,
-  ): Promise<Pick<ExpenseWithOdometerWarning, "odometer_warning" | "odometer_previous_max_km">> {
+  ): Promise<
+    Pick<
+      ExpenseWithOdometerWarning,
+      "odometer_warning" | "odometer_previous_max_km"
+    >
+  > {
     if (odometerKm == null) {
       return {};
     }
 
     try {
-      const maxKm = await this.findMaxOdometerByVehicle(client, vehicleId, userId, excludeExpenseId);
+      const maxKm = await this.findMaxOdometerByVehicle(
+        client,
+        vehicleId,
+        userId,
+        excludeExpenseId,
+      );
       if (maxKm != null && odometerKm < maxKm) {
         return { odometer_warning: true, odometer_previous_max_km: maxKm };
       }
     } catch (err) {
-      this.logger.error("Falha ao verificar sequência de odômetro", err as Error);
+      this.logger.error(
+        "Falha ao verificar sequência de odômetro",
+        err as Error,
+      );
     }
     return {};
   }
@@ -266,7 +290,9 @@ export class ExpensesService {
   ): Promise<string | null> {
     const calendarDay = toCalendarDay(new Date(occurredAt), tz);
     const dayStartUtc = resolveDateTimeInput(calendarDay, tz);
-    const dayEndUtc = new Date(new Date(dayStartUtc).getTime() + 24 * 60 * 60 * 1000).toISOString();
+    const dayEndUtc = new Date(
+      new Date(dayStartUtc).getTime() + 24 * 60 * 60 * 1000,
+    ).toISOString();
 
     const { data, error } = await client
       .from("expenses")
@@ -313,7 +339,10 @@ export class ExpensesService {
         return { duplicate_warning: true, duplicate_id: duplicateId };
       }
     } catch (err) {
-      this.logger.error("Falha ao verificar duplicata de despesa", err as Error);
+      this.logger.error(
+        "Falha ao verificar duplicata de despesa",
+        err as Error,
+      );
     }
     return {};
   }
@@ -333,10 +362,17 @@ export class ExpensesService {
     }
 
     const priceperLiter =
-      expense.liters != null && expense.liters > 0 ? round2(expense.amount / expense.liters) : null;
+      expense.liters != null && expense.liters > 0
+        ? round2(expense.amount / expense.liters)
+        : null;
 
     let kmPerLiter: number | null = null;
-    if (expense.full_tank === true && expense.liters != null && expense.liters > 0 && expense.odometer_km != null) {
+    if (
+      expense.full_tank === true &&
+      expense.liters != null &&
+      expense.liters > 0 &&
+      expense.odometer_km != null
+    ) {
       const maxPrevKm = await this.findMaxOdometerByVehicle(
         client,
         expense.vehicle_id,
@@ -348,7 +384,9 @@ export class ExpensesService {
       }
     }
 
-    return { computed: { km_per_liter: kmPerLiter, price_per_liter: priceperLiter } };
+    return {
+      computed: { km_per_liter: kmPerLiter, price_per_liter: priceperLiter },
+    };
   }
 
   /**
@@ -368,7 +406,9 @@ export class ExpensesService {
 
     if (error) {
       this.logger.error("Falha ao listar fornecedores", error.message);
-      throw new InternalServerErrorException("Não foi possível listar os fornecedores");
+      throw new InternalServerErrorException(
+        "Não foi possível listar os fornecedores",
+      );
     }
 
     const seen = new Set<string>();
@@ -407,8 +447,13 @@ export class ExpensesService {
       .maybeSingle();
 
     if (vehicleError) {
-      this.logger.error("Falha ao verificar veículo antes de criar despesa", vehicleError.message);
-      throw new InternalServerErrorException("Não foi possível verificar o veículo");
+      this.logger.error(
+        "Falha ao verificar veículo antes de criar despesa",
+        vehicleError.message,
+      );
+      throw new InternalServerErrorException(
+        "Não foi possível verificar o veículo",
+      );
     }
     if (!vehicle) {
       throw new NotFoundException("Veículo não encontrado");
@@ -426,18 +471,31 @@ export class ExpensesService {
     const occurredAt = resolveDateTimeInput(dto.occurred_at, tz);
 
     if (strict) {
-      await this.checkOdometerHardBlock(client, userId, dto.vehicle_id, occurredAt, dto.odometer_km);
+      await this.checkOdometerHardBlock(
+        client,
+        userId,
+        dto.vehicle_id,
+        occurredAt,
+        dto.odometer_km,
+      );
     }
 
     const { data, error } = await client
       .from("expenses")
-      .insert({ ...dto, occurred_at: occurredAt, user_id: userId, is_readonly: false })
+      .insert({
+        ...dto,
+        occurred_at: occurredAt,
+        user_id: userId,
+        is_readonly: false,
+      })
       .select(EXPENSE_COLUMNS)
       .single();
 
     if (error || !data) {
       this.logger.error("Falha ao criar despesa", error?.message);
-      throw new InternalServerErrorException("Não foi possível criar a despesa");
+      throw new InternalServerErrorException(
+        "Não foi possível criar a despesa",
+      );
     }
 
     void this.auditService.log({
@@ -450,8 +508,18 @@ export class ExpensesService {
     const expense = data as Expense;
     const odometerWarning = strict
       ? {}
-      : await this.buildOdometerWarning(client, userId, expense.vehicle_id, dto.odometer_km);
-    const duplicateWarning = await this.buildDuplicateWarning(client, userId, expense, tz);
+      : await this.buildOdometerWarning(
+          client,
+          userId,
+          expense.vehicle_id,
+          dto.odometer_km,
+        );
+    const duplicateWarning = await this.buildDuplicateWarning(
+      client,
+      userId,
+      expense,
+      tz,
+    );
     const fuelMetrics = await this.computeFuelMetrics(client, userId, expense);
     // @spec SPEC-20260715-002 RF-BK-09, R-TZ-04 — aviso não-bloqueante quando o dia calendário
     // (fuso do usuário) da despesa é posterior ao dia calendário corrente
@@ -459,7 +527,13 @@ export class ExpensesService {
       toCalendarDay(new Date(occurredAt), tz) > toCalendarDay(new Date(), tz)
         ? { future_date_warning: true }
         : {};
-    return { ...expense, ...odometerWarning, ...duplicateWarning, ...fuelMetrics, ...futureDateWarning };
+    return {
+      ...expense,
+      ...odometerWarning,
+      ...duplicateWarning,
+      ...fuelMetrics,
+      ...futureDateWarning,
+    };
   }
 
   /**
@@ -500,20 +574,31 @@ export class ExpensesService {
 
     if (error) {
       this.logger.error("Falha ao listar despesas", error.message);
-      throw new InternalServerErrorException("Não foi possível listar as despesas");
+      throw new InternalServerErrorException(
+        "Não foi possível listar as despesas",
+      );
     }
 
     const total = count ?? 0;
     return {
       data: (data ?? []) as Expense[],
-      meta: { total, page, limit, has_next: from + (data?.length ?? 0) < total },
+      meta: {
+        total,
+        page,
+        limit,
+        has_next: from + (data?.length ?? 0) < total,
+      },
     };
   }
 
   /**
    * @spec SPEC-20260714-001 RF-04
    */
-  async findOne(accessToken: string, userId: string, expenseId: string): Promise<Expense> {
+  async findOne(
+    accessToken: string,
+    userId: string,
+    expenseId: string,
+  ): Promise<Expense> {
     const { data, error } = await this.clientForUser(accessToken)
       .from("expenses")
       .select(EXPENSE_COLUMNS)
@@ -524,7 +609,9 @@ export class ExpensesService {
 
     if (error) {
       this.logger.error("Falha ao buscar despesa", error.message);
-      throw new InternalServerErrorException("Não foi possível buscar a despesa");
+      throw new InternalServerErrorException(
+        "Não foi possível buscar a despesa",
+      );
     }
     if (!data) {
       throw new NotFoundException("Despesa não encontrada");
@@ -546,13 +633,17 @@ export class ExpensesService {
   ): Promise<ExpenseWithOdometerWarning> {
     const existing = await this.findOne(accessToken, userId, expenseId);
     if (existing.is_readonly) {
-      throw new ForbiddenException("Despesa vinculada ao ledger não pode ser editada");
+      throw new ForbiddenException(
+        "Despesa vinculada ao ledger não pode ser editada",
+      );
     }
 
     const client = this.clientForUser(accessToken);
     const tz = await this.resolveUserTimezone(accessToken, userId);
     const resolvedOccurredAt =
-      dto.occurred_at !== undefined ? resolveDateTimeInput(dto.occurred_at, tz) : undefined;
+      dto.occurred_at !== undefined
+        ? resolveDateTimeInput(dto.occurred_at, tz)
+        : undefined;
 
     if (strict && dto.odometer_km !== undefined) {
       await this.checkOdometerHardBlock(
@@ -567,7 +658,12 @@ export class ExpensesService {
 
     const { data, error } = await client
       .from("expenses")
-      .update({ ...dto, ...(resolvedOccurredAt !== undefined ? { occurred_at: resolvedOccurredAt } : {}) })
+      .update({
+        ...dto,
+        ...(resolvedOccurredAt !== undefined
+          ? { occurred_at: resolvedOccurredAt }
+          : {}),
+      })
       .eq("id", expenseId)
       .eq("user_id", userId)
       .is("deleted_at", null)
@@ -576,7 +672,9 @@ export class ExpensesService {
 
     if (error) {
       this.logger.error("Falha ao atualizar despesa", error.message);
-      throw new InternalServerErrorException("Não foi possível atualizar a despesa");
+      throw new InternalServerErrorException(
+        "Não foi possível atualizar a despesa",
+      );
     }
     if (!data) {
       throw new NotFoundException("Despesa não encontrada");
@@ -593,7 +691,13 @@ export class ExpensesService {
     const expense = data as Expense;
     const warning = strict
       ? {}
-      : await this.buildOdometerWarning(client, userId, expense.vehicle_id, dto.odometer_km, expenseId);
+      : await this.buildOdometerWarning(
+          client,
+          userId,
+          expense.vehicle_id,
+          dto.odometer_km,
+          expenseId,
+        );
     const fuelMetrics = await this.computeFuelMetrics(client, userId, expense);
     return { ...expense, ...warning, ...fuelMetrics };
   }
@@ -601,10 +705,16 @@ export class ExpensesService {
   /**
    * @spec SPEC-20260714-001 RF-06, RF-07, R-LED-01, R5
    */
-  async remove(accessToken: string, userId: string, expenseId: string): Promise<void> {
+  async remove(
+    accessToken: string,
+    userId: string,
+    expenseId: string,
+  ): Promise<void> {
     const existing = await this.findOne(accessToken, userId, expenseId);
     if (existing.is_readonly) {
-      throw new ForbiddenException("Despesa vinculada ao ledger não pode ser removida");
+      throw new ForbiddenException(
+        "Despesa vinculada ao ledger não pode ser removida",
+      );
     }
 
     const { error } = await this.clientForUser(accessToken)
@@ -616,7 +726,9 @@ export class ExpensesService {
 
     if (error) {
       this.logger.error("Falha ao remover despesa", error.message);
-      throw new InternalServerErrorException("Não foi possível remover a despesa");
+      throw new InternalServerErrorException(
+        "Não foi possível remover a despesa",
+      );
     }
 
     void this.auditService.log({
@@ -640,11 +752,15 @@ export class ExpensesService {
       p_vehicle_id: query.vehicle_id ?? null,
       p_horizon_days: query.horizon_days,
     });
-    const { data, error } = await (query.limit ? builder.limit(query.limit) : builder);
+    const { data, error } = await (query.limit
+      ? builder.limit(query.limit)
+      : builder);
 
     if (error) {
       this.logger.error("Falha ao carregar próximas despesas", error.message);
-      throw new InternalServerErrorException("Não foi possível carregar as próximas despesas");
+      throw new InternalServerErrorException(
+        "Não foi possível carregar as próximas despesas",
+      );
     }
     return (data ?? []) as UpcomingCostItem[];
   }
@@ -675,9 +791,16 @@ export class ExpensesService {
     const { data, error } = await builder;
     if (error) {
       this.logger.error("Falha ao calcular KPIs financeiros", error.message);
-      throw new InternalServerErrorException("Não foi possível calcular os KPIs financeiros");
+      throw new InternalServerErrorException(
+        "Não foi possível calcular os KPIs financeiros",
+      );
     }
-    return round2(((data ?? []) as { amount: number }[]).reduce((sum, row) => sum + row.amount, 0));
+    return round2(
+      ((data ?? []) as { amount: number }[]).reduce(
+        (sum, row) => sum + row.amount,
+        0,
+      ),
+    );
   }
 
   /**
@@ -685,30 +808,55 @@ export class ExpensesService {
    * @spec SPEC-20260715-002 R-TZ-01 — limites de mês calculados no fuso do usuário, não no
    * calendário local do processo Node.js (mesma classe de bug corrigida em `DashboardService`).
    */
-  async getKpis(accessToken: string, userId: string, query: ExpenseKpisDto): Promise<ExpenseKpis> {
+  async getKpis(
+    accessToken: string,
+    userId: string,
+    query: ExpenseKpisDto,
+  ): Promise<ExpenseKpis> {
     const client = this.clientForUser(accessToken);
     const tz = await this.resolveUserTimezone(accessToken, userId);
     const todayInTz = toCalendarDay(new Date(), tz);
     const [year, month] = todayInTz.split("-").map(Number) as [number, number];
     const monthStart = (offset: number) => {
       const d = new Date(Date.UTC(year, month - 1 + offset, 1));
-      return resolveDateTimeInput(`${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-01`, tz);
+      return resolveDateTimeInput(
+        `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-01`,
+        tz,
+      );
     };
     const startOfThisMonth = monthStart(0);
     const startOfNextMonth = monthStart(1);
     const startOfPrevMonth = monthStart(-1);
 
-    const [totalThisMonth, totalPrevMonth, totalAllTime, upcoming] = await Promise.all([
-      this.sumExpensesAmount(client, userId, query.vehicle_id, startOfThisMonth, startOfNextMonth),
-      this.sumExpensesAmount(client, userId, query.vehicle_id, startOfPrevMonth, startOfThisMonth),
-      this.sumExpensesAmount(client, userId, query.vehicle_id),
-      this.getUpcomingCosts(accessToken, { vehicle_id: query.vehicle_id, horizon_days: 30 }),
-    ]);
+    const [totalThisMonth, totalPrevMonth, totalAllTime, upcoming] =
+      await Promise.all([
+        this.sumExpensesAmount(
+          client,
+          userId,
+          query.vehicle_id,
+          startOfThisMonth,
+          startOfNextMonth,
+        ),
+        this.sumExpensesAmount(
+          client,
+          userId,
+          query.vehicle_id,
+          startOfPrevMonth,
+          startOfThisMonth,
+        ),
+        this.sumExpensesAmount(client, userId, query.vehicle_id),
+        this.getUpcomingCosts(accessToken, {
+          vehicle_id: query.vehicle_id,
+          horizon_days: 30,
+        }),
+      ]);
 
     const deltaPercent =
       totalPrevMonth === 0
         ? null
-        : Math.round(((totalThisMonth - totalPrevMonth) / totalPrevMonth) * 1000) / 10;
+        : Math.round(
+            ((totalThisMonth - totalPrevMonth) / totalPrevMonth) * 1000,
+          ) / 10;
 
     return {
       total_this_month: totalThisMonth,
@@ -772,7 +920,9 @@ export class ExpensesService {
 
     if (error || !data) {
       this.logger.error("Falha ao vincular despesa ao ledger", error?.message);
-      throw new InternalServerErrorException("Não foi possível vincular a despesa ao ledger");
+      throw new InternalServerErrorException(
+        "Não foi possível vincular a despesa ao ledger",
+      );
     }
 
     void this.auditService.log({
@@ -805,7 +955,9 @@ export class ExpensesService {
 
     if (error) {
       this.logger.error("Falha ao remover despesa vinculada", error.message);
-      throw new InternalServerErrorException("Não foi possível remover a despesa vinculada");
+      throw new InternalServerErrorException(
+        "Não foi possível remover a despesa vinculada",
+      );
     }
   }
 
@@ -836,12 +988,18 @@ export class ExpensesService {
     const client = this.clientForUser(accessToken);
     const today = new Date();
     const toDateString = (date: Date) => date.toISOString().slice(0, 10);
-    const from = query.from ?? toDateString(new Date(today.getFullYear(), today.getMonth() - 12, today.getDate()));
+    const from =
+      query.from ??
+      toDateString(
+        new Date(today.getFullYear(), today.getMonth() - 12, today.getDate()),
+      );
     const to = query.to ?? toDateString(today);
 
     let builder = client
       .from("expenses")
-      .select("occurred_at, amount, category, description, source_type, vehicles(plate, make, model)")
+      .select(
+        "occurred_at, amount, category, description, source_type, vehicles(plate, make, model)",
+      )
       .eq("user_id", userId)
       .is("deleted_at", null)
       .gte("occurred_at", from)
@@ -852,7 +1010,9 @@ export class ExpensesService {
     }
 
     const header = "Data,Veiculo,Placa,Categoria,Valor,Origem,Descricao";
-    const { data, error } = await builder.order("occurred_at", { ascending: false }).limit(5_000);
+    const { data, error } = await builder
+      .order("occurred_at", { ascending: false })
+      .limit(5_000);
 
     if (error) {
       return `${header}\n`;
@@ -871,7 +1031,9 @@ export class ExpensesService {
     }
 
     const rows = ((data ?? []) as ConsolidatedExportRow[]).map((row) => {
-      const vehicle = (Array.isArray(row.vehicles) ? row.vehicles[0] : row.vehicles) ?? {
+      const vehicle = (Array.isArray(row.vehicles)
+        ? row.vehicles[0]
+        : row.vehicles) ?? {
         plate: "",
         make: null,
         model: null,

@@ -1,6 +1,6 @@
 import typography from "@tailwindcss/typography";
 import type { Config } from "tailwindcss";
-import { typographyScale } from "@nave/ui/tokens";
+import { typographyScale } from "@navestory/ui/tokens";
 
 // @spec SPEC-20260525-001 §4.1
 // Fonte de verdade dos valores de cor é `packages/ui/src/tokens/colors.ts` — este arquivo só
@@ -10,7 +10,10 @@ const config: Config = {
   // @spec SPEC-20260721-001 RF-03 — next-themes aplica/remove a classe `.dark` no <html>;
   // `darkMode: "class"` faz o Tailwind gerar variantes `dark:` a partir dela.
   darkMode: "class",
-  content: ["./src/**/*.{js,ts,jsx,tsx,mdx}", "../../packages/ui/src/**/*.{js,ts,jsx,tsx}"],
+  content: [
+    "./src/**/*.{js,ts,jsx,tsx,mdx}",
+    "../../packages/ui/src/**/*.{js,ts,jsx,tsx}",
+  ],
   theme: {
     extend: {
       colors: {
@@ -111,13 +114,34 @@ const config: Config = {
       // default do Tailwind). `fontWeight` é deliberadamente omitido (ver D-03 da spec) —
       // peso continua via `font-*` semântico aplicado à parte de cada componente.
       fontSize: {
-        xs: [typographyScale.xs.fontSize, { lineHeight: typographyScale.xs.lineHeight }],
-        sm: [typographyScale.sm.fontSize, { lineHeight: typographyScale.sm.lineHeight }],
-        base: [typographyScale.base.fontSize, { lineHeight: typographyScale.base.lineHeight }],
-        md: [typographyScale.md.fontSize, { lineHeight: typographyScale.md.lineHeight }],
-        lg: [typographyScale.lg.fontSize, { lineHeight: typographyScale.lg.lineHeight }],
-        xl: [typographyScale.xl.fontSize, { lineHeight: typographyScale.xl.lineHeight }],
-        "2xl": [typographyScale["2xl"].fontSize, { lineHeight: typographyScale["2xl"].lineHeight }],
+        xs: [
+          typographyScale.xs.fontSize,
+          { lineHeight: typographyScale.xs.lineHeight },
+        ],
+        sm: [
+          typographyScale.sm.fontSize,
+          { lineHeight: typographyScale.sm.lineHeight },
+        ],
+        base: [
+          typographyScale.base.fontSize,
+          { lineHeight: typographyScale.base.lineHeight },
+        ],
+        md: [
+          typographyScale.md.fontSize,
+          { lineHeight: typographyScale.md.lineHeight },
+        ],
+        lg: [
+          typographyScale.lg.fontSize,
+          { lineHeight: typographyScale.lg.lineHeight },
+        ],
+        xl: [
+          typographyScale.xl.fontSize,
+          { lineHeight: typographyScale.xl.lineHeight },
+        ],
+        "2xl": [
+          typographyScale["2xl"].fontSize,
+          { lineHeight: typographyScale["2xl"].lineHeight },
+        ],
       },
     },
   },

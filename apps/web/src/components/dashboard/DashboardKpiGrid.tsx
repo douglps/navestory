@@ -2,9 +2,9 @@
 
 import Link from "next/link";
 import type { ReactNode } from "react";
-import type { FleetKpiCatalog, KpiCatalogId } from "@nave/validators";
+import type { FleetKpiCatalog, KpiCatalogId } from "@navestory/validators";
 import { TriangleAlert } from "lucide-react";
-import { KpiCard, type KpiCardProps } from "@nave/ui";
+import { KpiCard, type KpiCardProps } from "@navestory/ui";
 import { KPI_CATALOG_META } from "./kpi-catalog";
 
 function currency(value: number): string {
@@ -18,14 +18,20 @@ function formatDate(dateStr: string): string {
 type CardSpec = Pick<KpiCardProps, "value" | "unit" | "trend" | "sparkline">;
 
 /** @spec SPEC-20260721-002 RF-01, R-KPI-02 — `delta_pct` nulo nunca vira seta de tendência */
-function specForId(id: KpiCatalogId, catalog: FleetKpiCatalog): CardSpec | "unavailable" {
+function specForId(
+  id: KpiCatalogId,
+  catalog: FleetKpiCatalog,
+): CardSpec | "unavailable" {
   switch (id) {
     case "expenses_month": {
       const result = catalog.expenses_month;
       if (!result.ok) return "unavailable";
       return {
         value: currency(result.value.value),
-        trend: result.value.delta_pct === null ? undefined : { value: result.value.delta_pct },
+        trend:
+          result.value.delta_pct === null
+            ? undefined
+            : { value: result.value.delta_pct },
         sparkline: result.value.history_6mo ?? undefined,
       };
     }
@@ -34,14 +40,19 @@ function specForId(id: KpiCatalogId, catalog: FleetKpiCatalog): CardSpec | "unav
       if (!result.ok) return "unavailable";
       return {
         value: currency(result.value.value),
-        trend: result.value.delta_pct === null ? undefined : { value: result.value.delta_pct },
+        trend:
+          result.value.delta_pct === null
+            ? undefined
+            : { value: result.value.delta_pct },
         sparkline: result.value.history_6mo ?? undefined,
       };
     }
     case "fleet_health": {
       const result = catalog.fleet_health;
       if (!result.ok) return "unavailable";
-      return result.value === null ? { value: "—" } : { value: result.value, unit: "/100" };
+      return result.value === null
+        ? { value: "—" }
+        : { value: result.value, unit: "/100" };
     }
     case "urgent_maintenance": {
       const result = catalog.urgent_maintenance;
@@ -58,7 +69,10 @@ function specForId(id: KpiCatalogId, catalog: FleetKpiCatalog): CardSpec | "unav
       if (!result.ok) return "unavailable";
       return result.value === null
         ? { value: "Nenhuma agendada" }
-        : { value: formatDate(result.value.date), unit: result.value.vehicle_plate };
+        : {
+            value: formatDate(result.value.date),
+            unit: result.value.vehicle_plate,
+          };
     }
     case "upcoming_costs_7d": {
       const result = catalog.upcoming_costs_7d;
@@ -94,7 +108,12 @@ export function DashboardKpiGrid({
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {activeIds.map((id) => (
           // eslint-disable-next-line security/detect-object-injection -- id é KpiCatalogId, união fixa de 8 literais
-          <KpiCard key={id} title={KPI_CATALOG_META[id].title} value="" loading />
+          <KpiCard
+            key={id}
+            title={KPI_CATALOG_META[id].title}
+            value=""
+            loading
+          />
         ))}
       </div>
     );

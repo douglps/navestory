@@ -5,7 +5,10 @@ import {
   UnprocessableEntityException,
 } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
-import { DEFAULT_EXPENSE_CATEGORIES, DEFAULT_EXPENSE_CATEGORY_VALUES } from "@nave/validators";
+import {
+  DEFAULT_EXPENSE_CATEGORIES,
+  DEFAULT_EXPENSE_CATEGORY_VALUES,
+} from "@navestory/validators";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createUserScopedClient } from "../../shared/supabase/create-user-scoped-client";
 import type { CreateCategoryDto } from "./dto/create-category.dto";
@@ -42,7 +45,10 @@ export class CategoriesService {
   async findAll(
     accessToken: string,
     userId: string,
-  ): Promise<{ default: typeof DEFAULT_EXPENSE_CATEGORIES; custom: UserCategory[] }> {
+  ): Promise<{
+    default: typeof DEFAULT_EXPENSE_CATEGORIES;
+    custom: UserCategory[];
+  }> {
     const { data, error } = await this.clientForUser(accessToken)
       .from("user_categories")
       .select("id, user_id, value, label, created_at")
@@ -53,14 +59,23 @@ export class CategoriesService {
       throw new NotFoundException("Não foi possível listar as categorias");
     }
 
-    return { default: DEFAULT_EXPENSE_CATEGORIES, custom: (data ?? []) as UserCategory[] };
+    return {
+      default: DEFAULT_EXPENSE_CATEGORIES,
+      custom: (data ?? []) as UserCategory[],
+    };
   }
 
   /**
    * @spec SPEC-20260602-004 RF-02, RF-03, RF-04, RF-05, CA-01..05, R-CAT-01, R-CAT-02, R-CAT-03
    */
-  async create(accessToken: string, userId: string, dto: CreateCategoryDto): Promise<UserCategory> {
-    if ((DEFAULT_EXPENSE_CATEGORY_VALUES as readonly string[]).includes(dto.value)) {
+  async create(
+    accessToken: string,
+    userId: string,
+    dto: CreateCategoryDto,
+  ): Promise<UserCategory> {
+    if (
+      (DEFAULT_EXPENSE_CATEGORY_VALUES as readonly string[]).includes(dto.value)
+    ) {
       throw new ConflictException("Já é uma categoria padrão");
     }
 
@@ -72,10 +87,14 @@ export class CategoriesService {
       .eq("user_id", userId);
 
     if (countError) {
-      throw new NotFoundException("Não foi possível validar o limite de categorias");
+      throw new NotFoundException(
+        "Não foi possível validar o limite de categorias",
+      );
     }
     if ((count ?? 0) >= CUSTOM_CATEGORY_LIMIT) {
-      throw new UnprocessableEntityException("Limite de 20 categorias personalizadas atingido");
+      throw new UnprocessableEntityException(
+        "Limite de 20 categorias personalizadas atingido",
+      );
     }
 
     const { data, error } = await client
@@ -97,7 +116,11 @@ export class CategoriesService {
   /**
    * @spec SPEC-20260602-004 RF-06, CA-06
    */
-  async remove(accessToken: string, userId: string, categoryId: string): Promise<void> {
+  async remove(
+    accessToken: string,
+    userId: string,
+    categoryId: string,
+  ): Promise<void> {
     const client = this.clientForUser(accessToken);
 
     const { data: existing, error: findError } = await client

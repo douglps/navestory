@@ -1,4 +1,4 @@
-import { listMaintenancesQuerySchema } from "@nave/validators";
+import { listMaintenancesQuerySchema } from "@navestory/validators";
 import type { z } from "zod";
 
 export const listMaintenancesDtoSchema = listMaintenancesQuerySchema;

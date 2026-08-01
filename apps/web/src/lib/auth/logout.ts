@@ -23,9 +23,9 @@ export async function logout(): Promise<void> {
   } finally {
     useDashboardStore.getState().clearAllSelection();
     if (typeof sessionStorage !== "undefined") {
-      sessionStorage.removeItem("nave-dashboard-context");
+      sessionStorage.removeItem("navestory-dashboard-context");
       // @spec SPEC-20260730-002 RF-07 — colapso da sidebar não deve vazar entre sessões.
-      sessionStorage.removeItem("nave-ui-state");
+      sessionStorage.removeItem("navestory-ui-state");
     }
     await clearApiCache();
     window.location.href = "/login";

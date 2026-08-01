@@ -1,6 +1,6 @@
 ---
 id: SPEC-20260721-001
-title: "Design System — Fundamentos de Marca, Tokens de Cor, Tema e Componentes de Navegação Global"
+title: "Design System — Fundamentos de Marca, Tokens de Cor, Tema e Componentes de navegação Global"
 status: approved
 date: 2026-07-21
 author: Douglas Lopes (lps.doug@protonmail.com)
@@ -9,7 +9,7 @@ security: []
 camadas: [frontend, design]
 ---
 
-# SPEC-20260721-001: Design System — Fundamentos de Marca, Tokens de Cor, Tema e Componentes de Navegação Global
+# SPEC-20260721-001: Design System — Fundamentos de Marca, Tokens de Cor, Tema e Componentes de navegação Global
 
 **Status:** approved
 **Criada em:** 2026-07-21
@@ -24,6 +24,7 @@ Em 2026-07-21, uma pesquisa aprofundada de fundamentos de design system foi conc
 A seção **F** desse documento consolidou seis pontos que exigiam decisão explícita do proprietário do produto. Todas as seis decisões foram tomadas em 2026-07-21 e são **vinculantes** — esta spec as formaliza como requisitos rastreáveis.
 
 O estado atual sem esta spec:
+
 - O token `--gold` não existe; usos de dourado (ex: `StatusBadge` de destaque premium) recorrem a `--warning`, mesclando semântica de "alerta" com "destaque de marca".
 - O tema padrão do app não está declarado — `next-themes` nunca foi configurado; na ausência de configuração explícita o comportamento depende do browser.
 - `--muted-foreground` usa L=48% em OKLCH, que pode falhar o contraste WCAG AA (4.5:1) em determinadas combinações de fundo.
@@ -37,23 +38,23 @@ Esta spec não duplica o conteúdo técnico da pesquisa — referencia-o como fo
 
 ## Objetivo
 
-Formalizar as seis decisões de produto de 2026-07-21 como requisitos rastreáveis, garantindo que a implementação dos fundamentos visuais do Nave (paleta OKLCH de marca, dark/light mode, acessibilidade de contraste, seletor de veículo global e Command Palette) seja guiada por regras explícitas e critérios de aceite mensuráveis — sem ambiguidade de escopo ou comportamento.
+Formalizar as seis decisões de produto de 2026-07-21 como requisitos rastreáveis, garantindo que a implementação dos fundamentos visuais do navestory (paleta OKLCH de marca, dark/light mode, acessibilidade de contraste, seletor de veículo global e Command Palette) seja guiada por regras explícitas e critérios de aceite mensuráveis — sem ambiguidade de escopo ou comportamento.
 
 ---
 
 ## Material de Referência (não duplicar aqui)
 
-| Documento | Conteúdo | Caminho |
-|-----------|----------|---------|
-| Pesquisa de Fundamentos | Metodologia, paleta OKLCH, dark mode, StatusBadge, NavBadge, Command Palette — racional técnico detalhado e exemplos de código | `specs/design-system/PESQUISA-FUNDAMENTOS-DESIGN-SYSTEM.md` |
-| Inventário do Design System | Estado atual dos tokens e componentes implementados em `packages/ui` | `specs/design-system/INVENTARIO-DESIGN-SYSTEM.md` |
-| Spec de Componentes UI (aprovada) | Escopo de implementação de componentes de `packages/ui` (T8.1) | `specs/design-system/SPEC-20260525-001.md` |
+| Documento                         | Conteúdo                                                                                                                       | Caminho                                                     |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------- |
+| Pesquisa de Fundamentos           | Metodologia, paleta OKLCH, dark mode, StatusBadge, NavBadge, Command Palette — racional técnico detalhado e exemplos de código | `specs/design-system/PESQUISA-FUNDAMENTOS-DESIGN-SYSTEM.md` |
+| Inventário do Design System       | Estado atual dos tokens e componentes implementados em `packages/ui`                                                           | `specs/design-system/INVENTARIO-DESIGN-SYSTEM.md`           |
+| Spec de Componentes UI (aprovada) | Escopo de implementação de componentes de `packages/ui` (T8.1)                                                                 | `specs/design-system/SPEC-20260525-001.md`                  |
 
 ---
 
 ## Histórias de Usuário e Critérios de Aceitação
 
-**Persona P1 — Douglas, mantenedor do Nave**, responsável pela implementação e consistência visual.
+**Persona P1 — Douglas, mantenedor do navestory**, responsável pela implementação e consistência visual.
 **Persona P2 — Gestor de frota**, usuário final que consome a interface em diferentes dispositivos e preferências de tema.
 
 ### US-01 — Token de marca dourada independente de alerta
@@ -112,25 +113,25 @@ Formalizar as seis decisões de produto de 2026-07-21 como requisitos rastreáve
 
 ## Requisitos Funcionais
 
-| ID | Requisito | Prioridade | História relacionada | Decisão de produto |
-|----|-----------|------------|----------------------|-------------------|
-| RF-01 | Criar tokens `--gold` e `--gold-foreground` em `packages/ui/src/tokens/colors.ts` e em `globals.css`, com valores calibrados em OKLCH para light e dark mode, distintos de `--warning` | Alta | US-01 | F-1 |
-| RF-02 | `--muted-foreground` deve usar valor de L ≤ 42% em OKLCH em ambos os temas, garantindo contraste AA (4.5:1) sobre `--background` sem exceção | Alta | US-02 | F-3 |
-| RF-03 | Configurar `next-themes` com `defaultTheme="system"` e `enableSystem={true}`; preferência manual do usuário armazenada em localStorage sobrepõe `prefers-color-scheme` | Alta | US-03 | F-2 |
-| RF-04 | O componente `NavBadge` deve truncar qualquer contagem > 9 para a string literal "9+"; valores ≤ 9 exibem o número real; valor 0 não exibe badge | Alta | US-04 | F-6 |
-| RF-05 | Implementar `VehicleContextSelector` no header shell: dropdown de veículos do usuário, sincronizado com o store de contexto global (Zustand); seleção propaga filtro para `/expenses`, `/maintenance` e `/fines` | Alta | US-05 | F-4 |
-| RF-06 | Implementar `CommandPalette` ativada por `Ctrl+K` / `⌘K`: campo de busca livre, resultados cruzando veículos, despesas e multas do usuário autenticado; navegação por teclado (setas, Enter, Esc) | Média | US-06 | F-5 |
+| ID    | Requisito                                                                                                                                                                                                        | Prioridade | História relacionada | Decisão de produto |
+| ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | -------------------- | ------------------ |
+| RF-01 | Criar tokens `--gold` e `--gold-foreground` em `packages/ui/src/tokens/colors.ts` e em `globals.css`, com valores calibrados em OKLCH para light e dark mode, distintos de `--warning`                           | Alta       | US-01                | F-1                |
+| RF-02 | `--muted-foreground` deve usar valor de L ≤ 42% em OKLCH em ambos os temas, garantindo contraste AA (4.5:1) sobre `--background` sem exceção                                                                     | Alta       | US-02                | F-3                |
+| RF-03 | Configurar `next-themes` com `defaultTheme="system"` e `enableSystem={true}`; preferência manual do usuário armazenada em localStorage sobrepõe `prefers-color-scheme`                                           | Alta       | US-03                | F-2                |
+| RF-04 | O componente `NavBadge` deve truncar qualquer contagem > 9 para a string literal "9+"; valores ≤ 9 exibem o número real; valor 0 não exibe badge                                                                 | Alta       | US-04                | F-6                |
+| RF-05 | Implementar `VehicleContextSelector` no header shell: dropdown de veículos do usuário, sincronizado com o store de contexto global (Zustand); seleção propaga filtro para `/expenses`, `/maintenance` e `/fines` | Alta       | US-05                | F-4                |
+| RF-06 | Implementar `CommandPalette` ativada por `Ctrl+K` / `⌘K`: campo de busca livre, resultados cruzando veículos, despesas e multas do usuário autenticado; navegação por teclado (setas, Enter, Esc)           | Média      | US-06                | F-5                |
 
 ---
 
 ## Requisitos Não-Funcionais
 
-| ID | Requisito | Métrica de Aceite |
-|----|-----------|------------------|
-| RNF-01 | Dark/light mode via troca de tokens — nenhum componente deve ter lógica condicional de cor interna | Auditoria de código: zero ocorrências de `dark:` diretamente em componentes de `packages/ui`; toda troca via variável CSS |
-| RNF-02 | Contraste mínimo WCAG AA em todos os tokens de texto (C-DS-01) | `jest-axe` sem violações de contraste em todos os componentes do pacote `packages/ui` |
-| RNF-03 | `CommandPalette` não bloqueia renderização inicial do shell | Lazy import (`next/dynamic` ou `React.lazy`); bundle inicial não aumenta em mais de 5 kB gzipped |
-| RNF-04 | `VehicleContextSelector` não introduz waterfall de rede adicional na navegação entre telas | Dados de veículos reutilizados do cache do store (Zustand) já populado no carregamento do shell; sem novo fetch por mudança de rota |
+| ID     | Requisito                                                                                          | Métrica de Aceite                                                                                                                   |
+| ------ | -------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| RNF-01 | Dark/light mode via troca de tokens — nenhum componente deve ter lógica condicional de cor interna | Auditoria de código: zero ocorrências de `dark:` diretamente em componentes de `packages/ui`; toda troca via variável CSS           |
+| RNF-02 | Contraste mínimo WCAG AA em todos os tokens de texto (C-DS-01)                                     | `jest-axe` sem violações de contraste em todos os componentes do pacote `packages/ui`                                               |
+| RNF-03 | `CommandPalette` não bloqueia renderização inicial do shell                                        | Lazy import (`next/dynamic` ou `React.lazy`); bundle inicial não aumenta em mais de 5 kB gzipped                                    |
+| RNF-04 | `VehicleContextSelector` não introduz waterfall de rede adicional na navegação entre telas    | Dados de veículos reutilizados do cache do store (Zustand) já populado no carregamento do shell; sem novo fetch por mudança de rota |
 
 ---
 
@@ -146,16 +147,16 @@ Formalizar as seis decisões de produto de 2026-07-21 como requisitos rastreáve
 
 ## Dependências
 
-| Tipo | Referência | Descrição |
-|------|-----------|-----------|
-| Spec | SPEC-20260525-001 | Tokens base e componentes de `packages/ui` — pré-requisito para RF-01, RF-02 |
-| Spec | SPEC-20260602-001 | Store de contexto global de veículo (Zustand) — pré-requisito para RF-05 |
-| Spec | SPEC-20260603-001 | `VehicleContextChip` no subheader — RF-05 coexiste com este componente; não duplicar responsabilidade de seleção |
-| Biblioteca | `next-themes` | Gerenciamento de tema dark/light (`defaultTheme="system"`) — RF-03 |
-| Biblioteca | `cmdk` | Primitivo headless de command palette já listado em SPEC-20260525-001 (§7.2) — RF-06; não instalar lib adicional |
-| Regra | R-DS-01 | Cap de "9+" no NavBadge — RF-04 |
-| Regra | C-DS-01 | Contraste WCAG AA mínimo em todo texto — RF-02, RNF-02 |
-| Regra | R-CTX-01 a R-CTX-07 | Comportamento do contexto global de veículo — RF-05 herda todas |
+| Tipo       | Referência          | Descrição                                                                                                        |
+| ---------- | ------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| Spec       | SPEC-20260525-001   | Tokens base e componentes de `packages/ui` — pré-requisito para RF-01, RF-02                                     |
+| Spec       | SPEC-20260602-001   | Store de contexto global de veículo (Zustand) — pré-requisito para RF-05                                         |
+| Spec       | SPEC-20260603-001   | `VehicleContextChip` no subheader — RF-05 coexiste com este componente; não duplicar responsabilidade de seleção |
+| Biblioteca | `next-themes`       | Gerenciamento de tema dark/light (`defaultTheme="system"`) — RF-03                                               |
+| Biblioteca | `cmdk`              | Primitivo headless de command palette já listado em SPEC-20260525-001 (§7.2) — RF-06; não instalar lib adicional |
+| Regra      | R-DS-01             | Cap de "9+" no NavBadge — RF-04                                                                                  |
+| Regra      | C-DS-01             | Contraste WCAG AA mínimo em todo texto — RF-02, RNF-02                                                           |
+| Regra      | R-CTX-01 a R-CTX-07 | Comportamento do contexto global de veículo — RF-05 herda todas                                                  |
 
 ---
 
@@ -181,10 +182,10 @@ Usa `cmdk` (já declarado em SPEC-20260525-001 como dependência do `Combobox`) 
 
 > Preencher apenas após `status: approved`. Mudança estrutural (reverte/substitui requisito) não edita aqui — cria spec nova com `superseded_by`.
 
-| Data | O que mudou | Por quê |
-|------|-------------|---------|
+| Data       | O que mudou                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | Por quê                                                                                                                                                                                                                                           |
+| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 2026-07-21 | Implementação concluída (RF-01 a RF-06) e spec movida de `draft` para `approved`. Três desvios registrados: (1) RF-05 reaproveita `VehicleContextChip` existente (SPEC-20260603-001) em vez de criar um `VehicleContextSelector` paralelo, para não violar R-CTX-07; (2) o filtro por veículo ativo não se aplica a `/fines` porque a rota ainda não existe no app — fica pendente de spec futura; (3) os overrides `.dark` em `globals.css`/`colors.ts` cobrem só os tokens indispensáveis para o tema funcionar de forma legível (neutros, `--primary`, `--gold`) — recalibração perceptual completa da paleta em dark mode (secondary/accent/success/warning/danger/info) permanece fora do escopo, coerente com a seção "Fora de Escopo" já existente. | Gate de sincronia spec↔código↔matriz exige `matrices/rastreabilidade.md` atualizado com caminhos reais ao concluir a implementação; ver `matrices/rastreabilidade.md` para status detalhado por requisito (RF-05 e RF-06 marcados como parciais). |
-| 2026-07-21 | Corrigido `KpiCard` (`packages/ui/src/components/kpi-card.tsx`), que violava RNF-02: o texto da tendência usava `text-{variant}` (tons "solid") direto sobre `--card`, medindo ~2.1:1 (warning), ~3.4:1 (success) e ~4.2:1 (info) — todos abaixo de 4.5:1 AA. Os tons "solid" são calibrados para contraste sobre o `-pastel` da mesma família (ver `tokens/colors.ts`), não sobre `--card`/`--background`. Corrigido para `bg-{variant}-pastel text-foreground`, mesmo padrão já usado em `Alert`/`Toast` (contraste ≥14:1). `kpi-card.test.tsx` ganhou casos `jest-axe` para os variants `warning`/`success`/`info`/`danger`, que antes não eram cobertos (só `danger`, caso limítrofe, era testado). | Falha de contraste identificada em auditoria solicitada pelo usuário após mudanças recentes no design system; RNF-02 exige zero violações de `jest-axe` em `packages/ui`, e o gap de cobertura de teste mascarava a regressão. |
-| 2026-07-22 | RF-06 completado: `CommandPaletteTrigger` passou a buscar também multas (`GET /fines`, categoria "Multas", navega para `/fines/:id`). A rota `/fines` — que na implementação original de 2026-07-21 ainda não existia, motivando a omissão — foi criada por `SPEC-20260722-005`. Criado `command-palette-trigger.spec.tsx` (6 casos), que antes não existia: abertura via botão/`Ctrl+K`, busca cruzando veículos/despesas/manutenções/multas, navegação ao selecionar multa, query <2 chars e mensagem de "nenhum resultado". Ver `matrices/rastreabilidade.md`. | Rota `/fines` deixou de ser um bloqueio; a omissão anterior era premissa desatualizada, não decisão de escopo. |
-| 2026-07-22 | RNF-03 completado: `CommandPalette` (e as dependências `cmdk`/`@radix-ui/react-dialog`) agora carrega via `next/dynamic({ ssr: false })` sobre `import("@nave/ui")`, montado só após a primeira abertura (`hasOpenedOnce`) — nem clique no botão nem `Ctrl+K` disparam o fetch do chunk antes disso. Verificado com `pnpm build`: o chunk isolado (~44,8 kB gzip) não aparece em nenhum `build-manifest.json` de rota, confirmando que não é parte do bundle inicial do shell. Caso de teste dedicado adicionado em `command-palette-trigger.spec.tsx`. | Item pendente desde a implementação original (RNF-03 "não verificado"); usuário solicitou o fechamento pontual. |
-| 2026-07-22 | RF-05 completado: `VehicleContextChip` agora detecta frota vazia (modo `none` + lista de veículos vazia) e exibe CTA "Adicionar veículo" (link para `/vehicles/new`) em vez do seletor/Dialog sem nada para listar. `useVehicleContext` passou a buscar a lista de veículos também no modo `none` (antes só em `single`), necessário para detectar a ausência de veículos antes de qualquer seleção. Ver `matrices/rastreabilidade.md` para os caminhos de código/teste atualizados. | Item estava pendente desde a implementação original de 2026-07-21 (marcado ⚠️ parcial na matriz); usuário solicitou o fechamento pontual. |
+| 2026-07-21 | Corrigido `KpiCard` (`packages/ui/src/components/kpi-card.tsx`), que violava RNF-02: o texto da tendência usava `text-{variant}` (tons "solid") direto sobre `--card`, medindo ~2.1:1 (warning), ~3.4:1 (success) e ~4.2:1 (info) — todos abaixo de 4.5:1 AA. Os tons "solid" são calibrados para contraste sobre o `-pastel` da mesma família (ver `tokens/colors.ts`), não sobre `--card`/`--background`. Corrigido para `bg-{variant}-pastel text-foreground`, mesmo padrão já usado em `Alert`/`Toast` (contraste ≥14:1). `kpi-card.test.tsx` ganhou casos `jest-axe` para os variants `warning`/`success`/`info`/`danger`, que antes não eram cobertos (só `danger`, caso limítrofe, era testado).                                                    | Falha de contraste identificada em auditoria solicitada pelo usuário após mudanças recentes no design system; RNF-02 exige zero violações de `jest-axe` em `packages/ui`, e o gap de cobertura de teste mascarava a regressão.                    |
+| 2026-07-22 | RF-06 completado: `CommandPaletteTrigger` passou a buscar também multas (`GET /fines`, categoria "Multas", navega para `/fines/:id`). A rota `/fines` — que na implementação original de 2026-07-21 ainda não existia, motivando a omissão — foi criada por `SPEC-20260722-005`. Criado `command-palette-trigger.spec.tsx` (6 casos), que antes não existia: abertura via botão/`Ctrl+K`, busca cruzando veículos/despesas/manutenções/multas, navegação ao selecionar multa, query <2 chars e mensagem de "nenhum resultado". Ver `matrices/rastreabilidade.md`.                                                                                                                                                                                | Rota `/fines` deixou de ser um bloqueio; a omissão anterior era premissa desatualizada, não decisão de escopo.                                                                                                                                    |
+| 2026-07-22 | RNF-03 completado: `CommandPalette` (e as dependências `cmdk`/`@radix-ui/react-dialog`) agora carrega via `next/dynamic({ ssr: false })` sobre `import("@navestory/ui")`, montado só após a primeira abertura (`hasOpenedOnce`) — nem clique no botão nem `Ctrl+K` disparam o fetch do chunk antes disso. Verificado com `pnpm build`: o chunk isolado (~44,8 kB gzip) não aparece em nenhum `build-manifest.json` de rota, confirmando que não é parte do bundle inicial do shell. Caso de teste dedicado adicionado em `command-palette-trigger.spec.tsx`.                                                                                                                                                                                               | Item pendente desde a implementação original (RNF-03 "não verificado"); usuário solicitou o fechamento pontual.                                                                                                                                   |
+| 2026-07-22 | RF-05 completado: `VehicleContextChip` agora detecta frota vazia (modo `none` + lista de veículos vazia) e exibe CTA "Adicionar veículo" (link para `/vehicles/new`) em vez do seletor/Dialog sem nada para listar. `useVehicleContext` passou a buscar a lista de veículos também no modo `none` (antes só em `single`), necessário para detectar a ausência de veículos antes de qualquer seleção. Ver `matrices/rastreabilidade.md` para os caminhos de código/teste atualizados.                                                                                                                                                                                                                                                                       | Item estava pendente desde a implementação original de 2026-07-21 (marcado ⚠️ parcial na matriz); usuário solicitou o fechamento pontual.                                                                                                         |

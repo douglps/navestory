@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 
 function draftKey(route: string): string {
-  return `nave_form_draft_${route}`;
+  return `navestory_form_draft_${route}`;
 }
 
 /**

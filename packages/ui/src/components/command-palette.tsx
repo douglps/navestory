@@ -56,7 +56,9 @@ export function CommandPalette({
             "focus-visible:outline-none",
           )}
         >
-          <RadixDialog.Title className="sr-only">Busca global</RadixDialog.Title>
+          <RadixDialog.Title className="sr-only">
+            Busca global
+          </RadixDialog.Title>
           <Cmdk shouldFilter={false} loop>
             <div className="flex items-center gap-2 border-b border-border px-3">
               {/* Radix `Dialog.Content` já move o foco para o primeiro elemento focável ao
@@ -73,7 +75,10 @@ export function CommandPalette({
             </div>
             <Cmdk.List className="max-h-80 overflow-y-auto p-1">
               <Cmdk.Empty className="px-3 py-6 text-center text-sm text-muted-foreground">
-                {emptyMessage ?? (query ? `Nenhum resultado para "${query}"` : "Digite para buscar")}
+                {emptyMessage ??
+                  (query
+                    ? `Nenhum resultado para "${query}"`
+                    : "Digite para buscar")}
               </Cmdk.Empty>
               {categories.map((category) => (
                 <Cmdk.Group
@@ -96,7 +101,9 @@ export function CommandPalette({
                           "data-[selected=true]:bg-muted",
                         )}
                       >
-                        {item.icon && <span aria-hidden="true">{item.icon}</span>}
+                        {item.icon && (
+                          <span aria-hidden="true">{item.icon}</span>
+                        )}
                         <span className="flex flex-col truncate">
                           <span className="truncate">{item.label}</span>
                           {item.description && (

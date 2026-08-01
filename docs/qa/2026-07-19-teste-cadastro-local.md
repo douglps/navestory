@@ -7,14 +7,14 @@
 
 ## Ambiente
 
-| Item | Valor |
-|---|---|
-| Supabase local | `http://127.0.0.1:54321` (via `supabase start`) |
-| Studio (ver/editar dados) | http://127.0.0.1:54323 |
-| Mailpit (e-mails de teste) | http://127.0.0.1:54324 |
-| API | `http://localhost:3001` (Swagger em `/api/docs`) |
-| Web | `http://localhost:3000` |
-| Subido via | `npm run lab` (`scripts/lab.mjs`) |
+| Item                       | Valor                                            |
+| -------------------------- | ------------------------------------------------ |
+| Supabase local             | `http://127.0.0.1:54321` (via `supabase start`)  |
+| Studio (ver/editar dados)  | http://127.0.0.1:54323                           |
+| Mailpit (e-mails de teste) | http://127.0.0.1:54324                           |
+| API                        | `http://localhost:3001` (Swagger em `/api/docs`) |
+| Web                        | `http://localhost:3000`                          |
+| Subido via                 | `npm run lab` (`scripts/lab.mjs`)                |
 
 ## ⚠️ Bugs encontrados e corrigidos durante o teste
 
@@ -32,7 +32,7 @@ mecanismos são incompatíveis — a verificação de assinatura falhava sempre.
 **Correção:** `apps/api/src/common/guards/supabase-auth.guard.ts` passou a validar o token
 chamando `auth.getUser()` no próprio Supabase (robusto a qualquer algoritmo/rotação de chave),
 em vez de verificar a assinatura localmente. De quebra, o guard passou a aceitar o token tanto
-via cookie httpOnly (`nave_access_token`, como o frontend real usa) quanto via header
+via cookie httpOnly (`navestory_access_token`, como o frontend real usa) quanto via header
 `Authorization` — antes só aceitava header, o que também quebraria a sessão do navegador.
 `apps/api/src/modules/auth/jwt.strategy.ts` ficou só com o tipo `JwtPayload` (a estratégia
 passport-jwt foi removida).
@@ -79,6 +79,7 @@ Ao abrir o Header e selecionar um veículo, a tela quebrava com `TypeError: Cann
 undefined or null to object` em `TcoBreakdownChart` (`apps/web/src/components/charts/tco-breakdown-chart.tsx:24`).
 
 **Causa raiz (duas camadas):**
+
 1. O banco Supabase local estava com só as migrations até `20260713200000` aplicadas —
    faltavam 5 migrations já presentes no repositório (`20260713210000` até `20260716140000`),
    incluindo a reescrita de `calculate_vehicle_tco` (RPC) de `TABLE(...)` para `jsonb` (T6.1).
@@ -109,7 +110,7 @@ ponto. A causa não era mais um bug de código: era o **Service Worker do PWA** 
 resposta antiga guardada em cache, de antes das correções.
 
 `apps/web/src/app/sw.ts` usa `StaleWhileRevalidate` para toda leitura GET de `/api/backend/*`
-(cache `nave-api-data`, RF-08/RF-10 de `SPEC-20260712-001`) — por design, essa estratégia
+(cache `navestory-api-data`, RF-08/RF-10 de `SPEC-20260712-001`) — por design, essa estratégia
 **sempre** serve a resposta salva em disco instantaneamente, mesmo com internet normal, e só
 atualiza em segundo plano depois. Diferente do cache HTTP comum do navegador, um hard refresh
 (Ctrl+Shift+R) **não** contorna isso — o Service Worker intercepta a requisição antes dela
@@ -117,8 +118,8 @@ chegar na rede. Como a retenção é por teto de disco (30 dias, `api-cache-rete
 R-PWA-06), não por expiração por tempo, uma resposta quebrada guardada antes de um fix continua
 sendo servida indefinidamente até ser despejada manualmente ou por espaço em disco.
 
-**Correção manual necessária (uma vez, feita durante o teste):** DevTools → aba *Application* →
-*Storage* → botão **Clear site data** → recarregar a página.
+**Correção manual necessária (uma vez, feita durante o teste):** DevTools → aba _Application_ →
+_Storage_ → botão **Clear site data** → recarregar a página.
 
 **Recomendação (não aplicada agora — decisão de design existente, `R-PWA-06`, não um bug a
 corrigir sozinho):** esse comportamento é intencional para uso offline real, mas em
@@ -130,13 +131,13 @@ objetivo original da spec.
 
 ## Usuário de teste
 
-| Campo | Valor |
-|---|---|
-| Nome | Douglas Teste |
-| E-mail | `teste.nave+qa1@example.com` |
-| Senha | `Teste123!` |
+| Campo     | Valor                                  |
+| --------- | -------------------------------------- |
+| Nome      | Douglas Teste                          |
+| E-mail    | `teste.navestory+qa1@example.com`      |
+| Senha     | `Teste123!`                            |
 | `user_id` | `b69865a3-7c2f-46c2-ad6f-0a5f74d168f1` |
-| Perfil | `autonomous` |
+| Perfil    | `autonomous`                           |
 
 Login pela tela: http://localhost:3000/login com as credenciais acima.
 
@@ -144,10 +145,10 @@ Login pela tela: http://localhost:3000/login com as credenciais acima.
 
 ### Veículos (`GET /vehicles`)
 
-| Placa | Marca/Modelo | Tipo | Combustível | Odômetro | `id` |
-|---|---|---|---|---|---|
-| ABC1234 | Fiat Toro | carro | diesel_s10 | 15.000 km | `6f284a9b-590a-4d83-8d41-fc6846dc6ec9` |
-| XYZ9A87 | Honda CG 160 | moto | gasoline | 8.000 km | `26ca5fc7-9323-4611-ba66-31582304486f` |
+| Placa   | Marca/Modelo | Tipo  | Combustível | Odômetro  | `id`                                   |
+| ------- | ------------ | ----- | ----------- | --------- | -------------------------------------- |
+| ABC1234 | Fiat Toro    | carro | diesel_s10  | 15.000 km | `6f284a9b-590a-4d83-8d41-fc6846dc6ec9` |
+| XYZ9A87 | Honda CG 160 | moto  | gasoline    | 8.000 km  | `26ca5fc7-9323-4611-ba66-31582304486f` |
 
 ### Grupo de veículos (`GET /vehicle-groups`)
 
@@ -169,10 +170,10 @@ Login pela tela: http://localhost:3000/login com as credenciais acima.
 
 ### Despesas (`GET /expenses`)
 
-| Categoria | Valor | Data | Veículo | Observação |
-|---|---|---|---|---|
-| fuel | R$ 250,75 | 2026-07-15 | Fiat Toro | 40L, tanque cheio, diesel S10, posto "Posto Teste" |
-| pedagio_ponte | R$ 15,90 | 2026-07-16 | Fiat Toro | categoria personalizada |
+| Categoria       | Valor     | Data       | Veículo      | Observação                                                                                                 |
+| --------------- | --------- | ---------- | ------------ | ---------------------------------------------------------------------------------------------------------- |
+| fuel            | R$ 250,75 | 2026-07-15 | Fiat Toro    | 40L, tanque cheio, diesel S10, posto "Posto Teste"                                                         |
+| pedagio_ponte   | R$ 15,90  | 2026-07-16 | Fiat Toro    | categoria personalizada                                                                                    |
 | fine (readonly) | R$ 195,23 | 2026-07-10 | Honda CG 160 | gerada automaticamente ao criar a multa (`source_type: fine`) — confirma a vinculação automática ao ledger |
 
 ### Modelo de despesa (`GET /expense-templates`)
@@ -210,28 +211,28 @@ veículos e 7 categorias diferentes (`fuel`, `washing`, `toll`, `insurance`, `ta
 veículo e preenchem litros/posto, como uma despesa de combustível real. 20/20 criadas com
 sucesso — banco de despesas do usuário de teste foi de 4 para **24 despesas**.
 
-| Data | Categoria | Valor | Veículo |
-|---|---|---|---|
-| 2026-05-21 | parking | R$ 196,35 | Honda CG 160 |
-| 2026-05-24 | washing | R$ 94,75 | Honda CG 160 |
-| 2026-05-25 | other | R$ 43,75 | Fiat Toro |
-| 2026-05-26 | washing | R$ 287,98 | Fiat Toro |
-| 2026-05-29 | other | R$ 240,54 | Honda CG 160 |
-| 2026-06-03 | other | R$ 56,75 | Honda CG 160 |
-| 2026-06-06 | other | R$ 205,01 | Fiat Toro |
-| 2026-06-06 | other | R$ 335,50 | Fiat Toro |
-| 2026-06-08 | insurance | R$ 313,62 | Fiat Toro |
-| 2026-06-10 | fuel | R$ 357,32 | Fiat Toro |
-| 2026-06-13 | fuel | R$ 73,99 | Honda CG 160 |
-| 2026-06-15 | fuel | R$ 111,21 | Honda CG 160 |
-| 2026-06-17 | other | R$ 66,57 | Fiat Toro |
-| 2026-06-21 | washing | R$ 214,31 | Fiat Toro |
-| 2026-06-22 | tax | R$ 240,35 | Honda CG 160 |
-| 2026-07-03 | parking | R$ 322,99 | Honda CG 160 |
-| 2026-07-05 | tax | R$ 174,05 | Fiat Toro |
-| 2026-07-08 | pedagio_ponte | R$ 290,82 | Fiat Toro |
-| 2026-07-10 | washing | R$ 251,91 | Fiat Toro |
-| 2026-07-15 | insurance | R$ 156,29 | Fiat Toro |
+| Data       | Categoria     | Valor     | Veículo      |
+| ---------- | ------------- | --------- | ------------ |
+| 2026-05-21 | parking       | R$ 196,35 | Honda CG 160 |
+| 2026-05-24 | washing       | R$ 94,75  | Honda CG 160 |
+| 2026-05-25 | other         | R$ 43,75  | Fiat Toro    |
+| 2026-05-26 | washing       | R$ 287,98 | Fiat Toro    |
+| 2026-05-29 | other         | R$ 240,54 | Honda CG 160 |
+| 2026-06-03 | other         | R$ 56,75  | Honda CG 160 |
+| 2026-06-06 | other         | R$ 205,01 | Fiat Toro    |
+| 2026-06-06 | other         | R$ 335,50 | Fiat Toro    |
+| 2026-06-08 | insurance     | R$ 313,62 | Fiat Toro    |
+| 2026-06-10 | fuel          | R$ 357,32 | Fiat Toro    |
+| 2026-06-13 | fuel          | R$ 73,99  | Honda CG 160 |
+| 2026-06-15 | fuel          | R$ 111,21 | Honda CG 160 |
+| 2026-06-17 | other         | R$ 66,57  | Fiat Toro    |
+| 2026-06-21 | washing       | R$ 214,31 | Fiat Toro    |
+| 2026-06-22 | tax           | R$ 240,35 | Honda CG 160 |
+| 2026-07-03 | parking       | R$ 322,99 | Honda CG 160 |
+| 2026-07-05 | tax           | R$ 174,05 | Fiat Toro    |
+| 2026-07-08 | pedagio_ponte | R$ 290,82 | Fiat Toro    |
+| 2026-07-10 | washing       | R$ 251,91 | Fiat Toro    |
+| 2026-07-15 | insurance     | R$ 156,29 | Fiat Toro    |
 
 Todas com descrição `"Lancamento teste seed #N (categoria)"` para ficar fácil de filtrar/apagar
 depois, se quiser. Confira em `/expenses` na tela ou no Studio (tabela `expenses`,
@@ -239,13 +240,13 @@ depois, se quiser. Confira em `/expenses` na tela ou no Studio (tabela `expenses
 
 ## Endpoints agregados conferidos (leitura)
 
-| Endpoint | Resultado |
-|---|---|
-| `GET /dashboard/fleet-kpis` | 1 manutenção urgente, próxima manutenção 2026-07-25 (Fiat Toro) |
-| `GET /dashboard/vehicle-cards` | 2 veículos, último abastecimento do Toro refletido corretamente |
-| `GET /dashboard/alerts` | 1 alerta de manutenção próxima (6 dias) |
-| `GET /analytics/tco/:vehicleId` | vazio — precisa de mais histórico/ciclo fechado para calcular |
-| `GET /audit-logs` | registro de `REGISTER` do usuário de teste presente |
+| Endpoint                        | Resultado                                                       |
+| ------------------------------- | --------------------------------------------------------------- |
+| `GET /dashboard/fleet-kpis`     | 1 manutenção urgente, próxima manutenção 2026-07-25 (Fiat Toro) |
+| `GET /dashboard/vehicle-cards`  | 2 veículos, último abastecimento do Toro refletido corretamente |
+| `GET /dashboard/alerts`         | 1 alerta de manutenção próxima (6 dias)                         |
+| `GET /analytics/tco/:vehicleId` | vazio — precisa de mais histórico/ciclo fechado para calcular   |
+| `GET /audit-logs`               | registro de `REGISTER` do usuário de teste presente             |
 
 ## Confirmação extra: o mesmo caminho que o navegador usa
 

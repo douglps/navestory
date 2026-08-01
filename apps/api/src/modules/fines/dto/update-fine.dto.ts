@@ -1,4 +1,4 @@
-import { updateFineInputSchema } from "@nave/validators";
+import { updateFineInputSchema } from "@navestory/validators";
 import type { z } from "zod";
 
 export const updateFineDtoSchema = updateFineInputSchema;

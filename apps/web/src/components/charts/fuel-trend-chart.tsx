@@ -1,6 +1,15 @@
 import type { ReactNode } from "react";
-import { Area, AreaChart, CartesianGrid, Line, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import type { FuelTrendPoint } from "@nave/validators";
+import {
+  Area,
+  AreaChart,
+  CartesianGrid,
+  Line,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
+import type { FuelTrendPoint } from "@navestory/validators";
 import { CHART_CATEGORY_COLORS } from "@/lib/chart-colors";
 
 /**
@@ -9,11 +18,19 @@ import { CHART_CATEGORY_COLORS } from "@/lib/chart-colors";
  * Extraído de apps/web/src/app/(app)/analytics/page.tsx (T6.1) para ser reaproveitado pelo
  * VehicleSpotlight (Sprint 2 do dashboard) sem duplicar a lógica de apresentação da tendência.
  */
-export function FuelTrendChart({ points }: { points: FuelTrendPoint[] }): ReactNode {
+export function FuelTrendChart({
+  points,
+}: {
+  points: FuelTrendPoint[];
+}): ReactNode {
   // Mesma defesa de TcoBreakdownChart: `points` ausente/malformado (ex: resposta antiga presa
   // no cache do Service Worker) não pode derrubar a tela.
   if (!points) {
-    return <p className="text-sm text-muted-foreground">Não foi possível carregar a tendência de consumo.</p>;
+    return (
+      <p className="text-sm text-muted-foreground">
+        Não foi possível carregar a tendência de consumo.
+      </p>
+    );
   }
 
   const chartData = [...points].reverse().map((point) => ({
@@ -27,7 +44,10 @@ export function FuelTrendChart({ points }: { points: FuelTrendPoint[] }): ReactN
       <div aria-hidden="true" className="h-64">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={chartData}>
-            <CartesianGrid strokeDasharray="3 3" stroke="oklch(var(--chart-grid))" />
+            <CartesianGrid
+              strokeDasharray="3 3"
+              stroke="oklch(var(--chart-grid))"
+            />
             <XAxis dataKey="date" />
             <YAxis />
             <Tooltip />
@@ -53,9 +73,13 @@ export function FuelTrendChart({ points }: { points: FuelTrendPoint[] }): ReactN
       </div>
 
       <details>
-        <summary className="cursor-pointer text-sm text-muted-foreground">Ver dados em tabela</summary>
+        <summary className="cursor-pointer text-sm text-muted-foreground">
+          Ver dados em tabela
+        </summary>
         <table className="mt-2 w-full text-sm">
-          <caption className="sr-only">Consumo de combustível por abastecimento</caption>
+          <caption className="sr-only">
+            Consumo de combustível por abastecimento
+          </caption>
           <thead>
             <tr className="text-left text-muted-foreground">
               <th scope="col">Data</th>

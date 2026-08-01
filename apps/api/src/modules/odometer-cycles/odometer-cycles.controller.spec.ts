@@ -16,17 +16,28 @@ describe("OdometerCyclesController", () => {
     };
   }
 
-  const req = { headers: { authorization: "Bearer token-123" }, cookies: {} } as Request;
+  const req = {
+    headers: { authorization: "Bearer token-123" },
+    cookies: {},
+  } as Request;
 
   it("create extrai o token e cria o ciclo", async () => {
     const { controller, odometerCyclesService } = createController();
 
-    const result = await controller.create(req, "u1", "v1", { starting_value: 0, reason: "Troca" });
-
-    expect(odometerCyclesService.create).toHaveBeenCalledWith("token-123", "u1", "v1", {
+    const result = await controller.create(req, "u1", "v1", {
       starting_value: 0,
       reason: "Troca",
     });
+
+    expect(odometerCyclesService.create).toHaveBeenCalledWith(
+      "token-123",
+      "u1",
+      "v1",
+      {
+        starting_value: 0,
+        reason: "Troca",
+      },
+    );
     expect(result.data).toEqual({ id: "cy1", cycle_number: 2 });
   });
 
@@ -35,7 +46,13 @@ describe("OdometerCyclesController", () => {
 
     const result = await controller.findAll(req, "u1", "v1", "10", "5");
 
-    expect(odometerCyclesService.findAll).toHaveBeenCalledWith("token-123", "u1", "v1", 10, 5);
+    expect(odometerCyclesService.findAll).toHaveBeenCalledWith(
+      "token-123",
+      "u1",
+      "v1",
+      10,
+      5,
+    );
     expect(result.data).toEqual([{ id: "cy1" }]);
   });
 
@@ -57,16 +74,16 @@ describe("OdometerCyclesController", () => {
     const { controller } = createController();
     const reqSemToken = { headers: {}, cookies: {} } as unknown as Request;
 
-    await expect(controller.findAll(reqSemToken, "u1", "v1")).rejects.toBeInstanceOf(
-      UnauthorizedException,
-    );
+    await expect(
+      controller.findAll(reqSemToken, "u1", "v1"),
+    ).rejects.toBeInstanceOf(UnauthorizedException);
   });
 
   it("usa o cookie de sessão quando não há header Authorization", async () => {
     const { controller, odometerCyclesService } = createController();
     const reqComCookie = {
       headers: {},
-      cookies: { nave_access_token: "cookie-token" },
+      cookies: { navestory_access_token: "cookie-token" },
     } as unknown as Request;
 
     await controller.findAll(reqComCookie, "u1", "v1");

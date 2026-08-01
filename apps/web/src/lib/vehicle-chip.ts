@@ -1,4 +1,4 @@
-import type { ChipField } from "@nave/validators";
+import type { ChipField } from "@navestory/validators";
 
 export interface VehicleChipData {
   make: string | null;
@@ -13,7 +13,10 @@ export interface VehicleChipData {
  * Reutilizado pela prévia de configuração (RNF-03) e, na Fase 5, pelo
  * `VehicleContextChip` real (SPEC-20260603-001).
  */
-export function resolveChipValue(field: ChipField, vehicle: VehicleChipData): string {
+export function resolveChipValue(
+  field: ChipField,
+  vehicle: VehicleChipData,
+): string {
   switch (field) {
     case "nickname":
       return vehicle.nickname ?? vehicle.model ?? "";
@@ -26,7 +29,10 @@ export function resolveChipValue(field: ChipField, vehicle: VehicleChipData): st
   }
 }
 
-export function formatChipPreview(fields: ChipField[], vehicle: VehicleChipData): string {
+export function formatChipPreview(
+  fields: ChipField[],
+  vehicle: VehicleChipData,
+): string {
   return fields
     .map((field) => resolveChipValue(field, vehicle))
     .filter((value) => value.length > 0)

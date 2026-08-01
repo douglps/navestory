@@ -1,7 +1,7 @@
-# Auditoria Completa do Projeto Nave
+# Auditoria Completa do Projeto navestory
 
 **Data:** 2026-07-19
-**Escopo:** Backend (`apps/api`), Frontend (`apps/web`), Banco de dados (Supabase/Postgres), DevOps/CI, Design System (`@nave/ui`), LGPD e governança de specs.
+**Escopo:** Backend (`apps/api`), Frontend (`apps/web`), Banco de dados (Supabase/Postgres), DevOps/CI, Design System (`@navestory/ui`), LGPD e governança de specs.
 **Método:** leitura direta do código-fonte, migrations, configs de CI e documentação do projeto — nada aqui é suposição.
 
 > Leia este documento de cima para baixo se quiser o panorama completo, ou pule direto para [Resumo de Riscos Priorizados](#resumo-de-riscos-priorizados) se quiser só a lista de problemas.
@@ -19,6 +19,7 @@ Na prática, o que encontramos confirma esse nível em quase tudo:
 - CI com múltiplos gates de qualidade (lint, types, testes, cobertura mínima 88%, teste de integração contra Supabase real, scan de segredos, scan de dependências).
 
 **Onde o patamar declarado (Nível 2 / Produto) ainda não bate com a realidade do produto:**
+
 - Não há tela de exclusão de conta, política de privacidade ou termos de uso — itens que um "Nível 2 com dado sensível sob LGPD" deveria ter antes de usuários reais externos.
 - Não há testes end-to-end (e2e) — só testes unitários/componente. Já causou 3 bugs reais escaparem para uma sessão de teste manual (detalhe na seção 8).
 
@@ -41,7 +42,8 @@ apps/api/src/
 ```
 
 **16 controllers**, todos registrados em `app.module.ts`. Não há ORM (Prisma/TypeORM) — o acesso ao banco é feito via SDK `@supabase/supabase-js`, de duas formas:
-- **Cliente admin** (chave *service-role*, ignora as regras de segurança do banco) — usado em módulos administrativos.
+
+- **Cliente admin** (chave _service-role_, ignora as regras de segurança do banco) — usado em módulos administrativos.
 - **Cliente com escopo de usuário** (usa o próprio token do usuário logado) — usado na maioria dos módulos de negócio, o que faz o próprio banco aplicar as regras de segurança automaticamente.
 
 **Entidades principais:** `profiles`, `vehicles`, `expenses` (ledger central de despesas — inclusive geradas automaticamente a partir de manutenções/multas/custos recorrentes), `maintenances`, `fines`, `vehicle_groups`, `expense_templates`, `user_categories`, `user_preferences`, `vehicle_recurring_costs`, `vehicle_odometer_cycles`, `audit_logs`. Também existem `drivers`, `vehicle_drivers` e `documents` já com regras de segurança no banco, mas **sem controller/módulo de aplicação correspondente** — o schema está à frente do código, ou seja, são tabelas prontas para uma feature que ainda não foi construída.
@@ -51,7 +53,7 @@ apps/api/src/
 ## 3. Autenticação, autorização e exclusão de conta
 
 - Login/cadastro usam **Supabase Auth**, não um sistema de JWT próprio.
-- A sessão é entregue via **cookies `httpOnly`** (`nave_access_token`, `nave_refresh_token`), o que é uma boa prática: o token não fica acessível para JavaScript malicioso rodando na página (proteção contra roubo via XSS).
+- A sessão é entregue via **cookies `httpOnly`** (`navestory_access_token`, `navestory_refresh_token`), o que é uma boa prática: o token não fica acessível para JavaScript malicioso rodando na página (proteção contra roubo via XSS).
 - O guard de autenticação (`apps/api/src/common/guards/supabase-auth.guard.ts`) valida o token consultando o próprio Supabase (não decodifica localmente, porque a chave usada é rotacionável), confere se o token é do tipo certo, e **bloqueia contas já excluídas (soft delete) de continuarem autenticando** — bom detalhe de segurança.
 - Existe controle de papel (`RolesGuard` + `@Roles("admin")`), aplicado no painel administrativo.
 - **Exclusão de conta**: o endpoint `DELETE /users/me` **existe e funciona no backend** — soft delete com anonimização, e exclusão definitiva agendada para 30 dias depois (período de arrependimento). O problema é que **não existe nenhum botão nem tela no site para o usuário chamar esse endpoint** (ver seção 8 — LGPD). Ou seja: a "porta dos fundos" de excluir a conta existe, mas não tem maçaneta do lado de fora.
@@ -63,12 +65,12 @@ apps/api/src/
 
 Todos os 16 controllers foram verificados. **Nenhuma rota de negócio está desprotegida.**
 
-| Rota | Protegida? |
-|---|---|
-| `GET /health` | Não — **intencional** (monitoramento externo precisa acessar sem login) |
-| `POST /auth/register`, `/login`, `/refresh`, `/recover-password`, `/reset-password` | Não — **intencional**, são justamente as portas de entrada |
-| `POST /auth/logout` | **Sim** |
-| Todas as demais (`/users`, `/vehicles`, `/expenses`, `/maintenances`, `/fines`, `/admin`, `/analytics`, `/dashboard`, etc.) | **Sim**, exigem login |
+| Rota                                                                                                                        | Protegida?                                                              |
+| --------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| `GET /health`                                                                                                               | Não — **intencional** (monitoramento externo precisa acessar sem login) |
+| `POST /auth/register`, `/login`, `/refresh`, `/recover-password`, `/reset-password`                                         | Não — **intencional**, são justamente as portas de entrada              |
+| `POST /auth/logout`                                                                                                         | **Sim**                                                                 |
+| Todas as demais (`/users`, `/vehicles`, `/expenses`, `/maintenances`, `/fines`, `/admin`, `/analytics`, `/dashboard`, etc.) | **Sim**, exigem login                                                   |
 
 **Exemplo prático do que isso significa:** se você tentasse acessar `GET /vehicles` sem estar logado (sem cookie/token válido), a API recusaria com erro 401 — não retorna nenhum dado de veículo. Isso foi confirmado lendo o código de cada controller, não é suposição.
 
@@ -89,6 +91,7 @@ Detalhe técnico positivo: ao final dessa migration, o projeto revoga todo acess
 **Exemplo prático do que isso evita:** sem essas duas camadas, seria possível o Usuário A trocar o ID de um veículo na URL/requisição (ex: `GET /vehicles/123`) e ver o veículo do Usuário B, caso o `123` pertencesse a outra pessoa. Com RLS + filtro explícito, isso é bloqueado nas duas pontas.
 
 **Pontos que precisam de uma checagem manual adicional (não são falhas confirmadas, são lacunas de verificação):**
+
 - Em `expense-templates.service.ts:55`, `recurring-costs.service.ts:46`, `maintenances.service.ts:62` e `fines.service.ts:42`, há uma consulta que confere "esse `vehicle_id` existe?" antes de criar uma despesa/manutenção/multa vinculada a ele. Se essa consulta específica usar o cliente admin **sem** incluir `.eq("user_id", ...)`, um usuário mal-intencionado poderia, em teoria, referenciar o veículo de outra pessoa e o sistema aceitaria a checagem como válida — criando um registro vinculado a um veículo que não é dele. **Recomendação:** confirmar linha a linha se essas 4 consultas filtram por dono do veículo.
 - O mesmo vale para `vehicle-groups.service.ts:182`, que confere múltiplos IDs de veículo de uma vez (`.in("id", dto.vehicleIds)`).
 
@@ -114,29 +117,30 @@ Nenhuma dessas foi confirmada como exploração real — mas como o RLS provavel
 ## 8. Frontend — telas e fluxo real de uso
 
 ### Estrutura de rotas
+
 - Grupo `(auth)`: `login`, `register`, `recover-password`, `reset-password` — públicas.
 - Grupo `(app)`: `dashboard`, `vehicles`, `vehicle-groups`, `expenses`, `maintenance`, `analytics`, `atividades`, `settings/preferences`, `settings/vehicles/[id]/odometer-cycles` — todas exigem login.
 
 ### Passo a passo do usuário real
 
-| Etapa | Existe? | Observação |
-|---|---|---|
-| Primeiro acesso / landing | ⚠️ Parcial | A rota raiz (`/`) dentro da área logada é, hoje, uma **tela de diagnóstico técnico** ("API: ok") deixada de uma tarefa de scaffolding — não é uma tela pensada para o usuário. Quem entra pelo menu lateral cai direto no `/dashboard` de verdade. |
-| Cadastro | ✅ | Valida os campos antes de enviar; se o e-mail já existe, mostra link para login/recuperação em vez de erro genérico. |
-| Login | ✅ | Erro de senha errada mostra mensagem genérica ("E-mail ou senha inválidos"), sem revelar se o e-mail existe — boa prática contra enumeração de contas. |
-| Recuperação de senha | ✅ | Sempre responde "se o e-mail existir, enviaremos instruções" — não vaza se o e-mail está cadastrado. |
-| **Exclusão de conta** | ❌ **Ausente na interface** | O backend já sabe fazer isso (`DELETE /users/me`), mas **não há nenhum botão "Excluir minha conta" em nenhuma tela**. Detalhe na seção LGPD abaixo. |
-| Logout | ✅ | Limpa cookies, cache local e Service Worker antes de redirecionar. |
+| Etapa                     | Existe?                     | Observação                                                                                                                                                                                                                                         |
+| ------------------------- | --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Primeiro acesso / landing | ⚠️ Parcial                  | A rota raiz (`/`) dentro da área logada é, hoje, uma **tela de diagnóstico técnico** ("API: ok") deixada de uma tarefa de scaffolding — não é uma tela pensada para o usuário. Quem entra pelo menu lateral cai direto no `/dashboard` de verdade. |
+| Cadastro                  | ✅                          | Valida os campos antes de enviar; se o e-mail já existe, mostra link para login/recuperação em vez de erro genérico.                                                                                                                               |
+| Login                     | ✅                          | Erro de senha errada mostra mensagem genérica ("E-mail ou senha inválidos"), sem revelar se o e-mail existe — boa prática contra enumeração de contas.                                                                                             |
+| Recuperação de senha      | ✅                          | Sempre responde "se o e-mail existir, enviaremos instruções" — não vaza se o e-mail está cadastrado.                                                                                                                                               |
+| **Exclusão de conta**     | ❌ **Ausente na interface** | O backend já sabe fazer isso (`DELETE /users/me`), mas **não há nenhum botão "Excluir minha conta" em nenhuma tela**. Detalhe na seção LGPD abaixo.                                                                                                |
+| Logout                    | ✅                          | Limpa cookies, cache local e Service Worker antes de redirecionar.                                                                                                                                                                                 |
 
 ### CRUD por entidade
 
-| Entidade | Criar | Editar | Listar | Excluir |
-|---|---|---|---|---|
-| Veículos | ✅ | ✅ | ✅ | ✅ (soft delete, com confirmação via `window.confirm()` do navegador) |
-| Manutenções | ✅ | ✅ | ✅ | ❌ — só muda de status (agendada → em andamento → concluída/cancelada) |
-| Despesas | ✅ | ✅ | ✅ | Provável, não confirmado em detalhe |
-| Grupos de veículos | ✅ | ✅ | ✅ | Não confirmado |
-| **Multas (fines)** | ❌ | ❌ | ❌ | ❌ — **o backend já sabe lidar com multas, mas não existe nenhuma tela para isso.** |
+| Entidade           | Criar | Editar | Listar | Excluir                                                                             |
+| ------------------ | ----- | ------ | ------ | ----------------------------------------------------------------------------------- |
+| Veículos           | ✅    | ✅     | ✅     | ✅ (soft delete, com confirmação via `window.confirm()` do navegador)          |
+| Manutenções        | ✅    | ✅     | ✅     | ❌ — só muda de status (agendada → em andamento → concluída/cancelada)              |
+| Despesas           | ✅    | ✅     | ✅     | Provável, não confirmado em detalhe                                                 |
+| Grupos de veículos | ✅    | ✅     | ✅     | Não confirmado                                                                      |
+| **Multas (fines)** | ❌    | ❌     | ❌     | ❌ — **o backend já sabe lidar com multas, mas não existe nenhuma tela para isso.** |
 
 **Nota de UX:** a confirmação de exclusão de veículo usa o alerta nativo do navegador (`window.confirm()`), não um modal do design system — funciona, mas destoa visualmente do resto do sistema.
 
@@ -145,6 +149,7 @@ Nenhuma dessas foi confirmada como exploração real — mas como o RLS provavel
 ## 9. Rotas protegidas no frontend — teste prático
 
 Existe um `middleware.ts` que roda antes de qualquer página carregar:
+
 - Se você está **deslogado** e tenta acessar `/dashboard` direto pela URL → é **redirecionado para `/login`**, guardando a rota original para voltar depois do login.
 - Se você está **logado** e tenta acessar `/login` de novo → é redirecionado para dentro do app.
 - Se o token expirou mas ainda dá para renovmotorizar (refresh token válido), o middleware tenta renovar automaticamente antes de decidir se bloqueia.
@@ -159,7 +164,7 @@ Existe um `middleware.ts` que roda antes de qualquer página carregar:
 
 ## 10. Design System, layout e acessibilidade
 
-- Pacote `@nave/ui` com **14 componentes** (botão, card, tabela, tabs, toast, alert, etc.), baseado em Radix + CVA.
+- Pacote `@navestory/ui` com **14 componentes** (botão, card, tabela, tabs, toast, alert, etc.), baseado em Radix + CVA.
 - Migração de telas antigas para os componentes novos está em andamento: 2 commits recentes já migraram tabs e toasts "manuais" para os componentes oficiais. Ainda pode haver telas usando padrão antigo (ex: alertas via `className` solto) — a própria documentação interna do projeto (`matrices/impacto.md`) já rastreia isso como pendência conhecida, não é uma surpresa da auditoria.
 - **Acessibilidade:** há lint automático (`eslint-plugin-jsx-a11y`) rodando no CI, e testes automatizados de acessibilidade (`jest-axe`) nos componentes do design system. Uso de `aria-label`, `role="alert"` e `aria-live` está presente nas telas revisadas.
 - **Lacuna:** não há teste de acessibilidade de página inteira (só por componente isolado) — algo pode passar despercebido quando os componentes são combinados numa tela real.
@@ -221,16 +226,16 @@ Não foi encontrada nenhuma página explicando ao usuário o que é feito com os
 
 ## Resumo de Riscos Priorizados
 
-| # | Severidade | Achado | Onde | Explicação para leigo |
-|---|---|---|---|---|
-| 1 | 🔴 Alto | Sem tela de exclusão de conta | Frontend | O direito legal de "apagar meus dados" existe no código mas não tem botão nenhum para o usuário usar sozinho. |
-| 2 | 🟠 Médio-Alto | Sem política de privacidade / termos / aviso de cookies | Frontend | Falta a página que explica ao usuário o que é feito com os dados dele — item padrão de conformidade legal. |
-| 3 | 🟡 Médio | Guard de autenticação sem teste automatizado dedicado | Backend (`supabase-auth.guard.ts`) | O "porteiro" que decide quem pode entrar no sistema não tem um teste próprio — se alguém mexer nele por engano, ninguém vai ser avisado automaticamente que a segurança quebrou. |
-| 4 | 🟡 Médio | Sem testes end-to-end (fluxo completo) | Frontend/QA | Já causou 3 bugs reais escaparem para teste manual em produção — testes atuais só checam pedaços isolados, não o sistema funcionando junto. |
-| 5 | 🟡 Médio | Consultas de "veículo existe?" sem confirmação total de filtro por dono | Backend (4 arquivos, seção 5) | Risco teórico (não confirmado) de um usuário conseguir vincular uma despesa/manutenção a um veículo que não é dele — precisa de checagem manual pontual. |
-| 6 | 🟢 Baixo | Tela raiz (`/`) é um stub de diagnóstico, não uma landing real | Frontend | Só afeta a primeira impressão de quem acessa o endereço raiz diretamente — o menu já leva ao dashboard real. |
-| 7 | 🟢 Baixo | Funcionalidade de multas sem nenhuma tela | Frontend | O sistema "sabe" lidar com multas de trânsito por trás dos panos, mas o usuário não tem onde ver ou cadastrar isso ainda. |
-| 8 | 🟢 Informativo | Comentário desatualizado no `middleware.ts` dizendo que a proteção de rota "não existe" (ela existe) | Frontend | Sem risco real, só pode confundir quem for ler o código depois. |
+| #   | Severidade     | Achado                                                                                               | Onde                               | Explicação para leigo                                                                                                                                                            |
+| --- | -------------- | ---------------------------------------------------------------------------------------------------- | ---------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | 🔴 Alto        | Sem tela de exclusão de conta                                                                        | Frontend                           | O direito legal de "apagar meus dados" existe no código mas não tem botão nenhum para o usuário usar sozinho.                                                                    |
+| 2   | 🟠 Médio-Alto  | Sem política de privacidade / termos / aviso de cookies                                              | Frontend                           | Falta a página que explica ao usuário o que é feito com os dados dele — item padrão de conformidade legal.                                                                       |
+| 3   | 🟡 Médio       | Guard de autenticação sem teste automatizado dedicado                                                | Backend (`supabase-auth.guard.ts`) | O "porteiro" que decide quem pode entrar no sistema não tem um teste próprio — se alguém mexer nele por engano, ninguém vai ser avisado automaticamente que a segurança quebrou. |
+| 4   | 🟡 Médio       | Sem testes end-to-end (fluxo completo)                                                               | Frontend/QA                        | Já causou 3 bugs reais escaparem para teste manual em produção — testes atuais só checam pedaços isolados, não o sistema funcionando junto.                                      |
+| 5   | 🟡 Médio       | Consultas de "veículo existe?" sem confirmação total de filtro por dono                              | Backend (4 arquivos, seção 5)      | Risco teórico (não confirmado) de um usuário conseguir vincular uma despesa/manutenção a um veículo que não é dele — precisa de checagem manual pontual.                         |
+| 6   | 🟢 Baixo       | Tela raiz (`/`) é um stub de diagnóstico, não uma landing real                                       | Frontend                           | Só afeta a primeira impressão de quem acessa o endereço raiz diretamente — o menu já leva ao dashboard real.                                                                     |
+| 7   | 🟢 Baixo       | Funcionalidade de multas sem nenhuma tela                                                            | Frontend                           | O sistema "sabe" lidar com multas de trânsito por trás dos panos, mas o usuário não tem onde ver ou cadastrar isso ainda.                                                        |
+| 8   | 🟢 Informativo | Comentário desatualizado no `middleware.ts` dizendo que a proteção de rota "não existe" (ela existe) | Frontend                           | Sem risco real, só pode confundir quem for ler o código depois.                                                                                                                  |
 
 ---
 

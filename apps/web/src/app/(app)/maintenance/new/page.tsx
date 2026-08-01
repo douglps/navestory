@@ -1,7 +1,19 @@
 "use client";
 
-import { createMaintenanceInputSchema, type CreateMaintenanceInput } from "@nave/validators";
-import { Alert, Button, Combobox, Container, CurrencyInput, EmptyState, Input, OdometerInput } from "@nave/ui";
+import {
+  createMaintenanceInputSchema,
+  type CreateMaintenanceInput,
+} from "@navestory/validators";
+import {
+  Alert,
+  Button,
+  Combobox,
+  Container,
+  CurrencyInput,
+  EmptyState,
+  Input,
+  OdometerInput,
+} from "@navestory/ui";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
@@ -23,7 +35,10 @@ interface MaintenanceResponse {
 }
 
 function vehicleLabel(vehicle: Vehicle): string {
-  return vehicle.nickname ?? (`${vehicle.make ?? ""} ${vehicle.model ?? ""}`.trim() || vehicle.plate);
+  return (
+    vehicle.nickname ??
+    (`${vehicle.make ?? ""} ${vehicle.model ?? ""}`.trim() || vehicle.plate)
+  );
 }
 
 /**
@@ -70,7 +85,10 @@ export default function NewMaintenancePage(): ReactNode {
 
   const mutation = useMutation({
     mutationFn: (input: CreateMaintenanceInput) =>
-      apiClient<MaintenanceResponse>("/maintenances", { method: "POST", body: input }),
+      apiClient<MaintenanceResponse>("/maintenances", {
+        method: "POST",
+        body: input,
+      }),
     onSuccess: () => router.push("/maintenance"),
     onError: (error) => {
       if (error instanceof ApiError) setFieldError(error.message);
@@ -84,7 +102,9 @@ export default function NewMaintenancePage(): ReactNode {
     const result = createMaintenanceInputSchema.safeParse({
       vehicle_id: vehicleId,
       description,
-      scheduled_date: scheduledDate ? datetimeLocalToIso(scheduledDate, tz) : "",
+      scheduled_date: scheduledDate
+        ? datetimeLocalToIso(scheduledDate, tz)
+        : "",
       cost: cost ?? null,
       odometer_km: odometerKm ?? null,
     });
@@ -115,7 +135,10 @@ export default function NewMaintenancePage(): ReactNode {
         <EmptyState
           title="Nenhum veículo cadastrado"
           description="Cadastre um veículo para agendar manutenções."
-          action={{ label: "Cadastrar veículo", onClick: () => router.push("/vehicles/new") }}
+          action={{
+            label: "Cadastrar veículo",
+            onClick: () => router.push("/vehicles/new"),
+          }}
         />
       </Container>
     );
@@ -127,10 +150,18 @@ export default function NewMaintenancePage(): ReactNode {
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-3">
         {contextChangeNotice && (
-          <div role="status" className="flex items-center justify-between gap-2 rounded-md border border-border p-2 text-sm">
+          <div
+            role="status"
+            className="flex items-center justify-between gap-2 rounded-md border border-border p-2 text-sm"
+          >
             <span>{contextChangeNotice}</span>
             <div className="flex shrink-0 gap-2">
-              <Button type="button" variant="ghost" size="sm" onClick={applyContextChange}>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={applyContextChange}
+              >
                 Atualizar campo
               </Button>
               <Button
@@ -168,12 +199,18 @@ export default function NewMaintenancePage(): ReactNode {
           }
         />
         {isVehicleInherited && (
-          <span className="text-xs text-foreground">↩ Herdado do contexto em foco</span>
+          <span className="text-xs text-foreground">
+            ↩ Herdado do contexto em foco
+          </span>
         )}
         {!isVehicleInherited && vehicleId && (
-          <span className="text-xs text-muted-foreground">✓ Selecionado manualmente</span>
+          <span className="text-xs text-muted-foreground">
+            ✓ Selecionado manualmente
+          </span>
         )}
-        {vehicleContextHint && <p className="text-xs text-muted-foreground">{vehicleContextHint}</p>}
+        {vehicleContextHint && (
+          <p className="text-xs text-muted-foreground">{vehicleContextHint}</p>
+        )}
         {vehicleQuickPicks.length > 0 && (
           <div className="flex flex-wrap gap-1">
             {vehicleQuickPicks.map((vehicle) => (
@@ -211,11 +248,18 @@ export default function NewMaintenancePage(): ReactNode {
         <CurrencyInput id="cost" value={cost} onChange={setCost} />
 
         <label htmlFor="odometer_km">Odômetro (km)</label>
-        <OdometerInput id="odometer_km" value={odometerKm} onChange={setOdometerKm} />
+        <OdometerInput
+          id="odometer_km"
+          value={odometerKm}
+          onChange={setOdometerKm}
+        />
 
         {fieldError && <Alert variant="error" description={fieldError} />}
         {mutation.isError && !fieldError && (
-          <Alert variant="error" description="Não foi possível agendar a manutenção." />
+          <Alert
+            variant="error"
+            description="Não foi possível agendar a manutenção."
+          />
         )}
 
         <div className="flex gap-2">

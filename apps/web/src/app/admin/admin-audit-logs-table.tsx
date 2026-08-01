@@ -14,7 +14,7 @@ import {
   TableHeader,
   TableRow,
   type DateRange,
-} from "@nave/ui";
+} from "@navestory/ui";
 import { useQuery } from "@tanstack/react-query";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, type FormEvent, type ReactNode } from "react";
@@ -93,7 +93,8 @@ export function AdminAuditLogsTable(): ReactNode {
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ["admin", "audit-logs", page, userIdFilter, from, to],
-    queryFn: () => apiClient<AuditLogsResponse>(`/admin/audit-logs?${queryString}`),
+    queryFn: () =>
+      apiClient<AuditLogsResponse>(`/admin/audit-logs?${queryString}`),
     retry: false,
   });
 
@@ -103,9 +104,15 @@ export function AdminAuditLogsTable(): ReactNode {
 
   return (
     <div className="flex flex-col gap-4">
-      <form onSubmit={handleFilterSubmit} className="flex flex-col gap-3 sm:flex-row sm:items-end">
+      <form
+        onSubmit={handleFilterSubmit}
+        className="flex flex-col gap-3 sm:flex-row sm:items-end"
+      >
         <div className="flex-1">
-          <label htmlFor="audit-user-id" className="mb-1 block text-xs text-muted-foreground">
+          <label
+            htmlFor="audit-user-id"
+            className="mb-1 block text-xs text-muted-foreground"
+          >
             ID do usuário
           </label>
           <Input
@@ -116,7 +123,11 @@ export function AdminAuditLogsTable(): ReactNode {
             onChange={(event) => setUserIdInput(event.target.value)}
           />
         </div>
-        <DateRangePicker value={dateRange} onValueChange={handleDateRangeChange} className="flex-1" />
+        <DateRangePicker
+          value={dateRange}
+          onValueChange={handleDateRangeChange}
+          className="flex-1"
+        />
         <Button type="submit">Filtrar</Button>
       </form>
 
@@ -128,7 +139,12 @@ export function AdminAuditLogsTable(): ReactNode {
         </div>
       )}
 
-      {isError && <Alert variant="error" description="Não foi possível carregar os audit logs." />}
+      {isError && (
+        <Alert
+          variant="error"
+          description="Não foi possível carregar os audit logs."
+        />
+      )}
 
       {!isLoading && !isError && data && data.data.length === 0 && (
         <EmptyState title="Nenhum audit log encontrado" />
@@ -153,7 +169,9 @@ export function AdminAuditLogsTable(): ReactNode {
                   <TableCell>{log.table_name}</TableCell>
                   <TableCell>{log.record_id}</TableCell>
                   <TableCell>{log.user_id ?? "—"}</TableCell>
-                  <TableCell>{new Date(log.created_at).toLocaleString("pt-BR")}</TableCell>
+                  <TableCell>
+                    {new Date(log.created_at).toLocaleString("pt-BR")}
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -161,10 +179,16 @@ export function AdminAuditLogsTable(): ReactNode {
 
           <div className="flex items-center justify-between">
             <span className="text-sm text-muted-foreground">
-              Página {data.meta.page} — {data.meta.total} registro{data.meta.total === 1 ? "" : "s"}
+              Página {data.meta.page} — {data.meta.total} registro
+              {data.meta.total === 1 ? "" : "s"}
             </span>
             <div className="flex gap-2">
-              <Button type="button" variant="outline" disabled={page <= 1} onClick={() => goToPage(page - 1)}>
+              <Button
+                type="button"
+                variant="outline"
+                disabled={page <= 1}
+                onClick={() => goToPage(page - 1)}
+              >
                 Anterior
               </Button>
               <Button

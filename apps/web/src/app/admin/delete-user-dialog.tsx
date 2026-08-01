@@ -8,7 +8,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@nave/ui";
+} from "@navestory/ui";
 import { useMutation } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { apiClient } from "@/lib/http/api-client";
@@ -35,14 +35,23 @@ export function DeleteUserDialog({
   const pushToast = useUIStore((state) => state.pushToast);
 
   const mutation = useMutation({
-    mutationFn: () => apiClient<void>(`/admin/users/${userId}`, { method: "DELETE" }),
+    mutationFn: () =>
+      apiClient<void>(`/admin/users/${userId}`, { method: "DELETE" }),
     onSuccess: () => {
       onOpenChange(false);
-      pushToast({ variant: "success", title: "Conta excluída com sucesso", duration: 5000 });
+      pushToast({
+        variant: "success",
+        title: "Conta excluída com sucesso",
+        duration: 5000,
+      });
       onDeleted();
     },
     onError: () => {
-      pushToast({ variant: "error", title: "Não foi possível excluir a conta", duration: 5000 });
+      pushToast({
+        variant: "error",
+        title: "Não foi possível excluir a conta",
+        duration: 5000,
+      });
     },
   });
 
@@ -52,8 +61,8 @@ export function DeleteUserDialog({
         <DialogHeader>
           <DialogTitle>Excluir conta de {email ?? userId}</DialogTitle>
           <DialogDescription>
-            Esta ação é irreversível e exclui permanentemente todos os dados do usuário.
-            Confirmar?
+            Esta ação é irreversível e exclui permanentemente todos os dados do
+            usuário. Confirmar?
           </DialogDescription>
         </DialogHeader>
 

@@ -6,7 +6,7 @@
 > (ex: `apps/web/components/forms/register-form.tsx`), contagens de teste
 > (ex: "31 testes unitários (Vitest) + 18 testes e2e (Playwright)") e datas de entrega
 > (ex: "Entregue 2026-05-25") que não correspondiam ao filesystem real do repositório.
-> O repositório Nave é **greenfield**: não existe nenhum código-fonte implementado.
+> O repositório navestory é **greenfield**: não existe nenhum código-fonte implementado.
 >
 > **O que foi preservado:** a descrição funcional de todas as stories, critérios de aceite,
 > dependências entre itens, pontuação e prioridades — tudo genuíno e mantido integralmente.
@@ -68,7 +68,7 @@
 **O que implementar:**
 
 - Checkbox "Lembrar de mim" no formulário de login
-- Preferência salva em `sessionStorage` sob `nave_session_remember`
+- Preferência salva em `sessionStorage` sob `navestory_session_remember`
 - Quando `true`: `useActivityTracker` não inicia idle timer → sessão dura 7 dias (604 800 s, TTL atual do Supabase Dashboard — **não alterar**)
 - Banner na tela de login para `?session=expired`
 
@@ -110,7 +110,7 @@
 
 **Como** motorista autônomo,
 **quero** preencher nome, email e senha e criar minha conta,
-**para** ter acesso ao Nave.
+**para** ter acesso ao navestory.
 
 **O que implementar:**
 
@@ -264,7 +264,7 @@
 **O que implementar:**
 
 - Criar `apps/web/components/form-draft-guard.tsx`
-  - Ao detectar iminência de logout (evento do `useActivityTracker`): salvar estado em `sessionStorage` com chave `nave_form_draft_[route_path]`
+  - Ao detectar iminência de logout (evento do `useActivityTracker`): salvar estado em `sessionStorage` com chave `navestory_form_draft_[route_path]`
   - Ao montar o formulário após redirect de re-login: restaurar estado se chave existir
   - Banner discreto: "Seus dados foram restaurados do rascunho anterior"
   - Limpar `sessionStorage` após submit bem-sucedido
@@ -307,23 +307,23 @@
 
 ## Resumo para planejamento
 
-| ID         | Story                                    | Pts        | Prioridade | Depende de        | Status |
-| ---------- | ---------------------------------------- | ---------- | ---------- | ----------------- | ------ |
-| BL-AUTH-01 | Dois modos de persistência de sessão     | 3          | P0         | —                 | ⏳     |
-| BL-AUTH-02 | Sessão de 7 dias com "lembrar de mim"    | 5          | P0         | BL-AUTH-01        | ⏳     |
-| BL-AUTH-03 | Hook `useActivityTracker` (idle 30 min)  | 8          | P0         | BL-AUTH-01, 02    | ⏳     |
-| BL-AUTH-11 | Cadastro com dados válidos               | 3          | P0         | BL-AUTH-12        | ⏳     |
-| BL-AUTH-12 | Validação de senha — nova regra          | 2          | P0         | —                 | ⏳     |
-| BL-AUTH-04 | Bloqueio por 5 tentativas inválidas      | 5          | P1         | —                 | ⏳     |
-| BL-AUTH-05 | Resiliência a falhas do Supabase Auth    | 5          | P1         | —                 | ⏳     |
-| BL-AUTH-06 | Reenvio de e-mail com cooldown (delta)   | 2          | P1         | —                 | ⏳     |
-| BL-AUTH-07 | UX de link expirado/utilizado (delta)    | 2          | P1         | —                 | ⏳     |
-| BL-AUTH-13 | Email já cadastrado — bloco de aviso     | 3          | P1         | BL-AUTH-11        | ⏳     |
-| BL-AUTH-14 | Erros de sistema no cadastro             | 2          | P1         | BL-AUTH-11        | ⏳     |
-| BL-AUTH-08 | `<FormDraftGuard>`                       | 5          | P2         | BL-AUTH-03        | ⏳     |
-| BL-AUTH-09 | Toggle show/hide de senha                | 2          | P2         | —                 | ⏳     |
-| BL-AUTH-10 | Tratamento de 409 no frontend (delta)    | 1          | P2         | —                 | ⏳ (supercedido por BL-AUTH-13) |
-| **Total**  |                                          | **48 pts** |            |                   |        |
+| ID         | Story                                   | Pts        | Prioridade | Depende de     | Status                          |
+| ---------- | --------------------------------------- | ---------- | ---------- | -------------- | ------------------------------- |
+| BL-AUTH-01 | Dois modos de persistência de sessão    | 3          | P0         | —              | ⏳                              |
+| BL-AUTH-02 | Sessão de 7 dias com "lembrar de mim"   | 5          | P0         | BL-AUTH-01     | ⏳                              |
+| BL-AUTH-03 | Hook `useActivityTracker` (idle 30 min) | 8          | P0         | BL-AUTH-01, 02 | ⏳                              |
+| BL-AUTH-11 | Cadastro com dados válidos              | 3          | P0         | BL-AUTH-12     | ⏳                              |
+| BL-AUTH-12 | Validação de senha — nova regra         | 2          | P0         | —              | ⏳                              |
+| BL-AUTH-04 | Bloqueio por 5 tentativas inválidas     | 5          | P1         | —              | ⏳                              |
+| BL-AUTH-05 | Resiliência a falhas do Supabase Auth   | 5          | P1         | —              | ⏳                              |
+| BL-AUTH-06 | Reenvio de e-mail com cooldown (delta)  | 2          | P1         | —              | ⏳                              |
+| BL-AUTH-07 | UX de link expirado/utilizado (delta)   | 2          | P1         | —              | ⏳                              |
+| BL-AUTH-13 | Email já cadastrado — bloco de aviso    | 3          | P1         | BL-AUTH-11     | ⏳                              |
+| BL-AUTH-14 | Erros de sistema no cadastro            | 2          | P1         | BL-AUTH-11     | ⏳                              |
+| BL-AUTH-08 | `<FormDraftGuard>`                      | 5          | P2         | BL-AUTH-03     | ⏳                              |
+| BL-AUTH-09 | Toggle show/hide de senha               | 2          | P2         | —              | ⏳                              |
+| BL-AUTH-10 | Tratamento de 409 no frontend (delta)   | 1          | P2         | —              | ⏳ (supercedido por BL-AUTH-13) |
+| **Total**  |                                         | **48 pts** |            |                |                                 |
 
 ---
 

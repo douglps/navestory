@@ -1,4 +1,4 @@
-# Matriz de Rastreabilidade — Nave SaaS
+# Matriz de Rastreabilidade — navestory SaaS
 
 > **AVISO DE CORRECAO — 2026-07-12 (rev. 41)**
 > Esta matriz foi reescrita em 2026-07-12. Versoes anteriores (rev. 1 a rev. 40) continham
@@ -72,6 +72,7 @@
 > Fase 5: T5.3 (SPEC-20260602-001 — Sistema Em Foco) e T5.1 (SPEC-20260531-001 — Dashboard Sprint 1)
 > concluídas. Ver seções SPEC-20260602-001 e SPEC-20260531-001 abaixo para o detalhamento.
 > Destaques desta revisão:
+>
 > - Cobertura de Testes do módulo `dashboard` atualizada de ⏳ para ✅ (backend: `dashboard.service.spec.ts`/
 >   `dashboard.controller.spec.ts`; frontend: `FleetAlertBar.spec.tsx`, `VehicleHealthCard.spec.tsx`,
 >   `page.spec.tsx`, `use-dashboard-store.spec.ts`, `action-dock.spec.tsx`).
@@ -104,7 +105,6 @@
 >   e cobertos por `apps/web/src/app/(app)/expenses/new/page.spec.tsx` (✅). RF-03 também
 >   coberto por `apps/web/e2e/tests/expense-warnings.spec.ts` (E2E, 🔶 — aguarda secrets).
 >   Entradas já presentes na matriz com status e caminhos reais; nenhuma linha ⏳ pendente.
->
 > - **SPEC-20260716-003** (Testes E2E com Playwright, `draft`): seção `RF-DATA` adicionada
 >   nesta revisão — estava presente na spec mas ausente da matriz. `apps/api/scripts/seed-e2e.mjs`
 >   mapeado em RF-DATA-02. RF-E2E-05 destravada (RF-E2E-04 e RF-E2E-05 deixam de ser ⏳ e
@@ -133,6 +133,7 @@
 >   nem no payload de exclusão nem no audit log `changes`.
 >
 > **DIVERGÊNCIAS ENCONTRADAS — não corrigidas (aguardam spec/implementação):**
+>
 > - **EC-08** (não implementado como teste): `SENSITIVE_CHANGE_FIELDS` em `audit-logs.service.ts`
 >   não inclui `access_token` nem `token` — campos de token NÃO são removidos de `changes`.
 >   Código real: `["user_id", "deleted_at", "photo_url", "photo_thumbnail_url"]`. A spec R-MON-02
@@ -240,9 +241,9 @@
 >
 > - **RF-E2E-08** (login inválido — exibe `role="alert"`, mantém `/login`): adicionado a
 >   `apps/web/e2e/tests/auth.spec.ts`; usa `LoginPage.errorAlert` já existente mas sem cobertura.
-> - **RF-E2E-09** (cookie `nave_access_token` inválido/corrompido → redirect para `/login`):
+> - **RF-E2E-09** (cookie `navestory_access_token` inválido/corrompido → redirect para `/login`):
 >   adicionado a `apps/web/e2e/tests/auth.spec.ts`; injeta cookie via `context.addCookies()`.
->   Cookie confirmado em `apps/web/middleware.ts` linha 22 (`nave_access_token`).
+>   Cookie confirmado em `apps/web/middleware.ts` linha 22 (`navestory_access_token`).
 > - **RF-E2E-10** (usuário sem veículos — estado vazio no dialog): adicionado a
 >   `apps/web/e2e/tests/vehicle-context.spec.ts`; marcado como `skip` até que
 >   `E2E_USER_NO_VEHICLES_EMAIL` seja provisionado — instruções de provisionamento inline no
@@ -259,6 +260,7 @@
 > Auditoria do working tree (14 specs novas/modificadas via git status) contra as matrizes.
 > Resultado: todas as specs já tinham entradas correspondentes (revs. 55–58 cobriam integralmente).
 > Atualizações executadas nesta rodada:
+>
 > - `matrices/permissoes.md` (rev. 9): seção Dashboard expandida com 6 endpoints implementados
 >   após T5.1/T5.3b/SPEC-20260721-002 mas ausentes da matriz (`/dashboard/fleet-health`,
 >   `/dashboard/alerts`, `/dashboard/vehicle-cards`, `/dashboard/vehicle-history`,
@@ -269,21 +271,21 @@
 >   atualizada de ⏳ para 🔶 — `expenses.service.spec.ts` confirmado como existente (M em git
 >   status + referenciado como ✅ em SPEC-20260721-002 RF-09/P6); `expenses.controller.spec.ts`
 >   e `supabase-expense.repository.spec.ts` permanecem ⏳ (não verificados nesta rodada).
-> **Obs. interna:** `R-DS-09` referenciado em SPEC-20260729-003 localizado em `specs/RULES.md`
-> linha 79 (linha longa, omitida por ferramentas de busca com limite de caracteres — confirmado
-> por leitura direta). Nenhuma regra de frontmatter sem par em RULES.md encontrada nesta auditoria.
+>   **Obs. interna:** `R-DS-09` referenciado em SPEC-20260729-003 localizado em `specs/RULES.md`
+>   linha 79 (linha longa, omitida por ferramentas de busca com limite de caracteres — confirmado
+>   por leitura direta). Nenhuma regra de frontmatter sem par em RULES.md encontrada nesta auditoria.
 
 ---
 
 ## Legenda de Status
 
-| Símbolo | Significado |
-|---------|-------------|
-| ✅ | Implementado e com teste cobrindo o comportamento |
-| 🔶 | Implementado, mas sem cobertura de teste |
-| ⏳ | Não implementado ainda |
-| ⏸️ | Adiado — decisão explícita registrada (não é apenas "ainda não chegou a vez"); ver nota da spec/tarefa para o motivo e o gatilho de retomada |
-| ❌ | Fora de escopo do MVP |
+| Símbolo | Significado                                                                                                                                  |
+| ------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| ✅      | Implementado e com teste cobrindo o comportamento                                                                                            |
+| 🔶      | Implementado, mas sem cobertura de teste                                                                                                     |
+| ⏳      | Não implementado ainda                                                                                                                       |
+| ⏸️      | Adiado — decisão explícita registrada (não é apenas "ainda não chegou a vez"); ver nota da spec/tarefa para o motivo e o gatilho de retomada |
+| ❌      | Fora de escopo do MVP                                                                                                                        |
 
 ---
 
@@ -297,13 +299,14 @@ que o artefato ainda não existe no repositório.
 
 ## SPEC-20260712-001 — PWA Offline (approved, v0.5)
 
-> Primeira fase do PWA do Nave: instalação (manifest + ícones + prompt) e modo offline
+> Primeira fase do PWA do navestory: instalação (manifest + ícones + prompt) e modo offline
 > somente-leitura via Service Worker (Serwist) — cache de shell, assets e leitura de API.
 > Escrita offline (fila de sync), resolução de conflito e push notifications ficam fora de
 > escopo (Fase 2). **Aprovada em 2026-07-18 (v0.3)** após revisão de gaps/incoerências — ver
 > versões anteriores desta entrada. **Implementada em 2026-07-18 (v0.4).** Duas correções
 > técnicas descobertas durante a implementação, sem mudar comportamento observável (ver
 > changelog da spec):
+>
 > 1. O projeto **não usa Supabase Auth Client no browser** (sessão via cookie httpOnly + JWT,
 >    `apps/web/middleware.ts`) — RF-16/RF-17 usam `apps/web/src/lib/auth/logout.ts` como
 >    gancho, não `onAuthStateChange`. EC-03 (troca de usuário sem logout explícito) fica
@@ -315,57 +318,57 @@ que o artefato ainda não existe no repositório.
 >    build terminava "com sucesso" sem gerar nenhum Service Worker. Migrado para
 >    `@serwist/turbopack` (v9), que compila o SW via route handler
 >    (`src/app/serwist/[path]/route.ts`), compatível com Turbopack. Nomes de cache
->    (`nave-pages`/`nave-api-data`) e todas as estratégias por RF permanecem como especificado.
+>    (`navestory-pages`/`navestory-api-data`) e todas as estratégias por RF permanecem como especificado.
 
 ### Manifest e Instalação (R-PWA-04, R-PWA-05)
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-01 | Web App Manifest via `app/manifest.ts` (nome, ícones, `display: standalone`, cores da marca Nave) | `apps/web/src/app/manifest.ts` | manual (Lighthouse/`curl /manifest.webmanifest`) | 🔶 |
-| RF-02 | Ícones 192×192 e 512×512 em formato `any` e `maskable` | `apps/web/public/icons/icon-{192,512}-{any,maskable}.png` | — | 🔶 |
-| RF-03 | Captura de `beforeinstallprompt` + CTA próprio de instalação após 2ª visita (Android/Chrome) | `apps/web/src/lib/pwa/use-install-prompt.ts`, `apps/web/src/components/pwa/install-prompt-banner.tsx` | — | 🔶 |
-| RF-04 | Banner de instrução manual de instalação para Safari iOS (sem `beforeinstallprompt`) | `apps/web/src/lib/pwa/platform-detection.ts`, `apps/web/src/components/pwa/ios-install-banner.tsx` | `apps/web/src/lib/pwa/platform-detection.spec.ts` | ✅ |
+| Req   | Descrição                                                                                              | Código                                                                                                | Teste                                             | Status |
+| ----- | ------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------- | ------------------------------------------------- | ------ |
+| RF-01 | Web App Manifest via `app/manifest.ts` (nome, ícones, `display: standalone`, cores da marca navestory) | `apps/web/src/app/manifest.ts`                                                                        | manual (Lighthouse/`curl /manifest.webmanifest`)  | 🔶     |
+| RF-02 | Ícones 192×192 e 512×512 em formato `any` e `maskable`                                                 | `apps/web/public/icons/icon-{192,512}-{any,maskable}.png`                                             | —                                                 | 🔶     |
+| RF-03 | Captura de `beforeinstallprompt` + CTA próprio de instalação após 2ª visita (Android/Chrome)           | `apps/web/src/lib/pwa/use-install-prompt.ts`, `apps/web/src/components/pwa/install-prompt-banner.tsx` | —                                                 | 🔶     |
+| RF-04 | Banner de instrução manual de instalação para Safari iOS (sem `beforeinstallprompt`)                   | `apps/web/src/lib/pwa/platform-detection.ts`, `apps/web/src/components/pwa/ios-install-banner.tsx`    | `apps/web/src/lib/pwa/platform-detection.spec.ts` | ✅     |
 
 ### Cache de Shell e Assets (R-PWA-01)
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-05 | Precache do shell (HTML de layout, CSS, JS) via Service Worker com `CacheFirst` para assets versionados | `apps/web/src/app/sw.ts`, `apps/web/src/app/serwist/[path]/route.ts`, `apps/web/next.config.ts` | manual (`pnpm build && pnpm start` + `curl /serwist/sw.js` → 200, 50 precache entries) | 🔶 |
-| RF-06 | Navegação HTML com `NetworkFirst` (timeout 3s) e fallback para cache da rota ou página offline | `apps/web/src/app/sw.ts` | manual | 🔶 |
-| RF-07 | Página de fallback de navegação para rotas nunca visitadas (D12: rota dedicada) | `apps/web/src/app/offline/page.tsx` | manual | 🔶 |
+| Req   | Descrição                                                                                               | Código                                                                                          | Teste                                                                                  | Status |
+| ----- | ------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- | ------ |
+| RF-05 | Precache do shell (HTML de layout, CSS, JS) via Service Worker com `CacheFirst` para assets versionados | `apps/web/src/app/sw.ts`, `apps/web/src/app/serwist/[path]/route.ts`, `apps/web/next.config.ts` | manual (`pnpm build && pnpm start` + `curl /serwist/sw.js` → 200, 50 precache entries) | 🔶     |
+| RF-06 | navegação HTML com `NetworkFirst` (timeout 3s) e fallback para cache da rota ou página offline     | `apps/web/src/app/sw.ts`                                                                        | manual                                                                                 | 🔶     |
+| RF-07 | Página de fallback de navegação para rotas nunca visitadas (D12: rota dedicada)                    | `apps/web/src/app/offline/page.tsx`                                                             | manual                                                                                 | 🔶     |
 
 ### Cache de Leitura da API (R-PWA-01, R-PWA-06)
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-08 | `GET` de rotas de dados via `StaleWhileRevalidate` | `apps/web/src/app/sw.ts` | `apps/web/src/lib/http/api-client.spec.ts` (garante que GET chega ao fetch mesmo offline, pré-requisito para o SW poder responder do cache) | 🔶 |
-| RF-09 | Mutações (`POST`/`PUT`/`PATCH`/`DELETE`) nunca interceptadas pelo Service Worker — `NetworkOnly` | `apps/web/src/app/sw.ts` | — | 🔶 |
-| RF-10 | Cache de dados de API sem prazo de invalidação atrelado à exibição; TTL de 30 dias (R-PWA-06) é só teto de retenção em disco, removido apenas com conexão disponível | `apps/web/src/lib/pwa/api-cache-retention-plugin.ts` | — | 🔶 |
+| Req   | Descrição                                                                                                                                                            | Código                                               | Teste                                                                                                                                       | Status |
+| ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| RF-08 | `GET` de rotas de dados via `StaleWhileRevalidate`                                                                                                                   | `apps/web/src/app/sw.ts`                             | `apps/web/src/lib/http/api-client.spec.ts` (garante que GET chega ao fetch mesmo offline, pré-requisito para o SW poder responder do cache) | 🔶     |
+| RF-09 | Mutações (`POST`/`PUT`/`PATCH`/`DELETE`) nunca interceptadas pelo Service Worker — `NetworkOnly`                                                                     | `apps/web/src/app/sw.ts`                             | —                                                                                                                                           | 🔶     |
+| RF-10 | Cache de dados de API sem prazo de invalidação atrelado à exibição; TTL de 30 dias (R-PWA-06) é só teto de retenção em disco, removido apenas com conexão disponível | `apps/web/src/lib/pwa/api-cache-retention-plugin.ts` | —                                                                                                                                           | 🔶     |
 
 ### Bloqueio Explícito de Escrita Offline (R-PWA-02)
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-11 | Bloqueio client-side de submissões quando offline, com mensagem explícita | `apps/web/src/lib/http/api-client.ts`, `apps/web/src/lib/pwa/connectivity-store.ts` | `apps/web/src/lib/http/api-client.spec.ts` | ✅ |
-| RF-11.1 | Falha de rede real com `navigator.onLine === true` (falso positivo) tratada como offline retroativo, mesma mensagem de RF-11 (R-PWA-08) | `apps/web/src/lib/http/api-client.ts` | `apps/web/src/lib/http/api-client.spec.ts` | ✅ |
-| RF-12 | Conteúdo do formulário preservado quando a submissão é bloqueada por falta de conexão | `apps/web/src/lib/http/api-client.ts` (erro dedicado não limpa estado local do formulário) | — | 🔶 |
-| RF-13 | Indicador fixo e compacto de status de conectividade, ao lado do `VehicleContextChip` no `Header` | `apps/web/src/components/pwa/connectivity-indicator.tsx`, `apps/web/src/components/layout/header.tsx` | — | 🔶 |
-| RF-13.1 | Formato do timestamp de última atualização exibido offline: "Hoje HH:mm" / "Ontem HH:mm" / "DD/MM/AA HH:mm" (R-PWA-07) | `apps/web/src/lib/pwa/format-cache-age.ts`, `apps/web/src/lib/pwa/get-cache-age.ts` | `apps/web/src/lib/pwa/format-cache-age.spec.ts` | ✅ |
+| Req     | Descrição                                                                                                                               | Código                                                                                                | Teste                                           | Status |
+| ------- | --------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- | ----------------------------------------------- | ------ |
+| RF-11   | Bloqueio client-side de submissões quando offline, com mensagem explícita                                                               | `apps/web/src/lib/http/api-client.ts`, `apps/web/src/lib/pwa/connectivity-store.ts`                   | `apps/web/src/lib/http/api-client.spec.ts`      | ✅     |
+| RF-11.1 | Falha de rede real com `navigator.onLine === true` (falso positivo) tratada como offline retroativo, mesma mensagem de RF-11 (R-PWA-08) | `apps/web/src/lib/http/api-client.ts`                                                                 | `apps/web/src/lib/http/api-client.spec.ts`      | ✅     |
+| RF-12   | Conteúdo do formulário preservado quando a submissão é bloqueada por falta de conexão                                                   | `apps/web/src/lib/http/api-client.ts` (erro dedicado não limpa estado local do formulário)            | —                                               | 🔶     |
+| RF-13   | Indicador fixo e compacto de status de conectividade, ao lado do `VehicleContextChip` no `Header`                                       | `apps/web/src/components/pwa/connectivity-indicator.tsx`, `apps/web/src/components/layout/header.tsx` | —                                               | 🔶     |
+| RF-13.1 | Formato do timestamp de última atualização exibido offline: "Hoje HH:mm" / "Ontem HH:mm" / "DD/MM/AA HH:mm" (R-PWA-07)                  | `apps/web/src/lib/pwa/format-cache-age.ts`, `apps/web/src/lib/pwa/get-cache-age.ts`                   | `apps/web/src/lib/pwa/format-cache-age.spec.ts` | ✅     |
 
 ### Atualização do Service Worker (R-PWA-03)
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-14 | Toast de nova versão disponível; `skipWaiting()`/`clientsClaim()` somente após ação explícita do usuário — migrado para a fila única de toasts (SPEC-20260525-001 §8.2) | `apps/web/src/components/pwa/service-worker-update-listener.tsx`, `apps/web/src/components/layout/app-toast-viewport.tsx`, `apps/web/src/app/layout.tsx` (`SerwistProvider`) | — | 🔶 |
-| RF-15 | Nova versão carregada automaticamente ao reabrir o app após fechar todas as abas | (comportamento padrão do ciclo de vida do SW — sem lógica adicional) | — | 🔶 |
+| Req   | Descrição                                                                                                                                                               | Código                                                                                                                                                                       | Teste | Status |
+| ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----- | ------ |
+| RF-14 | Toast de nova versão disponível; `skipWaiting()`/`clientsClaim()` somente após ação explícita do usuário — migrado para a fila única de toasts (SPEC-20260525-001 §8.2) | `apps/web/src/components/pwa/service-worker-update-listener.tsx`, `apps/web/src/components/layout/app-toast-viewport.tsx`, `apps/web/src/app/layout.tsx` (`SerwistProvider`) | —     | 🔶     |
+| RF-15 | Nova versão carregada automaticamente ao reabrir o app após fechar todas as abas                                                                                        | (comportamento padrão do ciclo de vida do SW — sem lógica adicional)                                                                                                         | —     | 🔶     |
 
 ### Limpeza de Cache no Logout (R-PWA-06, S6)
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-16 | Limpeza do Cache Storage de dados de usuário (`nave-api-data`) no logout — via `logout.ts`, não `onAuthStateChange` (ver nota técnica acima) | `apps/web/src/lib/pwa/clear-api-cache.ts`, `apps/web/src/lib/auth/logout.ts` | `apps/web/src/lib/pwa/clear-api-cache.spec.ts` | ✅ |
-| RF-17 | Nenhum dado residual do usuário anterior visível após troca de conta no mesmo dispositivo | `apps/web/src/lib/auth/logout.ts` | — | 🔶 |
-| EC-03 | Troca de usuário sem logout explícito tratada como `SIGNED_OUT` implícito (Must, D13) | — | — | ⏸️ — bloqueado por falta de `user_id` exposto ao client (backend); retomar quando `/auth/login`/`/auth/me` expuser o id |
+| Req   | Descrição                                                                                                                                         | Código                                                                       | Teste                                          | Status                                                                                                                  |
+| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- | ---------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| RF-16 | Limpeza do Cache Storage de dados de usuário (`navestory-api-data`) no logout — via `logout.ts`, não `onAuthStateChange` (ver nota técnica acima) | `apps/web/src/lib/pwa/clear-api-cache.ts`, `apps/web/src/lib/auth/logout.ts` | `apps/web/src/lib/pwa/clear-api-cache.spec.ts` | ✅                                                                                                                      |
+| RF-17 | Nenhum dado residual do usuário anterior visível após troca de conta no mesmo dispositivo                                                         | `apps/web/src/lib/auth/logout.ts`                                            | —                                              | 🔶                                                                                                                      |
+| EC-03 | Troca de usuário sem logout explícito tratada como `SIGNED_OUT` implícito (Must, D13)                                                             | —                                                                            | —                                              | ⏸️ — bloqueado por falta de `user_id` exposto ao client (backend); retomar quando `/auth/login`/`/auth/me` expuser o id |
 
 ---
 
@@ -383,62 +386,62 @@ que o artefato ainda não existe no repositório.
 
 ### Validação de Manutenção (R-ODO-03)
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-01 | `odometer_km` obrigatório quando `status === 'completed'` — implementado como checagem imperativa em `MaintenancesService.update()` (não via `superRefine` no schema Zod, já que a validação depende do valor *existente* no banco quando não reenviado no payload; mesma decisão de design de `SPEC-20260603-002`/RNF-04) | `apps/api/src/modules/maintenances/maintenances.service.ts` | `apps/api/src/modules/maintenances/maintenances.service.spec.ts` | 🔶 Implementado com padrão diferente do descrito |
-| RF-02 | `MaintenancesService.update()` rejeita HTTP 422 quando `status = completed` sem `odometer_km` válido | `apps/api/src/modules/maintenances/maintenances.service.ts` | `apps/api/src/modules/maintenances/maintenances.service.spec.ts` | ✅ |
-| RF-03 | Bug de `createMaintenanceAction` (Server Action) não aplicável — projeto não usa Server Actions para mutação (decisão já registrada em T3.9); `POST /maintenances` mapeia `odometer_km` corretamente desde a criação do endpoint | `apps/api/src/modules/maintenances/maintenances.controller.ts` | `apps/api/src/modules/maintenances/maintenances.controller.spec.ts` | ✅ N/A por decisão de arquitetura |
-| RF-04 | Validação de sequência de odômetro em manutenções: padrão response-field (`odometer_warning`/`odometer_previous_max_km`), não exceção (`MaintenanceWarningException` descartada — mesma decisão de T3.2/T3.3 para despesas); `findMaxOdometerByVehicle` ainda sem filtro de ciclo ativo (R-ODO-04 permanece ⏳) | `apps/api/src/modules/maintenances/maintenances.service.ts` | `apps/api/src/modules/maintenances/maintenances.service.spec.ts` | 🔶 Implementado com padrão diferente do descrito |
+| Req   | Descrição                                                                                                                                                                                                                                                                                                                  | Código                                                         | Teste                                                               | Status                                           |
+| ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- | ------------------------------------------------------------------- | ------------------------------------------------ |
+| RF-01 | `odometer_km` obrigatório quando `status === 'completed'` — implementado como checagem imperativa em `MaintenancesService.update()` (não via `superRefine` no schema Zod, já que a validação depende do valor _existente_ no banco quando não reenviado no payload; mesma decisão de design de `SPEC-20260603-002`/RNF-04) | `apps/api/src/modules/maintenances/maintenances.service.ts`    | `apps/api/src/modules/maintenances/maintenances.service.spec.ts`    | 🔶 Implementado com padrão diferente do descrito |
+| RF-02 | `MaintenancesService.update()` rejeita HTTP 422 quando `status = completed` sem `odometer_km` válido                                                                                                                                                                                                                       | `apps/api/src/modules/maintenances/maintenances.service.ts`    | `apps/api/src/modules/maintenances/maintenances.service.spec.ts`    | ✅                                               |
+| RF-03 | Bug de `createMaintenanceAction` (Server Action) não aplicável — projeto não usa Server Actions para mutação (decisão já registrada em T3.9); `POST /maintenances` mapeia `odometer_km` corretamente desde a criação do endpoint                                                                                           | `apps/api/src/modules/maintenances/maintenances.controller.ts` | `apps/api/src/modules/maintenances/maintenances.controller.spec.ts` | ✅ N/A por decisão de arquitetura                |
+| RF-04 | Validação de sequência de odômetro em manutenções: padrão response-field (`odometer_warning`/`odometer_previous_max_km`), não exceção (`MaintenanceWarningException` descartada — mesma decisão de T3.2/T3.3 para despesas); `findMaxOdometerByVehicle` ainda sem filtro de ciclo ativo (R-ODO-04 permanece ⏳)            | `apps/api/src/modules/maintenances/maintenances.service.ts`    | `apps/api/src/modules/maintenances/maintenances.service.spec.ts`    | 🔶 Implementado com padrão diferente do descrito |
 
 ### Modelo de Dados — `vehicle_odometer_cycles` (R-ODO-05, R-ODO-06)
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-05 | Migration `20260712171919_vehicle_odometer_cycles.sql`: tabela com colunas descritas na spec; constraint `cycle_number >= 2` | `supabase/migrations/20260712171919_vehicle_odometer_cycles.sql` | — | 🔶 |
-| RF-06 | RLS: SELECT e INSERT filtrados por `auth.uid() = (SELECT user_id FROM vehicles WHERE id = vehicle_id)`; sem policy UPDATE ou DELETE | `supabase/migrations/20260712172047_rls_policies.sql` | — | 🔶 |
-| RF-07 | Função SQL `get_active_cycle_start(p_vehicle_id uuid) RETURNS timestamptz` | `supabase/migrations/20260712171919_vehicle_odometer_cycles.sql` | — | 🔶 |
+| Req   | Descrição                                                                                                                           | Código                                                           | Teste | Status |
+| ----- | ----------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- | ----- | ------ |
+| RF-05 | Migration `20260712171919_vehicle_odometer_cycles.sql`: tabela com colunas descritas na spec; constraint `cycle_number >= 2`        | `supabase/migrations/20260712171919_vehicle_odometer_cycles.sql` | —     | 🔶     |
+| RF-06 | RLS: SELECT e INSERT filtrados por `auth.uid() = (SELECT user_id FROM vehicles WHERE id = vehicle_id)`; sem policy UPDATE ou DELETE | `supabase/migrations/20260712172047_rls_policies.sql`            | —     | 🔶     |
+| RF-07 | Função SQL `get_active_cycle_start(p_vehicle_id uuid) RETURNS timestamptz`                                                          | `supabase/migrations/20260712171919_vehicle_odometer_cycles.sql` | —     | 🔶     |
 
 ### Backend — `OdometerCyclesModule`
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-08/R-ODO-05 | `POST /vehicles/:vehicleId/odometer-cycles`: valida ownership via `VehiclesService.findOne`, calcula `cycle_number` e `previous_cycle_max` (via `expenses.odometer_km`), persiste, dispara audit fire-and-forget omitindo `reason` (D8) | `apps/api/src/modules/odometer-cycles/odometer-cycles.controller.ts`, `odometer-cycles.service.ts` | `apps/api/src/modules/odometer-cycles/odometer-cycles.service.spec.ts`, `odometer-cycles.controller.spec.ts` | ✅ |
-| RF-09/P1 | `GET /vehicles/:vehicleId/odometer-cycles`: retorna ciclos ordenados por `cycle_number ASC`, paginados (padrão 20, máx 100, clamp aplicado) | `apps/api/src/modules/odometer-cycles/odometer-cycles.service.ts` | `apps/api/src/modules/odometer-cycles/odometer-cycles.service.spec.ts` | ✅ |
-| RF-10/R-ODO-04 | `OdometerCyclesService.getActiveCycleStart(accessToken, userId, vehicleId)`: chama RPC `get_active_cycle_start`; degrada graciosamente (`null`) em caso de falha (D6) — ainda não consumido por nenhum service, pois `ExpensesService`/`MaintenanceService` não existem | `apps/api/src/modules/odometer-cycles/odometer-cycles.service.ts` | `apps/api/src/modules/odometer-cycles/odometer-cycles.service.spec.ts` | ✅ |
-| RF-11/R-SAN-01/R-SAN-02 | `createOdometerCycleInputSchema`: `reason` obrigatório 3–500 chars com `.trim().normalize('NFC')`; `starting_value` não-negativo, default 0 | `packages/validators/src/odometer-cycle.schemas.ts` | `packages/validators/src/odometer-cycle.schemas.spec.ts` | ✅ |
+| Req                     | Descrição                                                                                                                                                                                                                                                               | Código                                                                                             | Teste                                                                                                        | Status |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ | ------ |
+| RF-08/R-ODO-05          | `POST /vehicles/:vehicleId/odometer-cycles`: valida ownership via `VehiclesService.findOne`, calcula `cycle_number` e `previous_cycle_max` (via `expenses.odometer_km`), persiste, dispara audit fire-and-forget omitindo `reason` (D8)                                 | `apps/api/src/modules/odometer-cycles/odometer-cycles.controller.ts`, `odometer-cycles.service.ts` | `apps/api/src/modules/odometer-cycles/odometer-cycles.service.spec.ts`, `odometer-cycles.controller.spec.ts` | ✅     |
+| RF-09/P1                | `GET /vehicles/:vehicleId/odometer-cycles`: retorna ciclos ordenados por `cycle_number ASC`, paginados (padrão 20, máx 100, clamp aplicado)                                                                                                                             | `apps/api/src/modules/odometer-cycles/odometer-cycles.service.ts`                                  | `apps/api/src/modules/odometer-cycles/odometer-cycles.service.spec.ts`                                       | ✅     |
+| RF-10/R-ODO-04          | `OdometerCyclesService.getActiveCycleStart(accessToken, userId, vehicleId)`: chama RPC `get_active_cycle_start`; degrada graciosamente (`null`) em caso de falha (D6) — ainda não consumido por nenhum service, pois `ExpensesService`/`MaintenanceService` não existem | `apps/api/src/modules/odometer-cycles/odometer-cycles.service.ts`                                  | `apps/api/src/modules/odometer-cycles/odometer-cycles.service.spec.ts`                                       | ✅     |
+| RF-11/R-SAN-01/R-SAN-02 | `createOdometerCycleInputSchema`: `reason` obrigatório 3–500 chars com `.trim().normalize('NFC')`; `starting_value` não-negativo, default 0                                                                                                                             | `packages/validators/src/odometer-cycle.schemas.ts`                                                | `packages/validators/src/odometer-cycle.schemas.spec.ts`                                                     | ✅     |
 
 ### Extensão de `findMaxOdometerByVehicle` — Filtro por Ciclo Ativo (R-ODO-04)
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-12 | `ExpenseRepositoryPort.findMaxOdometerByVehicle` recebe parâmetro opcional `sinceDate?: string`; zero breaking change para callers existentes | — | — | ⏳ Depende do módulo de despesas (Fase 3) |
-| RF-13 | `MaintenancesService.findMaxOdometerByVehicle(client, vehicleId, userId, excludeMaintenanceId?)`: análogo ao de expenses, sem parâmetro `sinceDate`/filtro de ciclo ainda (ver RF-14/RF-15) | `apps/api/src/modules/maintenances/maintenances.service.ts` | `apps/api/src/modules/maintenances/maintenances.service.spec.ts` | 🔶 Sem filtro de ciclo |
-| RF-14 | `ExpensesService` consulta `OdometerCyclesService.getActiveCycleStart()` antes da verificação de sequência e passa resultado como `sinceDate` | — | — | ⏳ Depende do módulo de despesas (Fase 3) |
-| RF-15 | `MaintenancesService` aplica o mesmo padrão de RF-14 para o repositório de manutenções (R-ODO-04) | — | — | ⏳ Gap pré-existente também em `ExpensesService` (RF-14); tratamento unificado em spec futura |
+| Req   | Descrição                                                                                                                                                                                   | Código                                                      | Teste                                                            | Status                                                                                        |
+| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- | ---------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| RF-12 | `ExpenseRepositoryPort.findMaxOdometerByVehicle` recebe parâmetro opcional `sinceDate?: string`; zero breaking change para callers existentes                                               | —                                                           | —                                                                | ⏳ Depende do módulo de despesas (Fase 3)                                                     |
+| RF-13 | `MaintenancesService.findMaxOdometerByVehicle(client, vehicleId, userId, excludeMaintenanceId?)`: análogo ao de expenses, sem parâmetro `sinceDate`/filtro de ciclo ainda (ver RF-14/RF-15) | `apps/api/src/modules/maintenances/maintenances.service.ts` | `apps/api/src/modules/maintenances/maintenances.service.spec.ts` | 🔶 Sem filtro de ciclo                                                                        |
+| RF-14 | `ExpensesService` consulta `OdometerCyclesService.getActiveCycleStart()` antes da verificação de sequência e passa resultado como `sinceDate`                                               | —                                                           | —                                                                | ⏳ Depende do módulo de despesas (Fase 3)                                                     |
+| RF-15 | `MaintenancesService` aplica o mesmo padrão de RF-14 para o repositório de manutenções (R-ODO-04)                                                                                           | —                                                           | —                                                                | ⏳ Gap pré-existente também em `ExpensesService` (RF-14); tratamento unificado em spec futura |
 
 ### Mensagem de Confirmação e Atalho para Novo Ciclo (R-ODO-06)
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-16 | Warning de odômetro exibe `AlertDialog` com botões "Confirmar retroativo" e "Cancelar" | — | — | ⏳ Depende do `ExpenseForm`/`MaintenanceForm` (Fases 3/4) |
-| RF-17 | Quando `odometer_km <= 100` OU queda >= 50%: UI exibe caminho "Iniciar novo ciclo" (R-ODO-06) | — | — | ⏳ Depende do `ExpenseForm`/`MaintenanceForm` (Fases 3/4) |
+| Req   | Descrição                                                                                     | Código | Teste | Status                                                    |
+| ----- | --------------------------------------------------------------------------------------------- | ------ | ----- | --------------------------------------------------------- |
+| RF-16 | Warning de odômetro exibe `AlertDialog` com botões "Confirmar retroativo" e "Cancelar"        | —      | —     | ⏳ Depende do `ExpenseForm`/`MaintenanceForm` (Fases 3/4) |
+| RF-17 | Quando `odometer_km <= 100` OU queda >= 50%: UI exibe caminho "Iniciar novo ciclo" (R-ODO-06) | —      | —     | ⏳ Depende do `ExpenseForm`/`MaintenanceForm` (Fases 3/4) |
 
 ### Atualização das Funções SQL Analíticas
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-18 | `fuel_consumption_trend` atualizada com filtro de ciclo ativo no WHERE | `supabase/migrations/20260712172020_analytics_functions.sql` | — | 🔶 |
-| RF-19 | `calculate_vehicle_tco` atualizada com o mesmo filtro de ciclo ativo | `supabase/migrations/20260712172020_analytics_functions.sql` | — | 🔶 |
-| RF-20 | `get_vehicle_cost_per_km` atualizada com o mesmo filtro de ciclo ativo | `supabase/migrations/20260712172020_analytics_functions.sql` | — | 🔶 |
-| RF-21 | Ordem de deploy obrigatória: (1) migration + funções SQL; (2) backend OdometerCyclesModule; (3) UI de reset | Respeitada — migration+funções (2026-07-12) precederam `OdometerCyclesModule` (2026-07-13, T2.4) | — | ✅ |
+| Req   | Descrição                                                                                                   | Código                                                                                           | Teste | Status |
+| ----- | ----------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ | ----- | ------ |
+| RF-18 | `fuel_consumption_trend` atualizada com filtro de ciclo ativo no WHERE                                      | `supabase/migrations/20260712172020_analytics_functions.sql`                                     | —     | 🔶     |
+| RF-19 | `calculate_vehicle_tco` atualizada com o mesmo filtro de ciclo ativo                                        | `supabase/migrations/20260712172020_analytics_functions.sql`                                     | —     | 🔶     |
+| RF-20 | `get_vehicle_cost_per_km` atualizada com o mesmo filtro de ciclo ativo                                      | `supabase/migrations/20260712172020_analytics_functions.sql`                                     | —     | 🔶     |
+| RF-21 | Ordem de deploy obrigatória: (1) migration + funções SQL; (2) backend OdometerCyclesModule; (3) UI de reset | Respeitada — migration+funções (2026-07-12) precederam `OdometerCyclesModule` (2026-07-13, T2.4) | —     | ✅     |
 
 ### Interface — Tela de Configurações e Badge
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-22 | Rota `/settings/vehicles/[vehicleId]/odometer-cycles`: tabela de histórico + modal "Reiniciar odômetro" (sem dirty-check `AlertDialog` dedicado — mesma limitação de T2.1, pendente do Design System) | `apps/web/src/app/settings/vehicles/[vehicleId]/odometer-cycles/page.tsx` | `apps/web/src/app/settings/vehicles/[vehicleId]/odometer-cycles/page.spec.tsx` | 🔶 |
-| RF-23 | `VehicleContextChip` exibe badge "Ciclo {N}" somente quando `cycle_number >= 2`; Ciclo 1 implícito não exibe badge (R-ODO-06) | — | — | ⏳ Depende do dashboard/Em Foco (Fase 5) |
-| RF-24 | `MaintenanceForm`: campo `odometer_km` torna-se visualmente obrigatório quando `status = completed` (R-ODO-03) | `apps/web/src/app/maintenance/[id]/page.tsx` | `apps/web/src/app/maintenance/[id]/page.spec.tsx` | 🔶 Campo exposto via `OdometerInput`; obrigatoriedade visual condicional (asterisco/required dinâmico) fica ⏳ — enforcement real já ocorre no backend (422) |
+| Req   | Descrição                                                                                                                                                                                             | Código                                                                    | Teste                                                                          | Status                                                                                                                                                       |
+| ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- | ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| RF-22 | Rota `/settings/vehicles/[vehicleId]/odometer-cycles`: tabela de histórico + modal "Reiniciar odômetro" (sem dirty-check `AlertDialog` dedicado — mesma limitação de T2.1, pendente do Design System) | `apps/web/src/app/settings/vehicles/[vehicleId]/odometer-cycles/page.tsx` | `apps/web/src/app/settings/vehicles/[vehicleId]/odometer-cycles/page.spec.tsx` | 🔶                                                                                                                                                           |
+| RF-23 | `VehicleContextChip` exibe badge "Ciclo {N}" somente quando `cycle_number >= 2`; Ciclo 1 implícito não exibe badge (R-ODO-06)                                                                         | —                                                                         | —                                                                              | ⏳ Depende do dashboard/Em Foco (Fase 5)                                                                                                                     |
+| RF-24 | `MaintenanceForm`: campo `odometer_km` torna-se visualmente obrigatório quando `status = completed` (R-ODO-03)                                                                                        | `apps/web/src/app/maintenance/[id]/page.tsx`                              | `apps/web/src/app/maintenance/[id]/page.spec.tsx`                              | 🔶 Campo exposto via `OdometerInput`; obrigatoriedade visual condicional (asterisco/required dinâmico) fica ⏳ — enforcement real já ocorre no backend (422) |
 
 ---
 
@@ -450,63 +453,63 @@ que o artefato ainda não existe no repositório.
 
 ### Cadastro e Elegibilidade (Seção 1)
 
-| Requisito | Descrição | Código | Teste | Status |
-|-----------|-----------|--------|-------|--------|
-| BS-REG-01..05 | Cadastro self-service com email válido; campo `profile_type`; email único; acesso imediato | — | — | ⏳ |
-| BS-BLK-01..05 | Blacklist de emails banidos; rate limit 5/15min (S4); honeypot anti-bot; rejeição de emails descartáveis; verificação 18+ | — | — | ⏳ |
-| BS-FLW-01..05 | Formulário único (4 campos); redirect para onboarding; pular onboarding; email de boas-vindas; PWA responsivo | — | — | ⏳ |
+| Requisito     | Descrição                                                                                                                 | Código | Teste | Status |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------- | ------ | ----- | ------ |
+| BS-REG-01..05 | Cadastro self-service com email válido; campo `profile_type`; email único; acesso imediato                                | —      | —     | ⏳     |
+| BS-BLK-01..05 | Blacklist de emails banidos; rate limit 5/15min (S4); honeypot anti-bot; rejeição de emails descartáveis; verificação 18+ | —      | —     | ⏳     |
+| BS-FLW-01..05 | Formulário único (4 campos); redirect para onboarding; pular onboarding; email de boas-vindas; PWA responsivo             | —      | —     | ⏳     |
 
 ### Modelo de Assinatura e Monetização (Seção 2)
 
-| Requisito | Descrição | Código | Teste | Status |
-|-----------|-----------|--------|-------|--------|
-| BS-PLN-01..06 | Planos Gratis (beta ilimitado, pós-beta 3 veículos/2 meses), Pro Mensal (R$ 29,90), Pro Anual (R$ 199), Frota (R$ 49,90); trial 14 dias | — | — | ⏳ |
-| BS-MON-01..08 | Banners de upgrade; checkout integrado (Stripe/MP); downgrade com consolidação; cancelamento self-service; retry de cobrança; grace period proporcional; win-back; countdown banner | — | — | ⏳ |
-| BS-VLT-01..06 | Timeline com meses consolidados; CTA de upgrade; garantia de retenção de dados; KPIs com dados gerais; batch job de consolidação; busca em meses consolidados | — | — | ⏳ |
+| Requisito     | Descrição                                                                                                                                                                           | Código | Teste | Status |
+| ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ----- | ------ |
+| BS-PLN-01..06 | Planos Gratis (beta ilimitado, pós-beta 3 veículos/2 meses), Pro Mensal (R$ 29,90), Pro Anual (R$ 199), Frota (R$ 49,90); trial 14 dias                                             | —      | —     | ⏳     |
+| BS-MON-01..08 | Banners de upgrade; checkout integrado (Stripe/MP); downgrade com consolidação; cancelamento self-service; retry de cobrança; grace period proporcional; win-back; countdown banner | —      | —     | ⏳     |
+| BS-VLT-01..06 | Timeline com meses consolidados; CTA de upgrade; garantia de retenção de dados; KPIs com dados gerais; batch job de consolidação; busca em meses consolidados                       | —      | —     | ⏳     |
 
 ### Controle de Acesso (Seção 3)
 
-| Requisito | Descrição | Código | Teste | Status |
-|-----------|-----------|--------|-------|--------|
-| BS-ACL-01..07 | Roles: anonymous, user, admin, workspace_owner, workspace_member; CRUD owner-only (RLS); anti-enumeração (404 não 403); admin sem acesso a dados de negócio; workspace member com atribuição por veículo | — | — | ⏳ |
-| BS-SEC-01..06 | Lock após 5 tentativas; exclusão LGPD self-service; sessão 30min inatividade; troca de senha invalida sessões; (Fase 2) MFA TOTP; (Fase 2) Login social | — | — | ⏳ |
+| Requisito     | Descrição                                                                                                                                                                                                | Código | Teste | Status |
+| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ----- | ------ |
+| BS-ACL-01..07 | Roles: anonymous, user, admin, workspace_owner, workspace_member; CRUD owner-only (RLS); anti-enumeração (404 não 403); admin sem acesso a dados de negócio; workspace member com atribuição por veículo | —      | —     | ⏳     |
+| BS-SEC-01..06 | Lock após 5 tentativas; exclusão LGPD self-service; sessão 30min inatividade; troca de senha invalida sessões; (Fase 2) MFA TOTP; (Fase 2) Login social                                                  | —      | —     | ⏳     |
 
 ### Onboarding e Ativação (Seção 4)
 
-| Requisito | Descrição | Código | Teste | Status |
-|-----------|-----------|--------|-------|--------|
-| BS-ONB-01..06 | Wizard 3 passos; pre-fill via placa FIPE; checklist primeiros passos; nudge 48h; import CSV para frotas; empty state com CTA | — | — | ⏳ |
+| Requisito     | Descrição                                                                                                                    | Código | Teste | Status |
+| ------------- | ---------------------------------------------------------------------------------------------------------------------------- | ------ | ----- | ------ |
+| BS-ONB-01..06 | Wizard 3 passos; pre-fill via placa FIPE; checklist primeiros passos; nudge 48h; import CSV para frotas; empty state com CTA | —      | —     | ⏳     |
 
 ### Retenção e Engajamento (Seção 5)
 
-| Requisito | Descrição | Código | Teste | Status |
-|-----------|-----------|--------|-------|--------|
-| BS-RET-01..07 | Lembrete semanal; streak de registro; alerta vencimento 60 dias; resumo mensal por email; insights de anomalia; reengajamento 14d; win-back 60d | — | — | ⏳ |
+| Requisito     | Descrição                                                                                                                                       | Código | Teste | Status |
+| ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ----- | ------ |
+| BS-RET-01..07 | Lembrete semanal; streak de registro; alerta vencimento 60 dias; resumo mensal por email; insights de anomalia; reengajamento 14d; win-back 60d | —      | —     | ⏳     |
 
 ### Crescimento e Aquisição (Seção 6)
 
-| Requisito | Descrição | Código | Teste | Status |
-|-----------|-----------|--------|-------|--------|
-| BS-GRW-01..05 | Referral com benefício mútuo; rastreamento de referral; card compartilhável; calculadora de custo/km; blog SEO | — | — | ⏳ |
-| BS-EXP-01..04 | Sugestão de upgrade ao exceder limites; upgrade para Frota; onboarding assistido 10+ veículos; (Fase 3) API pública com simulação de custos | — | — | ⏳ |
-| BS-INFRA-01..02 | Simulação de custos de infra Supabase; rate limits por plano baseados na simulação | — | — | ⏳ |
+| Requisito       | Descrição                                                                                                                                   | Código | Teste | Status |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ----- | ------ |
+| BS-GRW-01..05   | Referral com benefício mútuo; rastreamento de referral; card compartilhável; calculadora de custo/km; blog SEO                              | —      | —     | ⏳     |
+| BS-EXP-01..04   | Sugestão de upgrade ao exceder limites; upgrade para Frota; onboarding assistido 10+ veículos; (Fase 3) API pública com simulação de custos | —      | —     | ⏳     |
+| BS-INFRA-01..02 | Simulação de custos de infra Supabase; rate limits por plano baseados na simulação                                                          | —      | —     | ⏳     |
 
 ### Compliance e Suporte (Seções 7-8)
 
-| Requisito | Descrição | Código | Teste | Status |
-|-----------|-----------|--------|-------|--------|
-| BS-LGP-01..05 | Export por plano (LGPD portabilidade); exclusão self-service 30 dias; anonimização; audit logs preservados; cookies com consentimento | — | — | ⏳ |
-| BS-TRM-01..03 | Aceite de termos no cadastro; re-aceite em atualização; política de privacidade detalhada | — | — | ⏳ |
-| BS-SUP-01..05 | FAQ/comunidade (Gratis); email 48h (Pro); chat prioritário 24h (Frota); NPS a cada 30 dias; alerta de feedback negativo | — | — | ⏳ |
+| Requisito     | Descrição                                                                                                                             | Código | Teste | Status |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------- | ------ | ----- | ------ |
+| BS-LGP-01..05 | Export por plano (LGPD portabilidade); exclusão self-service 30 dias; anonimização; audit logs preservados; cookies com consentimento | —      | —     | ⏳     |
+| BS-TRM-01..03 | Aceite de termos no cadastro; re-aceite em atualização; política de privacidade detalhada                                             | —      | —     | ⏳     |
+| BS-SUP-01..05 | FAQ/comunidade (Gratis); email 48h (Pro); chat prioritário 24h (Frota); NPS a cada 30 dias; alerta de feedback negativo               | —      | —     | ⏳     |
 
 ### Roadmap de Implementação
 
-| Fase | Stories | Status |
-|------|---------|--------|
-| MVP (atual) | BS-REG-01..05, BS-BLK-01..02, BS-FLW-01..03, BS-ACL-01..05, BS-SEC-01..04, BS-LGP-02..04 | ⏳ Não iniciado |
-| Pós-beta (Fase 2) | BS-PLN-01..06, BS-MON-01..08, BS-VLT-01..06, BS-BLK-03..05, BS-FLW-04, BS-ONB-01..06, BS-TRM-01..03 | ⏳ |
-| Crescimento (Fase 3) | BS-RET-01..07, BS-GRW-01..05, BS-EXP-01..03, BS-SUP-01..05, BS-SEC-05..06, BS-INFRA-01..02 | ⏳ |
-| Enterprise (Fase 4) | BS-ACL-06..07, BS-EXP-04, BS-PLN-05 (Frota expandido com API) | ⏳ |
+| Fase                 | Stories                                                                                             | Status          |
+| -------------------- | --------------------------------------------------------------------------------------------------- | --------------- |
+| MVP (atual)          | BS-REG-01..05, BS-BLK-01..02, BS-FLW-01..03, BS-ACL-01..05, BS-SEC-01..04, BS-LGP-02..04            | ⏳ Não iniciado |
+| Pós-beta (Fase 2)    | BS-PLN-01..06, BS-MON-01..08, BS-VLT-01..06, BS-BLK-03..05, BS-FLW-04, BS-ONB-01..06, BS-TRM-01..03 | ⏳              |
+| Crescimento (Fase 3) | BS-RET-01..07, BS-GRW-01..05, BS-EXP-01..03, BS-SUP-01..05, BS-SEC-05..06, BS-INFRA-01..02          | ⏳              |
+| Enterprise (Fase 4)  | BS-ACL-06..07, BS-EXP-04, BS-PLN-05 (Frota expandido com API)                                       | ⏳              |
 
 ---
 
@@ -525,37 +528,37 @@ que o artefato ainda não existe no repositório.
 
 ### Backend — AnalyticsModule
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-01 | RPC `calculate_vehicle_tco(vehicle_id)`: TCO com breakdown fixo (fuel/maintenance/fines/recurring/other), cost_per_km, cost_per_month, total_km, period_days (R-ANA-04) — substitui a função homônima divergente já existente | `supabase/migrations/20260716120000_analytics_tco_fuel_trend.sql`, `apps/api/src/modules/analytics/analytics.service.ts` | `apps/api/src/modules/analytics/analytics.service.spec.ts` | ✅ |
-| RF-02 | RPC `fuel_consumption_trend(vehicle_id, limit)`: km/L, price_per_liter, rolling_avg_kpl (janela 5) (R-ANA-01, R-FUEL-02/03) — substitui a função homônima divergente já existente | `supabase/migrations/20260716120000_analytics_tco_fuel_trend.sql`, `apps/api/src/modules/analytics/analytics.service.ts` | `apps/api/src/modules/analytics/analytics.service.spec.ts` | ✅ |
-| RF-03 | RPC `detect_expense_anomalies(threshold)`: Z-Score por (vehicle_id, category) (R-ANA-02) | `supabase/migrations/20260716130000_analytics_anomalies_benchmark.sql`, `apps/api/src/modules/analytics/analytics.service.ts` | `apps/api/src/modules/analytics/analytics.service.spec.ts` | ✅ |
-| RF-04 | RPC `fleet_benchmark()`: ranking de veículos por custo/km (R-ANA-05) | `supabase/migrations/20260716130000_analytics_anomalies_benchmark.sql`, `apps/api/src/modules/analytics/analytics.service.ts` | `apps/api/src/modules/analytics/analytics.service.spec.ts` | ✅ |
-| RF-05 | RPC `forecast_monthly_costs(vehicle_id?, months_ahead)`: projeção com média móvel 3 meses + banda ±1σ (R-ANA-03) | `supabase/migrations/20260716140000_analytics_forecast_seasonal.sql`, `apps/api/src/modules/analytics/analytics.service.ts` | `apps/api/src/modules/analytics/analytics.service.spec.ts` | ✅ |
-| RF-06 | RPC `seasonal_expense_heatmap(vehicle_id?)`: heatmap mês x categoria (R-ANA-07) | `supabase/migrations/20260716140000_analytics_forecast_seasonal.sql`, `apps/api/src/modules/analytics/analytics.service.ts` | `apps/api/src/modules/analytics/analytics.service.spec.ts` | ✅ |
-| RF-07 | `GET /analytics/tco/:vehicleId`: cache 1h stale-while-revalidate, 404 se veículo não encontrado/não pertence ao usuário | `apps/api/src/modules/analytics/analytics.controller.ts` | `apps/api/src/modules/analytics/analytics.controller.spec.ts` | ✅ |
-| RF-08 | `GET /analytics/fuel-trend/:vehicleId`: query param `limit` (default 20, max 100) | `apps/api/src/modules/analytics/analytics.controller.ts`, `packages/validators/src/analytics.schemas.ts` | `apps/api/src/modules/analytics/analytics.controller.spec.ts` | ✅ |
-| RF-09 | `GET /analytics/anomalies`: query params `threshold` (1.5-4.0), `vehicle_id` opcional (filtro aplicado server-side) | `apps/api/src/modules/analytics/analytics.controller.ts`, `apps/api/src/modules/analytics/dto/anomalies.dto.ts`, `packages/validators/src/analytics.schemas.ts` | `apps/api/src/modules/analytics/analytics.controller.spec.ts` | ✅ |
-| RF-10 | `GET /analytics/benchmark`: array vazio se < 2 veículos (empty state é responsabilidade do frontend, a RPC sempre retorna os dados) | `apps/api/src/modules/analytics/analytics.controller.ts` | `apps/api/src/modules/analytics/analytics.controller.spec.ts` | ✅ |
-| RF-11 | `GET /analytics/forecast`: query params `vehicle_id` opcional, `months` (default 3, max 12) | `apps/api/src/modules/analytics/analytics.controller.ts`, `apps/api/src/modules/analytics/dto/forecast.dto.ts` | `apps/api/src/modules/analytics/analytics.controller.spec.ts` | ✅ |
-| RF-12 | `GET /analytics/seasonal`: query param `vehicle_id` opcional | `apps/api/src/modules/analytics/analytics.controller.ts`, `apps/api/src/modules/analytics/dto/seasonal.dto.ts` | `apps/api/src/modules/analytics/analytics.controller.spec.ts` | ✅ |
-| RF-14 | Geração de insights em linguagem natural (eficiência, degradação de consumo, multas, fornecedor, projeção) (R-ANA-05); exposta via `GET /analytics/insights` (endpoint não numerado na spec, necessário para RF-13 consumir os insights) | `apps/api/src/modules/analytics/analytics.service.ts`, `apps/api/src/modules/analytics/analytics.controller.ts`, `apps/api/src/modules/analytics/dto/insights.dto.ts` | `apps/api/src/modules/analytics/analytics.service.spec.ts`, `apps/api/src/modules/analytics/analytics.controller.spec.ts` | ✅ |
-| RF-16 | `GET /analytics/export`: CSV (TCO breakdown + forecast), throttle 10/5min | `apps/api/src/modules/analytics/analytics.controller.ts`, `apps/api/src/modules/analytics/analytics.service.ts`, `apps/api/src/modules/analytics/dto/export-analytics.dto.ts` | `apps/api/src/modules/analytics/analytics.controller.spec.ts`, `apps/api/src/modules/analytics/analytics.service.spec.ts` | ✅ |
+| Req   | Descrição                                                                                                                                                                                                                                | Código                                                                                                                                                                        | Teste                                                                                                                     | Status |
+| ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- | ------ |
+| RF-01 | RPC `calculate_vehicle_tco(vehicle_id)`: TCO com breakdown fixo (fuel/maintenance/fines/recurring/other), cost_per_km, cost_per_month, total_km, period_days (R-ANA-04) — substitui a função homônima divergente já existente            | `supabase/migrations/20260716120000_analytics_tco_fuel_trend.sql`, `apps/api/src/modules/analytics/analytics.service.ts`                                                      | `apps/api/src/modules/analytics/analytics.service.spec.ts`                                                                | ✅     |
+| RF-02 | RPC `fuel_consumption_trend(vehicle_id, limit)`: km/L, price_per_liter, rolling_avg_kpl (janela 5) (R-ANA-01, R-FUEL-02/03) — substitui a função homônima divergente já existente                                                        | `supabase/migrations/20260716120000_analytics_tco_fuel_trend.sql`, `apps/api/src/modules/analytics/analytics.service.ts`                                                      | `apps/api/src/modules/analytics/analytics.service.spec.ts`                                                                | ✅     |
+| RF-03 | RPC `detect_expense_anomalies(threshold)`: Z-Score por (vehicle_id, category) (R-ANA-02)                                                                                                                                                 | `supabase/migrations/20260716130000_analytics_anomalies_benchmark.sql`, `apps/api/src/modules/analytics/analytics.service.ts`                                                 | `apps/api/src/modules/analytics/analytics.service.spec.ts`                                                                | ✅     |
+| RF-04 | RPC `fleet_benchmark()`: ranking de veículos por custo/km (R-ANA-05)                                                                                                                                                                     | `supabase/migrations/20260716130000_analytics_anomalies_benchmark.sql`, `apps/api/src/modules/analytics/analytics.service.ts`                                                 | `apps/api/src/modules/analytics/analytics.service.spec.ts`                                                                | ✅     |
+| RF-05 | RPC `forecast_monthly_costs(vehicle_id?, months_ahead)`: projeção com média móvel 3 meses + banda ±1σ (R-ANA-03)                                                                                                                         | `supabase/migrations/20260716140000_analytics_forecast_seasonal.sql`, `apps/api/src/modules/analytics/analytics.service.ts`                                                   | `apps/api/src/modules/analytics/analytics.service.spec.ts`                                                                | ✅     |
+| RF-06 | RPC `seasonal_expense_heatmap(vehicle_id?)`: heatmap mês x categoria (R-ANA-07)                                                                                                                                                          | `supabase/migrations/20260716140000_analytics_forecast_seasonal.sql`, `apps/api/src/modules/analytics/analytics.service.ts`                                                   | `apps/api/src/modules/analytics/analytics.service.spec.ts`                                                                | ✅     |
+| RF-07 | `GET /analytics/tco/:vehicleId`: cache 1h stale-while-revalidate, 404 se veículo não encontrado/não pertence ao usuário                                                                                                                  | `apps/api/src/modules/analytics/analytics.controller.ts`                                                                                                                      | `apps/api/src/modules/analytics/analytics.controller.spec.ts`                                                             | ✅     |
+| RF-08 | `GET /analytics/fuel-trend/:vehicleId`: query param `limit` (default 20, max 100)                                                                                                                                                        | `apps/api/src/modules/analytics/analytics.controller.ts`, `packages/validators/src/analytics.schemas.ts`                                                                      | `apps/api/src/modules/analytics/analytics.controller.spec.ts`                                                             | ✅     |
+| RF-09 | `GET /analytics/anomalies`: query params `threshold` (1.5-4.0), `vehicle_id` opcional (filtro aplicado server-side)                                                                                                                      | `apps/api/src/modules/analytics/analytics.controller.ts`, `apps/api/src/modules/analytics/dto/anomalies.dto.ts`, `packages/validators/src/analytics.schemas.ts`               | `apps/api/src/modules/analytics/analytics.controller.spec.ts`                                                             | ✅     |
+| RF-10 | `GET /analytics/benchmark`: array vazio se < 2 veículos (empty state é responsabilidade do frontend, a RPC sempre retorna os dados)                                                                                                      | `apps/api/src/modules/analytics/analytics.controller.ts`                                                                                                                      | `apps/api/src/modules/analytics/analytics.controller.spec.ts`                                                             | ✅     |
+| RF-11 | `GET /analytics/forecast`: query params `vehicle_id` opcional, `months` (default 3, max 12)                                                                                                                                              | `apps/api/src/modules/analytics/analytics.controller.ts`, `apps/api/src/modules/analytics/dto/forecast.dto.ts`                                                                | `apps/api/src/modules/analytics/analytics.controller.spec.ts`                                                             | ✅     |
+| RF-12 | `GET /analytics/seasonal`: query param `vehicle_id` opcional                                                                                                                                                                             | `apps/api/src/modules/analytics/analytics.controller.ts`, `apps/api/src/modules/analytics/dto/seasonal.dto.ts`                                                                | `apps/api/src/modules/analytics/analytics.controller.spec.ts`                                                             | ✅     |
+| RF-14 | Geração de insights em linguagem natural (eficiência, degradação de consumo, multas, fornecedor, projeção) (R-ANA-05); exposta via `GET /analytics/insights` (endpoint não numerado na spec, necessário para RF-13 consumir os insights) | `apps/api/src/modules/analytics/analytics.service.ts`, `apps/api/src/modules/analytics/analytics.controller.ts`, `apps/api/src/modules/analytics/dto/insights.dto.ts`         | `apps/api/src/modules/analytics/analytics.service.spec.ts`, `apps/api/src/modules/analytics/analytics.controller.spec.ts` | ✅     |
+| RF-16 | `GET /analytics/export`: CSV (TCO breakdown + forecast), throttle 10/5min                                                                                                                                                                | `apps/api/src/modules/analytics/analytics.controller.ts`, `apps/api/src/modules/analytics/analytics.service.ts`, `apps/api/src/modules/analytics/dto/export-analytics.dto.ts` | `apps/api/src/modules/analytics/analytics.controller.spec.ts`, `apps/api/src/modules/analytics/analytics.service.spec.ts` | ✅     |
 
 ### Frontend — Página `/analytics`
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-13 | Página `/analytics`: KPI cards, TCO (stacked bar + donut), fuel trend (area chart), anomalias (alert cards), benchmark (horizontal bar), forecast (area chart com banda), sazonalidade (heatmap), insights (cards); responsivo mobile/desktop; usa `recharts` (dependência nova, ver spec) | `apps/web/src/app/(app)/analytics/page.tsx` | `apps/web/src/app/(app)/analytics/page.spec.tsx` | ✅ todas as seções (TCO, fuel trend, anomalias, benchmark, forecast, sazonalidade, insights) prontas com seletor de veículo e botão "Exportar" (RF-16) |
-| RF-15 | Empty states por seção com CTA (TCO, combustível, anomalias, benchmark, forecast, sazonalidade, insights) | `apps/web/src/app/(app)/analytics/page.tsx` | `apps/web/src/app/(app)/analytics/page.spec.tsx` | ✅ todas as 7 seções com empty state; benchmark com CTA "Adicionar Veículo →" — demais sem CTA de navegação, conforme redação original de cada linha da RF-15 |
+| Req   | Descrição                                                                                                                                                                                                                                                                                  | Código                                      | Teste                                            | Status                                                                                                                                                             |
+| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------- | ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| RF-13 | Página `/analytics`: KPI cards, TCO (stacked bar + donut), fuel trend (area chart), anomalias (alert cards), benchmark (horizontal bar), forecast (area chart com banda), sazonalidade (heatmap), insights (cards); responsivo mobile/desktop; usa `recharts` (dependência nova, ver spec) | `apps/web/src/app/(app)/analytics/page.tsx` | `apps/web/src/app/(app)/analytics/page.spec.tsx` | ✅ todas as seções (TCO, fuel trend, anomalias, benchmark, forecast, sazonalidade, insights) prontas com seletor de veículo e botão "Exportar" (RF-16)             |
+| RF-15 | Empty states por seção com CTA (TCO, combustível, anomalias, benchmark, forecast, sazonalidade, insights)                                                                                                                                                                                  | `apps/web/src/app/(app)/analytics/page.tsx` | `apps/web/src/app/(app)/analytics/page.spec.tsx` | ✅ todas as 7 seções com empty state; benchmark com CTA "Adicionar Veículo →" — demais sem CTA de navegação, conforme redação original de cada linha da RF-15 |
 
 ### Implementação por Fase
 
-| Fase | Tarefa | Módulos | Status |
-|------|--------|---------|--------|
-| T6.1 — Foundation | RPCs TCO + Fuel Trend, endpoints, página `/analytics` (TCO + fuel chart) | TCO, Fuel Intelligence | ✅ concluído em 2026-07-16 |
-| T6.2 — Intelligence | RPCs de anomalias e benchmark, endpoints, seções na página | Anomalias, Benchmark | ✅ concluído em 2026-07-16 |
-| T6.3 — Prediction | RPCs de forecast e sazonalidade, insights NL, export CSV, empty states completos | Forecast, Seasonal, Insights NL | ✅ concluído em 2026-07-16 |
+| Fase                | Tarefa                                                                           | Módulos                         | Status                     |
+| ------------------- | -------------------------------------------------------------------------------- | ------------------------------- | -------------------------- |
+| T6.1 — Foundation   | RPCs TCO + Fuel Trend, endpoints, página `/analytics` (TCO + fuel chart)         | TCO, Fuel Intelligence          | ✅ concluído em 2026-07-16 |
+| T6.2 — Intelligence | RPCs de anomalias e benchmark, endpoints, seções na página                       | Anomalias, Benchmark            | ✅ concluído em 2026-07-16 |
+| T6.3 — Prediction   | RPCs de forecast e sazonalidade, insights NL, export CSV, empty states completos | Forecast, Seasonal, Insights NL | ✅ concluído em 2026-07-16 |
 
 ---
 
@@ -565,7 +568,7 @@ que o artefato ainda não existe no repositório.
 > para todos os formulários. Status: approved.
 > **2026-07-14:** decisão tomada com o usuário ao retomar T3.9 (ver changelog de
 > SPEC-20260612-001) de **não** construir esta stack agora — react-hook-form/Server
-> Actions/`@nave/ui` form kit ficam para quando a Fase 8 (Design System) evoluir os
+> Actions/`@navestory/ui` form kit ficam para quando a Fase 8 (Design System) evoluir os
 > componentes. `R-FUEL-08` foi implementada sem essa stack, via hook `useFuelCrossCalc`
 > (`apps/web/src/lib/hooks/use-fuel-cross-calc.ts`).
 > **2026-07-14 (T3.10):** R-FORM-05 e R-FORM-07 aplicados retroativamente ao Expense Form
@@ -574,25 +577,25 @@ que o artefato ainda não existe no repositório.
 
 ### Regras de Formulário (R-FORM)
 
-| Requisito | Descrição | Código | Teste | Status |
-|-----------|-----------|--------|-------|--------|
-| R-FORM-01 | `mode: 'onBlur'`, `reValidateMode: 'onChange'` em todos os forms | — | — | ⏳ Depende da stack react-hook-form (Fase 8) |
-| R-FORM-02 | `FormField` + `Controller` pattern; nunca `.register()` direto | — | — | ⏳ Depende da stack react-hook-form (Fase 8) |
-| R-FORM-03 | Valores monetários usam `CurrencyInput` (ATM-style) | `packages/ui/src/components/masked-input.tsx` | `packages/ui/src/components/masked-input.spec.tsx` | ✅ (Expense Form) |
-| R-FORM-04 | Create actions redirect para listagem; update/delete fazem revalidate sem redirect | `apps/web/src/app/expenses/new/page.tsx`, `apps/web/src/app/expenses/[id]/page.tsx` | `apps/web/src/app/expenses/new/page.spec.tsx`, `apps/web/src/app/expenses/[id]/page.spec.tsx` | ✅ (Expense Form) |
-| R-FORM-05 | Dirty check com confirmação (`window.confirm`, adaptado de `AlertDialog`) ao cancelar | `apps/web/src/app/expenses/new/page.tsx`, `apps/web/src/app/expenses/[id]/page.tsx` | `apps/web/src/app/expenses/new/page.spec.tsx`, `apps/web/src/app/expenses/[id]/page.spec.tsx` | ✅ (Expense Form) |
-| R-FORM-06 | Server Actions retornam `ActionResult` padrão | — | — | ⏳ Não aplicável sem Server Actions; API usa `ApiError`/`apiClient` uniformemente |
-| R-FORM-07 | Empty state com CTA quando sem veículos cadastrados | `apps/web/src/app/expenses/new/page.tsx` | `apps/web/src/app/expenses/new/page.spec.tsx` | ✅ (Expense Form) |
+| Requisito | Descrição                                                                             | Código                                                                              | Teste                                                                                         | Status                                                                            |
+| --------- | ------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| R-FORM-01 | `mode: 'onBlur'`, `reValidateMode: 'onChange'` em todos os forms                      | —                                                                                   | —                                                                                             | ⏳ Depende da stack react-hook-form (Fase 8)                                      |
+| R-FORM-02 | `FormField` + `Controller` pattern; nunca `.register()` direto                        | —                                                                                   | —                                                                                             | ⏳ Depende da stack react-hook-form (Fase 8)                                      |
+| R-FORM-03 | Valores monetários usam `CurrencyInput` (ATM-style)                                   | `packages/ui/src/components/masked-input.tsx`                                       | `packages/ui/src/components/masked-input.spec.tsx`                                            | ✅ (Expense Form)                                                                 |
+| R-FORM-04 | Create actions redirect para listagem; update/delete fazem revalidate sem redirect    | `apps/web/src/app/expenses/new/page.tsx`, `apps/web/src/app/expenses/[id]/page.tsx` | `apps/web/src/app/expenses/new/page.spec.tsx`, `apps/web/src/app/expenses/[id]/page.spec.tsx` | ✅ (Expense Form)                                                                 |
+| R-FORM-05 | Dirty check com confirmação (`window.confirm`, adaptado de `AlertDialog`) ao cancelar | `apps/web/src/app/expenses/new/page.tsx`, `apps/web/src/app/expenses/[id]/page.tsx` | `apps/web/src/app/expenses/new/page.spec.tsx`, `apps/web/src/app/expenses/[id]/page.spec.tsx` | ✅ (Expense Form)                                                                 |
+| R-FORM-06 | Server Actions retornam `ActionResult` padrão                                         | —                                                                                   | —                                                                                             | ⏳ Não aplicável sem Server Actions; API usa `ApiError`/`apiClient` uniformemente |
+| R-FORM-07 | Empty state com CTA quando sem veículos cadastrados                                   | `apps/web/src/app/expenses/new/page.tsx`                                            | `apps/web/src/app/expenses/new/page.spec.tsx`                                                 | ✅ (Expense Form)                                                                 |
 
 ### Fases de Implementação
 
-| Fase | Descrição | Status |
-|------|-----------|--------|
-| Fase 1 | Stack padrão (zodResolver, FormField, CurrencyInput) | ⏳ |
-| Fase 2 | `typedResolver` centralizado; formulários migrados | ⏳ |
-| Fase 3 | Dirty check + AlertDialog; feedback sonner | ⏳ |
-| Fase 4 | Auto-draft com preferência R-PREF-02 | ⏳ |
-| Fase 5 | Auditoria de conformidade de todos os forms | ⏳ |
+| Fase   | Descrição                                            | Status |
+| ------ | ---------------------------------------------------- | ------ |
+| Fase 1 | Stack padrão (zodResolver, FormField, CurrencyInput) | ⏳     |
+| Fase 2 | `typedResolver` centralizado; formulários migrados   | ⏳     |
+| Fase 3 | Dirty check + AlertDialog; feedback sonner           | ⏳     |
+| Fase 4 | Auto-draft com preferência R-PREF-02                 | ⏳     |
+| Fase 5 | Auditoria de conformidade de todos os forms          | ⏳     |
 
 ---
 
@@ -601,39 +604,40 @@ que o artefato ainda não existe no repositório.
 > Transforma o rascunho automático do `ExpenseForm` em preferência opcional do usuário,
 > configurável em Preferências, com default desativado. Regras: R-PREF-01, R-PREF-02. Segurança: S2.
 > Status: approved — RF-01/RF-02 concluídos em 2026-07-14 via `PreferencesModule` REST (NestJS)
-> + React Query, não server actions Next.js como originalmente descrito (ver changelog da spec).
-> RF-03 (integração com `ExpenseForm`) ⏳ até a Fase 3 (módulo de despesas ainda não existe).
+>
+> - React Query, não server actions Next.js como originalmente descrito (ver changelog da spec).
+>   RF-03 (integração com `ExpenseForm`) ⏳ até a Fase 3 (módulo de despesas ainda não existe).
 
 ### Banco de dados
 
-| Artefato | Descrição | Regra | Status |
-|----------|-----------|-------|--------|
+| Artefato                                                                | Descrição                                                                                                                                     | Regra     | Status                  |
+| ----------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- | --------- | ----------------------- |
 | `supabase/migrations/20260712171846_grouping_templates_preferences.sql` | Coluna `auto_draft_enabled BOOLEAN NOT NULL DEFAULT FALSE` incluída diretamente no `CREATE TABLE user_preferences` (sem ALTER TABLE separado) | R-PREF-02 | 🔶 Aplicado (sem teste) |
 
 ### Schema / Validação
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-01 | Campo `auto_draft_enabled` no schema; `DEFAULT_AUTO_DRAFT_ENABLED = false` exportado | `packages/validators/src/preferences.schemas.ts` | `packages/validators/src/preferences.schemas.spec.ts` | ✅ |
+| Req   | Descrição                                                                            | Código                                           | Teste                                                 | Status |
+| ----- | ------------------------------------------------------------------------------------ | ------------------------------------------------ | ----------------------------------------------------- | ------ |
+| RF-01 | Campo `auto_draft_enabled` no schema; `DEFAULT_AUTO_DRAFT_ENABLED = false` exportado | `packages/validators/src/preferences.schemas.ts` | `packages/validators/src/preferences.schemas.spec.ts` | ✅     |
 
 ### API REST (backend) — substitui Server Actions da spec original
 
-| Req | Descrição | Código | Regra | Teste | Status |
-|-----|-----------|--------|-------|-------|--------|
-| RF-01.3 | `GET /preferences`: lê `auto_draft_enabled`; retorna `false` como fallback quando ausente | `apps/api/src/modules/preferences/preferences.{controller,service}.ts` | R-PREF-01 | `apps/api/src/modules/preferences/preferences.{controller,service}.spec.ts` | ✅ |
-| RF-01.3 | `PATCH /preferences`: upsert idempotente de `auto_draft_enabled` por `user_id` | `apps/api/src/modules/preferences/preferences.{controller,service}.ts` | R-PREF-02 | `apps/api/src/modules/preferences/preferences.{controller,service}.spec.ts` | ✅ |
+| Req     | Descrição                                                                                 | Código                                                                 | Regra     | Teste                                                                       | Status |
+| ------- | ----------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- | --------- | --------------------------------------------------------------------------- | ------ |
+| RF-01.3 | `GET /preferences`: lê `auto_draft_enabled`; retorna `false` como fallback quando ausente | `apps/api/src/modules/preferences/preferences.{controller,service}.ts` | R-PREF-01 | `apps/api/src/modules/preferences/preferences.{controller,service}.spec.ts` | ✅     |
+| RF-01.3 | `PATCH /preferences`: upsert idempotente de `auto_draft_enabled` por `user_id`            | `apps/api/src/modules/preferences/preferences.{controller,service}.ts` | R-PREF-02 | `apps/api/src/modules/preferences/preferences.{controller,service}.spec.ts` | ✅     |
 
 ### Componente de Preferência
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-02 | Toggle "Rascunho automático" com label e descrição; estado local + `isDirty` + `safeParse` + feedback "Salvando…"/"✓ Salvo" | `apps/web/src/app/settings/preferences/page.tsx` | `apps/web/src/app/settings/preferences/page.spec.tsx` | ✅ |
+| Req   | Descrição                                                                                                                   | Código                                           | Teste                                                 | Status |
+| ----- | --------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------ | ----------------------------------------------------- | ------ |
+| RF-02 | Toggle "Rascunho automático" com label e descrição; estado local + `isDirty` + `safeParse` + feedback "Salvando…"/"✓ Salvo" | `apps/web/src/app/settings/preferences/page.tsx` | `apps/web/src/app/settings/preferences/page.spec.tsx` | ✅     |
 
 ### Integração com ExpenseForm
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-03/RF-04 | `ExpenseForm` recebe prop `autoDraftEnabled`; draft condicionado à essa prop; página de nova despesa carrega a preferência via `GET /preferences` | — | — | ⏳ Depende da Fase 3 (`ExpenseForm` ainda não existe) |
+| Req         | Descrição                                                                                                                                         | Código | Teste | Status                                                |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ----- | ----------------------------------------------------- |
+| RF-03/RF-04 | `ExpenseForm` recebe prop `autoDraftEnabled`; draft condicionado à essa prop; página de nova despesa carrega a preferência via `GET /preferences` | —      | —     | ⏳ Depende da Fase 3 (`ExpenseForm` ainda não existe) |
 
 ---
 
@@ -642,16 +646,16 @@ que o artefato ainda não existe no repositório.
 > Ajustes pontuais no `ExpenseForm`: limite máximo do campo Valor (R-EXP-01), campo Ano
 > editável, "Tanque cheio?" tri-state (R-FUEL-06), limite de 7 dígitos no Odômetro (R-ODO-02)
 > e reorganização do layout. **2026-07-14 (T3.9):** implementado sobre a stack real do projeto
-> (client component + `useState` + TanStack Query), não react-hook-form/`@nave/ui` como a spec
+> (client component + `useState` + TanStack Query), não react-hook-form/`@navestory/ui` como a spec
 > original descreve — ver changelog da spec e de SPEC-20260612-001.
 
-| Requisito | Descrição | Código | Teste | Status |
-|-----------|-----------|--------|-------|--------|
-| RF-01 | `amount` aceita até R$ 100.000.000,00 (R-EXP-01); `CurrencyInput` permite digitar até 11 dígitos | `packages/validators/src/expense.schemas.ts` (já vigente desde T3.0), `packages/ui/src/components/masked-input.tsx` (`CURRENCY_MAX_DIGITS = 11`) | `packages/ui/src/components/masked-input.spec.tsx` | ✅ |
-| RF-02 | Campo "Ano" (4 dígitos) ao lado da Data: editar atualiza apenas o ano; ano inválido faz rollover (comportamento padrão de `Date`) | `apps/web/src/lib/date-year.ts`, `apps/web/src/app/expenses/{new/page.tsx,[id]/page.tsx}` | `apps/web/src/lib/date-year.spec.ts`, `apps/web/src/app/expenses/new/page.spec.tsx` | ✅ |
-| RF-03 | "Tanque cheio?" tri-state (`true`/`false`/`null`, default `null`); botões "Sim"/"Não", clicar no ativo desmarca para `null` (R-FUEL-06) | `apps/web/src/app/expenses/{new/page.tsx,[id]/page.tsx}` | `apps/web/src/app/expenses/new/page.spec.tsx` | ✅ |
-| RF-04 | `odometer_km` limitado a 9.999.999 (7 dígitos) no `expenseBaseSchema` (R-ODO-02); `OdometerInput` limita digitação a 7 dígitos | `packages/validators/src/expense.schemas.ts` (já vigente desde T3.0), `packages/ui/src/components/masked-input.tsx` (`ODOMETER_MAX_DIGITS = 7`) | `packages/validators/src/expense.schemas.spec.ts`, `packages/ui/src/components/masked-input.spec.tsx` | ✅ |
-| RF-05 | Reordenação do layout: Data + Ano lado a lado; Odômetro movido para após Data/Ano quando `category = fuel` | `apps/web/src/app/expenses/{new/page.tsx,[id]/page.tsx}` | — (verificado visualmente na estrutura do JSX) | ✅ |
+| Requisito | Descrição                                                                                                                               | Código                                                                                                                                           | Teste                                                                                                 | Status |
+| --------- | --------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------- | ------ |
+| RF-01     | `amount` aceita até R$ 100.000.000,00 (R-EXP-01); `CurrencyInput` permite digitar até 11 dígitos                                        | `packages/validators/src/expense.schemas.ts` (já vigente desde T3.0), `packages/ui/src/components/masked-input.tsx` (`CURRENCY_MAX_DIGITS = 11`) | `packages/ui/src/components/masked-input.spec.tsx`                                                    | ✅     |
+| RF-02     | Campo "Ano" (4 dígitos) ao lado da Data: editar atualiza apenas o ano; ano inválido faz rollover (comportamento padrão de `Date`)       | `apps/web/src/lib/date-year.ts`, `apps/web/src/app/expenses/{new/page.tsx,[id]/page.tsx}`                                                        | `apps/web/src/lib/date-year.spec.ts`, `apps/web/src/app/expenses/new/page.spec.tsx`                   | ✅     |
+| RF-03     | "Tanque cheio?" tri-state (`true`/`false`/`null`, default `null`); botões "Sim"/"Não", clicar no ativo desmarca para `null` (R-FUEL-06) | `apps/web/src/app/expenses/{new/page.tsx,[id]/page.tsx}`                                                                                         | `apps/web/src/app/expenses/new/page.spec.tsx`                                                         | ✅     |
+| RF-04     | `odometer_km` limitado a 9.999.999 (7 dígitos) no `expenseBaseSchema` (R-ODO-02); `OdometerInput` limita digitação a 7 dígitos          | `packages/validators/src/expense.schemas.ts` (já vigente desde T3.0), `packages/ui/src/components/masked-input.tsx` (`ODOMETER_MAX_DIGITS = 7`)  | `packages/validators/src/expense.schemas.spec.ts`, `packages/ui/src/components/masked-input.spec.tsx` | ✅     |
+| RF-05     | Reordenação do layout: Data + Ano lado a lado; Odômetro movido para após Data/Ano quando `category = fuel`                              | `apps/web/src/app/expenses/{new/page.tsx,[id]/page.tsx}`                                                                                         | — (verificado visualmente na estrutura do JSX)                                                        | ✅     |
 
 ---
 
@@ -661,23 +665,23 @@ que o artefato ainda não existe no repositório.
 > pt-BR, cálculo cruzado de combustível, hard-block de odômetro, mensagens de erro de update).
 > Regras: R-ODO-01 (novo), R-CTX-06 (atualizado). **2026-07-14 (T3.9):** implementado com
 > adaptação de arquitetura — decisão tomada com o usuário (ver changelog da spec): sem
-> react-hook-form/Server Actions/`@nave/ui` form kit (SPEC-20260619-001), que nunca foram
+> react-hook-form/Server Actions/`@navestory/ui` form kit (SPEC-20260619-001), que nunca foram
 > construídos neste projeto. `CurrencyInput`/`OdometerInput` viraram componentes React simples
 > controlados (`value`/`onChange`) em `packages/ui`, consumidos por `useState` puro.
 > RF-02 (reatividade ao contexto global) fica ⏳ — depende do `useDashboardStore`/"Em Foco"
 > da Fase 5 (SPEC-20260602-001), ainda não implementado.
 
-| Requisito | Descrição | Código | Teste | Status |
-|-----------|-----------|--------|-------|--------|
-| RF-01.1 | KPI "Próximos 30 dias" calculado em todas as abas (já não dependia da aba ativa nesta implementação — `kpis`/`upcoming` são carregados incondicionalmente em `/expenses`) | `apps/web/src/app/expenses/page.tsx` | `apps/web/src/app/expenses/page.spec.tsx` | ✅ |
-| RF-01.2 | RPC `get_upcoming_costs` ganha 4ª fonte: despesas manuais (`source_type IS NULL`, `date > current_date`) como `source_type = 'expense'` | `supabase/migrations/20260714220000_upcoming_costs_manual_expenses.sql` | — (RPC; sem harness de teste de banco no projeto) | 🔶 Aplicado |
-| RF-02 | Campo `vehicle_id` do `ExpenseForm` reativo a mudanças do contexto global enquanto `isInherited === true` | — | — | ⏳ Depende da Fase 5 (`useDashboardStore` ainda não existe) |
-| RF-03 | Máscaras pt-BR progressivas (acumulador de dígitos estilo caixa eletrônico) nos campos Valor, Odômetro e Litros | `packages/ui/src/components/masked-input.tsx` (`CurrencyInput`, `OdometerInput`) | `packages/ui/src/components/masked-input.spec.tsx` | ✅ |
-| RF-04 | Hard-block de regressão de odômetro (R-ODO-01): rejeita valor menor que o máximo registrado em data anterior/igual, ou maior que o mínimo registrado em data posterior. Adaptação: opt-in via query param `?strict=true` (enviado só pelo `apps/web`) em vez de "fluxo web" separado — o soft-warning R1 (SPEC-20260601-001) permanece o default para os demais consumidores da API | `apps/api/src/modules/expenses/expenses.service.ts` (`checkOdometerHardBlock`, `findOdometerBoundary`) | `apps/api/src/modules/expenses/expenses.service.spec.ts` | ✅ |
-| RF-05 | Campo "Valor por litro" editável na seção de combustível, com cálculo cruzado entre `amount`, `liters` e `price_per_liter`; algoritmo de pilha de ordem de edição `fuelEditOrder` (R-FUEL-08) | `apps/web/src/lib/hooks/use-fuel-cross-calc.ts` | `apps/web/src/lib/hooks/use-fuel-cross-calc.spec.ts` | ✅ |
-| RF-06.1 | `category = fuel` ⇒ `odometer_km` obrigatório, via `superRefine` compartilhado por `createExpenseInputSchema` e `updateExpenseInputSchema` (o update só valida quando `category` está presente no payload — "já é fuel" sem alterar a categoria depende do estado persistido e não é verificável no schema) | `packages/validators/src/expense.schemas.ts` (`requireOdometerForFuel`) | `packages/validators/src/expense.schemas.spec.ts` | ✅ |
-| RF-06.2 | Edição bloqueada quando `is_readonly === true` — já implementado desde T3.0 (`ForbiddenException`), reafirmado sem mudança de código | `apps/api/src/modules/expenses/expenses.service.ts` (`update`) | `apps/api/src/modules/expenses/expenses.service.spec.ts` | ✅ |
-| RF-06.3 | Mensagem de erro do hard-block exibida inline no formulário via `ApiError.message` (substitui a diferenciação `PGRST116`/genérico da spec original, que pressupõe Server Actions) | `apps/web/src/app/expenses/[id]/page.tsx` (`onError` de `updateMutation`) | `apps/web/src/app/expenses/[id]/page.spec.tsx` | ✅ |
+| Requisito | Descrição                                                                                                                                                                                                                                                                                                                                                                           | Código                                                                                                 | Teste                                                    | Status                                                      |
+| --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ | -------------------------------------------------------- | ----------------------------------------------------------- |
+| RF-01.1   | KPI "Próximos 30 dias" calculado em todas as abas (já não dependia da aba ativa nesta implementação — `kpis`/`upcoming` são carregados incondicionalmente em `/expenses`)                                                                                                                                                                                                           | `apps/web/src/app/expenses/page.tsx`                                                                   | `apps/web/src/app/expenses/page.spec.tsx`                | ✅                                                          |
+| RF-01.2   | RPC `get_upcoming_costs` ganha 4ª fonte: despesas manuais (`source_type IS NULL`, `date > current_date`) como `source_type = 'expense'`                                                                                                                                                                                                                                             | `supabase/migrations/20260714220000_upcoming_costs_manual_expenses.sql`                                | — (RPC; sem harness de teste de banco no projeto)        | 🔶 Aplicado                                                 |
+| RF-02     | Campo `vehicle_id` do `ExpenseForm` reativo a mudanças do contexto global enquanto `isInherited === true`                                                                                                                                                                                                                                                                           | —                                                                                                      | —                                                        | ⏳ Depende da Fase 5 (`useDashboardStore` ainda não existe) |
+| RF-03     | Máscaras pt-BR progressivas (acumulador de dígitos estilo caixa eletrônico) nos campos Valor, Odômetro e Litros                                                                                                                                                                                                                                                                     | `packages/ui/src/components/masked-input.tsx` (`CurrencyInput`, `OdometerInput`)                       | `packages/ui/src/components/masked-input.spec.tsx`       | ✅                                                          |
+| RF-04     | Hard-block de regressão de odômetro (R-ODO-01): rejeita valor menor que o máximo registrado em data anterior/igual, ou maior que o mínimo registrado em data posterior. Adaptação: opt-in via query param `?strict=true` (enviado só pelo `apps/web`) em vez de "fluxo web" separado — o soft-warning R1 (SPEC-20260601-001) permanece o default para os demais consumidores da API | `apps/api/src/modules/expenses/expenses.service.ts` (`checkOdometerHardBlock`, `findOdometerBoundary`) | `apps/api/src/modules/expenses/expenses.service.spec.ts` | ✅                                                          |
+| RF-05     | Campo "Valor por litro" editável na seção de combustível, com cálculo cruzado entre `amount`, `liters` e `price_per_liter`; algoritmo de pilha de ordem de edição `fuelEditOrder` (R-FUEL-08)                                                                                                                                                                                       | `apps/web/src/lib/hooks/use-fuel-cross-calc.ts`                                                        | `apps/web/src/lib/hooks/use-fuel-cross-calc.spec.ts`     | ✅                                                          |
+| RF-06.1   | `category = fuel` ⇒ `odometer_km` obrigatório, via `superRefine` compartilhado por `createExpenseInputSchema` e `updateExpenseInputSchema` (o update só valida quando `category` está presente no payload — "já é fuel" sem alterar a categoria depende do estado persistido e não é verificável no schema)                                                                         | `packages/validators/src/expense.schemas.ts` (`requireOdometerForFuel`)                                | `packages/validators/src/expense.schemas.spec.ts`        | ✅                                                          |
+| RF-06.2   | Edição bloqueada quando `is_readonly === true` — já implementado desde T3.0 (`ForbiddenException`), reafirmado sem mudança de código                                                                                                                                                                                                                                                | `apps/api/src/modules/expenses/expenses.service.ts` (`update`)                                         | `apps/api/src/modules/expenses/expenses.service.spec.ts` | ✅                                                          |
+| RF-06.3   | Mensagem de erro do hard-block exibida inline no formulário via `ApiError.message` (substitui a diferenciação `PGRST116`/genérico da spec original, que pressupõe Server Actions)                                                                                                                                                                                                   | `apps/web/src/app/expenses/[id]/page.tsx` (`onError` de `updateMutation`)                              | `apps/web/src/app/expenses/[id]/page.spec.tsx`           | ✅                                                          |
 
 ---
 
@@ -689,11 +693,11 @@ que o artefato ainda não existe no repositório.
 > `get_upcoming_costs(p_vehicle_id uuid default null, p_horizon_days integer default 30)`,
 > divergindo do `(p_user_id UUID)` planejado na spec — filtra por `auth.uid()` internamente.
 
-| Requisito | Descrição | Código | Teste | Status |
-|-----------|-----------|--------|-------|--------|
-| RF-01 | RPC `get_upcoming_costs(p_vehicle_id, p_horizon_days)`: unifica maintenance, fines, recurring_costs | `supabase/migrations/20260712172020_analytics_functions.sql` | — | 🔶 |
-| RF-02 | Tab "Próximas" em `/expenses` | — | — | ⏳ |
-| RF-03 | Tab "Em atraso" com filtro `due_date < hoje AND paid_at IS NULL` | — | — | ⏳ |
+| Requisito | Descrição                                                                                           | Código                                                       | Teste | Status |
+| --------- | --------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ | ----- | ------ |
+| RF-01     | RPC `get_upcoming_costs(p_vehicle_id, p_horizon_days)`: unifica maintenance, fines, recurring_costs | `supabase/migrations/20260712172020_analytics_functions.sql` | —     | 🔶     |
+| RF-02     | Tab "Próximas" em `/expenses`                                                                       | —                                                            | —     | ⏳     |
+| RF-03     | Tab "Em atraso" com filtro `due_date < hoje AND paid_at IS NULL`                                    | —                                                            | —     | ⏳     |
 
 ---
 
@@ -701,11 +705,11 @@ que o artefato ainda não existe no repositório.
 
 > KPI cards financeiros no topo de `/expenses`. Regras: R-LED-01. Nenhum código implementado.
 
-| Requisito | Descrição | Código | Teste | Status |
-|-----------|-----------|--------|-------|--------|
-| RF-01 | KPI "Total este mês" com delta vs mês anterior | — | — | ⏳ |
-| RF-02 | KPI "Próximos 30 dias" com soma de upcoming costs | — | — | ⏳ |
-| RF-03 | KPI "Total acumulado" com histórico | — | — | ⏳ |
+| Requisito | Descrição                                         | Código | Teste | Status |
+| --------- | ------------------------------------------------- | ------ | ----- | ------ |
+| RF-01     | KPI "Total este mês" com delta vs mês anterior    | —      | —     | ⏳     |
+| RF-02     | KPI "Próximos 30 dias" com soma de upcoming costs | —      | —     | ⏳     |
+| RF-03     | KPI "Total acumulado" com histórico               | —      | —     | ⏳     |
 
 ---
 
@@ -713,10 +717,10 @@ que o artefato ainda não existe no repositório.
 
 > In-app badge no sidebar para custos recorrentes vencendo em 7 dias. Nenhum código implementado.
 
-| Requisito | Descrição | Código | Teste | Status |
-|-----------|-----------|--------|-------|--------|
-| RF-01 | Badge numérico no item "Despesas" do sidebar | — | — | ⏳ |
-| RF-02 | Widget "Próximos 7 dias" no dashboard | — | — | ⏳ |
+| Requisito | Descrição                                    | Código | Teste | Status |
+| --------- | -------------------------------------------- | ------ | ----- | ------ |
+| RF-01     | Badge numérico no item "Despesas" do sidebar | —      | —     | ⏳     |
+| RF-02     | Widget "Próximos 7 dias" no dashboard        | —      | —     | ⏳     |
 
 ---
 
@@ -728,21 +732,21 @@ que o artefato ainda não existe no repositório.
 
 ### Banco de dados
 
-| Artefato | Descrição | Regra | Status |
-|----------|-----------|-------|--------|
+| Artefato                                                                  | Descrição                                                                                                                                                                                                                           | Regra    | Status                  |
+| ------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ----------------------- |
 | `supabase/migrations/20260712171910_recurring_costs_and_ledger_index.sql` | Tabela `vehicle_recurring_costs` (id, user_id FK, vehicle_id FK, cost_type enum, year, amount, due_date, paid_at, expense_id FK nullable, notes, soft-delete); constraint `uq_vehicle_recurring_cost (vehicle_id, cost_type, year)` | R-REC-01 | 🔶 Aplicado (sem teste) |
-| RLS `recurring_costs_*` | `supabase/migrations/20260712172047_rls_policies.sql` — SELECT/INSERT/UPDATE por `user_id`; sem hard delete | R-REC-01 | 🔶 |
+| RLS `recurring_costs_*`                                                   | `supabase/migrations/20260712172047_rls_policies.sql` — SELECT/INSERT/UPDATE por `user_id`; sem hard delete                                                                                                                         | R-REC-01 | 🔶                      |
 
 ### Backend — RecurringCostsModule
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-01 | `GET /recurring-costs`: lista com filtros `vehicle_id`, `year`, `cost_type`, `paid` | — | — | ⏳ |
-| RF-02 | `POST /recurring-costs`: cria custo recorrente; verifica ownership; rejeita duplicata `(vehicle_id, cost_type, year)` com 409 (R-REC-01) | — | — | ⏳ |
-| RF-02 | `POST /recurring-costs`: quando `paid_at` informado, cria expense vinculada imediatamente (R-LED-05) | — | — | ⏳ |
-| RF-03 | `PATCH /recurring-costs/:id`: ao definir `paid_at` pela primeira vez, cria expense vinculada (R-LED-05) | — | — | ⏳ |
-| RF-04 | `DELETE /recurring-costs/:id`: soft-deleta expense vinculada antes de remover o custo recorrente (R-HUB-01) | — | — | ⏳ |
-| RF-05 | `getRecurringCostCategory(cost_type)`: mapeia `ipva|crlv` → `tax`, `insurance` → `insurance`, `other` → `other` | — | — | ⏳ |
+| Req   | Descrição                                                                                                                                | Código                                                | Teste | Status |
+| ----- | ---------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------- | ----- | ------ | --- |
+| RF-01 | `GET /recurring-costs`: lista com filtros `vehicle_id`, `year`, `cost_type`, `paid`                                                      | —                                                     | —     | ⏳     |
+| RF-02 | `POST /recurring-costs`: cria custo recorrente; verifica ownership; rejeita duplicata `(vehicle_id, cost_type, year)` com 409 (R-REC-01) | —                                                     | —     | ⏳     |
+| RF-02 | `POST /recurring-costs`: quando `paid_at` informado, cria expense vinculada imediatamente (R-LED-05)                                     | —                                                     | —     | ⏳     |
+| RF-03 | `PATCH /recurring-costs/:id`: ao definir `paid_at` pela primeira vez, cria expense vinculada (R-LED-05)                                  | —                                                     | —     | ⏳     |
+| RF-04 | `DELETE /recurring-costs/:id`: soft-deleta expense vinculada antes de remover o custo recorrente (R-HUB-01)                              | —                                                     | —     | ⏳     |
+| RF-05 | `getRecurringCostCategory(cost_type)`: mapeia `ipva                                                                                      | crlv`→`tax`, `insurance`→`insurance`, `other`→`other` | —     | —      | ⏳  |
 
 ---
 
@@ -751,10 +755,10 @@ que o artefato ainda não existe no repositório.
 > Quarta tab em `/expenses` com agrupamento accordion por veículo e subtotais.
 > Nenhum código implementado.
 
-| Requisito | Descrição | Código | Teste | Status |
-|-----------|-----------|--------|-------|--------|
-| RF-01 | Tab "Por veículo" com URL param `?tab=por-veiculo` | — | — | ⏳ |
-| RF-02 | Accordion por veículo com subtotal formatado em BRL | — | — | ⏳ |
+| Requisito | Descrição                                           | Código | Teste | Status |
+| --------- | --------------------------------------------------- | ------ | ----- | ------ |
+| RF-01     | Tab "Por veículo" com URL param `?tab=por-veiculo`  | —      | —     | ⏳     |
+| RF-02     | Accordion por veículo com subtotal formatado em BRL | —      | —     | ⏳     |
 
 ---
 
@@ -762,17 +766,17 @@ que o artefato ainda não existe no repositório.
 
 > CSV unificado de todas as origens financeiras. Regras: R5, R-LED-01. Nenhum código implementado.
 
-| Requisito | Descrição | Código | Teste | Status |
-|-----------|-----------|--------|-------|--------|
-| RF-01 | Botão "Exportar CSV" com período e filtro por veículo | — | — | ⏳ |
-| RF-02 | CSV inclui coluna `Origem` (Manual/Manutenção/Multa/Custo recorrente) | — | — | ⏳ |
-| RF-03 | BOM UTF-8 para compatibilidade Excel pt-BR | — | — | ⏳ |
+| Requisito | Descrição                                                             | Código | Teste | Status |
+| --------- | --------------------------------------------------------------------- | ------ | ----- | ------ |
+| RF-01     | Botão "Exportar CSV" com período e filtro por veículo                 | —      | —     | ⏳     |
+| RF-02     | CSV inclui coluna `Origem` (Manual/Manutenção/Multa/Custo recorrente) | —      | —     | ⏳     |
+| RF-03     | BOM UTF-8 para compatibilidade Excel pt-BR                            | —      | —     | ⏳     |
 
 ---
 
 ## EPIC-FIN-001 — Ledger Financeiro Unificado (ADR-006)
 
-> **Objetivo:** Consolidar todas as origens de despesas financeiras do Nave (manuais, multas,
+> **Objetivo:** Consolidar todas as origens de despesas financeiras do navestory (manuais, multas,
 > manutenções concluídas e custos recorrentes anuais) em um único ledger polimórfico na tabela
 > `expenses`, via padrão `source_type + source_id + is_readonly`. A tabela `expenses` passa a
 > ser a única fonte de verdade para o hub financeiro — sem UNION VIEW nem tabela de junção
@@ -785,15 +789,16 @@ que o artefato ainda não existe no repositório.
 >
 > **Specs do épico (por ordem de dependência):**
 >
-> | Spec | Título | Status |
-> |------|--------|--------|
-> | [SPEC-20260607-001](#spec-20260607-001--finesmodule-approved) | FinesModule — migration do ledger + `createFromSource`/`softDeleteBySource` | approved |
-> | [SPEC-20260608-001](#spec-20260608-001--upcoming-costs-próximas-despesas-approved) | Upcoming Costs: Próximas Despesas | approved |
-> | [SPEC-20260608-002](#spec-20260608-002--expenses-kpis-central-financeira-approved) | Expenses KPIs: Central Financeira | approved |
-> | [SPEC-20260608-003](#spec-20260608-003--recurring-costs-alerts-alertas-de-custos-recorrentes-approved) | Recurring Costs Alerts: Alertas de Custos Recorrentes | approved |
-> | [SPEC-20260609-001](#spec-20260609-001--crud-de-custos-recorrentes-approved) | CRUD de Custos Recorrentes | approved |
+> | Spec                                                                                                   | Título                                                                      | Status   |
+> | ------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------- | -------- |
+> | [SPEC-20260607-001](#spec-20260607-001--finesmodule-approved)                                          | FinesModule — migration do ledger + `createFromSource`/`softDeleteBySource` | approved |
+> | [SPEC-20260608-001](#spec-20260608-001--upcoming-costs-próximas-despesas-approved)                     | Upcoming Costs: Próximas Despesas                                           | approved |
+> | [SPEC-20260608-002](#spec-20260608-002--expenses-kpis-central-financeira-approved)                     | Expenses KPIs: Central Financeira                                           | approved |
+> | [SPEC-20260608-003](#spec-20260608-003--recurring-costs-alerts-alertas-de-custos-recorrentes-approved) | Recurring Costs Alerts: Alertas de Custos Recorrentes                       | approved |
+> | [SPEC-20260609-001](#spec-20260609-001--crud-de-custos-recorrentes-approved)                           | CRUD de Custos Recorrentes                                                  | approved |
 >
 > **Artefatos transversais do épico:**
+>
 > - Migration base: `supabase/migrations/20260608000000_unified_ledger.sql` (DDL: colunas polimórficas em `expenses`, tabela `vehicle_recurring_costs`, `uq_expenses_source`)
 > - Migration RPC: `supabase/migrations/20260608000001_rpc_upcoming_costs.sql`
 > - Ponto de escrita centralizado: `ExpensesService.createFromSource()` e `ExpensesService.softDeleteBySource()`
@@ -813,48 +818,48 @@ que o artefato ainda não existe no repositório.
 
 ### Banco de dados
 
-| Artefato | Descrição | Regra | Status |
-|----------|-----------|-------|--------|
-| `supabase/migrations/20260712171830_core_tables.sql` | Campos `source_type text`, `source_id uuid`, `is_readonly boolean` em `expenses`; constraint `expenses_source_coherence_check` | R-LED-04, R-HUB-02 | 🔶 Aplicado (sem teste) |
+| Artefato                                                                  | Descrição                                                                                                                          | Regra              | Status                  |
+| ------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- | ------------------ | ----------------------- |
+| `supabase/migrations/20260712171830_core_tables.sql`                      | Campos `source_type text`, `source_id uuid`, `is_readonly boolean` em `expenses`; constraint `expenses_source_coherence_check`     | R-LED-04, R-HUB-02 | 🔶 Aplicado (sem teste) |
 | `supabase/migrations/20260712171910_recurring_costs_and_ledger_index.sql` | Tabela `vehicle_recurring_costs` + índice único `uq_expenses_source ON expenses (source_type, source_id) WHERE deleted_at IS NULL` | R-HUB-02, R-REC-01 | 🔶 Aplicado (sem teste) |
-| `supabase/migrations/20260712172020_analytics_functions.sql` | Função `get_upcoming_costs(p_vehicle_id, p_horizon_days)` — unifica maintenance, fines, recurring_costs | R-REC-02 | 🔶 Aplicado (sem teste) |
+| `supabase/migrations/20260712172020_analytics_functions.sql`              | Função `get_upcoming_costs(p_vehicle_id, p_horizon_days)` — unifica maintenance, fines, recurring_costs                            | R-REC-02           | 🔶 Aplicado (sem teste) |
 
 ### Backend — FinesModule
 
-| Req | Descrição | Código | Regra | Teste | Status |
-|-----|-----------|--------|-------|-------|--------|
-| RF-01 | `POST /fines`: cria multa, valida ownership do veículo, cria expense vinculada via `createFromSource` (R-LED-02, R-HUB-02) | — | R-LED-02 | — | ⏳ |
-| RF-02 | `amount_with_discount` não pode ser maior que `amount`; retorna 400 | — | — | — | ⏳ |
-| RF-03 | `POST /fines`: usa `amount_with_discount` (quando disponível) como valor da expense vinculada (R-LED-02) | — | R-LED-02 | — | ⏳ |
-| RF-04 | `GET /fines`: lista multas do usuário com filtro opcional por `status` | — | S1 | — | ⏳ |
-| RF-05 | `PATCH /fines/:id`: grafo de transições `pending → [paid, appealing, cancelled]` | — | — | — | ⏳ |
-| RF-05 | Transição para `cancelled`: soft-deleta expense vinculada via `softDeleteBySource` (R-LED-03) | — | R-LED-03 | — | ⏳ |
-| RF-06 | `DELETE /fines/:id`: soft-delete + `softDeleteBySource('fine', id)` (R-HUB-01) | — | R-HUB-01 | — | ⏳ |
-| RF-07 | `GET /fines/vehicle/:vehicleId`: lista multas de um veículo específico; verifica ownership | — | S1 | — | ⏳ |
+| Req   | Descrição                                                                                                                  | Código | Regra    | Teste | Status |
+| ----- | -------------------------------------------------------------------------------------------------------------------------- | ------ | -------- | ----- | ------ |
+| RF-01 | `POST /fines`: cria multa, valida ownership do veículo, cria expense vinculada via `createFromSource` (R-LED-02, R-HUB-02) | —      | R-LED-02 | —     | ⏳     |
+| RF-02 | `amount_with_discount` não pode ser maior que `amount`; retorna 400                                                        | —      | —        | —     | ⏳     |
+| RF-03 | `POST /fines`: usa `amount_with_discount` (quando disponível) como valor da expense vinculada (R-LED-02)                   | —      | R-LED-02 | —     | ⏳     |
+| RF-04 | `GET /fines`: lista multas do usuário com filtro opcional por `status`                                                     | —      | S1       | —     | ⏳     |
+| RF-05 | `PATCH /fines/:id`: grafo de transições `pending → [paid, appealing, cancelled]`                                           | —      | —        | —     | ⏳     |
+| RF-05 | Transição para `cancelled`: soft-deleta expense vinculada via `softDeleteBySource` (R-LED-03)                              | —      | R-LED-03 | —     | ⏳     |
+| RF-06 | `DELETE /fines/:id`: soft-delete + `softDeleteBySource('fine', id)` (R-HUB-01)                                             | —      | R-HUB-01 | —     | ⏳     |
+| RF-07 | `GET /fines/vehicle/:vehicleId`: lista multas de um veículo específico; verifica ownership                                 | —      | S1       | —     | ⏳     |
 
 ### Backend — ExpensesService (extensão para ledger)
 
-| Req | Descrição | Código | Regra | Teste | Status |
-|-----|-----------|--------|-------|-------|--------|
-| R-LED-01 | `PATCH /expenses/:id` e `DELETE /expenses/:id`: retornam 403 quando `is_readonly = true` | — | R-LED-01 | — | ⏳ |
-| R-LED-02 | `createFromSource(dto)`: persiste com `is_readonly = true`; respeita `uq_expenses_source` (idempotente) | — | R-LED-02, R-LED-05 | — | ⏳ |
-| R-LED-03 | `softDeleteBySource(sourceType, sourceId)`: encontra expense ativa e aplica soft-delete (R-HUB-01) | — | R-LED-03 | — | ⏳ |
+| Req      | Descrição                                                                                               | Código | Regra              | Teste | Status |
+| -------- | ------------------------------------------------------------------------------------------------------- | ------ | ------------------ | ----- | ------ |
+| R-LED-01 | `PATCH /expenses/:id` e `DELETE /expenses/:id`: retornam 403 quando `is_readonly = true`                | —      | R-LED-01           | —     | ⏳     |
+| R-LED-02 | `createFromSource(dto)`: persiste com `is_readonly = true`; respeita `uq_expenses_source` (idempotente) | —      | R-LED-02, R-LED-05 | —     | ⏳     |
+| R-LED-03 | `softDeleteBySource(sourceType, sourceId)`: encontra expense ativa e aplica soft-delete (R-HUB-01)      | —      | R-LED-03           | —     | ⏳     |
 
 ### Frontend — Tela de Multas
 
-| Req | Descrição | Código | Regra | Teste | Status |
-|-----|-----------|--------|-------|-------|--------|
-| — | `/fines/page.tsx`: listagem de multas com KPIs e ações por linha | — | S1, R-LED-01 | — | ⏳ |
-| — | `/fines/new/page.tsx`: formulário de criação de multa | — | S1 | — | ⏳ |
+| Req | Descrição                                                        | Código | Regra        | Teste | Status |
+| --- | ---------------------------------------------------------------- | ------ | ------------ | ----- | ------ |
+| —   | `/fines/page.tsx`: listagem de multas com KPIs e ações por linha | —      | S1, R-LED-01 | —     | ⏳     |
+| —   | `/fines/new/page.tsx`: formulário de criação de multa            | —      | S1           | —     | ⏳     |
 
 ### Frontend — Central de Despesas (reestruturação planejada)
 
-| Req | Descrição | Código | Regra | Teste | Status |
-|-----|-----------|--------|-------|-------|--------|
-| R-LED-01 | `ExpenseRowActions`: ações de edição e exclusão ocultadas quando `is_readonly = true` | — | R-LED-01 | — | ⏳ |
-| — | `LinkedExpenseDrawer`: drawer que exibe informações da origem da despesa | — | R-LED-01 | — | ⏳ |
-| — | `/expenses/page.tsx`: reestruturado com tabs, KPIs financeiros, badges `readonly`, filtro por `source_type` | — | R-LED-01 | — | ⏳ |
-| — | `ExportCsvButton`: CSV consolidado inclui campo `source_type` | — | — | — | ⏳ |
+| Req      | Descrição                                                                                                   | Código | Regra    | Teste | Status |
+| -------- | ----------------------------------------------------------------------------------------------------------- | ------ | -------- | ----- | ------ |
+| R-LED-01 | `ExpenseRowActions`: ações de edição e exclusão ocultadas quando `is_readonly = true`                       | —      | R-LED-01 | —     | ⏳     |
+| —        | `LinkedExpenseDrawer`: drawer que exibe informações da origem da despesa                                    | —      | R-LED-01 | —     | ⏳     |
+| —        | `/expenses/page.tsx`: reestruturado com tabs, KPIs financeiros, badges `readonly`, filtro por `source_type` | —      | R-LED-01 | —     | ⏳     |
+| —        | `ExportCsvButton`: CSV consolidado inclui campo `source_type`                                               | —      | —        | —     | ⏳     |
 
 ---
 
@@ -868,13 +873,13 @@ que o artefato ainda não existe no repositório.
 > e ao fluxo de templates; UX de autocomplete "estilo Popover" fica ⏳ (T3.9/T3.10, junto do
 > `ExpenseForm` reescrito com react-hook-form — ver R-FORM-01/02).
 
-| Req | Descrição | Código | Regra | Teste | Status |
-|-----|-----------|--------|-------|-------|--------|
-| RF-01 | Aceitar `supplier` no payload da API (backend) — validação ≤ 100 chars | `packages/validators/src/expense.schemas.ts` (`expenseBaseSchema`) | R-FUEL-04 | — | ✅ |
-| RF-02 | `GET /expenses/suppliers` — busca 200 registros com `supplier IS NOT NULL`, deduplica case-insensitive em JS, retorna top 10 | `apps/api/src/modules/expenses/expenses.service.ts` (`listSuppliers`), `.controller.ts` | R-FUEL-04 | `expenses.service.spec.ts`, `.controller.spec.ts` | ✅ |
-| RF-02 | Campo `supplier` com `<datalist>` alimentado por `GET /expenses/suppliers` nos formulários `new`/`[id]` | `apps/web/src/app/expenses/new/page.tsx`, `[id]/page.tsx` | R-FUEL-04 | — | 🔶 sem teste dedicado de UI; autocomplete via Popover fica ⏳ (T3.9) |
-| RF-03 | Sem tabela separada — abordagem de query direta em `expenses` | `expenses.service.ts` (`listSuppliers`) | — | — | ✅ |
-| RF-04 | Aceitar texto livre sem match no histórico | `expenseBaseSchema` | — | — | ✅ |
+| Req   | Descrição                                                                                                                    | Código                                                                                  | Regra     | Teste                                             | Status                                                               |
+| ----- | ---------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- | --------- | ------------------------------------------------- | -------------------------------------------------------------------- |
+| RF-01 | Aceitar `supplier` no payload da API (backend) — validação ≤ 100 chars                                                       | `packages/validators/src/expense.schemas.ts` (`expenseBaseSchema`)                      | R-FUEL-04 | —                                                 | ✅                                                                   |
+| RF-02 | `GET /expenses/suppliers` — busca 200 registros com `supplier IS NOT NULL`, deduplica case-insensitive em JS, retorna top 10 | `apps/api/src/modules/expenses/expenses.service.ts` (`listSuppliers`), `.controller.ts` | R-FUEL-04 | `expenses.service.spec.ts`, `.controller.spec.ts` | ✅                                                                   |
+| RF-02 | Campo `supplier` com `<datalist>` alimentado por `GET /expenses/suppliers` nos formulários `new`/`[id]`                      | `apps/web/src/app/expenses/new/page.tsx`, `[id]/page.tsx`                               | R-FUEL-04 | —                                                 | 🔶 sem teste dedicado de UI; autocomplete via Popover fica ⏳ (T3.9) |
+| RF-03 | Sem tabela separada — abordagem de query direta em `expenses`                                                                | `expenses.service.ts` (`listSuppliers`)                                                 | —         | —                                                 | ✅                                                                   |
+| RF-04 | Aceitar texto livre sem match no histórico                                                                                   | `expenseBaseSchema`                                                                     | —         | —                                                 | ✅                                                                   |
 
 ---
 
@@ -892,17 +897,17 @@ que o artefato ainda não existe no repositório.
 > RF-07/RF-08 (cálculo em tempo real no form) ficam ⏳, escopo de T3.9/T3.10 (reescrita do
 > `ExpenseForm` com react-hook-form).
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-01 | Persistir `fuel_type` no payload da API (backend) — validação contra enum `FuelType` | `packages/validators/src/expense.schemas.ts` | — | ✅ |
-| RF-02 | Persistir `full_tank` (boolean nullable) no payload da API (backend) | `expense.schemas.ts` | — | ✅ |
-| RF-03 | Retornar `computed.km_per_liter` e `computed.price_per_liter` na resposta da API | `apps/api/src/modules/expenses/expenses.service.ts` (`computeFuelMetrics`) | `expenses.service.spec.ts` | ✅ |
-| RF-04 | `getLastFuelTypeAction(vehicleId)`: consulta último `fuel_type` selecionado para pré-preencher o campo (R-FUEL-01) | — | — | ⏳ (T3.9, ver R-FUEL-07) |
-| RF-04 | `ExpenseForm`: `useEffect` de pré-preenchimento de `fuel_type` dispara em modo criação | — | — | ⏳ (T3.9) |
-| RF-05 | Default de `full_tank = true` no formulário (toggle "Abastecimento parcial?") | `apps/web/src/app/expenses/new/page.tsx`, `[id]/page.tsx` (checkbox `partialTank`) | — | 🔶 implementado como decidido na spec original; superseded por R-FUEL-06 (tri-state) em T3.9 |
-| RF-06 | `ExpenseForm`: hint de odômetro exibe delta quando valor digitado supera o último registrado (R4) | — | — | ⏳ (T3.9) |
-| RF-07 | `ExpenseForm`: exibe mensagem "Consumo aparece após o 2º abastecimento completo" (R-FUEL-02, R-FUEL-03) | — | — | ⏳ (T3.9) |
-| RF-08 | Exibir preço/litro em tempo real no formulário | — | — | ⏳ (T3.9) |
+| Req   | Descrição                                                                                                          | Código                                                                             | Teste                      | Status                                                                                       |
+| ----- | ------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------- | -------------------------- | -------------------------------------------------------------------------------------------- |
+| RF-01 | Persistir `fuel_type` no payload da API (backend) — validação contra enum `FuelType`                               | `packages/validators/src/expense.schemas.ts`                                       | —                          | ✅                                                                                           |
+| RF-02 | Persistir `full_tank` (boolean nullable) no payload da API (backend)                                               | `expense.schemas.ts`                                                               | —                          | ✅                                                                                           |
+| RF-03 | Retornar `computed.km_per_liter` e `computed.price_per_liter` na resposta da API                                   | `apps/api/src/modules/expenses/expenses.service.ts` (`computeFuelMetrics`)         | `expenses.service.spec.ts` | ✅                                                                                           |
+| RF-04 | `getLastFuelTypeAction(vehicleId)`: consulta último `fuel_type` selecionado para pré-preencher o campo (R-FUEL-01) | —                                                                                  | —                          | ⏳ (T3.9, ver R-FUEL-07)                                                                     |
+| RF-04 | `ExpenseForm`: `useEffect` de pré-preenchimento de `fuel_type` dispara em modo criação                             | —                                                                                  | —                          | ⏳ (T3.9)                                                                                    |
+| RF-05 | Default de `full_tank = true` no formulário (toggle "Abastecimento parcial?")                                      | `apps/web/src/app/expenses/new/page.tsx`, `[id]/page.tsx` (checkbox `partialTank`) | —                          | 🔶 implementado como decidido na spec original; superseded por R-FUEL-06 (tri-state) em T3.9 |
+| RF-06 | `ExpenseForm`: hint de odômetro exibe delta quando valor digitado supera o último registrado (R4)                  | —                                                                                  | —                          | ⏳ (T3.9)                                                                                    |
+| RF-07 | `ExpenseForm`: exibe mensagem "Consumo aparece após o 2º abastecimento completo" (R-FUEL-02, R-FUEL-03)            | —                                                                                  | —                          | ⏳ (T3.9)                                                                                    |
+| RF-08 | Exibir preço/litro em tempo real no formulário                                                                     | —                                                                                  | —                          | ⏳ (T3.9)                                                                                    |
 
 ---
 
@@ -917,11 +922,11 @@ que o artefato ainda não existe no repositório.
 
 ### Banco de dados
 
-| Artefato | Descrição | Regra | Status |
-|----------|-----------|-------|--------|
+| Artefato                                                                | Descrição                                                                                                                                                              | Regra                | Status                  |
+| ----------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------- | ----------------------- |
 | `supabase/migrations/20260712171846_grouping_templates_preferences.sql` | `CREATE TABLE public.user_preferences` com colunas `user_id` (PK FK), `vehicle_chip_fields text[]`, `auto_draft_enabled boolean`, `updated_at`; FK `ON DELETE CASCADE` | R-PREF-01, R-DISP-03 | 🔶 Aplicado (sem teste) |
-| RLS `user_preferences_owner` (policy `for all`) | `supabase/migrations/20260712172047_rls_policies.sql` — política unificada `FOR ALL USING/WITH CHECK (auth.uid() = user_id)` | S2 | 🔶 |
-| Sem policy de DELETE explícita | Exclusão somente via cascade de `profiles.id` (C1 — LGPD); a policy `for all` não inclui hard delete direto pela app | S2, C1 | 🔶 |
+| RLS `user_preferences_owner` (policy `for all`)                         | `supabase/migrations/20260712172047_rls_policies.sql` — política unificada `FOR ALL USING/WITH CHECK (auth.uid() = user_id)`                                           | S2                   | 🔶                      |
+| Sem policy de DELETE explícita                                          | Exclusão somente via cascade de `profiles.id` (C1 — LGPD); a policy `for all` não inclui hard delete direto pela app                                                   | S2, C1               | 🔶                      |
 
 ---
 
@@ -934,37 +939,37 @@ que o artefato ainda não existe no repositório.
 
 ### Schema / Validação
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-01..RF-03/RF-08 | Schema Zod `chipFieldsSchema`: array 1–3 campos enum, `plate` obrigatório, sem repetição | `packages/validators/src/preferences.schemas.ts` | `packages/validators/src/preferences.schemas.spec.ts` | ✅ |
+| Req                | Descrição                                                                                | Código                                           | Teste                                                 | Status |
+| ------------------ | ---------------------------------------------------------------------------------------- | ------------------------------------------------ | ----------------------------------------------------- | ------ |
+| RF-01..RF-03/RF-08 | Schema Zod `chipFieldsSchema`: array 1–3 campos enum, `plate` obrigatório, sem repetição | `packages/validators/src/preferences.schemas.ts` | `packages/validators/src/preferences.schemas.spec.ts` | ✅     |
 
 ### Backend — Entidade e DTOs de Veículo
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-09 | Campo `nickname: string \| null` adicionado à entidade `Vehicle` (text nullable, max 50 chars — corrigido de 30, ver changelog da spec) | `apps/api/src/modules/vehicles/vehicles.service.ts`, `supabase/migrations/20260712171830_core_tables.sql` | — | ✅ (concluído em T2.1) |
-| RF-09 | `nickname` adicionado ao `CreateVehicleDto` e `UpdateVehicleDto` (opcional, max 50) | `packages/validators/src/vehicle.schemas.ts` | — | ✅ (concluído em T2.1) |
+| Req   | Descrição                                                                                                                               | Código                                                                                                    | Teste | Status                 |
+| ----- | --------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- | ----- | ---------------------- |
+| RF-09 | Campo `nickname: string \| null` adicionado à entidade `Vehicle` (text nullable, max 50 chars — corrigido de 30, ver changelog da spec) | `apps/api/src/modules/vehicles/vehicles.service.ts`, `supabase/migrations/20260712171830_core_tables.sql` | —     | ✅ (concluído em T2.1) |
+| RF-09 | `nickname` adicionado ao `CreateVehicleDto` e `UpdateVehicleDto` (opcional, max 50)                                                     | `packages/validators/src/vehicle.schemas.ts`                                                              | —     | ✅ (concluído em T2.1) |
 
 ### Backend — API REST (NestJS + React Query, não server actions)
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-06 | `GET /preferences`: retorna `vehicle_chip_fields` de `user_preferences`; fallback `DEFAULT_CHIP_FIELDS` quando ausente (R-DISP-03) | `apps/api/src/modules/preferences/preferences.service.ts` | `apps/api/src/modules/preferences/preferences.service.spec.ts` | ✅ |
-| RF-06/RF-08 | `PATCH /preferences`: valida com `chipFieldsSchema` (via `updatePreferencesInputSchema`), upsert parcial em `user_preferences.vehicle_chip_fields` | `apps/api/src/modules/preferences/preferences.controller.ts`, `preferences.service.ts` | `preferences.controller.spec.ts`, `preferences.service.spec.ts` | ✅ |
+| Req         | Descrição                                                                                                                                          | Código                                                                                 | Teste                                                           | Status |
+| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- | --------------------------------------------------------------- | ------ |
+| RF-06       | `GET /preferences`: retorna `vehicle_chip_fields` de `user_preferences`; fallback `DEFAULT_CHIP_FIELDS` quando ausente (R-DISP-03)                 | `apps/api/src/modules/preferences/preferences.service.ts`                              | `apps/api/src/modules/preferences/preferences.service.spec.ts`  | ✅     |
+| RF-06/RF-08 | `PATCH /preferences`: valida com `chipFieldsSchema` (via `updatePreferencesInputSchema`), upsert parcial em `user_preferences.vehicle_chip_fields` | `apps/api/src/modules/preferences/preferences.controller.ts`, `preferences.service.ts` | `preferences.controller.spec.ts`, `preferences.service.spec.ts` | ✅     |
 
 ### Banco de dados
 
-| Artefato | Descrição | Regra | Status |
-|----------|-----------|-------|--------|
-| `ALTER TABLE vehicles ADD COLUMN nickname text CHECK (char_length(nickname) <= 50)` | Campo apelido nullable na tabela vehicles | R-DISP-01 | ✅ Aplicado (T2.1) |
+| Artefato                                                                                 | Descrição                                                                              | Regra         | Status                                  |
+| ---------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- | ------------- | --------------------------------------- |
+| `ALTER TABLE vehicles ADD COLUMN nickname text CHECK (char_length(nickname) <= 50)`      | Campo apelido nullable na tabela vehicles                                              | R-DISP-01     | ✅ Aplicado (T2.1)                      |
 | `CREATE TABLE user_preferences` com coluna `vehicle_chip_fields text[]` e RLS owner-only | Formalizada em SPEC-20260603-004; default `['make','plate','model']` já bate com RF-05 | S2, R-DISP-03 | ✅ Aplicado (sem teste dedicado de RLS) |
 
 ### Componentes de Layout e Tela de Preferências
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-01/RF-04/RF-05 | `VehicleContextChip`: renderização dinâmica por `chipFields`; fallback `nickname → model` — helper puro `resolveChipValue`/`formatChipPreview` já pronto para reuso | `apps/web/src/lib/vehicle-chip.ts` (helper) | `apps/web/src/lib/vehicle-chip.spec.ts` | 🔶 Helper pronto; componente do chip real ⏳ até Fase 5 (`SPEC-20260603-001`) |
-| RF-07/RNF-03 | Seção "Exibição do veículo" em `/settings/preferences`: seleção de 1-3 campos, reordenação, prévia em tempo real, salvar/cancelar | `apps/web/src/app/settings/preferences/page.tsx` | `apps/web/src/app/settings/preferences/page.spec.tsx` | ✅ |
+| Req               | Descrição                                                                                                                                                           | Código                                           | Teste                                                 | Status                                                                        |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------ | ----------------------------------------------------- | ----------------------------------------------------------------------------- |
+| RF-01/RF-04/RF-05 | `VehicleContextChip`: renderização dinâmica por `chipFields`; fallback `nickname → model` — helper puro `resolveChipValue`/`formatChipPreview` já pronto para reuso | `apps/web/src/lib/vehicle-chip.ts` (helper)      | `apps/web/src/lib/vehicle-chip.spec.ts`               | 🔶 Helper pronto; componente do chip real ⏳ até Fase 5 (`SPEC-20260603-001`) |
+| RF-07/RNF-03      | Seção "Exibição do veículo" em `/settings/preferences`: seleção de 1-3 campos, reordenação, prévia em tempo real, salvar/cancelar                                   | `apps/web/src/app/settings/preferences/page.tsx` | `apps/web/src/app/settings/preferences/page.spec.tsx` | ✅                                                                            |
 
 ---
 
@@ -978,25 +983,25 @@ que o artefato ainda não existe no repositório.
 
 ### Camada de serviço (backend)
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-01..RF-06/RF-13 | CRUD (`create`, `findAll`, `findOne`, `update`, `remove`) — inline, sem Repository/Port | `apps/api/src/modules/maintenances/maintenances.service.ts`, `.controller.ts`, `.module.ts` | `apps/api/src/modules/maintenances/maintenances.service.spec.ts`, `.controller.spec.ts` | ✅ |
-| RF-07/R7 | Validação de transição de status via `MAINTENANCE_STATUS_TRANSITIONS`; 409 se inválida | `apps/api/src/modules/maintenances/maintenances.service.ts`, `packages/validators/src/maintenance.schemas.ts` | `apps/api/src/modules/maintenances/maintenances.service.spec.ts`, `packages/validators/src/maintenance.schemas.spec.ts` | ✅ |
-| RF-08/R-ODO-03 | `odometer_km` obrigatório para transição a `completed`; 422 se ausente | `apps/api/src/modules/maintenances/maintenances.service.ts` | `apps/api/src/modules/maintenances/maintenances.service.spec.ts` | ✅ |
-| RF-09 | `findMaxOdometerByVehicle` (sem filtro de ciclo — R-ODO-04 permanece ⏳ em ambos os módulos); warning não-bloqueante | `apps/api/src/modules/maintenances/maintenances.service.ts` | `apps/api/src/modules/maintenances/maintenances.service.spec.ts` | ✅ |
-| RF-10/R-LED-02 | Transição a `completed` com `cost` cria despesa vinculada via `ExpensesService.createFromSource()` | `apps/api/src/modules/maintenances/maintenances.service.ts` | `apps/api/src/modules/maintenances/maintenances.service.spec.ts` | ✅ |
-| RF-11/R-LED-03 | Transição a `cancelled` soft-deleta a despesa vinculada via `softDeleteBySource()` | `apps/api/src/modules/maintenances/maintenances.service.ts` | `apps/api/src/modules/maintenances/maintenances.service.spec.ts` | ✅ |
-| RF-12/R-HUB-01 | `remove()` soft-deleta a despesa vinculada, se existir | `apps/api/src/modules/maintenances/maintenances.service.ts` | `apps/api/src/modules/maintenances/maintenances.service.spec.ts` | ✅ |
-| RF-14/C2 | Audit log em mutações bem-sucedidas; transições rejeitadas não geram entrada | `apps/api/src/modules/maintenances/maintenances.service.ts` | `apps/api/src/modules/maintenances/maintenances.service.spec.ts` | ✅ |
+| Req                | Descrição                                                                                                            | Código                                                                                                        | Teste                                                                                                                   | Status |
+| ------------------ | -------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- | ------ |
+| RF-01..RF-06/RF-13 | CRUD (`create`, `findAll`, `findOne`, `update`, `remove`) — inline, sem Repository/Port                              | `apps/api/src/modules/maintenances/maintenances.service.ts`, `.controller.ts`, `.module.ts`                   | `apps/api/src/modules/maintenances/maintenances.service.spec.ts`, `.controller.spec.ts`                                 | ✅     |
+| RF-07/R7           | Validação de transição de status via `MAINTENANCE_STATUS_TRANSITIONS`; 409 se inválida                               | `apps/api/src/modules/maintenances/maintenances.service.ts`, `packages/validators/src/maintenance.schemas.ts` | `apps/api/src/modules/maintenances/maintenances.service.spec.ts`, `packages/validators/src/maintenance.schemas.spec.ts` | ✅     |
+| RF-08/R-ODO-03     | `odometer_km` obrigatório para transição a `completed`; 422 se ausente                                               | `apps/api/src/modules/maintenances/maintenances.service.ts`                                                   | `apps/api/src/modules/maintenances/maintenances.service.spec.ts`                                                        | ✅     |
+| RF-09              | `findMaxOdometerByVehicle` (sem filtro de ciclo — R-ODO-04 permanece ⏳ em ambos os módulos); warning não-bloqueante | `apps/api/src/modules/maintenances/maintenances.service.ts`                                                   | `apps/api/src/modules/maintenances/maintenances.service.spec.ts`                                                        | ✅     |
+| RF-10/R-LED-02     | Transição a `completed` com `cost` cria despesa vinculada via `ExpensesService.createFromSource()`                   | `apps/api/src/modules/maintenances/maintenances.service.ts`                                                   | `apps/api/src/modules/maintenances/maintenances.service.spec.ts`                                                        | ✅     |
+| RF-11/R-LED-03     | Transição a `cancelled` soft-deleta a despesa vinculada via `softDeleteBySource()`                                   | `apps/api/src/modules/maintenances/maintenances.service.ts`                                                   | `apps/api/src/modules/maintenances/maintenances.service.spec.ts`                                                        | ✅     |
+| RF-12/R-HUB-01     | `remove()` soft-deleta a despesa vinculada, se existir                                                               | `apps/api/src/modules/maintenances/maintenances.service.ts`                                                   | `apps/api/src/modules/maintenances/maintenances.service.spec.ts`                                                        | ✅     |
+| RF-14/C2           | Audit log em mutações bem-sucedidas; transições rejeitadas não geram entrada                                         | `apps/api/src/modules/maintenances/maintenances.service.ts`                                                   | `apps/api/src/modules/maintenances/maintenances.service.spec.ts`                                                        | ✅     |
 
 ### Frontend (mínimo)
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-15 | `/maintenance`: lista com data, descrição, veículo, badge de status | `apps/web/src/app/maintenance/page.tsx` | `apps/web/src/app/maintenance/page.spec.tsx` | ✅ |
-| RF-16 | `/maintenance/new`: formulário mínimo, empty state sem veículos (R-FORM-07) | `apps/web/src/app/maintenance/new/page.tsx` | `apps/web/src/app/maintenance/new/page.spec.tsx` | ✅ |
-| RF-17 | `/maintenance/[id]`: edição + seletor de status restrito às transições válidas (UX progressiva, R7) | `apps/web/src/app/maintenance/[id]/page.tsx` | `apps/web/src/app/maintenance/[id]/page.spec.tsx` | ✅ |
-| RF-24 (SPEC-20260711-001) | `odometer_km` exposto no formulário de manutenção via `OdometerInput` (não torna-se visualmente obrigatório em `completed` — refinamento de UX deixado para spec futura) | `apps/web/src/app/maintenance/[id]/page.tsx` | idem | 🔶 Parcial |
+| Req                       | Descrição                                                                                                                                                                | Código                                       | Teste                                             | Status     |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------- | ------------------------------------------------- | ---------- |
+| RF-15                     | `/maintenance`: lista com data, descrição, veículo, badge de status                                                                                                      | `apps/web/src/app/maintenance/page.tsx`      | `apps/web/src/app/maintenance/page.spec.tsx`      | ✅         |
+| RF-16                     | `/maintenance/new`: formulário mínimo, empty state sem veículos (R-FORM-07)                                                                                              | `apps/web/src/app/maintenance/new/page.tsx`  | `apps/web/src/app/maintenance/new/page.spec.tsx`  | ✅         |
+| RF-17                     | `/maintenance/[id]`: edição + seletor de status restrito às transições válidas (UX progressiva, R7)                                                                      | `apps/web/src/app/maintenance/[id]/page.tsx` | `apps/web/src/app/maintenance/[id]/page.spec.tsx` | ✅         |
+| RF-24 (SPEC-20260711-001) | `odometer_km` exposto no formulário de manutenção via `OdometerInput` (não torna-se visualmente obrigatório em `completed` — refinamento de UX deixado para spec futura) | `apps/web/src/app/maintenance/[id]/page.tsx` | idem                                              | 🔶 Parcial |
 
 ---
 
@@ -1010,15 +1015,15 @@ que o artefato ainda não existe no repositório.
 
 ### Camada de serviço (backend)
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-01 | `MaintenancesService.update()` valida transição quando `status` está no payload | `apps/api/src/modules/maintenances/maintenances.service.ts` | `apps/api/src/modules/maintenances/maintenances.service.spec.ts` | ✅ |
-| RF-02..RF-05 | Constante `MAINTENANCE_STATUS_TRANSITIONS` define saídas de cada estado; `completed` e `cancelled` terminais | `packages/validators/src/maintenance.schemas.ts` | `packages/validators/src/maintenance.schemas.spec.ts` | ✅ |
-| RF-06 | Transição para o mesmo estado atual é rejeitada com 409 | idem | idem | ✅ |
-| RF-07 | Sem campo `status` no payload, validação de transição é ignorada | idem | idem | ✅ |
-| RF-08 | Status atual lido do `findOne()` de ownership — sem query adicional | idem | idem | ✅ |
-| RF-09 | Resposta 409 com `message: "Transição inválida: {de} → {para}"` | idem | idem | ✅ |
-| RF-10/C2 | Audit log gravado apenas após transição bem-sucedida | idem | idem | ✅ |
+| Req          | Descrição                                                                                                    | Código                                                      | Teste                                                            | Status |
+| ------------ | ------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------- | ---------------------------------------------------------------- | ------ |
+| RF-01        | `MaintenancesService.update()` valida transição quando `status` está no payload                              | `apps/api/src/modules/maintenances/maintenances.service.ts` | `apps/api/src/modules/maintenances/maintenances.service.spec.ts` | ✅     |
+| RF-02..RF-05 | Constante `MAINTENANCE_STATUS_TRANSITIONS` define saídas de cada estado; `completed` e `cancelled` terminais | `packages/validators/src/maintenance.schemas.ts`            | `packages/validators/src/maintenance.schemas.spec.ts`            | ✅     |
+| RF-06        | Transição para o mesmo estado atual é rejeitada com 409                                                      | idem                                                        | idem                                                             | ✅     |
+| RF-07        | Sem campo `status` no payload, validação de transição é ignorada                                             | idem                                                        | idem                                                             | ✅     |
+| RF-08        | Status atual lido do `findOne()` de ownership — sem query adicional                                          | idem                                                        | idem                                                             | ✅     |
+| RF-09        | Resposta 409 com `message: "Transição inválida: {de} → {para}"`                                              | idem                                                        | idem                                                             | ✅     |
+| RF-10/C2     | Audit log gravado apenas após transição bem-sucedida                                                         | idem                                                        | idem                                                             | ✅     |
 
 ---
 
@@ -1034,59 +1039,59 @@ que o artefato ainda não existe no repositório.
 
 ### Hook compartilhado e hooks utilitários
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| — | `useVehicleContext`: hidratação, queries de veículos/grupos sob demanda, resolução de label/aria-label por modo — extraído de `focus-slot.tsx`, reaproveitado por chip e switcher | `apps/web/src/lib/context/use-vehicle-context.ts` | Coberto indiretamente por `vehicle-context-chip.spec.tsx`, `header.spec.tsx` | ✅ |
-| Notas Técnicas | `useMediaQuery('(min-width: 768px)')` — SSR-safe, sem `window.innerWidth` direto | `apps/web/src/lib/hooks/use-media-query.ts` | `apps/web/src/lib/hooks/use-media-query.spec.ts` | ✅ |
-| RF-14 | `useOnlineStatus` — eventos `online`/`offline` + `navigator.onLine` | `apps/web/src/lib/hooks/use-online-status.ts` | `apps/web/src/lib/hooks/use-online-status.spec.ts` | ✅ |
+| Req            | Descrição                                                                                                                                                                         | Código                                            | Teste                                                                        | Status |
+| -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- | ---------------------------------------------------------------------------- | ------ |
+| —              | `useVehicleContext`: hidratação, queries de veículos/grupos sob demanda, resolução de label/aria-label por modo — extraído de `focus-slot.tsx`, reaproveitado por chip e switcher | `apps/web/src/lib/context/use-vehicle-context.ts` | Coberto indiretamente por `vehicle-context-chip.spec.tsx`, `header.spec.tsx` | ✅     |
+| Notas Técnicas | `useMediaQuery('(min-width: 768px)')` — SSR-safe, sem `window.innerWidth` direto                                                                                                  | `apps/web/src/lib/hooks/use-media-query.ts`       | `apps/web/src/lib/hooks/use-media-query.spec.ts`                             | ✅     |
+| RF-14          | `useOnlineStatus` — eventos `online`/`offline` + `navigator.onLine`                                                                                                               | `apps/web/src/lib/hooks/use-online-status.ts`     | `apps/web/src/lib/hooks/use-online-status.spec.ts`                           | ✅     |
 
 ### VehicleContextChip
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-01 | Chip visível no `Header` (novo, não `FluidFleetHeader`) em todos os breakpoints e páginas autenticadas | `apps/web/src/components/layout/header.tsx`, `apps/web/src/app/(app)/layout.tsx` | `apps/web/src/components/layout/header.spec.tsx` | ✅ |
-| RF-02 | Estados visuais por modo (none/single/group/multi/attribute); ícones emoji em vez de `lucide-react` (não adicionado ao projeto) | `apps/web/src/components/layout/vehicle-context-chip.tsx` | `apps/web/src/components/layout/vehicle-context-chip.spec.tsx` | ✅ |
-| RF-03 | Dimensões h-11 (44px) + max-width 140px + text truncation (WCAG 2.5.5) | `apps/web/src/components/layout/vehicle-context-chip.tsx` | — (verificação visual/classe Tailwind, sem teste dedicado de dimensão) | 🔶 |
-| RF-04 | Botão X com `clearAllSelection()` + `stopPropagation` | `apps/web/src/components/layout/vehicle-context-chip.tsx` | `apps/web/src/components/layout/vehicle-context-chip.spec.tsx` | ✅ |
-| RF-05 | `aria-label` dinâmico por modo descrevendo contexto ativo | `apps/web/src/lib/context/use-vehicle-context.ts` (`getModeAriaLabel`) | `apps/web/src/components/layout/vehicle-context-chip.spec.tsx` (via texto do label) | ✅ |
-| RF-06 | Estado hover (`ring-1`) e focus-visible (`ring-2 ring-primary`) | `apps/web/src/components/layout/vehicle-context-chip.tsx` | — (classes Tailwind, sem teste de estilo computado) | 🔶 |
-| RF-24 | Skeleton `w-32 h-11 animate-pulse` durante hidratação; nunca exibe `none` transitório | `apps/web/src/components/layout/vehicle-context-chip.tsx` | Coberto indiretamente (demais testes aguardam hidratação via `waitFor`) | 🔶 |
+| Req   | Descrição                                                                                                                       | Código                                                                           | Teste                                                                               | Status |
+| ----- | ------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- | ------ |
+| RF-01 | Chip visível no `Header` (novo, não `FluidFleetHeader`) em todos os breakpoints e páginas autenticadas                          | `apps/web/src/components/layout/header.tsx`, `apps/web/src/app/(app)/layout.tsx` | `apps/web/src/components/layout/header.spec.tsx`                                    | ✅     |
+| RF-02 | Estados visuais por modo (none/single/group/multi/attribute); ícones emoji em vez de `lucide-react` (não adicionado ao projeto) | `apps/web/src/components/layout/vehicle-context-chip.tsx`                        | `apps/web/src/components/layout/vehicle-context-chip.spec.tsx`                      | ✅     |
+| RF-03 | Dimensões h-11 (44px) + max-width 140px + text truncation (WCAG 2.5.5)                                                          | `apps/web/src/components/layout/vehicle-context-chip.tsx`                        | — (verificação visual/classe Tailwind, sem teste dedicado de dimensão)              | 🔶     |
+| RF-04 | Botão X com `clearAllSelection()` + `stopPropagation`                                                                           | `apps/web/src/components/layout/vehicle-context-chip.tsx`                        | `apps/web/src/components/layout/vehicle-context-chip.spec.tsx`                      | ✅     |
+| RF-05 | `aria-label` dinâmico por modo descrevendo contexto ativo                                                                       | `apps/web/src/lib/context/use-vehicle-context.ts` (`getModeAriaLabel`)           | `apps/web/src/components/layout/vehicle-context-chip.spec.tsx` (via texto do label) | ✅     |
+| RF-06 | Estado hover (`ring-1`) e focus-visible (`ring-2 ring-primary`)                                                                 | `apps/web/src/components/layout/vehicle-context-chip.tsx`                        | — (classes Tailwind, sem teste de estilo computado)                                 | 🔶     |
+| RF-24 | Skeleton `w-32 h-11 animate-pulse` durante hidratação; nunca exibe `none` transitório                                           | `apps/web/src/components/layout/vehicle-context-chip.tsx`                        | Coberto indiretamente (demais testes aguardam hidratação via `waitFor`)             | 🔶     |
 
 ### VehicleContextDialog, VehicleContextSheet e VehicleSwitcherContent
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-07/RF-08 | Dialog desktop (`@radix-ui/react-dialog`): backdrop blur, `max-w-[380px]`, `Esc` com `stopPropagation` | `apps/web/src/components/layout/vehicle-context-dialog.tsx` | `apps/web/src/components/layout/vehicle-context-chip.spec.tsx` (abertura via clique) | 🔶 (sem teste dedicado de `Esc`) |
-| RF-09 | Skeleton `animate-pulse` durante loading; erro com retry após 8s (`setTimeout`) | `apps/web/src/components/layout/vehicle-switcher-content.tsx` | — (sem teste dedicado de timeout/retry) | 🔶 |
-| RF-10 | Fechamento do Dialog com animação `data-[state=closed]:fade-out duration-150` ao selecionar item | `apps/web/src/components/layout/vehicle-context-dialog.tsx` | — | 🔶 |
-| RF-11..RF-13 | Sheet mobile (`vaul`): bottom-up `snapPoints=[0.7]`, handle de drag, `overscroll-behavior: contain` | `apps/web/src/components/layout/vehicle-context-sheet.tsx` | `apps/web/src/components/layout/vehicle-context-chip.spec.tsx` (abertura via clique) | 🔶 (sem teste de snap-point/drag, específico do vaul) |
-| RF-12 | `padding-bottom: env(safe-area-inset-bottom)` | `apps/web/src/components/layout/vehicle-switcher-content.tsx` | — | 🔶 |
-| RF-14 | Banner offline via `useOnlineStatus`; cache TanStack Query `staleTime: 60_000` (não SWR, ver nota RF-14 da spec) | `apps/web/src/components/layout/vehicle-switcher-content.tsx`, `apps/web/src/lib/context/use-vehicle-context.ts` | — (sem teste dedicado do banner offline) | 🔶 |
-| RNF-05 | Busca client-side normaliza diacríticos (`normalize('NFD')`) e remove hífens de placa | `apps/web/src/components/layout/vehicle-switcher-content.tsx` (`normalizeForSearch`) | — (sem teste unitário dedicado da função de busca) | 🔶 |
+| Req          | Descrição                                                                                                        | Código                                                                                                           | Teste                                                                                | Status                                                |
+| ------------ | ---------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ | ----------------------------------------------------- |
+| RF-07/RF-08  | Dialog desktop (`@radix-ui/react-dialog`): backdrop blur, `max-w-[380px]`, `Esc` com `stopPropagation`           | `apps/web/src/components/layout/vehicle-context-dialog.tsx`                                                      | `apps/web/src/components/layout/vehicle-context-chip.spec.tsx` (abertura via clique) | 🔶 (sem teste dedicado de `Esc`)                      |
+| RF-09        | Skeleton `animate-pulse` durante loading; erro com retry após 8s (`setTimeout`)                                  | `apps/web/src/components/layout/vehicle-switcher-content.tsx`                                                    | — (sem teste dedicado de timeout/retry)                                              | 🔶                                                    |
+| RF-10        | Fechamento do Dialog com animação `data-[state=closed]:fade-out duration-150` ao selecionar item                 | `apps/web/src/components/layout/vehicle-context-dialog.tsx`                                                      | —                                                                                    | 🔶                                                    |
+| RF-11..RF-13 | Sheet mobile (`vaul`): bottom-up `snapPoints=[0.7]`, handle de drag, `overscroll-behavior: contain`              | `apps/web/src/components/layout/vehicle-context-sheet.tsx`                                                       | `apps/web/src/components/layout/vehicle-context-chip.spec.tsx` (abertura via clique) | 🔶 (sem teste de snap-point/drag, específico do vaul) |
+| RF-12        | `padding-bottom: env(safe-area-inset-bottom)`                                                                    | `apps/web/src/components/layout/vehicle-switcher-content.tsx`                                                    | —                                                                                    | 🔶                                                    |
+| RF-14        | Banner offline via `useOnlineStatus`; cache TanStack Query `staleTime: 60_000` (não SWR, ver nota RF-14 da spec) | `apps/web/src/components/layout/vehicle-switcher-content.tsx`, `apps/web/src/lib/context/use-vehicle-context.ts` | — (sem teste dedicado do banner offline)                                             | 🔶                                                    |
+| RNF-05       | Busca client-side normaliza diacríticos (`normalize('NFD')`) e remove hífens de placa                            | `apps/web/src/components/layout/vehicle-switcher-content.tsx` (`normalizeForSearch`)                             | — (sem teste unitário dedicado da função de busca)                                   | 🔶                                                    |
 
 ### Migração do Sidebar
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-15 | Remoção de `FocusSlot` do sidebar; arquivo deletado do repositório (`focus-slot.tsx`/`focus-slot.spec.tsx`) | `apps/web/src/components/layout/sidebar.tsx` | `apps/web/src/components/layout/sidebar.spec.tsx` (RF-15) | ✅ |
-| RF-16 | Dot passivo (`w-2 h-2 rounded-full`, `aria-hidden`) no sidebar colapsado, cor por `selectionMode`, sem interação | `apps/web/src/components/layout/sidebar.tsx` | `apps/web/src/components/layout/sidebar.spec.tsx` (RF-16) | ✅ |
-| RF-17 | Confirmado satisfeito pelo `onClick` de logout já existente (sem gesto de hold — fora de escopo) | `apps/web/src/components/layout/sidebar.tsx` (comentário `@spec`) | — (nenhum comportamento novo a testar) | ✅ |
+| Req   | Descrição                                                                                                        | Código                                                            | Teste                                                     | Status |
+| ----- | ---------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- | --------------------------------------------------------- | ------ |
+| RF-15 | Remoção de `FocusSlot` do sidebar; arquivo deletado do repositório (`focus-slot.tsx`/`focus-slot.spec.tsx`)      | `apps/web/src/components/layout/sidebar.tsx`                      | `apps/web/src/components/layout/sidebar.spec.tsx` (RF-15) | ✅     |
+| RF-16 | Dot passivo (`w-2 h-2 rounded-full`, `aria-hidden`) no sidebar colapsado, cor por `selectionMode`, sem interação | `apps/web/src/components/layout/sidebar.tsx`                      | `apps/web/src/components/layout/sidebar.spec.tsx` (RF-16) | ✅     |
+| RF-17 | Confirmado satisfeito pelo `onClick` de logout já existente (sem gesto de hold — fora de escopo)                 | `apps/web/src/components/layout/sidebar.tsx` (comentário `@spec`) | — (nenhum comportamento novo a testar)                    | ✅     |
 
 ### Backend
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-18 | `.limit(100)` em `VehiclesService.findAll`/`VehicleGroupsService.findAll` — corrigido de "sem limite" (não "20→100", ver changelog da spec) | `apps/api/src/modules/vehicles/vehicles.service.ts`, `apps/api/src/modules/vehicle-groups/vehicle-groups.service.ts` | `apps/api/src/modules/vehicles/vehicles.service.spec.ts`, `apps/api/src/modules/vehicle-groups/vehicle-groups.service.spec.ts` | ✅ |
-| RF-19 | `member_count` exclui membros com veículo soft-deletado (busca veículos ativos + conta em memória) | `apps/api/src/modules/vehicle-groups/vehicle-groups.service.ts` (`findAll`) | `apps/api/src/modules/vehicle-groups/vehicle-groups.service.spec.ts` | ✅ |
-| RF-20 | 404 para veículo soft-deleted — reaproveitado de `VehiclesService.findOne` (não criado endpoint `/dashboard/stats` novo) | `apps/api/src/modules/vehicles/vehicles.service.ts` (`findOne`, já existente) | `apps/api/src/modules/vehicles/vehicles.service.spec.ts` (já existente) | ✅ |
+| Req   | Descrição                                                                                                                                   | Código                                                                                                               | Teste                                                                                                                          | Status |
+| ----- | ------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ | ------ |
+| RF-18 | `.limit(100)` em `VehiclesService.findAll`/`VehicleGroupsService.findAll` — corrigido de "sem limite" (não "20→100", ver changelog da spec) | `apps/api/src/modules/vehicles/vehicles.service.ts`, `apps/api/src/modules/vehicle-groups/vehicle-groups.service.ts` | `apps/api/src/modules/vehicles/vehicles.service.spec.ts`, `apps/api/src/modules/vehicle-groups/vehicle-groups.service.spec.ts` | ✅     |
+| RF-19 | `member_count` exclui membros com veículo soft-deletado (busca veículos ativos + conta em memória)                                          | `apps/api/src/modules/vehicle-groups/vehicle-groups.service.ts` (`findAll`)                                          | `apps/api/src/modules/vehicle-groups/vehicle-groups.service.spec.ts`                                                           | ✅     |
+| RF-20 | 404 para veículo soft-deleted — reaproveitado de `VehiclesService.findOne` (não criado endpoint `/dashboard/stats` novo)                    | `apps/api/src/modules/vehicles/vehicles.service.ts` (`findOne`, já existente)                                        | `apps/api/src/modules/vehicles/vehicles.service.spec.ts` (já existente)                                                        | ✅     |
 
 ### Persistência e limpeza de contexto
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-21 | `zustand/persist` com `sessionStorage` (corrige localStorage da SPEC-20260602-001) | `apps/web/src/lib/stores/use-dashboard-store.ts` | `apps/web/src/lib/stores/use-dashboard-store.spec.ts` | ✅ |
-| RF-22 | Limpeza automática de contexto em 404 de `GET /vehicles/:id` do veículo ativo; usa a fila única de toasts do `ui-store` (`pushToast`, migrado em SPEC-20260525-001 §8.2) | `apps/web/src/lib/http/api-client.ts` (`handleNotFound`) | `apps/web/src/lib/http/api-client.spec.ts` | ✅ |
-| RF-23 | `sessionStorage.removeItem("nave-dashboard-context")` explícito no logout, além de `clearAllSelection()` | `apps/web/src/lib/auth/logout.ts` | `apps/web/src/lib/auth/logout.spec.ts` | ✅ |
+| Req   | Descrição                                                                                                                                                                | Código                                                   | Teste                                                 | Status |
+| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------- | ----------------------------------------------------- | ------ |
+| RF-21 | `zustand/persist` com `sessionStorage` (corrige localStorage da SPEC-20260602-001)                                                                                       | `apps/web/src/lib/stores/use-dashboard-store.ts`         | `apps/web/src/lib/stores/use-dashboard-store.spec.ts` | ✅     |
+| RF-22 | Limpeza automática de contexto em 404 de `GET /vehicles/:id` do veículo ativo; usa a fila única de toasts do `ui-store` (`pushToast`, migrado em SPEC-20260525-001 §8.2) | `apps/web/src/lib/http/api-client.ts` (`handleNotFound`) | `apps/web/src/lib/http/api-client.spec.ts`            | ✅     |
+| RF-23 | `sessionStorage.removeItem("navestory-dashboard-context")` explícito no logout, além de `clearAllSelection()`                                                            | `apps/web/src/lib/auth/logout.ts`                        | `apps/web/src/lib/auth/logout.spec.ts`                | ✅     |
 
 ---
 
@@ -1110,24 +1115,24 @@ que o artefato ainda não existe no repositório.
 
 ### Infraestrutura de Audit Log
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-01/RF-02/RF-03 | `AuditService.log()`: injeta `timestamp`/`requestId` em `changes`; fire-and-forget via try/catch + `Logger`; escritor único (sem contraparte no frontend) | `apps/api/src/shared/audit/audit.service.ts` | `apps/api/src/shared/audit/audit.service.spec.ts` | ✅ |
-| RF-04/RNF-04/R-MON-04 | Imutabilidade de `audit_logs` via RLS (`audit_logs_no_update`, `audit_logs_no_delete`) | `supabase/migrations/20260712172047_rls_policies.sql` | — (sem harness de teste de integração de banco além do já existente em `rls.int-spec.ts`) | 🔶 Aplicado |
-| RF-05 | `audit_logs.user_id ON DELETE SET NULL` | `supabase/migrations/20260712171830_core_tables.sql` | — | 🔶 Aplicado |
-| RF-06 | `changes` sem PII na leitura: `AuditLogsService` remove `user_id`/`deleted_at`/`photo_url`/`photo_thumbnail_url` antes de retornar (defesa em profundidade; registro em si já não grava esses campos por convenção dos callers) | `apps/api/src/modules/audit-logs/audit-logs.service.ts` | `apps/api/src/modules/audit-logs/audit-logs.service.spec.ts` | ✅ |
-| RF-07/CA-11 | `AuditService.log()` grava `requestId` em `changes` via `AsyncLocalStorage` populado pelo `RequestIdInterceptor` | `apps/api/src/common/context/request-context.ts`, `apps/api/src/common/interceptors/request-id.interceptor.ts`, `apps/api/src/shared/audit/audit.service.ts` | `apps/api/src/shared/audit/audit.service.spec.ts` | ✅ |
-| RF-08 | Cobertura atual de `AuditService.log()`: `auth`, `admin`, `users`, `vehicles`, `expenses`, `maintenances`, `fines`, `recurring-costs`, `odometer-cycles` | `apps/api/src/modules/{auth,admin,users,vehicles,expenses,maintenances,fines,recurring-costs,odometer-cycles}/*.service.ts` | ver specs de cada módulo | ✅ |
+| Req                   | Descrição                                                                                                                                                                                                                       | Código                                                                                                                                                       | Teste                                                                                     | Status      |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------- | ----------- |
+| RF-01/RF-02/RF-03     | `AuditService.log()`: injeta `timestamp`/`requestId` em `changes`; fire-and-forget via try/catch + `Logger`; escritor único (sem contraparte no frontend)                                                                       | `apps/api/src/shared/audit/audit.service.ts`                                                                                                                 | `apps/api/src/shared/audit/audit.service.spec.ts`                                         | ✅          |
+| RF-04/RNF-04/R-MON-04 | Imutabilidade de `audit_logs` via RLS (`audit_logs_no_update`, `audit_logs_no_delete`)                                                                                                                                          | `supabase/migrations/20260712172047_rls_policies.sql`                                                                                                        | — (sem harness de teste de integração de banco além do já existente em `rls.int-spec.ts`) | 🔶 Aplicado |
+| RF-05                 | `audit_logs.user_id ON DELETE SET NULL`                                                                                                                                                                                         | `supabase/migrations/20260712171830_core_tables.sql`                                                                                                         | —                                                                                         | 🔶 Aplicado |
+| RF-06                 | `changes` sem PII na leitura: `AuditLogsService` remove `user_id`/`deleted_at`/`photo_url`/`photo_thumbnail_url` antes de retornar (defesa em profundidade; registro em si já não grava esses campos por convenção dos callers) | `apps/api/src/modules/audit-logs/audit-logs.service.ts`                                                                                                      | `apps/api/src/modules/audit-logs/audit-logs.service.spec.ts`                              | ✅          |
+| RF-07/CA-11           | `AuditService.log()` grava `requestId` em `changes` via `AsyncLocalStorage` populado pelo `RequestIdInterceptor`                                                                                                                | `apps/api/src/common/context/request-context.ts`, `apps/api/src/common/interceptors/request-id.interceptor.ts`, `apps/api/src/shared/audit/audit.service.ts` | `apps/api/src/shared/audit/audit.service.spec.ts`                                         | ✅          |
+| RF-08                 | Cobertura atual de `AuditService.log()`: `auth`, `admin`, `users`, `vehicles`, `expenses`, `maintenances`, `fines`, `recurring-costs`, `odometer-cycles`                                                                        | `apps/api/src/modules/{auth,admin,users,vehicles,expenses,maintenances,fines,recurring-costs,odometer-cycles}/*.service.ts`                                  | ver specs de cada módulo                                                                  | ✅          |
 
 ### Página Histórico de Atividades (`/atividades`)
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-09/RF-10 | Client component + `apiClient`; consulta `GET /audit-logs` (top-100 `audit_logs` do usuário, `created_at DESC`); autenticação via middleware (`apps/web/middleware.ts`), não redirect na própria página | `apps/web/src/app/(app)/atividades/page.tsx`, `apps/api/src/modules/audit-logs/{audit-logs.controller,audit-logs.service}.ts` | `apps/web/src/app/(app)/atividades/page.spec.tsx`, `apps/api/src/modules/audit-logs/{audit-logs.controller,audit-logs.service}.spec.ts` | ✅ |
-| RF-11 | KPI cards: Total, Veículos, Despesas, Manutenções (computados a partir do mesmo array de 100 entradas, sem query adicional) | `apps/web/src/app/(app)/atividades/page.tsx` | `apps/web/src/app/(app)/atividades/page.spec.tsx` | ✅ |
-| RF-12..RF-14 | Tabela: Quando (relativo), Ação (badge colorido por sufixo `_CREATED`/`_UPDATED`/`_DELETED`), Domínio (emoji + label, sem depender de ícone lib — projeto não usa lucide-react), Detalhes (oculto em mobile, `hidden sm:table-cell`) | `apps/web/src/app/(app)/atividades/page.tsx` | `apps/web/src/app/(app)/atividades/page.spec.tsx` | ✅ |
-| RF-15 | Empty state com emoji 🛡️ e mensagem "Nenhuma operação registrada ainda." | `apps/web/src/app/(app)/atividades/page.tsx` | `apps/web/src/app/(app)/atividades/page.spec.tsx` | ✅ |
-| RF-16 | Link "Histórico de Atividades" no cabeçalho do dashboard principal (fora do `ActionDock`, que é fixo em 4 itens) | `apps/web/src/app/(app)/dashboard/page.tsx` | — (coberto indiretamente por `dashboard/page.spec.tsx` já existente; sem asserção dedicada ao novo link) | 🔶 |
+| Req          | Descrição                                                                                                                                                                                                                            | Código                                                                                                                        | Teste                                                                                                                                   | Status |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| RF-09/RF-10  | Client component + `apiClient`; consulta `GET /audit-logs` (top-100 `audit_logs` do usuário, `created_at DESC`); autenticação via middleware (`apps/web/middleware.ts`), não redirect na própria página                              | `apps/web/src/app/(app)/atividades/page.tsx`, `apps/api/src/modules/audit-logs/{audit-logs.controller,audit-logs.service}.ts` | `apps/web/src/app/(app)/atividades/page.spec.tsx`, `apps/api/src/modules/audit-logs/{audit-logs.controller,audit-logs.service}.spec.ts` | ✅     |
+| RF-11        | KPI cards: Total, Veículos, Despesas, Manutenções (computados a partir do mesmo array de 100 entradas, sem query adicional)                                                                                                          | `apps/web/src/app/(app)/atividades/page.tsx`                                                                                  | `apps/web/src/app/(app)/atividades/page.spec.tsx`                                                                                       | ✅     |
+| RF-12..RF-14 | Tabela: Quando (relativo), Ação (badge colorido por sufixo `_CREATED`/`_UPDATED`/`_DELETED`), Domínio (emoji + label, sem depender de ícone lib — projeto não usa lucide-react), Detalhes (oculto em mobile, `hidden sm:table-cell`) | `apps/web/src/app/(app)/atividades/page.tsx`                                                                                  | `apps/web/src/app/(app)/atividades/page.spec.tsx`                                                                                       | ✅     |
+| RF-15        | Empty state com emoji 🛡️ e mensagem "Nenhuma operação registrada ainda."                                                                                                                                                             | `apps/web/src/app/(app)/atividades/page.tsx`                                                                                  | `apps/web/src/app/(app)/atividades/page.spec.tsx`                                                                                       | ✅     |
+| RF-16        | Link "Histórico de Atividades" no cabeçalho do dashboard principal (fora do `ActionDock`, que é fixo em 4 itens)                                                                                                                     | `apps/web/src/app/(app)/dashboard/page.tsx`                                                                                   | — (coberto indiretamente por `dashboard/page.spec.tsx` já existente; sem asserção dedicada ao novo link)                                | 🔶     |
 
 ---
 
@@ -1141,39 +1146,39 @@ que o artefato ainda não existe no repositório.
 
 ### Banco de dados
 
-| Artefato | Descrição | Regra | Status |
-|----------|-----------|-------|--------|
+| Artefato                                             | Descrição                                                                       | Regra        | Status                   |
+| ---------------------------------------------------- | ------------------------------------------------------------------------------- | ------------ | ------------------------ |
 | `supabase/migrations/20260712171830_core_tables.sql` | `CREATE TABLE public.expenses` — já aplicado, schema não alterado por esta spec | R1, R-LED-04 | ✅ (schema já existente) |
 
 ### API (backend) — `ExpensesModule`
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-01/RF-02/CA-01 | `POST /expenses` cria despesa manual | `apps/api/src/modules/expenses/expenses.service.ts`, `expenses.controller.ts` | `apps/api/src/modules/expenses/expenses.service.spec.ts`, `expenses.controller.spec.ts` | ✅ |
-| RF-03/CA-06/CA-07/CA-17 | `GET /expenses` lista paginada, filtros, isolamento por usuário | `apps/api/src/modules/expenses/expenses.service.ts` (`findAll`) | `apps/api/src/modules/expenses/expenses.service.spec.ts` | ✅ |
-| RF-04/CA-08 | `GET /expenses/:id` | `apps/api/src/modules/expenses/expenses.service.ts` (`findOne`) | `apps/api/src/modules/expenses/expenses.service.spec.ts` | ✅ |
-| RF-05/CA-13 | `PATCH /expenses/:id` | `apps/api/src/modules/expenses/expenses.service.ts` (`update`) | `apps/api/src/modules/expenses/expenses.service.spec.ts` | ✅ |
-| RF-06/CA-11 | `DELETE /expenses/:id` soft-delete | `apps/api/src/modules/expenses/expenses.service.ts` (`remove`) | `apps/api/src/modules/expenses/expenses.service.spec.ts` | ✅ |
-| RF-07/CA-09/CA-10/R-LED-01 | Bloqueio de PATCH/DELETE em despesas `is_readonly` (403) | `apps/api/src/modules/expenses/expenses.service.ts` (`update`, `remove`) | `apps/api/src/modules/expenses/expenses.service.spec.ts` | ✅ |
-| RF-08/CA-05 | `odometer_km` persistido; checagem de sequência (R1) implementada em T3.2 — ver [SPEC-20260601-001](expenses/SPEC-20260601-001-odometer-validation.md) | `apps/api/src/modules/expenses/expenses.service.ts` (`create`, `buildOdometerWarning`) | `apps/api/src/modules/expenses/expenses.service.spec.ts` | ✅ |
-| RF-09/CA-12 | `vehicle_id` de outro usuário → 404 | `apps/api/src/modules/expenses/expenses.service.ts` (`create`) | `apps/api/src/modules/expenses/expenses.service.spec.ts` | ✅ |
-| RF-10/CA-15/C2 | Audit log em mutações (fire-and-forget via `AuditService`) | `apps/api/src/modules/expenses/expenses.service.ts` | `apps/api/src/modules/expenses/expenses.service.spec.ts` | 🔶 (chamada verificada via mock; sem teste de integração do `audit_logs`) |
-| RF-14 | Campo `computed` (`price_per_liter`, `km_per_liter`) | `apps/api/src/modules/expenses/expenses.service.ts` (`computeFuelMetrics`) — implementado em T3.5, ver [SPEC-20260606-001](expenses/SPEC-20260606-001-fuel-enrichment.md) | `apps/api/src/modules/expenses/expenses.service.spec.ts` | ✅ |
-| RF-15 | Paginação por `cursor` | — | — | ❌ Baixa prioridade, não implementada nesta tarefa |
+| Req                        | Descrição                                                                                                                                              | Código                                                                                                                                                                    | Teste                                                                                   | Status                                                                    |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| RF-01/RF-02/CA-01          | `POST /expenses` cria despesa manual                                                                                                                   | `apps/api/src/modules/expenses/expenses.service.ts`, `expenses.controller.ts`                                                                                             | `apps/api/src/modules/expenses/expenses.service.spec.ts`, `expenses.controller.spec.ts` | ✅                                                                        |
+| RF-03/CA-06/CA-07/CA-17    | `GET /expenses` lista paginada, filtros, isolamento por usuário                                                                                        | `apps/api/src/modules/expenses/expenses.service.ts` (`findAll`)                                                                                                           | `apps/api/src/modules/expenses/expenses.service.spec.ts`                                | ✅                                                                        |
+| RF-04/CA-08                | `GET /expenses/:id`                                                                                                                                    | `apps/api/src/modules/expenses/expenses.service.ts` (`findOne`)                                                                                                           | `apps/api/src/modules/expenses/expenses.service.spec.ts`                                | ✅                                                                        |
+| RF-05/CA-13                | `PATCH /expenses/:id`                                                                                                                                  | `apps/api/src/modules/expenses/expenses.service.ts` (`update`)                                                                                                            | `apps/api/src/modules/expenses/expenses.service.spec.ts`                                | ✅                                                                        |
+| RF-06/CA-11                | `DELETE /expenses/:id` soft-delete                                                                                                                     | `apps/api/src/modules/expenses/expenses.service.ts` (`remove`)                                                                                                            | `apps/api/src/modules/expenses/expenses.service.spec.ts`                                | ✅                                                                        |
+| RF-07/CA-09/CA-10/R-LED-01 | Bloqueio de PATCH/DELETE em despesas `is_readonly` (403)                                                                                               | `apps/api/src/modules/expenses/expenses.service.ts` (`update`, `remove`)                                                                                                  | `apps/api/src/modules/expenses/expenses.service.spec.ts`                                | ✅                                                                        |
+| RF-08/CA-05                | `odometer_km` persistido; checagem de sequência (R1) implementada em T3.2 — ver [SPEC-20260601-001](expenses/SPEC-20260601-001-odometer-validation.md) | `apps/api/src/modules/expenses/expenses.service.ts` (`create`, `buildOdometerWarning`)                                                                                    | `apps/api/src/modules/expenses/expenses.service.spec.ts`                                | ✅                                                                        |
+| RF-09/CA-12                | `vehicle_id` de outro usuário → 404                                                                                                                    | `apps/api/src/modules/expenses/expenses.service.ts` (`create`)                                                                                                            | `apps/api/src/modules/expenses/expenses.service.spec.ts`                                | ✅                                                                        |
+| RF-10/CA-15/C2             | Audit log em mutações (fire-and-forget via `AuditService`)                                                                                             | `apps/api/src/modules/expenses/expenses.service.ts`                                                                                                                       | `apps/api/src/modules/expenses/expenses.service.spec.ts`                                | 🔶 (chamada verificada via mock; sem teste de integração do `audit_logs`) |
+| RF-14                      | Campo `computed` (`price_per_liter`, `km_per_liter`)                                                                                                   | `apps/api/src/modules/expenses/expenses.service.ts` (`computeFuelMetrics`) — implementado em T3.5, ver [SPEC-20260606-001](expenses/SPEC-20260606-001-fuel-enrichment.md) | `apps/api/src/modules/expenses/expenses.service.spec.ts`                                | ✅                                                                        |
+| RF-15                      | Paginação por `cursor`                                                                                                                                 | —                                                                                                                                                                         | —                                                                                       | ❌ Baixa prioridade, não implementada nesta tarefa                        |
 
 ### Schema / Validação
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-02 | `expenseBaseSchema`, `createExpenseInputSchema`, `updateExpenseInputSchema`, `listExpensesQuerySchema` | `packages/validators/src/expense.schemas.ts` | `packages/validators/src/expense.schemas.spec.ts` | ✅ |
+| Req   | Descrição                                                                                              | Código                                       | Teste                                             | Status |
+| ----- | ------------------------------------------------------------------------------------------------------ | -------------------------------------------- | ------------------------------------------------- | ------ |
+| RF-02 | `expenseBaseSchema`, `createExpenseInputSchema`, `updateExpenseInputSchema`, `listExpensesQuerySchema` | `packages/validators/src/expense.schemas.ts` | `packages/validators/src/expense.schemas.spec.ts` | ✅     |
 
 ### Frontend
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-11 | Página `/expenses` (listagem, resolve veículo por `vehicle_id`) | `apps/web/src/app/expenses/page.tsx` | `apps/web/src/app/expenses/page.spec.tsx` | ✅ |
-| RF-12 | Página `/expenses/new` (formulário de criação) | `apps/web/src/app/expenses/new/page.tsx` | `apps/web/src/app/expenses/new/page.spec.tsx` | ✅ |
-| RF-13 | Página `/expenses/[id]` (edição + remoção, bloqueio quando `is_readonly`) | `apps/web/src/app/expenses/[id]/page.tsx` | `apps/web/src/app/expenses/[id]/page.spec.tsx` | ✅ |
+| Req   | Descrição                                                                 | Código                                    | Teste                                          | Status |
+| ----- | ------------------------------------------------------------------------- | ----------------------------------------- | ---------------------------------------------- | ------ |
+| RF-11 | Página `/expenses` (listagem, resolve veículo por `vehicle_id`)           | `apps/web/src/app/expenses/page.tsx`      | `apps/web/src/app/expenses/page.spec.tsx`      | ✅     |
+| RF-12 | Página `/expenses/new` (formulário de criação)                            | `apps/web/src/app/expenses/new/page.tsx`  | `apps/web/src/app/expenses/new/page.spec.tsx`  | ✅     |
+| RF-13 | Página `/expenses/[id]` (edição + remoção, bloqueio quando `is_readonly`) | `apps/web/src/app/expenses/[id]/page.tsx` | `apps/web/src/app/expenses/[id]/page.spec.tsx` | ✅     |
 
 ---
 
@@ -1188,37 +1193,37 @@ que o artefato ainda não existe no repositório.
 
 ### Banco de dados
 
-| Artefato | Descrição | Regra | Status |
-|----------|-----------|-------|--------|
-| `supabase/migrations/20260712171846_grouping_templates_preferences.sql` | `CREATE TABLE public.user_categories` (id, user_id FK, value slug `[a-z0-9_-]+`, label 1–100 chars, created_at) com FK `→ profiles(id) ON DELETE CASCADE` | — | 🔶 Aplicado (sem teste) |
-| `supabase/migrations/20260713210000_user_categories_unique_value.sql` | `ADD CONSTRAINT uq_user_categories_user_value UNIQUE (user_id, value)` — gap corrigido em T2.3 | R-CAT-02, RF-03 | ✅ Aplicado (coberto indiretamente por `categories.service.spec.ts`, caso de violação `23505`) |
-| RLS `user_categories_owner` | `supabase/migrations/20260712172047_rls_policies.sql` — policy `for all` por `user_id` | S2 | 🔶 |
+| Artefato                                                                | Descrição                                                                                                                                                 | Regra           | Status                                                                                         |
+| ----------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------- | ---------------------------------------------------------------------------------------------- |
+| `supabase/migrations/20260712171846_grouping_templates_preferences.sql` | `CREATE TABLE public.user_categories` (id, user*id FK, value slug `[a-z0-9*-]+`, label 1–100 chars, created_at) com FK `→ profiles(id) ON DELETE CASCADE` | —               | 🔶 Aplicado (sem teste)                                                                        |
+| `supabase/migrations/20260713210000_user_categories_unique_value.sql`   | `ADD CONSTRAINT uq_user_categories_user_value UNIQUE (user_id, value)` — gap corrigido em T2.3                                                            | R-CAT-02, RF-03 | ✅ Aplicado (coberto indiretamente por `categories.service.spec.ts`, caso de violação `23505`) |
+| RLS `user_categories_owner`                                             | `supabase/migrations/20260712172047_rls_policies.sql` — policy `for all` por `user_id`                                                                    | S2              | 🔶                                                                                             |
 
 ### API (backend) — `CategoriesModule`
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-01/CA-07 | `GET /categories`: retorna `{ default: DEFAULT_EXPENSE_CATEGORIES, custom: [...] }` ordenado por `label` | `apps/api/src/modules/categories/categories.controller.ts`, `categories.service.ts` | `apps/api/src/modules/categories/categories.service.spec.ts` | ✅ |
-| RF-02/CA-01/CA-05 | `POST /categories`: cria categoria; `value` validado via `createCategoryInputSchema` (slug, 1–50) | `apps/api/src/modules/categories/categories.controller.ts`, `categories.service.ts` | `apps/api/src/modules/categories/categories.service.spec.ts` | ✅ |
-| RF-04/CA-02/R-CAT-03 | `POST /categories` com `value` de categoria padrão retorna 409 | `apps/api/src/modules/categories/categories.service.ts` | `apps/api/src/modules/categories/categories.service.spec.ts` | ✅ |
-| RF-03/CA-03/R-CAT-02 | `POST /categories` com `value` duplicado do mesmo usuário retorna 409 (via `23505` + constraint nova) | `apps/api/src/modules/categories/categories.service.ts` | `apps/api/src/modules/categories/categories.service.spec.ts` | ✅ |
-| RF-05/CA-04/R-CAT-01 | `POST /categories` quando usuário já tem 20 categorias retorna 422 | `apps/api/src/modules/categories/categories.service.ts` | `apps/api/src/modules/categories/categories.service.spec.ts` | ✅ |
-| RF-06/CA-06/R-CAT-04 | `DELETE /categories/:id`: hard-delete; verifica ownership; 404 se não encontrada | `apps/api/src/modules/categories/categories.controller.ts`, `categories.service.ts` | `apps/api/src/modules/categories/categories.service.spec.ts` | ✅ |
-| RNF-01/RNF-02/S1/S2 | Toda rota exige JWT (`SupabaseAuthGuard`); client escopado por usuário + filtro `user_id` | `apps/api/src/modules/categories/categories.service.ts` | `apps/api/src/modules/categories/categories.service.spec.ts` | ✅ |
-| RNF-03/C1 | Cascade FK `user_categories.user_id → profiles(id) ON DELETE CASCADE` garante remoção na exclusão de conta | `supabase/migrations/20260712171846_grouping_templates_preferences.sql` | — | 🔶 Garantido pelo DB, sem teste de integração |
+| Req                  | Descrição                                                                                                  | Código                                                                              | Teste                                                        | Status                                        |
+| -------------------- | ---------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- | ------------------------------------------------------------ | --------------------------------------------- |
+| RF-01/CA-07          | `GET /categories`: retorna `{ default: DEFAULT_EXPENSE_CATEGORIES, custom: [...] }` ordenado por `label`   | `apps/api/src/modules/categories/categories.controller.ts`, `categories.service.ts` | `apps/api/src/modules/categories/categories.service.spec.ts` | ✅                                            |
+| RF-02/CA-01/CA-05    | `POST /categories`: cria categoria; `value` validado via `createCategoryInputSchema` (slug, 1–50)          | `apps/api/src/modules/categories/categories.controller.ts`, `categories.service.ts` | `apps/api/src/modules/categories/categories.service.spec.ts` | ✅                                            |
+| RF-04/CA-02/R-CAT-03 | `POST /categories` com `value` de categoria padrão retorna 409                                             | `apps/api/src/modules/categories/categories.service.ts`                             | `apps/api/src/modules/categories/categories.service.spec.ts` | ✅                                            |
+| RF-03/CA-03/R-CAT-02 | `POST /categories` com `value` duplicado do mesmo usuário retorna 409 (via `23505` + constraint nova)      | `apps/api/src/modules/categories/categories.service.ts`                             | `apps/api/src/modules/categories/categories.service.spec.ts` | ✅                                            |
+| RF-05/CA-04/R-CAT-01 | `POST /categories` quando usuário já tem 20 categorias retorna 422                                         | `apps/api/src/modules/categories/categories.service.ts`                             | `apps/api/src/modules/categories/categories.service.spec.ts` | ✅                                            |
+| RF-06/CA-06/R-CAT-04 | `DELETE /categories/:id`: hard-delete; verifica ownership; 404 se não encontrada                           | `apps/api/src/modules/categories/categories.controller.ts`, `categories.service.ts` | `apps/api/src/modules/categories/categories.service.spec.ts` | ✅                                            |
+| RNF-01/RNF-02/S1/S2  | Toda rota exige JWT (`SupabaseAuthGuard`); client escopado por usuário + filtro `user_id`                  | `apps/api/src/modules/categories/categories.service.ts`                             | `apps/api/src/modules/categories/categories.service.spec.ts` | ✅                                            |
+| RNF-03/C1            | Cascade FK `user_categories.user_id → profiles(id) ON DELETE CASCADE` garante remoção na exclusão de conta | `supabase/migrations/20260712171846_grouping_templates_preferences.sql`             | —                                                            | 🔶 Garantido pelo DB, sem teste de integração |
 
 ### Schema / Validação
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-02 | `createCategoryInputSchema`, `DEFAULT_EXPENSE_CATEGORIES` (9 categorias), `DEFAULT_EXPENSE_CATEGORY_VALUES` | `packages/validators/src/category.schemas.ts` | `packages/validators/src/category.schemas.spec.ts` | ✅ |
+| Req   | Descrição                                                                                                   | Código                                        | Teste                                              | Status |
+| ----- | ----------------------------------------------------------------------------------------------------------- | --------------------------------------------- | -------------------------------------------------- | ------ |
+| RF-02 | `createCategoryInputSchema`, `DEFAULT_EXPENSE_CATEGORIES` (9 categorias), `DEFAULT_EXPENSE_CATEGORY_VALUES` | `packages/validators/src/category.schemas.ts` | `packages/validators/src/category.schemas.spec.ts` | ✅     |
 
 ### Frontend
 
-| Req | Descrição | Status |
-|-----|-----------|--------|
-| RF-07/RF-08 | `ExpenseForm` com `customCategories: { value, label }[]`; migração do legado `profiles.preferences.expense_categories` para `GET /categories` — depende do módulo de despesas (Fase 3) | ⏳ |
-| — | UI de gerenciamento de categorias (página de configurações) | ❌ Fora de escopo do MVP (definição original da spec) |
+| Req         | Descrição                                                                                                                                                                              | Status                                                |
+| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------- |
+| RF-07/RF-08 | `ExpenseForm` com `customCategories: { value, label }[]`; migração do legado `profiles.preferences.expense_categories` para `GET /categories` — depende do módulo de despesas (Fase 3) | ⏳                                                    |
+| —           | UI de gerenciamento de categorias (página de configurações)                                                                                                                            | ❌ Fora de escopo do MVP (definição original da spec) |
 
 ---
 
@@ -1233,39 +1238,39 @@ que o artefato ainda não existe no repositório.
 
 ### Banco de dados
 
-| Artefato | Descrição | Regra | Status |
-|----------|-----------|-------|--------|
-| `supabase/migrations/20260712171846_grouping_templates_preferences.sql` | Tabelas `vehicle_groups` (id, user_id FK, name, color, timestamps) e `vehicle_group_members` (group_id FK, vehicle_id FK, PK composta) | — | 🔶 Aplicado (sem teste) |
-| RLS `vehicle_groups_owner` + `vehicle_group_members_owner` | `supabase/migrations/20260712172047_rls_policies.sql` — policies `for all` por `user_id` (groups) e por ownership transitivo via join (members) | S2 | 🔶 |
+| Artefato                                                                | Descrição                                                                                                                                       | Regra | Status                  |
+| ----------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- | ----- | ----------------------- |
+| `supabase/migrations/20260712171846_grouping_templates_preferences.sql` | Tabelas `vehicle_groups` (id, user_id FK, name, color, timestamps) e `vehicle_group_members` (group_id FK, vehicle_id FK, PK composta)          | —     | 🔶 Aplicado (sem teste) |
+| RLS `vehicle_groups_owner` + `vehicle_group_members_owner`              | `supabase/migrations/20260712172047_rls_policies.sql` — policies `for all` por `user_id` (groups) e por ownership transitivo via join (members) | S2    | 🔶                      |
 
 ### API (backend) — `VehicleGroupsModule`
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-01/RF-02/CA-01..03 | `POST /vehicle-groups`: cria grupo com `name` + `color`; valida via `createGroupInputSchema` | `apps/api/src/modules/vehicle-groups/vehicle-groups.controller.ts`, `vehicle-groups.service.ts` | `apps/api/src/modules/vehicle-groups/vehicle-groups.service.spec.ts`, `vehicle-groups.controller.spec.ts` | ✅ |
-| RF-08 | `GET /vehicle-groups`: lista grupos do usuário com `member_count` (agregação `vehicle_group_members(count)`) | `apps/api/src/modules/vehicle-groups/vehicle-groups.service.ts` | `apps/api/src/modules/vehicle-groups/vehicle-groups.service.spec.ts` | ✅ |
-| RF-03/CA-08 | `PATCH /vehicle-groups/:id`: atualiza `name`/`color` por `id + user_id`; 404 se não for do dono | `apps/api/src/modules/vehicle-groups/vehicle-groups.controller.ts`, `vehicle-groups.service.ts` | `apps/api/src/modules/vehicle-groups/vehicle-groups.service.spec.ts` | ✅ |
-| RF-04/R-GRP-04/CA-07 | `DELETE /vehicle-groups/:id`: hard-delete; cascade FK remove membros | `apps/api/src/modules/vehicle-groups/vehicle-groups.controller.ts`, `vehicle-groups.service.ts` | `apps/api/src/modules/vehicle-groups/vehicle-groups.service.spec.ts` | ✅ |
-| RF-05/RF-06/RF-07/R-GRP-01..03/CA-04..06 | `PUT /vehicle-groups/:id/members`: replace-all; valida max 200 ids via schema; descarta veículos sem ownership ou soft-deletados | `apps/api/src/modules/vehicle-groups/vehicle-groups.controller.ts`, `vehicle-groups.service.ts` | `apps/api/src/modules/vehicle-groups/vehicle-groups.service.spec.ts` | ✅ |
-| RNF-01/RNF-02/S1/S2 | Toda mutação usa client Supabase escopado pelo JWT do usuário (`clientForUser`) + filtro `user_id` redundante à RLS | `apps/api/src/modules/vehicle-groups/vehicle-groups.service.ts` | `apps/api/src/modules/vehicle-groups/vehicle-groups.service.spec.ts` | ✅ |
+| Req                                      | Descrição                                                                                                                        | Código                                                                                          | Teste                                                                                                     | Status |
+| ---------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- | ------ |
+| RF-01/RF-02/CA-01..03                    | `POST /vehicle-groups`: cria grupo com `name` + `color`; valida via `createGroupInputSchema`                                     | `apps/api/src/modules/vehicle-groups/vehicle-groups.controller.ts`, `vehicle-groups.service.ts` | `apps/api/src/modules/vehicle-groups/vehicle-groups.service.spec.ts`, `vehicle-groups.controller.spec.ts` | ✅     |
+| RF-08                                    | `GET /vehicle-groups`: lista grupos do usuário com `member_count` (agregação `vehicle_group_members(count)`)                     | `apps/api/src/modules/vehicle-groups/vehicle-groups.service.ts`                                 | `apps/api/src/modules/vehicle-groups/vehicle-groups.service.spec.ts`                                      | ✅     |
+| RF-03/CA-08                              | `PATCH /vehicle-groups/:id`: atualiza `name`/`color` por `id + user_id`; 404 se não for do dono                                  | `apps/api/src/modules/vehicle-groups/vehicle-groups.controller.ts`, `vehicle-groups.service.ts` | `apps/api/src/modules/vehicle-groups/vehicle-groups.service.spec.ts`                                      | ✅     |
+| RF-04/R-GRP-04/CA-07                     | `DELETE /vehicle-groups/:id`: hard-delete; cascade FK remove membros                                                             | `apps/api/src/modules/vehicle-groups/vehicle-groups.controller.ts`, `vehicle-groups.service.ts` | `apps/api/src/modules/vehicle-groups/vehicle-groups.service.spec.ts`                                      | ✅     |
+| RF-05/RF-06/RF-07/R-GRP-01..03/CA-04..06 | `PUT /vehicle-groups/:id/members`: replace-all; valida max 200 ids via schema; descarta veículos sem ownership ou soft-deletados | `apps/api/src/modules/vehicle-groups/vehicle-groups.controller.ts`, `vehicle-groups.service.ts` | `apps/api/src/modules/vehicle-groups/vehicle-groups.service.spec.ts`                                      | ✅     |
+| RNF-01/RNF-02/S1/S2                      | Toda mutação usa client Supabase escopado pelo JWT do usuário (`clientForUser`) + filtro `user_id` redundante à RLS              | `apps/api/src/modules/vehicle-groups/vehicle-groups.service.ts`                                 | `apps/api/src/modules/vehicle-groups/vehicle-groups.service.spec.ts`                                      | ✅     |
 
 ### Schema / Validação
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-01/RF-16 | `createGroupInputSchema`/`updateGroupInputSchema`/`setGroupMembersInputSchema`, `PRESET_GROUP_COLORS` | `packages/validators/src/vehicle-group.schemas.ts` | `packages/validators/src/vehicle-group.schemas.spec.ts` | ✅ |
+| Req         | Descrição                                                                                             | Código                                             | Teste                                                   | Status |
+| ----------- | ----------------------------------------------------------------------------------------------------- | -------------------------------------------------- | ------------------------------------------------------- | ------ |
+| RF-01/RF-16 | `createGroupInputSchema`/`updateGroupInputSchema`/`setGroupMembersInputSchema`, `PRESET_GROUP_COLORS` | `packages/validators/src/vehicle-group.schemas.ts` | `packages/validators/src/vehicle-group.schemas.spec.ts` | ✅     |
 
 ### Frontend
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-08 | `/vehicle-groups`: listagem com contagem de membros | `apps/web/src/app/vehicle-groups/page.tsx` | `apps/web/src/app/vehicle-groups/page.spec.tsx` | ✅ |
-| RF-01/RF-05/RF-09 (parcial) | `/vehicle-groups/new`: formulário de criação (nome, paleta preset, checkboxes de veículos) | `apps/web/src/app/vehicle-groups/new/page.tsx` | `apps/web/src/app/vehicle-groups/new/page.spec.tsx` | ✅ |
-| RF-03/RF-04/RF-05 | `/vehicle-groups/[id]`: edição de nome/cor, gerenciamento de membros, exclusão | `apps/web/src/app/vehicle-groups/[id]/page.tsx` | `apps/web/src/app/vehicle-groups/[id]/page.spec.tsx` | ✅ |
-| RF-08..RF-11 | `FleetAside`: chips de grupos; formulário inline criar/editar; ativar modo `group` no store — depende do dashboard (Fase 5) | — | — | ⏳ |
-| RF-12/RF-13 | `FleetCommand`: chips de grupos para filtro rápido; `GroupKpiSummary` filtrado por vehicleIds — depende do dashboard (Fase 5) | — | — | ⏳ |
-| RF-10/RF-11/R-CTX-02 | `activeGroupId` no store Zustand + persistência em localStorage + query param `groupId` na URL — depende do sistema Em Foco (SPEC-20260602-001, Fase 5) | — | — | ⏳ |
-| RF-14/RF-15 | Limpeza silenciosa de contexto ao excluir grupo ativo / detectar staleness — depende do item acima | — | — | ⏳ |
+| Req                         | Descrição                                                                                                                                               | Código                                          | Teste                                                | Status |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- | ---------------------------------------------------- | ------ |
+| RF-08                       | `/vehicle-groups`: listagem com contagem de membros                                                                                                     | `apps/web/src/app/vehicle-groups/page.tsx`      | `apps/web/src/app/vehicle-groups/page.spec.tsx`      | ✅     |
+| RF-01/RF-05/RF-09 (parcial) | `/vehicle-groups/new`: formulário de criação (nome, paleta preset, checkboxes de veículos)                                                              | `apps/web/src/app/vehicle-groups/new/page.tsx`  | `apps/web/src/app/vehicle-groups/new/page.spec.tsx`  | ✅     |
+| RF-03/RF-04/RF-05           | `/vehicle-groups/[id]`: edição de nome/cor, gerenciamento de membros, exclusão                                                                          | `apps/web/src/app/vehicle-groups/[id]/page.tsx` | `apps/web/src/app/vehicle-groups/[id]/page.spec.tsx` | ✅     |
+| RF-08..RF-11                | `FleetAside`: chips de grupos; formulário inline criar/editar; ativar modo `group` no store — depende do dashboard (Fase 5)                             | —                                               | —                                                    | ⏳     |
+| RF-12/RF-13                 | `FleetCommand`: chips de grupos para filtro rápido; `GroupKpiSummary` filtrado por vehicleIds — depende do dashboard (Fase 5)                           | —                                               | —                                                    | ⏳     |
+| RF-10/RF-11/R-CTX-02        | `activeGroupId` no store Zustand + persistência em localStorage + query param `groupId` na URL — depende do sistema Em Foco (SPEC-20260602-001, Fase 5) | —                                               | —                                                    | ⏳     |
+| RF-14/RF-15                 | Limpeza silenciosa de contexto ao excluir grupo ativo / detectar staleness — depende do item acima                                                      | —                                               | —                                                    | ⏳     |
 
 ---
 
@@ -1281,38 +1286,38 @@ que o artefato ainda não existe no repositório.
 
 ### Schema / Validação
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-01/RF-07 | `vehicleBaseSchema`/`createVehicleInputSchema`/`updateVehicleInputSchema` (Zod) | `packages/validators/src/vehicle.schemas.ts` | `packages/validators/src/vehicle.schemas.spec.ts` | ✅ |
-| RF-02/R-VEH-02 | `plateSchema` + `normalizePlate`: uppercase sem hífen, valida BR/Mercosul | `packages/validators/src/vehicle.schemas.ts` | `packages/validators/src/vehicle.schemas.spec.ts` | ✅ |
+| Req            | Descrição                                                                       | Código                                       | Teste                                             | Status |
+| -------------- | ------------------------------------------------------------------------------- | -------------------------------------------- | ------------------------------------------------- | ------ |
+| RF-01/RF-07    | `vehicleBaseSchema`/`createVehicleInputSchema`/`updateVehicleInputSchema` (Zod) | `packages/validators/src/vehicle.schemas.ts` | `packages/validators/src/vehicle.schemas.spec.ts` | ✅     |
+| RF-02/R-VEH-02 | `plateSchema` + `normalizePlate`: uppercase sem hífen, valida BR/Mercosul       | `packages/validators/src/vehicle.schemas.ts` | `packages/validators/src/vehicle.schemas.spec.ts` | ✅     |
 
 ### API (backend)
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-01/RF-02/CA-01 | `POST /vehicles`: cria veículo; placa normalizada via `LicensePlate` VO | `apps/api/src/modules/vehicles/vehicles.controller.ts`, `vehicles.service.ts` | `apps/api/src/modules/vehicles/vehicles.service.spec.ts`, `vehicles.controller.spec.ts` | ✅ |
-| RF-03/RF-16/CA-04 | `GET /vehicles`: lista veículos do `user_id` do JWT com `deleted_at IS NULL` | `apps/api/src/modules/vehicles/vehicles.controller.ts`, `vehicles.service.ts` | `apps/api/src/modules/vehicles/vehicles.service.spec.ts` | ✅ |
-| RF-04/RF-15/RF-16/CA-08 | `GET /vehicles/:id`: busca por `id + user_id`; retorna 404 se não encontrado ou de outro usuário | `apps/api/src/modules/vehicles/vehicles.controller.ts`, `vehicles.service.ts` | `apps/api/src/modules/vehicles/vehicles.service.spec.ts` | ✅ |
-| RF-05/CA-07 | `PATCH /vehicles/:id`: atualiza campos parciais; verifica propriedade | `apps/api/src/modules/vehicles/vehicles.controller.ts`, `vehicles.service.ts` | `apps/api/src/modules/vehicles/vehicles.service.spec.ts` | ✅ |
-| RF-06/R-VEH-01/CA-05/CA-06 | `DELETE /vehicles/:id`: soft-delete em cascata — vehicle + expenses + maintenances via `Promise.all` | `apps/api/src/modules/vehicles/vehicles.controller.ts`, `vehicles.service.ts` | `apps/api/src/modules/vehicles/vehicles.service.spec.ts` | ✅ |
-| RF-02/R-VEH-02/CA-01..03 | `LicensePlate` VO valida e normaliza placa (BR + Mercosul); placa inválida lança 400 | `apps/api/src/modules/vehicles/value-objects/license-plate.vo.ts` | `apps/api/src/modules/vehicles/value-objects/license-plate.vo.spec.ts` | ✅ |
-| RF-17/C2 | Audit log (`VEHICLE_CREATED`/`VEHICLE_UPDATED`/`VEHICLE_DELETED`) registrado em mutações via `AuditService.log` fire-and-forget | `apps/api/src/modules/vehicles/vehicles.service.ts` | `apps/api/src/modules/vehicles/vehicles.service.spec.ts` | ✅ |
-| RNF-04 | Nota de risco preservada da spec original: os 3 updates do soft-delete cascata rodam em `Promise.all` sem RPC transacional — falha parcial é teoricamente possível; melhoria futura registrada nas Notas Técnicas da spec | `apps/api/src/modules/vehicles/vehicles.service.ts` | — | 🔶 Risco conhecido, não bloqueante |
+| Req                        | Descrição                                                                                                                                                                                                                 | Código                                                                        | Teste                                                                                   | Status                             |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- | ---------------------------------- |
+| RF-01/RF-02/CA-01          | `POST /vehicles`: cria veículo; placa normalizada via `LicensePlate` VO                                                                                                                                                   | `apps/api/src/modules/vehicles/vehicles.controller.ts`, `vehicles.service.ts` | `apps/api/src/modules/vehicles/vehicles.service.spec.ts`, `vehicles.controller.spec.ts` | ✅                                 |
+| RF-03/RF-16/CA-04          | `GET /vehicles`: lista veículos do `user_id` do JWT com `deleted_at IS NULL`                                                                                                                                              | `apps/api/src/modules/vehicles/vehicles.controller.ts`, `vehicles.service.ts` | `apps/api/src/modules/vehicles/vehicles.service.spec.ts`                                | ✅                                 |
+| RF-04/RF-15/RF-16/CA-08    | `GET /vehicles/:id`: busca por `id + user_id`; retorna 404 se não encontrado ou de outro usuário                                                                                                                          | `apps/api/src/modules/vehicles/vehicles.controller.ts`, `vehicles.service.ts` | `apps/api/src/modules/vehicles/vehicles.service.spec.ts`                                | ✅                                 |
+| RF-05/CA-07                | `PATCH /vehicles/:id`: atualiza campos parciais; verifica propriedade                                                                                                                                                     | `apps/api/src/modules/vehicles/vehicles.controller.ts`, `vehicles.service.ts` | `apps/api/src/modules/vehicles/vehicles.service.spec.ts`                                | ✅                                 |
+| RF-06/R-VEH-01/CA-05/CA-06 | `DELETE /vehicles/:id`: soft-delete em cascata — vehicle + expenses + maintenances via `Promise.all`                                                                                                                      | `apps/api/src/modules/vehicles/vehicles.controller.ts`, `vehicles.service.ts` | `apps/api/src/modules/vehicles/vehicles.service.spec.ts`                                | ✅                                 |
+| RF-02/R-VEH-02/CA-01..03   | `LicensePlate` VO valida e normaliza placa (BR + Mercosul); placa inválida lança 400                                                                                                                                      | `apps/api/src/modules/vehicles/value-objects/license-plate.vo.ts`             | `apps/api/src/modules/vehicles/value-objects/license-plate.vo.spec.ts`                  | ✅                                 |
+| RF-17/C2                   | Audit log (`VEHICLE_CREATED`/`VEHICLE_UPDATED`/`VEHICLE_DELETED`) registrado em mutações via `AuditService.log` fire-and-forget                                                                                           | `apps/api/src/modules/vehicles/vehicles.service.ts`                           | `apps/api/src/modules/vehicles/vehicles.service.spec.ts`                                | ✅                                 |
+| RNF-04                     | Nota de risco preservada da spec original: os 3 updates do soft-delete cascata rodam em `Promise.all` sem RPC transacional — falha parcial é teoricamente possível; melhoria futura registrada nas Notas Técnicas da spec | `apps/api/src/modules/vehicles/vehicles.service.ts`                           | —                                                                                       | 🔶 Risco conhecido, não bloqueante |
 
 ### Frontend
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-03/CA-04 | `/vehicles`: listagem de veículos ativos | `apps/web/src/app/vehicles/page.tsx` | `apps/web/src/app/vehicles/page.spec.tsx` | ✅ |
-| RF-01/CA-01/CA-02 | `/vehicles/new`: formulário de cadastro (campos obrigatórios apenas) | `apps/web/src/app/vehicles/new/page.tsx` | `apps/web/src/app/vehicles/new/page.spec.tsx` | ✅ |
-| RF-04/RF-05/CA-07/CA-08 | `/vehicles/[id]`: ficha do veículo com edição parcial (apelido, cor) | `apps/web/src/app/vehicles/[id]/page.tsx` | `apps/web/src/app/vehicles/[id]/page.spec.tsx` | ✅ |
-| RF-06/CA-05 | Confirmação de remoção (soft-delete) via `window.confirm` — sem componente `AlertDialog` dedicado, pendente do Design System (Fase 8, T8.1) | `apps/web/src/app/vehicles/[id]/page.tsx` | `apps/web/src/app/vehicles/[id]/page.spec.tsx` | 🔶 |
-| RF-07 | Campos opcionais além de apelido/cor (foto, combustível, documentação, motor) não expostos no formulário mínimo desta tarefa | — | — | ⏳ |
-| RF-11 | Upload de foto de capa com `PhotoFramingDialog` | — | — | ⏳ |
-| RF-12 | Autocomplete FIPE via `FipeCombobox` | — | — | ⏳ |
-| RF-13 | `/vehicles/[id]/history`: histórico de atividades via `ActivityTimelineView.tsx` | — | — | ⏳ |
-| RF-14 | `/vehicles/[id]/manage`: gestão de documentação e especificações técnicas | — | — | ⏳ |
-| RF-09/RF-10 | `QuickVehicleRegister`: fluxo de onboarding para primeiro veículo | — | — | ⏳ |
+| Req                     | Descrição                                                                                                                                   | Código                                    | Teste                                          | Status |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------- | ---------------------------------------------- | ------ |
+| RF-03/CA-04             | `/vehicles`: listagem de veículos ativos                                                                                                    | `apps/web/src/app/vehicles/page.tsx`      | `apps/web/src/app/vehicles/page.spec.tsx`      | ✅     |
+| RF-01/CA-01/CA-02       | `/vehicles/new`: formulário de cadastro (campos obrigatórios apenas)                                                                        | `apps/web/src/app/vehicles/new/page.tsx`  | `apps/web/src/app/vehicles/new/page.spec.tsx`  | ✅     |
+| RF-04/RF-05/CA-07/CA-08 | `/vehicles/[id]`: ficha do veículo com edição parcial (apelido, cor)                                                                        | `apps/web/src/app/vehicles/[id]/page.tsx` | `apps/web/src/app/vehicles/[id]/page.spec.tsx` | ✅     |
+| RF-06/CA-05             | Confirmação de remoção (soft-delete) via `window.confirm` — sem componente `AlertDialog` dedicado, pendente do Design System (Fase 8, T8.1) | `apps/web/src/app/vehicles/[id]/page.tsx` | `apps/web/src/app/vehicles/[id]/page.spec.tsx` | 🔶     |
+| RF-07                   | Campos opcionais além de apelido/cor (foto, combustível, documentação, motor) não expostos no formulário mínimo desta tarefa                | —                                         | —                                              | ⏳     |
+| RF-11                   | Upload de foto de capa com `PhotoFramingDialog`                                                                                             | —                                         | —                                              | ⏳     |
+| RF-12                   | Autocomplete FIPE via `FipeCombobox`                                                                                                        | —                                         | —                                              | ⏳     |
+| RF-13                   | `/vehicles/[id]/history`: histórico de atividades via `ActivityTimelineView.tsx`                                                            | —                                         | —                                              | ⏳     |
+| RF-14                   | `/vehicles/[id]/manage`: gestão de documentação e especificações técnicas                                                                   | —                                         | —                                              | ⏳     |
+| RF-09/RF-10             | `QuickVehicleRegister`: fluxo de onboarding para primeiro veículo                                                                           | —                                         | —                                              | ⏳     |
 
 ---
 
@@ -1324,58 +1329,59 @@ que o artefato ainda não existe no repositório.
 > já existentes; o repositório não tinha nenhum app shell (`layout.tsx` era só `QueryProvider`,
 > cada página um `<main>` solto). T5.3 foi dividida em sub-tarefas (T5.3a-d). Esta rodada
 > (T5.3a) criou o pré-requisito: rota group `app/(app)/` (páginas autenticadas movidas para lá)
-> + `components/layout/sidebar.tsx` com nav básica.
-> **2026-07-15 (T5.3b):** `use-dashboard-store.ts` (5 modos, R-CTX-01/02) e `focus-slot.tsx`
-> (RF-01–06, com botão "Trocar" abrindo seletor inline de veículo/grupo) implementados e
-> integrados ao `Sidebar` (expandido e recolhido via `isSidebarCollapsed` em `ui-store.ts`).
-> RF-07 a RF-19 (integração com formulários, `VehicleActivator`, staleness) ficam para
-> T5.3c/T5.3d.
-> **2026-07-15 (T5.3c):** `VehicleActivator` (bootstrap `?vehicleId=`/`?groupId=` na URL →
-> store, e `ContextFilterSync` store → URL via `window.location.search` não-reativo, RF-15,
-> RF-17.1, R-CTX-04) e `FleetAside` (staleness de `activeVehicleId`/`activeGroupId`, RF-16,
-> reaproveitando as query keys `["vehicles"]`/`["vehicle-groups"]` já usadas pelo `focus-slot`
-> — sem request extra, RNF-03) implementados. RF-19 (logout limpa contexto) exigiu criar
-> `apps/web/src/lib/auth/logout.ts` e um botão "Sair" no `Sidebar` — não havia nenhum
-> mecanismo de logout no frontend até esta rodada (endpoint `POST /auth/logout` já existia
-> no backend, sem consumidor no cliente).
-> **2026-07-15 (T5.3d):** `use-vehicle-context-field.ts` (RF-07, RF-13, RF-14, R-CTX-06) e
-> `vehicle-recency.ts` (RF-12) implementados e integrados a `expenses/new/page.tsx` e
-> `maintenance/new/page.tsx`. **Desvios de escopo, documentados em IMPACTO-032:** RF-09
-> (lista de veículos pré-filtrada pelos membros do grupo) mostra a dica textual do grupo mas
-> não filtra a lista — não existe endpoint que retorne os IDs de membros de um grupo
-> específico (só `PUT /vehicle-groups/:id/members`, replace-all); RF-11 (dropdown filtrado por
-> atributo) funciona apenas client-side, sobre a lista de veículos já carregada. Ambos os
-> gaps ficam registrados para tratamento futuro (endpoint dedicado, se o modo `group`/
-> `attribute` ganhar um seletor de UI real — hoje só acionável via API/store direto).
+>
+> - `components/layout/sidebar.tsx` com nav básica.
+>   **2026-07-15 (T5.3b):** `use-dashboard-store.ts` (5 modos, R-CTX-01/02) e `focus-slot.tsx`
+>   (RF-01–06, com botão "Trocar" abrindo seletor inline de veículo/grupo) implementados e
+>   integrados ao `Sidebar` (expandido e recolhido via `isSidebarCollapsed` em `ui-store.ts`).
+>   RF-07 a RF-19 (integração com formulários, `VehicleActivator`, staleness) ficam para
+>   T5.3c/T5.3d.
+>   **2026-07-15 (T5.3c):** `VehicleActivator` (bootstrap `?vehicleId=`/`?groupId=` na URL →
+>   store, e `ContextFilterSync` store → URL via `window.location.search` não-reativo, RF-15,
+>   RF-17.1, R-CTX-04) e `FleetAside` (staleness de `activeVehicleId`/`activeGroupId`, RF-16,
+>   reaproveitando as query keys `["vehicles"]`/`["vehicle-groups"]` já usadas pelo `focus-slot`
+>   — sem request extra, RNF-03) implementados. RF-19 (logout limpa contexto) exigiu criar
+>   `apps/web/src/lib/auth/logout.ts` e um botão "Sair" no `Sidebar` — não havia nenhum
+>   mecanismo de logout no frontend até esta rodada (endpoint `POST /auth/logout` já existia
+>   no backend, sem consumidor no cliente).
+>   **2026-07-15 (T5.3d):** `use-vehicle-context-field.ts` (RF-07, RF-13, RF-14, R-CTX-06) e
+>   `vehicle-recency.ts` (RF-12) implementados e integrados a `expenses/new/page.tsx` e
+>   `maintenance/new/page.tsx`. **Desvios de escopo, documentados em IMPACTO-032:** RF-09
+>   (lista de veículos pré-filtrada pelos membros do grupo) mostra a dica textual do grupo mas
+>   não filtra a lista — não existe endpoint que retorne os IDs de membros de um grupo
+>   específico (só `PUT /vehicle-groups/:id/members`, replace-all); RF-11 (dropdown filtrado por
+>   atributo) funciona apenas client-side, sobre a lista de veículos já carregada. Ambos os
+>   gaps ficam registrados para tratamento futuro (endpoint dedicado, se o modo `group`/
+>   `attribute` ganhar um seletor de UI real — hoje só acionável via API/store direto).
 
 ### Frontend
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| — | Pré-requisito (T5.3a): app shell — route group `(app)` + `Sidebar` com navegação | `apps/web/src/app/(app)/layout.tsx`, `apps/web/src/components/layout/sidebar.tsx` | `apps/web/src/components/layout/sidebar.spec.tsx` | ✅ |
-| R-CTX-01/R-CTX-02 | `use-dashboard-store.ts`: 5 modos de contexto (`none`/`single`/`group`/`multi`/`attribute`), `clearAllSelection`, persistência seletiva (`single`/`group` via localStorage; `multi`/`attribute` efêmeros) | `apps/web/src/lib/stores/use-dashboard-store.ts` | `apps/web/src/lib/stores/use-dashboard-store.spec.ts` | ✅ |
-| RF-01, RF-02, RF-03, RF-06 | `focus-slot.tsx`: slot "Em Foco" com os 5 estados visuais, label por modo, botão "×" (`clearAllSelection`) | `apps/web/src/components/layout/focus-slot.tsx` | `apps/web/src/components/layout/focus-slot.spec.tsx` | ✅ |
-| RF-04 | Sidebar recolhido: slot mostra só ícone + dot, tooltip nativo (`title`) com detalhes | `apps/web/src/components/layout/focus-slot.tsx`, `apps/web/src/lib/stores/ui-store.ts` (`isSidebarCollapsed`) | — | ✅ (tooltip via `title` nativo, sem componente de tooltip customizado) |
-| RF-05 | Botão "Trocar" abre seletor inline (lista de veículos/grupos) | `apps/web/src/components/layout/focus-slot.tsx` | — | 🟡 Funcional, mas é uma lista simples sem busca/paginação — suficiente para o volume atual de veículos por usuário |
-| RNF-05 | Nomenclatura canônica centralizada | `apps/web/src/lib/context/context-labels.ts` | — | ✅ |
-| RNF-01/RNF-02 | Slot reserva espaço fixo antes da hidratação (evita CLS); render inicial não bloqueia em rede | `apps/web/src/components/layout/focus-slot.tsx` | — | ✅ |
-| RF-15, R-CTX-04 | `VehicleActivator`: único componente que sincroniza URL↔store; bootstrap de `?vehicleId=`/`?groupId=` no mount | `apps/web/src/components/layout/vehicle-activator.tsx` | `apps/web/src/components/layout/vehicle-activator.spec.tsx` | ✅ |
-| RF-17.1 | `ContextFilterSync` (mesma implementação): reage só a mudanças do store; lê `window.location.search` não-reativamente para não conflitar com filtros locais de página | `apps/web/src/components/layout/vehicle-activator.tsx` | `apps/web/src/components/layout/vehicle-activator.spec.tsx` | ✅ |
-| RF-16 | `FleetAside`: staleness de `activeVehicleId` (toast + clear) e `activeGroupId` (clear silencioso) | `apps/web/src/components/layout/fleet-aside.tsx` | `apps/web/src/components/layout/fleet-aside.spec.tsx` | ✅ |
-| RNF-03 | Staleness reaproveita as query keys `["vehicles"]`/`["vehicle-groups"]` já ativas no `focus-slot` — sem request extra (dedupe do TanStack Query) | `apps/web/src/components/layout/fleet-aside.tsx` | — | ✅ |
-| RNF-04 | Toast não-obstrutivo, descartável, some sozinho em 5s — migrado para a fila única de toasts (SPEC-20260525-001 §8.2), `duration: 5000` | `packages/ui/src/components/toast.tsx`, `apps/web/src/components/layout/fleet-aside.tsx` | `packages/ui/src/components/toast.test.tsx`, `apps/web/src/components/layout/fleet-aside.spec.tsx` | ✅ |
-| RF-19 | Logout limpa todos os campos de contexto | `apps/web/src/lib/auth/logout.ts`, botão "Sair" em `sidebar.tsx` | `apps/web/src/lib/auth/logout.spec.ts` | ✅ |
-| RF-07, R-CTX-06 | `use-vehicle-context-field.ts`: captura o contexto do store apenas no mount; pré-seleciona `vehicle_id` só no modo `single` | `apps/web/src/lib/hooks/use-vehicle-context-field.ts` | `apps/web/src/lib/hooks/use-vehicle-context-field.spec.tsx` | ✅ |
-| RF-08 | Ícone ↩ + fundo/borda âmbar quando o campo está herdado do contexto | `apps/web/src/app/(app)/expenses/new/page.tsx`, `.../maintenance/new/page.tsx` | `page.spec.tsx` de cada formulário | ✅ |
-| RF-09 | Modo `group`: campo vazio + dica com nome do grupo | `use-vehicle-context-field.ts` | — | 🟡 Dica textual pronta; lista **não** é pré-filtrada pelos membros — não existe endpoint `GET` para os IDs de membros de um grupo específico (só `PUT .../members`, replace-all) |
-| RF-10 | Modo `multi`: dica "N veículos selecionados" + atalhos | `use-vehicle-context-field.ts` | `use-vehicle-context-field.spec.tsx` | ✅ |
-| RF-11 | Modo `attribute`: dropdown filtrado pelo atributo ativo | `use-vehicle-context-field.ts` | `use-vehicle-context-field.spec.tsx` | 🟡 Filtragem client-side sobre a lista já carregada; modo `attribute` ainda não tem seletor de UI (só acionável via store/API direto) |
-| RF-12 | Modo `none`: atalhos dos últimos veículos acessados | `apps/web/src/lib/vehicle-recency.ts`, `use-vehicle-context-field.ts` | `expenses/new/page.spec.tsx` ("modo none: exibe os veículos recentes") | ✅ |
-| RF-13 | Seleção manual troca o ícone para ✓ e remove o visual âmbar | `use-vehicle-context-field.ts` | `page.spec.tsx` de cada formulário ("troca para indicador ✓") | ✅ |
-| RF-14 | Mudança de contexto com formulário aberto não reseta o campo; aviso com ação "Atualizar campo" | `use-vehicle-context-field.ts` | `expenses/new/page.spec.tsx` ("mudança de contexto com o formulário aberto") | ✅ (aviso inline no formulário, não o toast fixo global de RF-16 — natureza diferente: ação específica do campo, não staleness) |
-| RF-17 (dashboard/listas) | Filtragem de KPIs, Spotlight, listas de despesas/manutenções pelo contexto ativo | — | — | ⏳ Sync já existe (T5.3c); filtragem em si depende da Fase 5/6 (dashboard e listas ainda não leem o store) |
-| RF-18 | `/vehicles/[id]` e `/settings` ignoram o contexto | — | — | ⏳ Trivial (não fazem leitura do store hoje) — confirmar quando o contexto passar a influenciar outras páginas |
-| RF-17 | `expenses/page.tsx` e `maintenance/page.tsx`: filtro por contexto via `ContextFilterSync` | — | — | ⏳ |
+| Req                        | Descrição                                                                                                                                                                                                 | Código                                                                                                        | Teste                                                                                              | Status                                                                                                                                                                           |
+| -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| —                          | Pré-requisito (T5.3a): app shell — route group `(app)` + `Sidebar` com navegação                                                                                                                     | `apps/web/src/app/(app)/layout.tsx`, `apps/web/src/components/layout/sidebar.tsx`                             | `apps/web/src/components/layout/sidebar.spec.tsx`                                                  | ✅                                                                                                                                                                               |
+| R-CTX-01/R-CTX-02          | `use-dashboard-store.ts`: 5 modos de contexto (`none`/`single`/`group`/`multi`/`attribute`), `clearAllSelection`, persistência seletiva (`single`/`group` via localStorage; `multi`/`attribute` efêmeros) | `apps/web/src/lib/stores/use-dashboard-store.ts`                                                              | `apps/web/src/lib/stores/use-dashboard-store.spec.ts`                                              | ✅                                                                                                                                                                               |
+| RF-01, RF-02, RF-03, RF-06 | `focus-slot.tsx`: slot "Em Foco" com os 5 estados visuais, label por modo, botão "×" (`clearAllSelection`)                                                                                                | `apps/web/src/components/layout/focus-slot.tsx`                                                               | `apps/web/src/components/layout/focus-slot.spec.tsx`                                               | ✅                                                                                                                                                                               |
+| RF-04                      | Sidebar recolhido: slot mostra só ícone + dot, tooltip nativo (`title`) com detalhes                                                                                                                      | `apps/web/src/components/layout/focus-slot.tsx`, `apps/web/src/lib/stores/ui-store.ts` (`isSidebarCollapsed`) | —                                                                                                  | ✅ (tooltip via `title` nativo, sem componente de tooltip customizado)                                                                                                           |
+| RF-05                      | Botão "Trocar" abre seletor inline (lista de veículos/grupos)                                                                                                                                             | `apps/web/src/components/layout/focus-slot.tsx`                                                               | —                                                                                                  | 🟡 Funcional, mas é uma lista simples sem busca/paginação — suficiente para o volume atual de veículos por usuário                                                               |
+| RNF-05                     | Nomenclatura canônica centralizada                                                                                                                                                                        | `apps/web/src/lib/context/context-labels.ts`                                                                  | —                                                                                                  | ✅                                                                                                                                                                               |
+| RNF-01/RNF-02              | Slot reserva espaço fixo antes da hidratação (evita CLS); render inicial não bloqueia em rede                                                                                                             | `apps/web/src/components/layout/focus-slot.tsx`                                                               | —                                                                                                  | ✅                                                                                                                                                                               |
+| RF-15, R-CTX-04            | `VehicleActivator`: único componente que sincroniza URL↔store; bootstrap de `?vehicleId=`/`?groupId=` no mount                                                                                            | `apps/web/src/components/layout/vehicle-activator.tsx`                                                        | `apps/web/src/components/layout/vehicle-activator.spec.tsx`                                        | ✅                                                                                                                                                                               |
+| RF-17.1                    | `ContextFilterSync` (mesma implementação): reage só a mudanças do store; lê `window.location.search` não-reativamente para não conflitar com filtros locais de página                                     | `apps/web/src/components/layout/vehicle-activator.tsx`                                                        | `apps/web/src/components/layout/vehicle-activator.spec.tsx`                                        | ✅                                                                                                                                                                               |
+| RF-16                      | `FleetAside`: staleness de `activeVehicleId` (toast + clear) e `activeGroupId` (clear silencioso)                                                                                                         | `apps/web/src/components/layout/fleet-aside.tsx`                                                              | `apps/web/src/components/layout/fleet-aside.spec.tsx`                                              | ✅                                                                                                                                                                               |
+| RNF-03                     | Staleness reaproveita as query keys `["vehicles"]`/`["vehicle-groups"]` já ativas no `focus-slot` — sem request extra (dedupe do TanStack Query)                                                          | `apps/web/src/components/layout/fleet-aside.tsx`                                                              | —                                                                                                  | ✅                                                                                                                                                                               |
+| RNF-04                     | Toast não-obstrutivo, descartável, some sozinho em 5s — migrado para a fila única de toasts (SPEC-20260525-001 §8.2), `duration: 5000`                                                                    | `packages/ui/src/components/toast.tsx`, `apps/web/src/components/layout/fleet-aside.tsx`                      | `packages/ui/src/components/toast.test.tsx`, `apps/web/src/components/layout/fleet-aside.spec.tsx` | ✅                                                                                                                                                                               |
+| RF-19                      | Logout limpa todos os campos de contexto                                                                                                                                                                  | `apps/web/src/lib/auth/logout.ts`, botão "Sair" em `sidebar.tsx`                                              | `apps/web/src/lib/auth/logout.spec.ts`                                                             | ✅                                                                                                                                                                               |
+| RF-07, R-CTX-06            | `use-vehicle-context-field.ts`: captura o contexto do store apenas no mount; pré-seleciona `vehicle_id` só no modo `single`                                                                               | `apps/web/src/lib/hooks/use-vehicle-context-field.ts`                                                         | `apps/web/src/lib/hooks/use-vehicle-context-field.spec.tsx`                                        | ✅                                                                                                                                                                               |
+| RF-08                      | Ícone ↩ + fundo/borda âmbar quando o campo está herdado do contexto                                                                                                                                       | `apps/web/src/app/(app)/expenses/new/page.tsx`, `.../maintenance/new/page.tsx`                                | `page.spec.tsx` de cada formulário                                                                 | ✅                                                                                                                                                                               |
+| RF-09                      | Modo `group`: campo vazio + dica com nome do grupo                                                                                                                                                        | `use-vehicle-context-field.ts`                                                                                | —                                                                                                  | 🟡 Dica textual pronta; lista **não** é pré-filtrada pelos membros — não existe endpoint `GET` para os IDs de membros de um grupo específico (só `PUT .../members`, replace-all) |
+| RF-10                      | Modo `multi`: dica "N veículos selecionados" + atalhos                                                                                                                                                    | `use-vehicle-context-field.ts`                                                                                | `use-vehicle-context-field.spec.tsx`                                                               | ✅                                                                                                                                                                               |
+| RF-11                      | Modo `attribute`: dropdown filtrado pelo atributo ativo                                                                                                                                                   | `use-vehicle-context-field.ts`                                                                                | `use-vehicle-context-field.spec.tsx`                                                               | 🟡 Filtragem client-side sobre a lista já carregada; modo `attribute` ainda não tem seletor de UI (só acionável via store/API direto)                                            |
+| RF-12                      | Modo `none`: atalhos dos últimos veículos acessados                                                                                                                                                       | `apps/web/src/lib/vehicle-recency.ts`, `use-vehicle-context-field.ts`                                         | `expenses/new/page.spec.tsx` ("modo none: exibe os veículos recentes")                             | ✅                                                                                                                                                                               |
+| RF-13                      | Seleção manual troca o ícone para ✓ e remove o visual âmbar                                                                                                                                               | `use-vehicle-context-field.ts`                                                                                | `page.spec.tsx` de cada formulário ("troca para indicador ✓")                                      | ✅                                                                                                                                                                               |
+| RF-14                      | Mudança de contexto com formulário aberto não reseta o campo; aviso com ação "Atualizar campo"                                                                                                            | `use-vehicle-context-field.ts`                                                                                | `expenses/new/page.spec.tsx` ("mudança de contexto com o formulário aberto")                       | ✅ (aviso inline no formulário, não o toast fixo global de RF-16 — natureza diferente: ação específica do campo, não staleness)                                                  |
+| RF-17 (dashboard/listas)   | Filtragem de KPIs, Spotlight, listas de despesas/manutenções pelo contexto ativo                                                                                                                          | —                                                                                                             | —                                                                                                  | ⏳ Sync já existe (T5.3c); filtragem em si depende da Fase 5/6 (dashboard e listas ainda não leem o store)                                                                       |
+| RF-18                      | `/vehicles/[id]` e `/settings` ignoram o contexto                                                                                                                                                         | —                                                                                                             | —                                                                                                  | ⏳ Trivial (não fazem leitura do store hoje) — confirmar quando o contexto passar a influenciar outras páginas                                                                   |
+| RF-17                      | `expenses/page.tsx` e `maintenance/page.tsx`: filtro por contexto via `ContextFilterSync`                                                                                                                 | —                                                                                                             | —                                                                                                  | ⏳                                                                                                                                                                               |
 
 ---
 
@@ -1387,6 +1393,7 @@ que o artefato ainda não existe no repositório.
 > `CategoriesModule`/`ExpensesModule`. **Desvios deliberados de escopo frente à spec** (frontend
 > deste projeto usa formulários HTML simples, sem `react-hook-form`, modal ou design system —
 > mesmo padrão já estabelecido em `/expenses/new` e `/expenses/[id]`):
+>
 > - RF-05 (modal de criação inline): implementado como formulário inline expansível, não um
 >   modal dedicado — não existe componente de modal no `packages/ui` ainda.
 > - RF-08 (bump de `last_used_at` via `PATCH /expense-templates/:id`): implementado como rota
@@ -1400,48 +1407,48 @@ que o artefato ainda não existe no repositório.
 > - Feature flag `NEXT_PUBLIC_EXPENSE_TEMPLATES_ENABLED` (Seção 14 da spec): não implementada —
 >   nenhuma outra feature do projeto usa flag de ambiente; a feature entra direto atrás do
 >   `SupabaseAuthGuard`/sessão autenticada, mesmo padrão de T3.0–T3.3.
-> RF-13 (aviso de veículo excluído) foi implementado no frontend via comparação client-side com
-> a lista de veículos ativos, sem o ícone âmbar especificado — mensagem inline apenas.
+>   RF-13 (aviso de veículo excluído) foi implementado no frontend via comparação client-side com
+>   a lista de veículos ativos, sem o ícone âmbar especificado — mensagem inline apenas.
 
 ### Banco de dados
 
-| Artefato | Descrição | Regra | Status |
-|----------|-----------|-------|--------|
-| `supabase/migrations/20260712171846_grouping_templates_preferences.sql` | Tabela `expense_templates` (id, user_id FK, vehicle_id FK, name, category, amount, description, liters, fuel_type, supplier, timestamps) | R3, R6 | ✅ |
-| Trigger `trg_expense_templates_limit` | `supabase/migrations/20260712171941_trigger_functions.sql` — `enforce_expense_templates_limit()`, bloqueia o 21º insert | R3, RNF-06 | ✅ |
-| RLS `expense_templates_*` | `supabase/migrations/20260712172047_rls_policies.sql` — policies SELECT, INSERT, UPDATE, DELETE por `user_id` | S1, S2, RNF-04 | ✅ |
+| Artefato                                                                | Descrição                                                                                                                                | Regra          | Status |
+| ----------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | -------------- | ------ |
+| `supabase/migrations/20260712171846_grouping_templates_preferences.sql` | Tabela `expense_templates` (id, user_id FK, vehicle_id FK, name, category, amount, description, liters, fuel_type, supplier, timestamps) | R3, R6         | ✅     |
+| Trigger `trg_expense_templates_limit`                                   | `supabase/migrations/20260712171941_trigger_functions.sql` — `enforce_expense_templates_limit()`, bloqueia o 21º insert                  | R3, RNF-06     | ✅     |
+| RLS `expense_templates_*`                                               | `supabase/migrations/20260712172047_rls_policies.sql` — policies SELECT, INSERT, UPDATE, DELETE por `user_id`                            | S1, S2, RNF-04 | ✅     |
 
 ### Validators (`packages/validators`)
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-06, R6 | `createExpenseTemplateInputSchema`/`updateExpenseTemplateInputSchema` — sem `date`/`odometer_km`/`full_tank` | `packages/validators/src/expense-template.schemas.ts` | `packages/validators/src/expense-template.schemas.spec.ts` | ✅ |
+| Req       | Descrição                                                                                                    | Código                                                | Teste                                                      | Status |
+| --------- | ------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------- | ---------------------------------------------------------- | ------ |
+| RF-06, R6 | `createExpenseTemplateInputSchema`/`updateExpenseTemplateInputSchema` — sem `date`/`odometer_km`/`full_tank` | `packages/validators/src/expense-template.schemas.ts` | `packages/validators/src/expense-template.schemas.spec.ts` | ✅     |
 
 ### Backend (`apps/api`)
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-01 | `GET /expense-templates` — lista ordenada por `last_used_at DESC` | `apps/api/src/modules/expense-templates/expense-templates.service.ts` (`findAll`) | `expense-templates.service.spec.ts` | ✅ |
-| RF-06, RF-07, RNF-06 | `POST /expense-templates` — valida veículo ativo do usuário e limite de 20 (422) antes do insert | `expense-templates.service.ts` (`create`) | `expense-templates.service.spec.ts` | ✅ |
-| RF-08 | `PATCH /expense-templates/:id/touch` — bump de `last_used_at` | `expense-templates.service.ts` (`touch`), `expense-templates.controller.ts` | `expense-templates.service.spec.ts`, `.controller.spec.ts` | ✅ |
-| RF-09 | `PATCH /expense-templates/:id` — atualização parcial (nome/campos) | `expense-templates.service.ts` (`update`) | `expense-templates.service.spec.ts` | ✅ |
-| RF-10, CA-08 | `DELETE /expense-templates/:id` — hard delete após checagem de ownership | `expense-templates.service.ts` (`remove`) | `expense-templates.service.spec.ts` | ✅ |
-| RNF-04, RNF-05 | `SupabaseAuthGuard` + RLS (`auth.uid()`) em todas as rotas | `expense-templates.controller.ts` | `expense-templates.controller.spec.ts` | ✅ |
+| Req                  | Descrição                                                                                        | Código                                                                            | Teste                                                      | Status |
+| -------------------- | ------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------- | ---------------------------------------------------------- | ------ |
+| RF-01                | `GET /expense-templates` — lista ordenada por `last_used_at DESC`                                | `apps/api/src/modules/expense-templates/expense-templates.service.ts` (`findAll`) | `expense-templates.service.spec.ts`                        | ✅     |
+| RF-06, RF-07, RNF-06 | `POST /expense-templates` — valida veículo ativo do usuário e limite de 20 (422) antes do insert | `expense-templates.service.ts` (`create`)                                         | `expense-templates.service.spec.ts`                        | ✅     |
+| RF-08                | `PATCH /expense-templates/:id/touch` — bump de `last_used_at`                                    | `expense-templates.service.ts` (`touch`), `expense-templates.controller.ts`       | `expense-templates.service.spec.ts`, `.controller.spec.ts` | ✅     |
+| RF-09                | `PATCH /expense-templates/:id` — atualização parcial (nome/campos)                               | `expense-templates.service.ts` (`update`)                                         | `expense-templates.service.spec.ts`                        | ✅     |
+| RF-10, CA-08         | `DELETE /expense-templates/:id` — hard delete após checagem de ownership                         | `expense-templates.service.ts` (`remove`)                                         | `expense-templates.service.spec.ts`                        | ✅     |
+| RNF-04, RNF-05       | `SupabaseAuthGuard` + RLS (`auth.uid()`) em todas as rotas                                       | `expense-templates.controller.ts`                                                 | `expense-templates.controller.spec.ts`                     | ✅     |
 
 ### Frontend (`apps/web`)
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-01, RF-02, RF-11 | Tray de modelos no topo de `/expenses/new`, estado vazio, scroll horizontal | `apps/web/src/app/expenses/new/page.tsx` (`ExpenseTemplatesTray`) | `page.spec.tsx` | ✅ |
-| RF-03, RF-04 | Aplicação de modelo preenche `vehicle_id`/`category`/`amount`/`description`; `date`/`odometer_km` inalterados | `page.tsx` (`handleApplyTemplate`) | `page.spec.tsx` | ✅ |
-| RF-05 | Criação inline de modelo (formulário expansível, não modal — ver nota acima) | `page.tsx` (`ExpenseTemplatesTray`, `creating`) | `page.spec.tsx` | 🔶 (sem teste de criação inline dedicado) |
-| RF-06, CA-10 | "Salvar como modelo" em `/expenses/[id]` | `apps/web/src/app/expenses/[id]/page.tsx` (`handleSaveAsTemplate`) | `page.spec.tsx` | ✅ |
-| RF-07, CA-06 | Botão "+" desabilitado ao atingir 20 modelos | `page.tsx` (`ExpenseTemplatesTray`, `atLimit`) | — | 🔶 (sem teste dedicado) |
-| RF-08 | Aplicação dispara `PATCH .../touch` fire-and-forget | `page.tsx` (`handleApply`, `touchMutation`) | `page.spec.tsx` | ✅ |
-| RF-09 | Renomear via menu de contexto | — | — | ⏳ deliberado (ver nota acima) |
-| RF-10, CA-08 | Exclusão de modelo com confirmação | `page.tsx` (`handleDelete`) | — | 🔶 (sem teste dedicado) |
-| RF-13, EC-01 | Aviso inline (sem ícone âmbar) quando `vehicle_id` do modelo não existe mais entre os veículos ativos | `page.tsx` (`handleApplyTemplate`, `templateNotice`) | — | 🔶 (sem teste dedicado) |
-| RF-02 (responsivo), Feature flag | Contagem exata de cartões por breakpoint; `NEXT_PUBLIC_EXPENSE_TEMPLATES_ENABLED` | — | — | ⏳ deliberado (ver nota acima) |
+| Req                              | Descrição                                                                                                     | Código                                                             | Teste           | Status                                    |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ | --------------- | ----------------------------------------- |
+| RF-01, RF-02, RF-11              | Tray de modelos no topo de `/expenses/new`, estado vazio, scroll horizontal                                   | `apps/web/src/app/expenses/new/page.tsx` (`ExpenseTemplatesTray`)  | `page.spec.tsx` | ✅                                        |
+| RF-03, RF-04                     | Aplicação de modelo preenche `vehicle_id`/`category`/`amount`/`description`; `date`/`odometer_km` inalterados | `page.tsx` (`handleApplyTemplate`)                                 | `page.spec.tsx` | ✅                                        |
+| RF-05                            | Criação inline de modelo (formulário expansível, não modal — ver nota acima)                                  | `page.tsx` (`ExpenseTemplatesTray`, `creating`)                    | `page.spec.tsx` | 🔶 (sem teste de criação inline dedicado) |
+| RF-06, CA-10                     | "Salvar como modelo" em `/expenses/[id]`                                                                      | `apps/web/src/app/expenses/[id]/page.tsx` (`handleSaveAsTemplate`) | `page.spec.tsx` | ✅                                        |
+| RF-07, CA-06                     | Botão "+" desabilitado ao atingir 20 modelos                                                                  | `page.tsx` (`ExpenseTemplatesTray`, `atLimit`)                     | —               | 🔶 (sem teste dedicado)                   |
+| RF-08                            | Aplicação dispara `PATCH .../touch` fire-and-forget                                                           | `page.tsx` (`handleApply`, `touchMutation`)                        | `page.spec.tsx` | ✅                                        |
+| RF-09                            | Renomear via menu de contexto                                                                                 | —                                                                  | —               | ⏳ deliberado (ver nota acima)            |
+| RF-10, CA-08                     | Exclusão de modelo com confirmação                                                                            | `page.tsx` (`handleDelete`)                                        | —               | 🔶 (sem teste dedicado)                   |
+| RF-13, EC-01                     | Aviso inline (sem ícone âmbar) quando `vehicle_id` do modelo não existe mais entre os veículos ativos         | `page.tsx` (`handleApplyTemplate`, `templateNotice`)               | —               | 🔶 (sem teste dedicado)                   |
+| RF-02 (responsivo), Feature flag | Contagem exata de cartões por breakpoint; `NEXT_PUBLIC_EXPENSE_TEMPLATES_ENABLED`                             | —                                                                  | —               | ⏳ deliberado (ver nota acima)            |
 
 ---
 
@@ -1455,20 +1462,20 @@ que o artefato ainda não existe no repositório.
 > SPEC-20260601-001. **Ajuste de design não coberto explicitamente pelos RFs:** a busca de
 > duplicata exclui o próprio registro recém-criado (`excludeExpenseId`) — sem essa exclusão, o
 > registro que acabou de ser inserido sempre bateria nos próprios 4 critérios de comparação
-> (a spec invoca a busca *após* o insert), gerando falso positivo em toda criação sem duplicata
+> (a spec invoca a busca _após_ o insert), gerando falso positivo em toda criação sem duplicata
 > real. Exibição do aviso no frontend fica ⏳ deliberadamente, mesma justificativa de T3.2.
 
 ### Camada de serviço
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-01 | `findPotentialDuplicate(userId, vehicleId, date, amount, category, excludeExpenseId)` — método privado do service | `apps/api/src/modules/expenses/expenses.service.ts` (`findPotentialDuplicate`) | `apps/api/src/modules/expenses/expenses.service.spec.ts` | ✅ |
-| RF-02 | `ExpensesService.create()`: invoca `findPotentialDuplicate()` após o insert bem-sucedido | `apps/api/src/modules/expenses/expenses.service.ts` (`create`, `buildDuplicateWarning`) | `apps/api/src/modules/expenses/expenses.service.spec.ts` | ✅ |
-| RF-03 | Enriquece resposta com `duplicate_warning: true` e `duplicate_id`; HTTP 201 mantido | `apps/api/src/modules/expenses/expenses.service.ts` (`buildDuplicateWarning`) | `apps/api/src/modules/expenses/expenses.service.spec.ts` | ✅ |
-| RF-04 | Sem `duplicate_warning` quando `findPotentialDuplicate` retorna `null` | `apps/api/src/modules/expenses/expenses.service.ts` (`buildDuplicateWarning`) | `apps/api/src/modules/expenses/expenses.service.spec.ts` | ✅ |
-| RF-05 | Apenas registros com `deleted_at IS NULL` são candidatos a duplicata | `apps/api/src/modules/expenses/expenses.service.ts` (`findPotentialDuplicate`, `.is("deleted_at", null)`) | — | 🔶 (filtro aplicado; sem teste dedicado ao soft-delete neste método) |
-| RF-06 | `ExpensesService.update()` não invoca `findPotentialDuplicate` | `apps/api/src/modules/expenses/expenses.service.ts` (`update`) | `apps/api/src/modules/expenses/expenses.service.spec.ts` | ✅ |
-| EC-05 | Falha na consulta de duplicata degrada graciosamente (loga e não bloqueia) | `apps/api/src/modules/expenses/expenses.service.ts` (`buildDuplicateWarning`) | `apps/api/src/modules/expenses/expenses.service.spec.ts` | ✅ |
+| Req   | Descrição                                                                                                         | Código                                                                                                    | Teste                                                    | Status                                                               |
+| ----- | ----------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- | -------------------------------------------------------------------- |
+| RF-01 | `findPotentialDuplicate(userId, vehicleId, date, amount, category, excludeExpenseId)` — método privado do service | `apps/api/src/modules/expenses/expenses.service.ts` (`findPotentialDuplicate`)                            | `apps/api/src/modules/expenses/expenses.service.spec.ts` | ✅                                                                   |
+| RF-02 | `ExpensesService.create()`: invoca `findPotentialDuplicate()` após o insert bem-sucedido                          | `apps/api/src/modules/expenses/expenses.service.ts` (`create`, `buildDuplicateWarning`)                   | `apps/api/src/modules/expenses/expenses.service.spec.ts` | ✅                                                                   |
+| RF-03 | Enriquece resposta com `duplicate_warning: true` e `duplicate_id`; HTTP 201 mantido                               | `apps/api/src/modules/expenses/expenses.service.ts` (`buildDuplicateWarning`)                             | `apps/api/src/modules/expenses/expenses.service.spec.ts` | ✅                                                                   |
+| RF-04 | Sem `duplicate_warning` quando `findPotentialDuplicate` retorna `null`                                            | `apps/api/src/modules/expenses/expenses.service.ts` (`buildDuplicateWarning`)                             | `apps/api/src/modules/expenses/expenses.service.spec.ts` | ✅                                                                   |
+| RF-05 | Apenas registros com `deleted_at IS NULL` são candidatos a duplicata                                              | `apps/api/src/modules/expenses/expenses.service.ts` (`findPotentialDuplicate`, `.is("deleted_at", null)`) | —                                                        | 🔶 (filtro aplicado; sem teste dedicado ao soft-delete neste método) |
+| RF-06 | `ExpensesService.update()` não invoca `findPotentialDuplicate`                                                    | `apps/api/src/modules/expenses/expenses.service.ts` (`update`)                                            | `apps/api/src/modules/expenses/expenses.service.spec.ts` | ✅                                                                   |
+| EC-05 | Falha na consulta de duplicata degrada graciosamente (loga e não bloqueia)                                        | `apps/api/src/modules/expenses/expenses.service.ts` (`buildDuplicateWarning`)                             | `apps/api/src/modules/expenses/expenses.service.spec.ts` | ✅                                                                   |
 
 ---
 
@@ -1485,16 +1492,16 @@ que o artefato ainda não existe no repositório.
 
 ### Camada de serviço
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-01 | `ExpensesService.create()`/`update()`: pula verificação quando `odometer_km` é `null` ou ausente | `apps/api/src/modules/expenses/expenses.service.ts` (`buildOdometerWarning`) | `apps/api/src/modules/expenses/expenses.service.spec.ts` | ✅ |
-| RF-02 | `findMaxOdometerByVehicle(vehicleId, userId, excludeExpenseId?)` — método privado do service (sem Repository/Port; consulta Supabase inline, mesmo padrão do restante do módulo) | `apps/api/src/modules/expenses/expenses.service.ts` (`findMaxOdometerByVehicle`) | `apps/api/src/modules/expenses/expenses.service.spec.ts` | ✅ |
-| RF-03 | `ExpensesService.create()`/`update()`: enriquece resposta com `odometer_warning: true` e `odometer_previous_max_km` | `apps/api/src/modules/expenses/expenses.service.ts` (`buildOdometerWarning`) | `apps/api/src/modules/expenses/expenses.service.spec.ts` | ✅ |
-| RF-04 | Sem warning quando `odometer_km >= máximo` ou sem registros anteriores | `apps/api/src/modules/expenses/expenses.service.ts` (`buildOdometerWarning`) | `apps/api/src/modules/expenses/expenses.service.spec.ts` | ✅ |
-| RF-05 | `ExpensesService.update()`: exclui o próprio registro da comparação via `excludeExpenseId` | `apps/api/src/modules/expenses/expenses.service.ts` (`update`, `findMaxOdometerByVehicle`) | `apps/api/src/modules/expenses/expenses.service.spec.ts` | ✅ |
-| RF-06 | Verificação considera apenas `deleted_at IS NULL` | `apps/api/src/modules/expenses/expenses.service.ts` (`findMaxOdometerByVehicle`) | — | 🔶 (filtro aplicado via `.is("deleted_at", null)`; sem teste dedicado ao filtro de soft-delete neste método) |
-| EC-05 | Falha na consulta de máximo degrada graciosamente (loga e não bloqueia) | `apps/api/src/modules/expenses/expenses.service.ts` (`buildOdometerWarning`) | `apps/api/src/modules/expenses/expenses.service.spec.ts` | ✅ |
-| NG-05 | Exibição do warning no frontend | — | — | ⏳ deliberado — fora do escopo desta spec (ver nota acima) |
+| Req   | Descrição                                                                                                                                                                        | Código                                                                                     | Teste                                                    | Status                                                                                                       |
+| ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| RF-01 | `ExpensesService.create()`/`update()`: pula verificação quando `odometer_km` é `null` ou ausente                                                                                 | `apps/api/src/modules/expenses/expenses.service.ts` (`buildOdometerWarning`)               | `apps/api/src/modules/expenses/expenses.service.spec.ts` | ✅                                                                                                           |
+| RF-02 | `findMaxOdometerByVehicle(vehicleId, userId, excludeExpenseId?)` — método privado do service (sem Repository/Port; consulta Supabase inline, mesmo padrão do restante do módulo) | `apps/api/src/modules/expenses/expenses.service.ts` (`findMaxOdometerByVehicle`)           | `apps/api/src/modules/expenses/expenses.service.spec.ts` | ✅                                                                                                           |
+| RF-03 | `ExpensesService.create()`/`update()`: enriquece resposta com `odometer_warning: true` e `odometer_previous_max_km`                                                              | `apps/api/src/modules/expenses/expenses.service.ts` (`buildOdometerWarning`)               | `apps/api/src/modules/expenses/expenses.service.spec.ts` | ✅                                                                                                           |
+| RF-04 | Sem warning quando `odometer_km >= máximo` ou sem registros anteriores                                                                                                           | `apps/api/src/modules/expenses/expenses.service.ts` (`buildOdometerWarning`)               | `apps/api/src/modules/expenses/expenses.service.spec.ts` | ✅                                                                                                           |
+| RF-05 | `ExpensesService.update()`: exclui o próprio registro da comparação via `excludeExpenseId`                                                                                       | `apps/api/src/modules/expenses/expenses.service.ts` (`update`, `findMaxOdometerByVehicle`) | `apps/api/src/modules/expenses/expenses.service.spec.ts` | ✅                                                                                                           |
+| RF-06 | Verificação considera apenas `deleted_at IS NULL`                                                                                                                                | `apps/api/src/modules/expenses/expenses.service.ts` (`findMaxOdometerByVehicle`)           | —                                                        | 🔶 (filtro aplicado via `.is("deleted_at", null)`; sem teste dedicado ao filtro de soft-delete neste método) |
+| EC-05 | Falha na consulta de máximo degrada graciosamente (loga e não bloqueia)                                                                                                          | `apps/api/src/modules/expenses/expenses.service.ts` (`buildOdometerWarning`)               | `apps/api/src/modules/expenses/expenses.service.spec.ts` | ✅                                                                                                           |
+| NG-05 | Exibição do warning no frontend                                                                                                                                                  | —                                                                                          | —                                                        | ⏳ deliberado — fora do escopo desta spec (ver nota acima)                                                   |
 
 ---
 
@@ -1503,7 +1510,7 @@ que o artefato ainda não existe no repositório.
 > **ATUALIZAÇÃO — 2026-07-22 — migração de consumidores (Alert, EmptyState)**
 > Rodadas 1–3 de `specs/design-system/PLANO-MIGRACAO-CONSUMIDORES.md` concluídas: `Alert` e
 > `EmptyState` substituíram o padrão ad hoc (`<p role="alert">`, `<div role="alert" className="rounded
-> border border-amber-300 bg-amber-50 ...">`, blocos manuais de "sem dados") em todas as telas de
+border border-amber-300 bg-amber-50 ...">`, blocos manuais de "sem dados") em todas as telas de
 > formulário, listagem/detalhe e componentes compartilhados do app — cerca de 40 arquivos entre
 > `apps/web/src/app/(app)`, `apps/web/src/app/(auth)` e `apps/web/src/components/{dashboard,layout}`.
 > Exceções mantidas ad hoc por não caberem na API dos componentes (documentadas linha a linha no
@@ -1603,35 +1610,35 @@ que o artefato ainda não existe no repositório.
 > `docs/IMPLEMENTATION_STRATEGY.md`. §10 da spec está 100% implementado em componentes;
 > resta apenas a migração de telas consumidoras (ver tabela abaixo).
 
-| Componente | Arquivo destino planejado | Tipo | Status |
-|------------|--------------------------|------|--------|
-| Tokens (cores, espaçamento, raio) | `packages/ui/src/tokens/{colors,spacing,radius}.ts`; aplicado em `apps/web/tailwind.config.ts` e `apps/web/src/app/globals.css` | Greenfield (bloqueante absoluto) | ✅ |
-| `Button` | `packages/ui/src/components/button.tsx` | Greenfield (pré-requisito) | ✅ (`button.test.tsx`, jest-axe) |
-| `Card` | `packages/ui/src/components/card.tsx` | Greenfield (pré-requisito) | ✅ (`card.test.tsx`, jest-axe) |
-| `Table` | `packages/ui/src/components/table.tsx` | Greenfield (pré-requisito) | ✅ (`table.test.tsx`, jest-axe) |
-| `EmptyState` | `packages/ui/src/components/empty-state.tsx` | Migração (6 duplicatas) | ✅ (`empty-state.test.tsx`, jest-axe) — telas consumidoras migradas (2026-07-22, ver `specs/design-system/PLANO-MIGRACAO-CONSUMIDORES.md`, Rodadas 1–3); poucas exceções ad hoc documentadas no plano (layouts onde o box centralizado não cabe) |
-| `Alert` | `packages/ui/src/components/alert.tsx` | Migração (padrão ad hoc em ~30 arquivos) | ✅ (`alert.test.tsx`, jest-axe) — telas consumidoras migradas (2026-07-22, ver `specs/design-system/PLANO-MIGRACAO-CONSUMIDORES.md`, Rodadas 1–3); exceções ad hoc documentadas no plano (alertas com 2 ações, badges compactos dentro de cards densos) |
-| `KpiCard` (vertical + sparkline) | `packages/ui/src/components/kpi-card.tsx` | Migração (`FleetKpis.tsx`, `expenses/page.tsx`) | ✅ (`kpi-card.test.tsx`, jest-axe) — `DashboardKpiGrid.tsx` (`/dashboard`) e `KpiCards` de `expenses/page.tsx` migrados (2026-07-22); duplicata ad hoc `DeltaBadge` removida |
-| `Toast` | `packages/ui/src/components/toast.tsx` | Migração (3 componentes ad hoc no `ui-store`) | ✅ (`toast.test.tsx`, jest-axe) — componente pronto; migração dos 3 toasts ad hoc (`ContextStaleToast`, `ServiceWorkerUpdateToast`, `OfflineWriteBlockedToast`) para a fila única concluída na mesma tarefa |
-| `Combobox` | `packages/ui/src/components/combobox.tsx` | Greenfield (substitui `<select>` nativo) | ✅ (`combobox.test.tsx`, jest-axe) — telas consumidoras migradas (2026-07-22, ver `specs/design-system/PLANO-MIGRACAO-CONSUMIDORES.md`, Rodada 4): `expenses/new`, `maintenance/new`, `expenses/[id]` |
-| `Tabs` | `packages/ui/src/components/tabs.tsx` | Migração (`expenses/page.tsx`, `VehicleSpotlight.tsx`) | ✅ (`tabs.test.tsx`, jest-axe) — componente pronto; `expenses/page.tsx` e `VehicleSpotlight.tsx` migrados na mesma rodada |
-| `Steps` (horizontal) | `packages/ui/src/components/steps.tsx` | Greenfield | ✅ (`steps.test.tsx`, jest-axe) — componente pronto; sem consumidor ainda (aguarda wizard de cadastro de veículo, fora do escopo desta spec) |
-| `DateRangePicker` | `packages/ui/src/components/date-range-picker.tsx` | Greenfield | ✅ (`date-range-picker.test.tsx`, jest-axe) — componente pronto; sem consumidor ainda (aguarda filtros de relatório, fase posterior) |
-| `FileUpload` | `packages/ui/src/components/file-upload.tsx` | Greenfield, sem consumidor imediato | ✅ (`file-upload.test.tsx`, jest-axe) — componente pronto; sem consumidor (aguarda feature de anexos, fora do escopo desta spec) |
-| `ChartWrapper` | `packages/ui/src/components/chart-wrapper.tsx` | Migração (lógica duplicada em `charts/`) | ✅ (`chart-wrapper.test.tsx`, jest-axe) — `analytics/page.tsx` (`TcoSection`, `FuelTrendSection`) e `VehicleSpotlight.tsx` (`ExpensesSection`, `FuelSection`) migrados (2026-07-22), consolidando header/loading/empty state; `TcoBreakdownChart`/`FuelTrendChart` seguem como o corpo do gráfico (children) |
-| `Breadcrumb` | `packages/ui/src/components/breadcrumb.tsx` | Greenfield | ✅ (`breadcrumb.test.tsx`, jest-axe) — componente pronto; sem consumidor ainda (navegação hoje é só via sidebar) |
-| `Input` | `packages/ui/src/components/input.tsx` | Greenfield (`SPEC-20260729-003`) — substitui `<input>` sem estilo | ✅ (`input.test.tsx`, jest-axe) — telas consumidoras migradas (2026-07-30, ver `PLANO-MIGRACAO-CONSUMIDORES.md`, Rodada 5): ~20 arquivos de formulário + autenticação |
-| `Textarea` | `packages/ui/src/components/textarea.tsx` | Greenfield (`SPEC-20260729-003`) | ✅ (`textarea.test.tsx`, jest-axe) — consumidor: `settings/vehicles/[vehicleId]/odometer-cycles/page.tsx` (campo "Motivo") |
-| `Checkbox` | `packages/ui/src/components/checkbox.tsx` | Greenfield (`SPEC-20260729-003`) | ✅ (`checkbox.test.tsx`, jest-axe) — consumidores: `vehicle-groups/*`, `settings/preferences`, `login`, `register`, `KpiPicker.tsx` |
-| `Switch` | `packages/ui/src/components/switch.tsx` | Greenfield (`SPEC-20260729-003`) | ✅ (`switch.test.tsx`, jest-axe) — componente pronto; sem consumidor ainda (telas atuais usam `Checkbox`) |
-| `Badge` | `packages/ui/src/components/badge.tsx` | Migração (padrão ad hoc convergente em ~10 arquivos, `SPEC-20260730-001`) | ✅ (`badge.test.tsx`, jest-axe) — 5 arquivos migrados (2026-07-30): `status-badge.ts`, `fines/page.tsx`, `fines/[id]/page.tsx`, `atividades/page.tsx`, `maintenance/page.tsx`, `VehicleHealthCard.tsx`; 3 casos avaliados e mantidos ad hoc (tingem linha/card inteiro, não pill isolado) |
-| `Skeleton` | `packages/ui/src/components/skeleton.tsx` | Migração (duplicado 5x, incluindo dentro do próprio `packages/ui`; `SPEC-20260730-001`) | ✅ (`skeleton.test.tsx`, jest-axe) — `kpi-card.tsx`/`chart-wrapper.tsx` refatorados internamente; 3 consumidores em `apps/web` migrados (2026-07-30) |
-| `Container` | `packages/ui/src/components/container.tsx` | Migração (32 ocorrências idênticas, `SPEC-20260730-001`) | ✅ (`container.test.tsx`, jest-axe) — 28 arquivos `page.tsx` migrados (2026-07-30) |
-| `Tooltip` | `packages/ui/src/components/tooltip.tsx` | Migração (substitui `title=` nativo, `SPEC-20260730-001`) | ✅ (`tooltip.test.tsx`, jest-axe) — 3 arquivos migrados (2026-07-30): `sidebar.tsx`, `VehicleHealthCard.tsx`, `atividades/page.tsx` |
+| Componente                        | Arquivo destino planejado                                                                                                       | Tipo                                                                                    | Status                                                                                                                                                                                                                                                                                                       |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Tokens (cores, espaçamento, raio) | `packages/ui/src/tokens/{colors,spacing,radius}.ts`; aplicado em `apps/web/tailwind.config.ts` e `apps/web/src/app/globals.css` | Greenfield (bloqueante absoluto)                                                        | ✅                                                                                                                                                                                                                                                                                                           |
+| `Button`                          | `packages/ui/src/components/button.tsx`                                                                                         | Greenfield (pré-requisito)                                                              | ✅ (`button.test.tsx`, jest-axe)                                                                                                                                                                                                                                                                             |
+| `Card`                            | `packages/ui/src/components/card.tsx`                                                                                           | Greenfield (pré-requisito)                                                              | ✅ (`card.test.tsx`, jest-axe)                                                                                                                                                                                                                                                                               |
+| `Table`                           | `packages/ui/src/components/table.tsx`                                                                                          | Greenfield (pré-requisito)                                                              | ✅ (`table.test.tsx`, jest-axe)                                                                                                                                                                                                                                                                              |
+| `EmptyState`                      | `packages/ui/src/components/empty-state.tsx`                                                                                    | Migração (6 duplicatas)                                                                 | ✅ (`empty-state.test.tsx`, jest-axe) — telas consumidoras migradas (2026-07-22, ver `specs/design-system/PLANO-MIGRACAO-CONSUMIDORES.md`, Rodadas 1–3); poucas exceções ad hoc documentadas no plano (layouts onde o box centralizado não cabe)                                                             |
+| `Alert`                           | `packages/ui/src/components/alert.tsx`                                                                                          | Migração (padrão ad hoc em ~30 arquivos)                                                | ✅ (`alert.test.tsx`, jest-axe) — telas consumidoras migradas (2026-07-22, ver `specs/design-system/PLANO-MIGRACAO-CONSUMIDORES.md`, Rodadas 1–3); exceções ad hoc documentadas no plano (alertas com 2 ações, badges compactos dentro de cards densos)                                                      |
+| `KpiCard` (vertical + sparkline)  | `packages/ui/src/components/kpi-card.tsx`                                                                                       | Migração (`FleetKpis.tsx`, `expenses/page.tsx`)                                         | ✅ (`kpi-card.test.tsx`, jest-axe) — `DashboardKpiGrid.tsx` (`/dashboard`) e `KpiCards` de `expenses/page.tsx` migrados (2026-07-22); duplicata ad hoc `DeltaBadge` removida                                                                                                                                 |
+| `Toast`                           | `packages/ui/src/components/toast.tsx`                                                                                          | Migração (3 componentes ad hoc no `ui-store`)                                           | ✅ (`toast.test.tsx`, jest-axe) — componente pronto; migração dos 3 toasts ad hoc (`ContextStaleToast`, `ServiceWorkerUpdateToast`, `OfflineWriteBlockedToast`) para a fila única concluída na mesma tarefa                                                                                                  |
+| `Combobox`                        | `packages/ui/src/components/combobox.tsx`                                                                                       | Greenfield (substitui `<select>` nativo)                                                | ✅ (`combobox.test.tsx`, jest-axe) — telas consumidoras migradas (2026-07-22, ver `specs/design-system/PLANO-MIGRACAO-CONSUMIDORES.md`, Rodada 4): `expenses/new`, `maintenance/new`, `expenses/[id]`                                                                                                        |
+| `Tabs`                            | `packages/ui/src/components/tabs.tsx`                                                                                           | Migração (`expenses/page.tsx`, `VehicleSpotlight.tsx`)                                  | ✅ (`tabs.test.tsx`, jest-axe) — componente pronto; `expenses/page.tsx` e `VehicleSpotlight.tsx` migrados na mesma rodada                                                                                                                                                                                    |
+| `Steps` (horizontal)              | `packages/ui/src/components/steps.tsx`                                                                                          | Greenfield                                                                              | ✅ (`steps.test.tsx`, jest-axe) — componente pronto; sem consumidor ainda (aguarda wizard de cadastro de veículo, fora do escopo desta spec)                                                                                                                                                                 |
+| `DateRangePicker`                 | `packages/ui/src/components/date-range-picker.tsx`                                                                              | Greenfield                                                                              | ✅ (`date-range-picker.test.tsx`, jest-axe) — componente pronto; sem consumidor ainda (aguarda filtros de relatório, fase posterior)                                                                                                                                                                         |
+| `FileUpload`                      | `packages/ui/src/components/file-upload.tsx`                                                                                    | Greenfield, sem consumidor imediato                                                     | ✅ (`file-upload.test.tsx`, jest-axe) — componente pronto; sem consumidor (aguarda feature de anexos, fora do escopo desta spec)                                                                                                                                                                             |
+| `ChartWrapper`                    | `packages/ui/src/components/chart-wrapper.tsx`                                                                                  | Migração (lógica duplicada em `charts/`)                                                | ✅ (`chart-wrapper.test.tsx`, jest-axe) — `analytics/page.tsx` (`TcoSection`, `FuelTrendSection`) e `VehicleSpotlight.tsx` (`ExpensesSection`, `FuelSection`) migrados (2026-07-22), consolidando header/loading/empty state; `TcoBreakdownChart`/`FuelTrendChart` seguem como o corpo do gráfico (children) |
+| `Breadcrumb`                      | `packages/ui/src/components/breadcrumb.tsx`                                                                                     | Greenfield                                                                              | ✅ (`breadcrumb.test.tsx`, jest-axe) — componente pronto; sem consumidor ainda (navegação hoje é só via sidebar)                                                                                                                                                                                        |
+| `Input`                           | `packages/ui/src/components/input.tsx`                                                                                          | Greenfield (`SPEC-20260729-003`) — substitui `<input>` sem estilo                       | ✅ (`input.test.tsx`, jest-axe) — telas consumidoras migradas (2026-07-30, ver `PLANO-MIGRACAO-CONSUMIDORES.md`, Rodada 5): ~20 arquivos de formulário + autenticação                                                                                                                                        |
+| `Textarea`                        | `packages/ui/src/components/textarea.tsx`                                                                                       | Greenfield (`SPEC-20260729-003`)                                                        | ✅ (`textarea.test.tsx`, jest-axe) — consumidor: `settings/vehicles/[vehicleId]/odometer-cycles/page.tsx` (campo "Motivo")                                                                                                                                                                                   |
+| `Checkbox`                        | `packages/ui/src/components/checkbox.tsx`                                                                                       | Greenfield (`SPEC-20260729-003`)                                                        | ✅ (`checkbox.test.tsx`, jest-axe) — consumidores: `vehicle-groups/*`, `settings/preferences`, `login`, `register`, `KpiPicker.tsx`                                                                                                                                                                          |
+| `Switch`                          | `packages/ui/src/components/switch.tsx`                                                                                         | Greenfield (`SPEC-20260729-003`)                                                        | ✅ (`switch.test.tsx`, jest-axe) — componente pronto; sem consumidor ainda (telas atuais usam `Checkbox`)                                                                                                                                                                                                    |
+| `Badge`                           | `packages/ui/src/components/badge.tsx`                                                                                          | Migração (padrão ad hoc convergente em ~10 arquivos, `SPEC-20260730-001`)               | ✅ (`badge.test.tsx`, jest-axe) — 5 arquivos migrados (2026-07-30): `status-badge.ts`, `fines/page.tsx`, `fines/[id]/page.tsx`, `atividades/page.tsx`, `maintenance/page.tsx`, `VehicleHealthCard.tsx`; 3 casos avaliados e mantidos ad hoc (tingem linha/card inteiro, não pill isolado)                    |
+| `Skeleton`                        | `packages/ui/src/components/skeleton.tsx`                                                                                       | Migração (duplicado 5x, incluindo dentro do próprio `packages/ui`; `SPEC-20260730-001`) | ✅ (`skeleton.test.tsx`, jest-axe) — `kpi-card.tsx`/`chart-wrapper.tsx` refatorados internamente; 3 consumidores em `apps/web` migrados (2026-07-30)                                                                                                                                                         |
+| `Container`                       | `packages/ui/src/components/container.tsx`                                                                                      | Migração (32 ocorrências idênticas, `SPEC-20260730-001`)                                | ✅ (`container.test.tsx`, jest-axe) — 28 arquivos `page.tsx` migrados (2026-07-30)                                                                                                                                                                                                                           |
+| `Tooltip`                         | `packages/ui/src/components/tooltip.tsx`                                                                                        | Migração (substitui `title=` nativo, `SPEC-20260730-001`)                               | ✅ (`tooltip.test.tsx`, jest-axe) — 3 arquivos migrados (2026-07-30): `sidebar.tsx`, `VehicleHealthCard.tsx`, `atividades/page.tsx`                                                                                                                                                                          |
 
 ---
 
-## SPEC-20260721-001 — Design System: Fundamentos de Marca, Tokens de Cor, Tema e Componentes de Navegação Global (approved)
+## SPEC-20260721-001 — Design System: Fundamentos de Marca, Tokens de Cor, Tema e Componentes de navegação Global (approved)
 
 > Formaliza as seis decisões de produto tomadas em 2026-07-21 com base na pesquisa de fundamentos
 > de design system (`PESQUISA-FUNDAMENTOS-DESIGN-SYSTEM.md`). Cobre: token `--gold` dedicado (F-1),
@@ -1649,36 +1656,36 @@ que o artefato ainda não existe no repositório.
 
 ### Tokens de Cor e Dark/Light Mode (RF-01, RF-02, RF-03)
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-01 | Tokens `--gold` e `--gold-foreground` em `packages/ui/src/tokens/colors.ts` e `globals.css`, valores OKLCH distintos de `--warning`, em light e dark | `packages/ui/src/tokens/colors.ts`, `apps/web/src/app/globals.css`, `apps/web/tailwind.config.ts` | — (tokens visuais; validação de contraste manual conforme C.3 da pesquisa) | ✅ |
-| RF-02 | `--muted-foreground` com L≤42% em OKLCH em ambos os temas; contraste ≥4.5:1 sobre `--background` (C-DS-01) | `packages/ui/src/tokens/colors.ts`, `apps/web/src/app/globals.css` | — | ✅ |
-| RF-03 | `next-themes` configurado com `defaultTheme="system"` e `enableSystem={true}`; preferência manual persiste em localStorage sobre `prefers-color-scheme` | `apps/web/src/components/providers/theme-provider.tsx`, `apps/web/src/app/layout.tsx`, `apps/web/tailwind.config.ts` (`darkMode: "class"`), `packages/ui/src/components/theme-toggle.tsx` | — (mecanismo de terceiros; sem teste de integração automatizado) | ✅ |
+| Req   | Descrição                                                                                                                                               | Código                                                                                                                                                                                    | Teste                                                                      | Status |
+| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- | ------ |
+| RF-01 | Tokens `--gold` e `--gold-foreground` em `packages/ui/src/tokens/colors.ts` e `globals.css`, valores OKLCH distintos de `--warning`, em light e dark    | `packages/ui/src/tokens/colors.ts`, `apps/web/src/app/globals.css`, `apps/web/tailwind.config.ts`                                                                                         | — (tokens visuais; validação de contraste manual conforme C.3 da pesquisa) | ✅     |
+| RF-02 | `--muted-foreground` com L≤42% em OKLCH em ambos os temas; contraste ≥4.5:1 sobre `--background` (C-DS-01)                                              | `packages/ui/src/tokens/colors.ts`, `apps/web/src/app/globals.css`                                                                                                                        | —                                                                          | ✅     |
+| RF-03 | `next-themes` configurado com `defaultTheme="system"` e `enableSystem={true}`; preferência manual persiste em localStorage sobre `prefers-color-scheme` | `apps/web/src/components/providers/theme-provider.tsx`, `apps/web/src/app/layout.tsx`, `apps/web/tailwind.config.ts` (`darkMode: "class"`), `packages/ui/src/components/theme-toggle.tsx` | — (mecanismo de terceiros; sem teste de integração automatizado)           | ✅     |
 
 ### NavBadge com Truncamento "9+" (RF-04)
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-04 | `NavBadge` component: valor >9 renderiza "9+"; valor 0 oculta o badge; valores 1–9 exibem o número real (R-DS-01) | `packages/ui/src/components/nav-badge.tsx` | `packages/ui/src/components/nav-badge.test.tsx` | ✅ |
+| Req   | Descrição                                                                                                         | Código                                     | Teste                                           | Status |
+| ----- | ----------------------------------------------------------------------------------------------------------------- | ------------------------------------------ | ----------------------------------------------- | ------ |
+| RF-04 | `NavBadge` component: valor >9 renderiza "9+"; valor 0 oculta o badge; valores 1–9 exibem o número real (R-DS-01) | `packages/ui/src/components/nav-badge.tsx` | `packages/ui/src/components/nav-badge.test.tsx` | ✅     |
 
 ### Seletor de Veículo Ativo no Header Shell (RF-05)
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
+| Req   | Descrição                                                                                                                                                                                                                                                             | Código                                                                                                                                                                                                                                                                                                                                                                       | Teste                                                                                                                                                                                                                               | Status                                                                 |
+| ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
 | RF-05 | Seletor de veículo visível no header (reaproveita `VehicleContextChip`); seleção propaga filtro para `/expenses` e `/maintenance`; sem veículo cadastrado (modo `none` + lista vazia), exibe CTA "Adicionar veículo" (`/vehicles/new`) em vez do seletor/Dialog vazio | `apps/web/src/components/layout/header.tsx`, `apps/web/src/components/layout/vehicle-context-chip.tsx`, `apps/web/src/lib/context/use-vehicle-context.ts` (lista de veículos agora também buscada em modo `none`), `apps/web/src/lib/context/context-labels.ts` (`addVehicleCta`), `apps/web/src/app/(app)/expenses/page.tsx`, `apps/web/src/app/(app)/maintenance/page.tsx` | `apps/web/src/components/layout/vehicle-context-chip.spec.tsx` (caso novo dedicado ao CTA), `apps/web/src/app/(app)/expenses/page.spec.tsx`, `apps/web/src/app/(app)/maintenance/page.spec.tsx` (cobertura pré-existente do filtro) | ⚠️ parcial — `/fines` não existe como rota, filtro não se aplica a ela |
 
 ### Command Palette de Busca Global (RF-06, RNF-03)
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-06 | `CommandPalette` ativada por `Ctrl+K`/`⌘K`: campo de busca focado ao abrir; resultados cruzando veículos, despesas, manutenções e multas (`/fines`, habilitada por `SPEC-20260722-005`); navegação por teclado (setas, Enter, Esc) | `packages/ui/src/components/command-palette.tsx`, `apps/web/src/components/layout/command-palette-trigger.tsx` | `packages/ui/src/components/command-palette.test.tsx`, `apps/web/src/components/layout/command-palette-trigger.spec.tsx` (abertura via botão/`Ctrl+K`, busca cruzando as 4 categorias, navegação ao selecionar multa, query <2 chars, "nenhum resultado", RNF-03) | ✅ |
-| RNF-03 | `CommandPalette` não bloqueia renderização inicial do shell: `next/dynamic` (`ssr: false`) sobre `import("@nave/ui")`, montado só após a 1ª abertura (`hasOpenedOnce`) — nem o clique no botão nem o `Ctrl+K` fazem fetch do chunk antes da 1ª interação | `apps/web/src/components/layout/command-palette-trigger.tsx` | `apps/web/src/components/layout/command-palette-trigger.spec.tsx` (caso "RNF-03: não monta o CommandPalette antes da primeira abertura") | ✅ Verificado com `pnpm build`: chunk `cmdk`/`CommandPalette` isolado (~44,8 kB gzip), ausente de todo `build-manifest.json` de rota — não é carregado eagerly |
+| Req    | Descrição                                                                                                                                                                                                                                                     | Código                                                                                                         | Teste                                                                                                                                                                                                                                                                  | Status                                                                                                                                                         |
+| ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| RF-06  | `CommandPalette` ativada por `Ctrl+K`/`⌘K`: campo de busca focado ao abrir; resultados cruzando veículos, despesas, manutenções e multas (`/fines`, habilitada por `SPEC-20260722-005`); navegação por teclado (setas, Enter, Esc)                       | `packages/ui/src/components/command-palette.tsx`, `apps/web/src/components/layout/command-palette-trigger.tsx` | `packages/ui/src/components/command-palette.test.tsx`, `apps/web/src/components/layout/command-palette-trigger.spec.tsx` (abertura via botão/`Ctrl+K`, busca cruzando as 4 categorias, navegação ao selecionar multa, query <2 chars, "nenhum resultado", RNF-03) | ✅                                                                                                                                                             |
+| RNF-03 | `CommandPalette` não bloqueia renderização inicial do shell: `next/dynamic` (`ssr: false`) sobre `import("@navestory/ui")`, montado só após a 1ª abertura (`hasOpenedOnce`) — nem o clique no botão nem o `Ctrl+K` fazem fetch do chunk antes da 1ª interação | `apps/web/src/components/layout/command-palette-trigger.tsx`                                                   | `apps/web/src/components/layout/command-palette-trigger.spec.tsx` (caso "RNF-03: não monta o CommandPalette antes da primeira abertura")                                                                                                                               | ✅ Verificado com `pnpm build`: chunk `cmdk`/`CommandPalette` isolado (~44,8 kB gzip), ausente de todo `build-manifest.json` de rota — não é carregado eagerly |
 
 ### Contraste WCAG AA em Componentes de `packages/ui` (RNF-02)
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RNF-02 | `KpiCard`: texto da tendência usava `text-{variant}` (tons "solid") direto sobre `--card`, falhando AA (warning ~2.1:1, success ~3.4:1, info ~4.2:1). Corrigido para `bg-{variant}-pastel text-foreground`, mesmo padrão de `Alert`/`Toast` (contraste ≥14:1) | `packages/ui/src/components/kpi-card.tsx` | `packages/ui/src/components/kpi-card.test.tsx` (`jest-axe` cobrindo warning/success/info/danger, gap de cobertura anterior corrigido) | ✅ |
+| Req    | Descrição                                                                                                                                                                                                                                                     | Código                                    | Teste                                                                                                                                 | Status |
+| ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| RNF-02 | `KpiCard`: texto da tendência usava `text-{variant}` (tons "solid") direto sobre `--card`, falhando AA (warning ~2.1:1, success ~3.4:1, info ~4.2:1). Corrigido para `bg-{variant}-pastel text-foreground`, mesmo padrão de `Alert`/`Toast` (contraste ≥14:1) | `packages/ui/src/components/kpi-card.tsx` | `packages/ui/src/components/kpi-card.test.tsx` (`jest-axe` cobrindo warning/success/info/danger, gap de cobertura anterior corrigido) | ✅     |
 
 ---
 
@@ -1691,24 +1698,24 @@ que o artefato ainda não existe no repositório.
 
 ### Documentação e Regras (RF-01, RF-02, RF-04)
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-01 | `Design.md` criado na raiz do repositório seguindo a estrutura de seções de R-DS-02 | `/Design.md` | — (documentação) | ✅ |
-| RF-02 | Regras R-DS-02 a R-DS-05 registradas em `specs/RULES.md` | `specs/RULES.md` | — (documentação) | ✅ |
-| RF-04 | `docs/ui-design/design-system.md` atualizado para referenciar `Design.md` e esta spec | `docs/ui-design/design-system.md` | — (documentação) | ✅ |
+| Req   | Descrição                                                                             | Código                            | Teste            | Status |
+| ----- | ------------------------------------------------------------------------------------- | --------------------------------- | ---------------- | ------ |
+| RF-01 | `Design.md` criado na raiz do repositório seguindo a estrutura de seções de R-DS-02   | `/Design.md`                      | — (documentação) | ✅     |
+| RF-02 | Regras R-DS-02 a R-DS-05 registradas em `specs/RULES.md`                              | `specs/RULES.md`                  | — (documentação) | ✅     |
+| RF-04 | `docs/ui-design/design-system.md` atualizado para referenciar `Design.md` e esta spec | `docs/ui-design/design-system.md` | — (documentação) | ✅     |
 
 ### Numerais Tabulares (RF-03)
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-03 | `tabular-nums` aplicado ao valor principal de `KpiCard` e a toda `TableCell` | `packages/ui/src/components/kpi-card.tsx`, `packages/ui/src/components/table.tsx` | `kpi-card.test.tsx` ("aplica tabular-nums ao valor principal"), `table.test.tsx` ("célula usa tabular-nums para alinhar dígitos entre linhas") — ambos assertam a classe via `toHaveClass("tabular-nums")` (2026-07-23) | ✅ |
+| Req   | Descrição                                                                    | Código                                                                            | Teste                                                                                                                                                                                                                   | Status |
+| ----- | ---------------------------------------------------------------------------- | --------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| RF-03 | `tabular-nums` aplicado ao valor principal de `KpiCard` e a toda `TableCell` | `packages/ui/src/components/kpi-card.tsx`, `packages/ui/src/components/table.tsx` | `kpi-card.test.tsx` ("aplica tabular-nums ao valor principal"), `table.test.tsx` ("célula usa tabular-nums para alinhar dígitos entre linhas") — ambos assertam a classe via `toHaveClass("tabular-nums")` (2026-07-23) | ✅     |
 
 ### Auditoria de Não-Regressão (RNF-01, RNF-02)
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RNF-01 | Nenhuma família de cor decorativa nova em `colors.ts` | `packages/ui/src/tokens/colors.ts` (inalterado nesta spec) | — | ✅ |
-| RNF-02 | Nenhum `rounded-full` na forma do botão (CVA de `variant`/`size`) | `packages/ui/src/components/button.tsx` (verificado — única ocorrência de `rounded-full` é o spinner circular de `loading`, elemento decorativo redondo por natureza, não a forma do botão) | — | ✅ |
+| Req    | Descrição                                                         | Código                                                                                                                                                                                      | Teste | Status |
+| ------ | ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----- | ------ |
+| RNF-01 | Nenhuma família de cor decorativa nova em `colors.ts`             | `packages/ui/src/tokens/colors.ts` (inalterado nesta spec)                                                                                                                                  | —     | ✅     |
+| RNF-02 | Nenhum `rounded-full` na forma do botão (CVA de `variant`/`size`) | `packages/ui/src/components/button.tsx` (verificado — única ocorrência de `rounded-full` é o spinner circular de `loading`, elemento decorativo redondo por natureza, não a forma do botão) | —     | ✅     |
 
 ---
 
@@ -1725,10 +1732,10 @@ que o artefato ainda não existe no repositório.
 
 ### Canvas Quente em Superfícies Neutras (RF-01, RF-02)
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-01 | `background`/`card`/`border`/`muted` ganham chroma 0.004 (matiz 80) em light mode, L inalterada; `.dark` sem mudança | `packages/ui/src/tokens/colors.ts`, `apps/web/src/app/globals.css` | Suíte `vitest` completa de `packages/ui` (139 testes, incl. `jest-axe`) — sem violação após a mudança | ✅ |
-| RF-02 | `INVENTARIO-DESIGN-SYSTEM.md` (tabela de tokens + bloco Figma Variables) atualizado com os novos valores | `specs/design-system/INVENTARIO-DESIGN-SYSTEM.md` | — (documentação) | ✅ |
+| Req   | Descrição                                                                                                            | Código                                                             | Teste                                                                                                 | Status |
+| ----- | -------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------- | ------ |
+| RF-01 | `background`/`card`/`border`/`muted` ganham chroma 0.004 (matiz 80) em light mode, L inalterada; `.dark` sem mudança | `packages/ui/src/tokens/colors.ts`, `apps/web/src/app/globals.css` | Suíte `vitest` completa de `packages/ui` (139 testes, incl. `jest-axe`) — sem violação após a mudança | ✅     |
+| RF-02 | `INVENTARIO-DESIGN-SYSTEM.md` (tabela de tokens + bloco Figma Variables) atualizado com os novos valores             | `specs/design-system/INVENTARIO-DESIGN-SYSTEM.md`                  | — (documentação)                                                                                      | ✅     |
 
 ---
 
@@ -1740,18 +1747,18 @@ que o artefato ainda não existe no repositório.
 
 ### Migração de Tokens e Regras (RF-01 a RF-03)
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-01 | Tokens de marca (`background`/`foreground`/`card`/`border`/`muted`/`primary`/`secondary`/`gold`/`danger` + `-foreground`/`-pastel`) substituídos pelos valores OKLCH da direção Prata, light e dark | `packages/ui/src/tokens/colors.ts`, `apps/web/src/app/globals.css` | Suíte `vitest` completa de `packages/ui` (141 testes, incl. `jest-axe`) e `apps/web` (329 testes) — ambas passam sem alteração de asserção | ✅ |
-| RF-02 | `R-DS-05` revisada (v1→v2, 60-30-10) e `R-DS-06` (terracota único tom de `danger`) criada em `specs/RULES.md` | `specs/RULES.md` | — (documentação) | ✅ |
-| RF-03 | `SPEC-20260722-002` marcada `deprecated`, `superseded_by: SPEC-20260729-001` | `specs/design-system/SPEC-20260722-002-canvas-quente-light-mode.md` | — (documentação) | ✅ |
+| Req   | Descrição                                                                                                                                                                                           | Código                                                              | Teste                                                                                                                                      | Status |
+| ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ | ------ |
+| RF-01 | Tokens de marca (`background`/`foreground`/`card`/`border`/`muted`/`primary`/`secondary`/`gold`/`danger` + `-foreground`/`-pastel`) substituídos pelos valores OKLCH da direção Prata, light e dark | `packages/ui/src/tokens/colors.ts`, `apps/web/src/app/globals.css`  | Suíte `vitest` completa de `packages/ui` (141 testes, incl. `jest-axe`) e `apps/web` (329 testes) — ambas passam sem alteração de asserção | ✅     |
+| RF-02 | `R-DS-05` revisada (v1→v2, 60-30-10) e `R-DS-06` (terracota único tom de `danger`) criada em `specs/RULES.md`                                                                                       | `specs/RULES.md`                                                    | — (documentação)                                                                                                                           | ✅     |
+| RF-03 | `SPEC-20260722-002` marcada `deprecated`, `superseded_by: SPEC-20260729-001`                                                                                                                        | `specs/design-system/SPEC-20260722-002-canvas-quente-light-mode.md` | — (documentação)                                                                                                                           | ✅     |
 
 ### Auditoria de Não-Regressão (RNF-01, RNF-02)
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RNF-01 | Nenhuma regressão em `packages/ui`/`apps/web` | — | Suítes completas rodadas após a migração — 141/141 e 329/329 passando | ✅ |
-| RNF-02 | Contraste AA preservado (`mutedForeground` acima do teto de L=42% documentado, mas dentro da razão exigida por `C-DS-01`) | `packages/ui/src/tokens/colors.ts` | Validação analítica via `contrastExpectations` da direção Prata (~5.2:1 light, ~6.8:1 dark) + ausência de regressão em `jest-axe` | ✅ |
+| Req    | Descrição                                                                                                                 | Código                             | Teste                                                                                                                             | Status |
+| ------ | ------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| RNF-01 | Nenhuma regressão em `packages/ui`/`apps/web`                                                                             | —                                  | Suítes completas rodadas após a migração — 141/141 e 329/329 passando                                                             | ✅     |
+| RNF-02 | Contraste AA preservado (`mutedForeground` acima do teto de L=42% documentado, mas dentro da razão exigida por `C-DS-01`) | `packages/ui/src/tokens/colors.ts` | Validação analítica via `contrastExpectations` da direção Prata (~5.2:1 light, ~6.8:1 dark) + ausência de regressão em `jest-axe` | ✅     |
 
 ---
 
@@ -1763,26 +1770,26 @@ que o artefato ainda não existe no repositório.
 
 ### Tokens Novos e Realinhamento (RF-01 a RF-03)
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-01 | `--surface`/`--surface-elevated`/`--on-surface*` realinhados à família de matiz Prata; `--primary` dark ganha chroma reforçada (0.038→0.11) | `apps/web/src/app/globals.css`, `packages/ui/src/tokens/colors.ts` | Suíte `vitest` completa (ver RNF-01) | ✅ |
-| RF-02 | `--categorical-1..5` (substitui `--chart-1..5`) em `globals.css`/`tailwind.config.ts`; `apps/web/src/lib/chart-colors.ts` criado; migrados `FleetCharts.tsx`, `analytics/page.tsx`, `tco-breakdown-chart.tsx`, `fuel-trend-chart.tsx`, `vehicle-context-chip.tsx`, `sidebar.tsx` (+ `sidebar.spec.tsx` assertion) | arquivos citados | `sidebar.spec.tsx` ("RF-16: exibe o dot passivo..." — assertion `bg-categorical-4`); demais cobertos por specs pré-existentes que passaram sem alteração | ✅ |
-| RF-03 | `--urgency-hot`/`--urgency-hot-pastel` criados; `urgencyBadge()` em `expenses/page.tsx` migrado para 4 níveis; `--finance-outgoing` realinhado (H=25→32) | `apps/web/src/app/globals.css`, `apps/web/src/app/(app)/expenses/page.tsx` | Coberto por `expenses/page.spec.tsx` pré-existente (sem asserção de classe de cor — passou sem alteração) | ✅ |
+| Req   | Descrição                                                                                                                                                                                                                                                                                                         | Código                                                                     | Teste                                                                                                                                                    | Status |
+| ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| RF-01 | `--surface`/`--surface-elevated`/`--on-surface*` realinhados à família de matiz Prata; `--primary` dark ganha chroma reforçada (0.038→0.11)                                                                                                                                                                       | `apps/web/src/app/globals.css`, `packages/ui/src/tokens/colors.ts`         | Suíte `vitest` completa (ver RNF-01)                                                                                                                     | ✅     |
+| RF-02 | `--categorical-1..5` (substitui `--chart-1..5`) em `globals.css`/`tailwind.config.ts`; `apps/web/src/lib/chart-colors.ts` criado; migrados `FleetCharts.tsx`, `analytics/page.tsx`, `tco-breakdown-chart.tsx`, `fuel-trend-chart.tsx`, `vehicle-context-chip.tsx`, `sidebar.tsx` (+ `sidebar.spec.tsx` assertion) | arquivos citados                                                           | `sidebar.spec.tsx` ("RF-16: exibe o dot passivo..." — assertion `bg-categorical-4`); demais cobertos por specs pré-existentes que passaram sem alteração | ✅     |
+| RF-03 | `--urgency-hot`/`--urgency-hot-pastel` criados; `urgencyBadge()` em `expenses/page.tsx` migrado para 4 níveis; `--finance-outgoing` realinhado (H=25→32)                                                                                                                                                          | `apps/web/src/app/globals.css`, `apps/web/src/app/(app)/expenses/page.tsx` | Coberto por `expenses/page.spec.tsx` pré-existente (sem asserção de classe de cor — passou sem alteração)                                                | ✅     |
 
 ### Varredura de Cor Hardcoded (RF-04 a RF-06)
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-04 | Badges de status semântico migrados 1:1 para tokens (`bg-{variant}-pastel text-foreground`, padrão `Alert`/`KpiCard`); helper compartilhado criado para fines | `atividades/page.tsx`, `maintenance/page.tsx`, `fines/page.tsx`, `fines/[id]/page.tsx`, `apps/web/src/lib/fines/status-badge.ts`, `VehicleSpotlight.tsx` | Cobertos por specs pré-existentes, sem asserção de classe de cor afetada | ✅ |
-| RF-05 | Chrome estrutural migrado (`bg-white`/`border-neutral-*` → `bg-card`/`border-border`/`text-muted-foreground`) | `vehicle-context-dialog.tsx`, `vehicle-context-sheet.tsx`, `vehicle-switcher-content.tsx`, `install-prompt-banner.tsx`, `ios-install-banner.tsx`, `connectivity-indicator.tsx`, `offline/page.tsx` (migrado para `Button` de `@nave/ui`), `expenses/new`, `maintenance/new`, `fines/new` (hints "herdado do contexto"), `register/page.tsx`, `recover-password/page.tsx`, `page.tsx` (landing), `password-input.tsx` | Nenhum teste com asserção de classe hardcoded encontrado (grep confirmado antes da migração) | ✅ |
-| RF-06 | `manifest.ts`/`layout.tsx` recalculados para hex Prata (`#1B3A6B`/`#F4F6F8`, era `#3b70ca`/`#fafafa`); comentário de exceção do `gold` em `colors.ts` passou a citar os dois protótipos (`dashboard/concept` e `dashboard/concept/design-system-v2`) | `apps/web/src/app/manifest.ts`, `apps/web/src/app/layout.tsx`, `packages/ui/src/tokens/colors.ts` | — (documentação/meta tags) | ✅ |
+| Req   | Descrição                                                                                                                                                                                                                                            | Código                                                                                                                                                                                                                                                                                                                                                                                                                    | Teste                                                                                        | Status |
+| ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- | ------ |
+| RF-04 | Badges de status semântico migrados 1:1 para tokens (`bg-{variant}-pastel text-foreground`, padrão `Alert`/`KpiCard`); helper compartilhado criado para fines                                                                                        | `atividades/page.tsx`, `maintenance/page.tsx`, `fines/page.tsx`, `fines/[id]/page.tsx`, `apps/web/src/lib/fines/status-badge.ts`, `VehicleSpotlight.tsx`                                                                                                                                                                                                                                                                  | Cobertos por specs pré-existentes, sem asserção de classe de cor afetada                     | ✅     |
+| RF-05 | Chrome estrutural migrado (`bg-white`/`border-neutral-*` → `bg-card`/`border-border`/`text-muted-foreground`)                                                                                                                                        | `vehicle-context-dialog.tsx`, `vehicle-context-sheet.tsx`, `vehicle-switcher-content.tsx`, `install-prompt-banner.tsx`, `ios-install-banner.tsx`, `connectivity-indicator.tsx`, `offline/page.tsx` (migrado para `Button` de `@navestory/ui`), `expenses/new`, `maintenance/new`, `fines/new` (hints "herdado do contexto"), `register/page.tsx`, `recover-password/page.tsx`, `page.tsx` (landing), `password-input.tsx` | Nenhum teste com asserção de classe hardcoded encontrado (grep confirmado antes da migração) | ✅     |
+| RF-06 | `manifest.ts`/`layout.tsx` recalculados para hex Prata (`#1B3A6B`/`#F4F6F8`, era `#3b70ca`/`#fafafa`); comentário de exceção do `gold` em `colors.ts` passou a citar os dois protótipos (`dashboard/concept` e `dashboard/concept/design-system-v2`) | `apps/web/src/app/manifest.ts`, `apps/web/src/app/layout.tsx`, `packages/ui/src/tokens/colors.ts`                                                                                                                                                                                                                                                                                                                         | — (documentação/meta tags)                                                                   | ✅     |
 
 ### Auditoria de Não-Regressão (RNF-01, RNF-02)
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RNF-01 | Nenhuma regressão | — | `tsc --noEmit` limpo (`packages/ui`, `apps/web`); `vitest` completo — `packages/ui` 141/141, `apps/web` 329/329; `pnpm build` sem erros | ✅ |
-| RNF-02 | Nenhum consumidor órfão de `--chart-1..5` | — | `grep -rn "chart-1\|chart-2\|chart-3\|chart-4\|chart-5"` no repo — só o comentário histórico em `globals.css` | ✅ |
+| Req    | Descrição                                 | Código | Teste                                                                                                                                   | Status |
+| ------ | ----------------------------------------- | ------ | --------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| RNF-01 | Nenhuma regressão                         | —      | `tsc --noEmit` limpo (`packages/ui`, `apps/web`); `vitest` completo — `packages/ui` 141/141, `apps/web` 329/329; `pnpm build` sem erros | ✅     |
+| RNF-02 | Nenhum consumidor órfão de `--chart-1..5` | —      | `grep -rn "chart-1\|chart-2\|chart-3\|chart-4\|chart-5"` no repo — só o comentário histórico em `globals.css`                           | ✅     |
 
 > **2026-07-30 — RF-04 a RF-06 ganham enforcement automático:** a varredura era manual até aqui.
 > `scripts/check-hardcoded-colors.mjs` (job `hardcoded-colors-gate` em `.github/workflows/ci.yml`,
@@ -1801,26 +1808,26 @@ que o artefato ainda não existe no repositório.
 
 ### Componentes Novos (RF-01 a RF-03)
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-01 | `Input`/`Textarea` criados, classe-base `inputBaseClass` exportada | `packages/ui/src/components/input.tsx`, `textarea.tsx` | `input.test.tsx` (5), `textarea.test.tsx` (4), incl. `jest-axe` | ✅ |
-| RF-02 | `Checkbox`/`Switch` criados, sem dependência Radix nova | `packages/ui/src/components/checkbox.tsx`, `switch.tsx` | `checkbox.test.tsx` (3), `switch.test.tsx` (4), incl. `jest-axe` | ✅ |
-| RF-03 | `CurrencyInput`/`OdometerInput` aceitam `className` e usam `inputBaseClass` | `packages/ui/src/components/masked-input.tsx` | `masked-input.spec.tsx` (9, pré-existente, sem alteração de asserção) | ✅ |
+| Req   | Descrição                                                                   | Código                                                  | Teste                                                                 | Status |
+| ----- | --------------------------------------------------------------------------- | ------------------------------------------------------- | --------------------------------------------------------------------- | ------ |
+| RF-01 | `Input`/`Textarea` criados, classe-base `inputBaseClass` exportada          | `packages/ui/src/components/input.tsx`, `textarea.tsx`  | `input.test.tsx` (5), `textarea.test.tsx` (4), incl. `jest-axe`       | ✅     |
+| RF-02 | `Checkbox`/`Switch` criados, sem dependência Radix nova                     | `packages/ui/src/components/checkbox.tsx`, `switch.tsx` | `checkbox.test.tsx` (3), `switch.test.tsx` (4), incl. `jest-axe`      | ✅     |
+| RF-03 | `CurrencyInput`/`OdometerInput` aceitam `className` e usam `inputBaseClass` | `packages/ui/src/components/masked-input.tsx`           | `masked-input.spec.tsx` (9, pré-existente, sem alteração de asserção) | ✅     |
 
 ### Migração de Consumidores (RF-04 a RF-06)
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-04 | Formulários de escrita migrados: `expenses/{new,[id]}`, `maintenance/{new,[id]}`, `vehicles/{new,[id],[id]/odometer}`, `vehicle-groups/{new,[id]}`, `fines/{new,[id]}`, `settings/preferences`, `settings/vehicles/[vehicleId]/odometer-cycles` | arquivos citados em `apps/web/src/app/(app)/` | Specs pré-existentes de cada tela, mais `maintenance/[id]/page.spec.tsx` ajustado (select→Combobox) | ✅ |
-| RF-05 | Autenticação migrada: `login`, `register`, `recover-password`, `reset-password`, `password-input.tsx` | arquivos citados em `apps/web/src/app/(auth)/` | Specs pré-existentes, sem alteração de asserção | ✅ |
-| RF-06 | Ajustes finos: `KpiPicker.tsx`, select de veículo em `analytics`/`dashboard`, botões de `expenses`/`fines` (listagem), `delete-account-dialog.tsx` | arquivos citados | `analytics/page.spec.tsx` ajustado (`findByDisplayValue`→`waitFor`+`toHaveTextContent`) | ✅ |
+| Req   | Descrição                                                                                                                                                                                                                                       | Código                                         | Teste                                                                                               | Status |
+| ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- | --------------------------------------------------------------------------------------------------- | ------ |
+| RF-04 | Formulários de escrita migrados: `expenses/{new,[id]}`, `maintenance/{new,[id]}`, `vehicles/{new,[id],[id]/odometer}`, `vehicle-groups/{new,[id]}`, `fines/{new,[id]}`, `settings/preferences`, `settings/vehicles/[vehicleId]/odometer-cycles` | arquivos citados em `apps/web/src/app/(app)/`  | Specs pré-existentes de cada tela, mais `maintenance/[id]/page.spec.tsx` ajustado (select→Combobox) | ✅     |
+| RF-05 | Autenticação migrada: `login`, `register`, `recover-password`, `reset-password`, `password-input.tsx`                                                                                                                                           | arquivos citados em `apps/web/src/app/(auth)/` | Specs pré-existentes, sem alteração de asserção                                                     | ✅     |
+| RF-06 | Ajustes finos: `KpiPicker.tsx`, select de veículo em `analytics`/`dashboard`, botões de `expenses`/`fines` (listagem), `delete-account-dialog.tsx`                                                                                              | arquivos citados                               | `analytics/page.spec.tsx` ajustado (`findByDisplayValue`→`waitFor`+`toHaveTextContent`)             | ✅     |
 
 ### Auditoria de Não-Regressão (RNF-01, RNF-02)
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RNF-01 | Nenhuma regressão | — | `tsc --noEmit` limpo; `vitest` completo — `packages/ui` 157/157 (141+16), `apps/web` 329/329 | ✅ |
-| RNF-02 | Zero `<input>`/`<button>`/`<select>`/`<textarea>` sem estilo fora de exceções | — | `grep` confirmando ocorrências restantes só em `brand-showcase/` e `dashboard/concept/*`, mais controles de forma customizada documentados (swatch de cor, FAB do dock, hambúrguer) | ✅ |
+| Req    | Descrição                                                                     | Código | Teste                                                                                                                                                                               | Status |
+| ------ | ----------------------------------------------------------------------------- | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| RNF-01 | Nenhuma regressão                                                             | —      | `tsc --noEmit` limpo; `vitest` completo — `packages/ui` 157/157 (141+16), `apps/web` 329/329                                                                                        | ✅     |
+| RNF-02 | Zero `<input>`/`<button>`/`<select>`/`<textarea>` sem estilo fora de exceções | —      | `grep` confirmando ocorrências restantes só em `brand-showcase/` e `dashboard/concept/*`, mais controles de forma customizada documentados (swatch de cor, FAB do dock, hambúrguer) | ✅     |
 
 ---
 
@@ -1832,28 +1839,28 @@ que o artefato ainda não existe no repositório.
 
 ### Componentes Novos (RF-01 a RF-04)
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-01 | `Badge` criado (5 variantes) | `packages/ui/src/components/badge.tsx` | `badge.test.tsx` (7, incl. `jest-axe`) | ✅ |
-| RF-02 | `Skeleton` criado; `kpi-card.tsx`/`chart-wrapper.tsx` refatorados para compor `Skeleton` | `packages/ui/src/components/skeleton.tsx`, `kpi-card.tsx`, `chart-wrapper.tsx` | `skeleton.test.tsx` (3, incl. `jest-axe`); `kpi-card.test.tsx`/`chart-wrapper.test.tsx` pré-existentes sem alteração de asserção | ✅ |
-| RF-03 | `Container` criado (6 tamanhos × 2 gaps) | `packages/ui/src/components/container.tsx` | `container.test.tsx` (10, incl. `jest-axe`) | ✅ |
-| RF-04 | `Tooltip` criado sobre `@radix-ui/react-tooltip` (nova dependência) | `packages/ui/src/components/tooltip.tsx`, `packages/ui/package.json` | `tooltip.test.tsx` (2, incl. `jest-axe`) | ✅ |
+| Req   | Descrição                                                                                | Código                                                                         | Teste                                                                                                                            | Status |
+| ----- | ---------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| RF-01 | `Badge` criado (5 variantes)                                                             | `packages/ui/src/components/badge.tsx`                                         | `badge.test.tsx` (7, incl. `jest-axe`)                                                                                           | ✅     |
+| RF-02 | `Skeleton` criado; `kpi-card.tsx`/`chart-wrapper.tsx` refatorados para compor `Skeleton` | `packages/ui/src/components/skeleton.tsx`, `kpi-card.tsx`, `chart-wrapper.tsx` | `skeleton.test.tsx` (3, incl. `jest-axe`); `kpi-card.test.tsx`/`chart-wrapper.test.tsx` pré-existentes sem alteração de asserção | ✅     |
+| RF-03 | `Container` criado (6 tamanhos × 2 gaps)                                                 | `packages/ui/src/components/container.tsx`                                     | `container.test.tsx` (10, incl. `jest-axe`)                                                                                      | ✅     |
+| RF-04 | `Tooltip` criado sobre `@radix-ui/react-tooltip` (nova dependência)                      | `packages/ui/src/components/tooltip.tsx`, `packages/ui/package.json`           | `tooltip.test.tsx` (2, incl. `jest-axe`)                                                                                         | ✅     |
 
 ### Migração de Consumidores (RF-05 a RF-08)
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-05 | Badge migrado: `status-badge.ts` (`FINE_STATUS_BADGE_CLASS`→`FINE_STATUS_BADGE_VARIANT`), `fines/page.tsx`, `fines/[id]/page.tsx`, `atividades/page.tsx`, `maintenance/page.tsx`, `VehicleHealthCard.tsx` (`DocumentBadge`) | arquivos citados | Specs pré-existentes, sem alteração de asserção | ✅ |
-| RF-06 | Skeleton migrado: `financial-subheader.tsx`, `vehicle-context-chip.tsx`, `vehicle-switcher-content.tsx` | arquivos citados | Specs pré-existentes (`vehicle-switcher-content.tsx` sem spec) | ✅ |
-| RF-07 | Container migrado: 28 arquivos `page.tsx` de `(app)/` e `(auth)/` (32 ocorrências) | arquivos citados | Specs pré-existentes de cada tela | ✅ |
-| RF-08 | Tooltip migrado: `sidebar.tsx`, `VehicleHealthCard.tsx`, `atividades/page.tsx` | arquivos citados | `VehicleHealthCard.spec.tsx` ajustado (`getByTitle`→`userEvent.hover`+`findByText`) | ✅ |
+| Req   | Descrição                                                                                                                                                                                                                   | Código           | Teste                                                                               | Status |
+| ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------- | ----------------------------------------------------------------------------------- | ------ |
+| RF-05 | Badge migrado: `status-badge.ts` (`FINE_STATUS_BADGE_CLASS`→`FINE_STATUS_BADGE_VARIANT`), `fines/page.tsx`, `fines/[id]/page.tsx`, `atividades/page.tsx`, `maintenance/page.tsx`, `VehicleHealthCard.tsx` (`DocumentBadge`) | arquivos citados | Specs pré-existentes, sem alteração de asserção                                     | ✅     |
+| RF-06 | Skeleton migrado: `financial-subheader.tsx`, `vehicle-context-chip.tsx`, `vehicle-switcher-content.tsx`                                                                                                                     | arquivos citados | Specs pré-existentes (`vehicle-switcher-content.tsx` sem spec)                      | ✅     |
+| RF-07 | Container migrado: 28 arquivos `page.tsx` de `(app)/` e `(auth)/` (32 ocorrências)                                                                                                                                          | arquivos citados | Specs pré-existentes de cada tela                                                   | ✅     |
+| RF-08 | Tooltip migrado: `sidebar.tsx`, `VehicleHealthCard.tsx`, `atividades/page.tsx`                                                                                                                                              | arquivos citados | `VehicleHealthCard.spec.tsx` ajustado (`getByTitle`→`userEvent.hover`+`findByText`) | ✅     |
 
 ### Auditoria de Não-Regressão (RNF-01, RNF-02)
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RNF-01 | Nenhuma regressão | — | `tsc --noEmit` limpo; `vitest` completo — `packages/ui` 179/179 (157+22), `apps/web` 329/329 | ✅ |
-| RNF-02 | Zero `animate-pulse`/`<main className="mx-auto flex max-w-`/badge pill inline fora de exceções | — | `grep` confirmando ocorrências restantes só em `brand-showcase/`, `dashboard/concept/*`, e os 3 casos de tingimento de linha inteira (não-badge, documentados) | ✅ |
+| Req    | Descrição                                                                                      | Código | Teste                                                                                                                                                          | Status |
+| ------ | ---------------------------------------------------------------------------------------------- | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| RNF-01 | Nenhuma regressão                                                                              | —      | `tsc --noEmit` limpo; `vitest` completo — `packages/ui` 179/179 (157+22), `apps/web` 329/329                                                                   | ✅     |
+| RNF-02 | Zero `animate-pulse`/`<main className="mx-auto flex max-w-`/badge pill inline fora de exceções | —      | `grep` confirmando ocorrências restantes só em `brand-showcase/`, `dashboard/concept/*`, e os 3 casos de tingimento de linha inteira (não-badge, documentados) | ✅     |
 
 ---
 
@@ -1877,24 +1884,24 @@ que o artefato ainda não existe no repositório.
 
 ### Migração de Tokens e Regras (RF-01 a RF-08)
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-01 | Conversão OKLCH completa do Azul-Índigo (12 tons) e grafite dedicado, com `contrastExpectations` | `apps/web/src/app/(app)/design-system/_lib/tokens.ts` (`PROPOSED_TOKENS`, `INDIGO_SCALE`, `GRAPHITE_SCALE`) | `contrast.spec.ts` (indireto, via produção após RF-02) | ✅ |
-| RF-02 | Migrar `primary`/`primaryForeground`/`background`/`foreground`/`card`/`cardForeground`/`border`/`muted`/`secondary`/`secondaryForeground` em `colors.ts`/`globals.css` | `packages/ui/src/tokens/colors.ts`, `apps/web/src/app/globals.css`, `apps/web/src/app/layout.tsx`, `apps/web/src/app/manifest.ts` (hex do `theme_color`) | Suíte `vitest` completa — `packages/ui` 179/179, `apps/web` 349/351 (2 pendências pré-existentes, não regressão) | ✅ |
-| RF-03 | Overrides de dark mode para `successPastel`/`warningPastel`/`dangerPastel`/`infoPastel` (`C-DS-02`) | `packages/ui/src/tokens/colors.ts`, `apps/web/src/app/globals.css` | `contrast.spec.ts` — 4 pares `{token} sobre {token}-pastel` em dark, todos ✅ | ✅ |
-| RF-04 | Documentar contrato "`warning`/`success` só sobre o próprio `-pastel`" no token/`Design.md` (fecha `C-DS-01`) | `packages/ui/src/tokens/colors.ts`, `apps/web/src/app/globals.css`, `Design.md` | — (documentação) | ✅ |
-| RF-05 | Atualizar `/Design.md` (ainda referencia "Steel & Sapphire") | `Design.md` | — (documentação) | ✅ |
-| RF-06 | Sistema tipográfico formal (Inter variável, escala modular, `tabular-nums`) | `packages/ui/src/tokens/typography.ts`, `apps/web/src/app/layout.tsx`, `apps/web/tailwind.config.ts` | `tsc --noEmit` limpo; `tabular-nums` já coberto por `kpi-card.test.tsx`/`table.test.tsx` (pré-existentes) | ✅ 🔶 escala `text-*` do Tailwind não remapeada (fora de escopo) |
-| RF-07 | Atualizar `matrices/rastreabilidade.md` com esta entrada | `matrices/rastreabilidade.md` | — (documentação) | ✅ |
-| RF-08 | `SPEC-20260729-001` marcada `deprecated`, `superseded_by: SPEC-20260731-001` | `specs/design-system/SPEC-20260729-001-adocao-direcao-prata.md` | — (documentação) | ✅ |
+| Req   | Descrição                                                                                                                                                              | Código                                                                                                                                                   | Teste                                                                                                            | Status                                                           |
+| ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| RF-01 | Conversão OKLCH completa do Azul-Índigo (12 tons) e grafite dedicado, com `contrastExpectations`                                                                       | `apps/web/src/app/(app)/design-system/_lib/tokens.ts` (`PROPOSED_TOKENS`, `INDIGO_SCALE`, `GRAPHITE_SCALE`)                                              | `contrast.spec.ts` (indireto, via produção após RF-02)                                                           | ✅                                                               |
+| RF-02 | Migrar `primary`/`primaryForeground`/`background`/`foreground`/`card`/`cardForeground`/`border`/`muted`/`secondary`/`secondaryForeground` em `colors.ts`/`globals.css` | `packages/ui/src/tokens/colors.ts`, `apps/web/src/app/globals.css`, `apps/web/src/app/layout.tsx`, `apps/web/src/app/manifest.ts` (hex do `theme_color`) | Suíte `vitest` completa — `packages/ui` 179/179, `apps/web` 349/351 (2 pendências pré-existentes, não regressão) | ✅                                                               |
+| RF-03 | Overrides de dark mode para `successPastel`/`warningPastel`/`dangerPastel`/`infoPastel` (`C-DS-02`)                                                                    | `packages/ui/src/tokens/colors.ts`, `apps/web/src/app/globals.css`                                                                                       | `contrast.spec.ts` — 4 pares `{token} sobre {token}-pastel` em dark, todos ✅                                    | ✅                                                               |
+| RF-04 | Documentar contrato "`warning`/`success` só sobre o próprio `-pastel`" no token/`Design.md` (fecha `C-DS-01`)                                                          | `packages/ui/src/tokens/colors.ts`, `apps/web/src/app/globals.css`, `Design.md`                                                                          | — (documentação)                                                                                                 | ✅                                                               |
+| RF-05 | Atualizar `/Design.md` (ainda referencia "Steel & Sapphire")                                                                                                           | `Design.md`                                                                                                                                              | — (documentação)                                                                                                 | ✅                                                               |
+| RF-06 | Sistema tipográfico formal (Inter variável, escala modular, `tabular-nums`)                                                                                            | `packages/ui/src/tokens/typography.ts`, `apps/web/src/app/layout.tsx`, `apps/web/tailwind.config.ts`                                                     | `tsc --noEmit` limpo; `tabular-nums` já coberto por `kpi-card.test.tsx`/`table.test.tsx` (pré-existentes)        | ✅ 🔶 escala `text-*` do Tailwind não remapeada (fora de escopo) |
+| RF-07 | Atualizar `matrices/rastreabilidade.md` com esta entrada                                                                                                               | `matrices/rastreabilidade.md`                                                                                                                            | — (documentação)                                                                                                 | ✅                                                               |
+| RF-08 | `SPEC-20260729-001` marcada `deprecated`, `superseded_by: SPEC-20260731-001`                                                                                           | `specs/design-system/SPEC-20260729-001-adocao-direcao-prata.md`                                                                                          | — (documentação)                                                                                                 | ✅                                                               |
 
 ### Auditoria de Não-Regressão (RNF-01 a RNF-03)
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RNF-01 | Nenhuma regressão em `packages/ui`/`apps/web` | — | `packages/ui` 179/179; `apps/web` 349/351 (2 falhas pré-existentes de `warning`, comparadas linha a linha contra a baseline Prata via `git stash`) | ✅ |
+| Req    | Descrição                                                                                           | Código                             | Teste                                                                                                                                                                                       | Status                                                   |
+| ------ | --------------------------------------------------------------------------------------------------- | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
+| RNF-01 | Nenhuma regressão em `packages/ui`/`apps/web`                                                       | —                                  | `packages/ui` 179/179; `apps/web` 349/351 (2 falhas pré-existentes de `warning`, comparadas linha a linha contra a baseline Prata via `git stash`)                                          | ✅                                                       |
 | RNF-02 | Contraste AA para `primary`/`primaryForeground`/`secondary`/`secondaryForeground` em ambos os temas | `packages/ui/src/tokens/colors.ts` | `contrast.spec.ts` não cobre o par `primary`/`primaryForeground` diretamente (gap pré-existente, não introduzido por esta spec); validado manualmente via a mesma lógica de `contrastRatio` | 🔶 sem cobertura automatizada direta (gap pré-existente) |
-| RNF-03 | `*-pastel` ≥4.5:1 contra `--foreground` em dark mode | `packages/ui/src/tokens/colors.ts` | `contrast.spec.ts` — todos os 4 pares em dark ✅ | ✅ |
+| RNF-03 | `*-pastel` ≥4.5:1 contra `--foreground` em dark mode                                                | `packages/ui/src/tokens/colors.ts` | `contrast.spec.ts` — todos os 4 pares em dark ✅                                                                                                                                            | ✅                                                       |
 
 ---
 
@@ -1908,19 +1915,19 @@ que o artefato ainda não existe no repositório.
 > pendente de `--danger-foreground` (mantido no valor literal de Prata em `SPEC-20260731-001` por
 > risco de derrubar o par abaixo do piso AA ao migrar para o grafite).
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-01 | Recalibrar `colorChannels.warning` (light) de `75% 0.16 85` para `54% 0.14 85` | `packages/ui/src/tokens/colors.ts`, `apps/web/src/app/globals.css` | `contrast.spec.ts` — `warning` sobre `card`/`warning-pastel` (light) ✅ | ✅ |
-| RF-02 | Override explícito de `darkColorChannels.warning` (`75% 0.16 85`, valor claro original preservado) | `packages/ui/src/tokens/colors.ts`, `apps/web/src/app/globals.css` | `contrast.spec.ts` — pares de `warning` em dark inalterados ✅ | ✅ |
-| RF-03 | Atualizar comentário desatualizado em `kpi-card.tsx` (RF-02/RNF-02 de `SPEC-20260721-001`) | `packages/ui/src/components/kpi-card.tsx` | — (documentação) | ✅ |
-| RF-04 | Atualizar `matrices/rastreabilidade.md` e `PLANO-MIGRACAO-SHOWCASE-INFRA.md` (changelog Rodada 4) | `matrices/rastreabilidade.md`, `specs/design-system/PLANO-MIGRACAO-SHOWCASE-INFRA.md` | — (documentação) | ✅ |
-| RF-05 | Recalibrar `dangerForeground`/`--danger-foreground` de `97.2% 0.003 248` (literal de Prata) para `97.5% 0.003 265` (hue de grafite, L elevado para preservar margem AA) | `packages/ui/src/tokens/colors.ts`, `apps/web/src/app/globals.css` | `contrast.spec.ts` — `danger` sobre `danger-foreground` ~4,57:1 ✅ | ✅ |
+| Req   | Descrição                                                                                                                                                               | Código                                                                                | Teste                                                                   | Status |
+| ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- | ------ |
+| RF-01 | Recalibrar `colorChannels.warning` (light) de `75% 0.16 85` para `54% 0.14 85`                                                                                          | `packages/ui/src/tokens/colors.ts`, `apps/web/src/app/globals.css`                    | `contrast.spec.ts` — `warning` sobre `card`/`warning-pastel` (light) ✅ | ✅     |
+| RF-02 | Override explícito de `darkColorChannels.warning` (`75% 0.16 85`, valor claro original preservado)                                                                      | `packages/ui/src/tokens/colors.ts`, `apps/web/src/app/globals.css`                    | `contrast.spec.ts` — pares de `warning` em dark inalterados ✅          | ✅     |
+| RF-03 | Atualizar comentário desatualizado em `kpi-card.tsx` (RF-02/RNF-02 de `SPEC-20260721-001`)                                                                              | `packages/ui/src/components/kpi-card.tsx`                                             | — (documentação)                                                        | ✅     |
+| RF-04 | Atualizar `matrices/rastreabilidade.md` e `PLANO-MIGRACAO-SHOWCASE-INFRA.md` (changelog Rodada 4)                                                                       | `matrices/rastreabilidade.md`, `specs/design-system/PLANO-MIGRACAO-SHOWCASE-INFRA.md` | — (documentação)                                                        | ✅     |
+| RF-05 | Recalibrar `dangerForeground`/`--danger-foreground` de `97.2% 0.003 248` (literal de Prata) para `97.5% 0.003 265` (hue de grafite, L elevado para preservar margem AA) | `packages/ui/src/tokens/colors.ts`, `apps/web/src/app/globals.css`                    | `contrast.spec.ts` — `danger` sobre `danger-foreground` ~4,57:1 ✅      | ✅     |
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RNF-01 | `contrast.spec.ts` passa 100% (22/22), ambos os temas | — | `contrast.spec.ts` 22/22 ✅ | ✅ |
-| RNF-02 | Nenhuma regressão em `packages/ui`/`apps/web` | — | `packages/ui` 179/179; `apps/web` 351/351 (as 2 falhas pré-existentes de `warning` desaparecem) | ✅ |
-| RNF-03 | `danger`/`danger-foreground` mantém margem folgada acima do piso AA após RF-05 | `packages/ui/src/tokens/colors.ts` | `contrast.spec.ts` — ~4,57:1 (era ~4,53:1) ✅ | ✅ |
+| Req    | Descrição                                                                      | Código                             | Teste                                                                                           | Status |
+| ------ | ------------------------------------------------------------------------------ | ---------------------------------- | ----------------------------------------------------------------------------------------------- | ------ |
+| RNF-01 | `contrast.spec.ts` passa 100% (22/22), ambos os temas                          | —                                  | `contrast.spec.ts` 22/22 ✅                                                                     | ✅     |
+| RNF-02 | Nenhuma regressão em `packages/ui`/`apps/web`                                  | —                                  | `packages/ui` 179/179; `apps/web` 351/351 (as 2 falhas pré-existentes de `warning` desaparecem) | ✅     |
+| RNF-03 | `danger`/`danger-foreground` mantém margem folgada acima do piso AA após RF-05 | `packages/ui/src/tokens/colors.ts` | `contrast.spec.ts` — ~4,57:1 (era ~4,53:1) ✅                                                   | ✅     |
 
 ---
 
@@ -1932,12 +1939,12 @@ que o artefato ainda não existe no repositório.
 > client-side de dados (`apiClient`) nunca passavam pelo guard S1 do middleware — um 401 de
 > sessão expirada caía direto no `throw` genérico de `ApiError`.
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-01 | Interceptação global: `401` de qualquer chamada `apiClient` redireciona para `/login?redirect=<pathname atual>` | `apps/web/src/lib/http/api-client.ts` | `apps/web/src/lib/http/api-client.spec.ts` — describe RF-01/RF-02/RF-03 | ✅ |
-| RF-02 | Endpoints `/auth/*` excluídos do redirect (401 de `/auth/login` é fluxo normal de credenciais inválidas, STORY-02) | `apps/web/src/lib/http/api-client.ts` (`isAuthEndpoint`) | `apps/web/src/lib/http/api-client.spec.ts` | ✅ |
-| RF-03 | Sem loop de redirect quando já em `/login` | `apps/web/src/lib/http/api-client.ts` (`getLoginRedirectUrl`) | `apps/web/src/lib/http/api-client.spec.ts` | ✅ |
-| RF-04 | `ApiError` continua sendo lançado após o redirect (efeito colateral, mesmo padrão de RF-13/SPEC-20260719-001) | `apps/web/src/lib/http/api-client.ts` | `apps/web/src/lib/http/api-client.spec.ts` | ✅ |
+| Req   | Descrição                                                                                                          | Código                                                        | Teste                                                                   | Status |
+| ----- | ------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------- | ----------------------------------------------------------------------- | ------ |
+| RF-01 | Interceptação global: `401` de qualquer chamada `apiClient` redireciona para `/login?redirect=<pathname atual>`    | `apps/web/src/lib/http/api-client.ts`                         | `apps/web/src/lib/http/api-client.spec.ts` — describe RF-01/RF-02/RF-03 | ✅     |
+| RF-02 | Endpoints `/auth/*` excluídos do redirect (401 de `/auth/login` é fluxo normal de credenciais inválidas, STORY-02) | `apps/web/src/lib/http/api-client.ts` (`isAuthEndpoint`)      | `apps/web/src/lib/http/api-client.spec.ts`                              | ✅     |
+| RF-03 | Sem loop de redirect quando já em `/login`                                                                         | `apps/web/src/lib/http/api-client.ts` (`getLoginRedirectUrl`) | `apps/web/src/lib/http/api-client.spec.ts`                              | ✅     |
+| RF-04 | `ApiError` continua sendo lançado após o redirect (efeito colateral, mesmo padrão de RF-13/SPEC-20260719-001)      | `apps/web/src/lib/http/api-client.ts`                         | `apps/web/src/lib/http/api-client.spec.ts`                              | ✅     |
 
 ---
 
@@ -1949,18 +1956,18 @@ que o artefato ainda não existe no repositório.
 > para `app_metadata`, gravável apenas via API administrativa (service role). Regra S12.
 > Substitui o mecanismo descrito no RF-09 de `SPEC-20260521-004` (ver changelog daquela spec).
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-SEC-001 | `RolesGuard` lê `app_metadata.role` em vez de `user_metadata.role` | `apps/api/src/common/guards/roles.guard.ts` | `apps/api/src/common/guards/roles.guard.spec.ts` | ✅ |
-| RF-SEC-002 | `SupabaseAuthGuard` e `SoftDeletedUserGuard` populam `request.user.app_metadata` a partir de `data.user.app_metadata` | `apps/api/src/common/guards/supabase-auth.guard.ts`, `apps/api/src/common/guards/soft-deleted-user.guard.ts` | `apps/api/src/common/guards/supabase-auth.guard.spec.ts`, `apps/api/src/common/guards/soft-deleted-user.guard.spec.ts` | ✅ |
-| RF-SEC-003 | `JwtPayload` declara `app_metadata?: { role?: string }` (campo `user_metadata` removido — não tinha outro consumidor) | `apps/api/src/modules/auth/jwt.strategy.ts` | — (tipo, verificado por `tsc --noEmit`) | ✅ |
-| RF-SEC-004 | Migração manual de contas admin existentes para `app_metadata.role` antes do deploy | Supabase Dashboard (operacional, sem código) | — | ⏳ pendente (execução manual por Douglas antes do deploy) |
-| RF-SEC-005 | Teste de regressão cobre o critério de fechamento: `user_metadata.role="admin"` forjado, sem `app_metadata.role`, é negado | `apps/api/src/common/guards/roles.guard.spec.ts` | mesmo arquivo (caso "bloqueia usuário com user_metadata.role='admin' forjado, sem app_metadata.role (S12)") | ✅ |
-| RF-SEC-006 | Changelog em `SPEC-20260521-004` registrando a substituição do mecanismo do RF-09 | `specs/admin/SPEC-20260521-004.md` (rodapé) | — (documentação) | ✅ |
+| Req        | Descrição                                                                                                                  | Código                                                                                                       | Teste                                                                                                                  | Status                                                    |
+| ---------- | -------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| RF-SEC-001 | `RolesGuard` lê `app_metadata.role` em vez de `user_metadata.role`                                                         | `apps/api/src/common/guards/roles.guard.ts`                                                                  | `apps/api/src/common/guards/roles.guard.spec.ts`                                                                       | ✅                                                        |
+| RF-SEC-002 | `SupabaseAuthGuard` e `SoftDeletedUserGuard` populam `request.user.app_metadata` a partir de `data.user.app_metadata`      | `apps/api/src/common/guards/supabase-auth.guard.ts`, `apps/api/src/common/guards/soft-deleted-user.guard.ts` | `apps/api/src/common/guards/supabase-auth.guard.spec.ts`, `apps/api/src/common/guards/soft-deleted-user.guard.spec.ts` | ✅                                                        |
+| RF-SEC-003 | `JwtPayload` declara `app_metadata?: { role?: string }` (campo `user_metadata` removido — não tinha outro consumidor)      | `apps/api/src/modules/auth/jwt.strategy.ts`                                                                  | — (tipo, verificado por `tsc --noEmit`)                                                                                | ✅                                                        |
+| RF-SEC-004 | Migração manual de contas admin existentes para `app_metadata.role` antes do deploy                                        | Supabase Dashboard (operacional, sem código)                                                                 | —                                                                                                                      | ⏳ pendente (execução manual por Douglas antes do deploy) |
+| RF-SEC-005 | Teste de regressão cobre o critério de fechamento: `user_metadata.role="admin"` forjado, sem `app_metadata.role`, é negado | `apps/api/src/common/guards/roles.guard.spec.ts`                                                             | mesmo arquivo (caso "bloqueia usuário com user_metadata.role='admin' forjado, sem app_metadata.role (S12)")            | ✅                                                        |
+| RF-SEC-006 | Changelog em `SPEC-20260521-004` registrando a substituição do mecanismo do RF-09                                          | `specs/admin/SPEC-20260521-004.md` (rodapé)                                                                  | — (documentação)                                                                                                       | ✅                                                        |
 
 ---
 
-## SPEC-20260731-004 — Shell de Rotas Públicas: PublicHeader, Footer Consistente e Navegação de Retorno (approved)
+## SPEC-20260731-004 — Shell de Rotas Públicas: PublicHeader, Footer Consistente e navegação de Retorno (approved)
 
 > Lacuna de UI nas rotas públicas: ausência de header de marca, footer inconsistente
 > (`LegalFooter` presente apenas em `/`, `/login`, `/register`) e sem navegação de retorno
@@ -1970,25 +1977,25 @@ que o artefato ainda não existe no repositório.
 > páginas afetadas foram ajustadas para mockar `useRouter` (consumido por `BackLink`) e continuam
 > verdes com os componentes novos renderizados.
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-01 | Criar `PublicHeader` em `apps/web/src/components/public-header.tsx` | `apps/web/src/components/public-header.tsx` | — | ✅ |
-| RF-02 | Prop `navLink?` opcional no `PublicHeader` | `apps/web/src/components/public-header.tsx` | — | ✅ |
-| RF-03 | `PublicHeader` em todas as rotas públicas (`/`, `/login`, `/register`, `/recover-password`, `/reset-password`, `/restore-account`, `/termos`, `/privacidade`, `/offline`) | `apps/web/src/app/page.tsx`, `apps/web/src/app/(auth)/login/page.tsx`, `apps/web/src/app/(auth)/register/page.tsx`, `apps/web/src/app/(auth)/recover-password/page.tsx`, `apps/web/src/app/(auth)/reset-password/page.tsx`, `apps/web/src/app/(auth)/restore-account/page.tsx`, `apps/web/src/app/termos/page.tsx`, `apps/web/src/app/privacidade/page.tsx`, `apps/web/src/app/offline/page.tsx` | — | ✅ |
-| RF-04 | Em `/login`: `navLink={{ label: "Criar conta", href: "/register" }}` | `apps/web/src/app/(auth)/login/page.tsx` | `apps/web/src/app/(auth)/login/page.spec.tsx` | ✅ |
-| RF-05 | Em `/register`: `navLink={{ label: "Entrar", href: "/login" }}` | `apps/web/src/app/(auth)/register/page.tsx` | `apps/web/src/app/(auth)/register/page.spec.tsx` | ✅ |
-| RF-06 | Demais rotas: `PublicHeader` sem `navLink` | `apps/web/src/app/page.tsx`, `apps/web/src/app/(auth)/recover-password/page.tsx`, `apps/web/src/app/(auth)/reset-password/page.tsx`, `apps/web/src/app/(auth)/restore-account/page.tsx`, `apps/web/src/app/termos/page.tsx`, `apps/web/src/app/privacidade/page.tsx`, `apps/web/src/app/offline/page.tsx` | — | ✅ |
-| RF-07 | `LegalFooter` presente em todas as rotas públicas (adicionado em `/recover-password`, `/reset-password`, `/restore-account`, `/termos`, `/privacidade`, `/offline`) | `apps/web/src/app/(auth)/recover-password/page.tsx`, `apps/web/src/app/(auth)/reset-password/page.tsx`, `apps/web/src/app/(auth)/restore-account/page.tsx`, `apps/web/src/app/termos/page.tsx`, `apps/web/src/app/privacidade/page.tsx`, `apps/web/src/app/offline/page.tsx` | — | ✅ |
-| RF-08 | Link "Voltar para o login" (→ `/login`) em `/recover-password`, abaixo do formulário | `apps/web/src/app/(auth)/recover-password/page.tsx` | `apps/web/src/app/(auth)/recover-password/page.spec.tsx` | ✅ |
-| RF-09 | Link "Voltar para o login" (→ `/login`) em `/reset-password`, abaixo do formulário | `apps/web/src/app/(auth)/reset-password/page.tsx` | `apps/web/src/app/(auth)/reset-password/page.spec.tsx` | ✅ |
-| RF-10 | Link "Voltar para o login" (→ `/login`) em `/restore-account`, terciário abaixo dos dois CTAs existentes | `apps/web/src/app/(auth)/restore-account/page.tsx` | `apps/web/src/app/(auth)/restore-account/page.spec.tsx` | ✅ |
-| RF-11 | Criar `BackLink` em `apps/web/src/components/back-link.tsx` (`router.back()` com fallback por prop) | `apps/web/src/components/back-link.tsx` | — | ✅ |
-| RF-12 | `BackLink` com `fallback="/"` e rótulo "Voltar" em `/termos` e `/privacidade`, acima do conteúdo | `apps/web/src/app/termos/page.tsx`, `apps/web/src/app/privacidade/page.tsx` | `apps/web/src/app/termos/page.spec.tsx`, `apps/web/src/app/privacidade/page.spec.tsx` | ✅ |
-| RF-13 | `ThemeToggle` (`@nave/ui`) no `PublicHeader`, alinhado à direita, com `useTheme`/`resolvedTheme` (`next-themes`) — mesmo padrão de `layout/header.tsx` | `apps/web/src/components/public-header.tsx` | — | ✅ |
+| Req   | Descrição                                                                                                                                                                 | Código                                                                                                                                                                                                                                                                                                                                                                                           | Teste                                                                                 | Status |
+| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------- | ------ |
+| RF-01 | Criar `PublicHeader` em `apps/web/src/components/public-header.tsx`                                                                                                       | `apps/web/src/components/public-header.tsx`                                                                                                                                                                                                                                                                                                                                                      | —                                                                                     | ✅     |
+| RF-02 | Prop `navLink?` opcional no `PublicHeader`                                                                                                                                | `apps/web/src/components/public-header.tsx`                                                                                                                                                                                                                                                                                                                                                      | —                                                                                     | ✅     |
+| RF-03 | `PublicHeader` em todas as rotas públicas (`/`, `/login`, `/register`, `/recover-password`, `/reset-password`, `/restore-account`, `/termos`, `/privacidade`, `/offline`) | `apps/web/src/app/page.tsx`, `apps/web/src/app/(auth)/login/page.tsx`, `apps/web/src/app/(auth)/register/page.tsx`, `apps/web/src/app/(auth)/recover-password/page.tsx`, `apps/web/src/app/(auth)/reset-password/page.tsx`, `apps/web/src/app/(auth)/restore-account/page.tsx`, `apps/web/src/app/termos/page.tsx`, `apps/web/src/app/privacidade/page.tsx`, `apps/web/src/app/offline/page.tsx` | —                                                                                     | ✅     |
+| RF-04 | Em `/login`: `navLink={{ label: "Criar conta", href: "/register" }}`                                                                                                      | `apps/web/src/app/(auth)/login/page.tsx`                                                                                                                                                                                                                                                                                                                                                         | `apps/web/src/app/(auth)/login/page.spec.tsx`                                         | ✅     |
+| RF-05 | Em `/register`: `navLink={{ label: "Entrar", href: "/login" }}`                                                                                                           | `apps/web/src/app/(auth)/register/page.tsx`                                                                                                                                                                                                                                                                                                                                                      | `apps/web/src/app/(auth)/register/page.spec.tsx`                                      | ✅     |
+| RF-06 | Demais rotas: `PublicHeader` sem `navLink`                                                                                                                                | `apps/web/src/app/page.tsx`, `apps/web/src/app/(auth)/recover-password/page.tsx`, `apps/web/src/app/(auth)/reset-password/page.tsx`, `apps/web/src/app/(auth)/restore-account/page.tsx`, `apps/web/src/app/termos/page.tsx`, `apps/web/src/app/privacidade/page.tsx`, `apps/web/src/app/offline/page.tsx`                                                                                        | —                                                                                     | ✅     |
+| RF-07 | `LegalFooter` presente em todas as rotas públicas (adicionado em `/recover-password`, `/reset-password`, `/restore-account`, `/termos`, `/privacidade`, `/offline`)       | `apps/web/src/app/(auth)/recover-password/page.tsx`, `apps/web/src/app/(auth)/reset-password/page.tsx`, `apps/web/src/app/(auth)/restore-account/page.tsx`, `apps/web/src/app/termos/page.tsx`, `apps/web/src/app/privacidade/page.tsx`, `apps/web/src/app/offline/page.tsx`                                                                                                                     | —                                                                                     | ✅     |
+| RF-08 | Link "Voltar para o login" (→ `/login`) em `/recover-password`, abaixo do formulário                                                                                      | `apps/web/src/app/(auth)/recover-password/page.tsx`                                                                                                                                                                                                                                                                                                                                              | `apps/web/src/app/(auth)/recover-password/page.spec.tsx`                              | ✅     |
+| RF-09 | Link "Voltar para o login" (→ `/login`) em `/reset-password`, abaixo do formulário                                                                                        | `apps/web/src/app/(auth)/reset-password/page.tsx`                                                                                                                                                                                                                                                                                                                                                | `apps/web/src/app/(auth)/reset-password/page.spec.tsx`                                | ✅     |
+| RF-10 | Link "Voltar para o login" (→ `/login`) em `/restore-account`, terciário abaixo dos dois CTAs existentes                                                                  | `apps/web/src/app/(auth)/restore-account/page.tsx`                                                                                                                                                                                                                                                                                                                                               | `apps/web/src/app/(auth)/restore-account/page.spec.tsx`                               | ✅     |
+| RF-11 | Criar `BackLink` em `apps/web/src/components/back-link.tsx` (`router.back()` com fallback por prop)                                                                       | `apps/web/src/components/back-link.tsx`                                                                                                                                                                                                                                                                                                                                                          | —                                                                                     | ✅     |
+| RF-12 | `BackLink` com `fallback="/"` e rótulo "Voltar" em `/termos` e `/privacidade`, acima do conteúdo                                                                          | `apps/web/src/app/termos/page.tsx`, `apps/web/src/app/privacidade/page.tsx`                                                                                                                                                                                                                                                                                                                      | `apps/web/src/app/termos/page.spec.tsx`, `apps/web/src/app/privacidade/page.spec.tsx` | ✅     |
+| RF-13 | `ThemeToggle` (`@navestory/ui`) no `PublicHeader`, alinhado à direita, com `useTheme`/`resolvedTheme` (`next-themes`) — mesmo padrão de `layout/header.tsx`               | `apps/web/src/components/public-header.tsx`                                                                                                                                                                                                                                                                                                                                                      | —                                                                                     | ✅     |
 
 ---
 
-## SPEC-20260731-005 — Design System: Remapeamento da Escala text-* do Tailwind para Tokens Formais (approved)
+## SPEC-20260731-005 — Design System: Remapeamento da Escala text-\* do Tailwind para Tokens Formais (approved)
 
 > Fecha a pendência registrada no changelog de `SPEC-20260731-001` (RF-06): a escala de
 > utilitários `text-*` do Tailwind ainda resolvia para os defaults de fábrica em vez dos valores
@@ -1998,7 +2005,7 @@ que o artefato ainda não existe no repositório.
 >
 > **2026-07-31 (fecho de RF-04):** baseline de visual regression gerada — seed E2E rodado
 > contra o Supabase remoto de `apps/api/.env`, stack local subida, `playwright test
-> visual-regression --update-snapshots` (6/6, confirmado depois sem `--update-snapshots`).
+visual-regression --update-snapshots` (6/6, confirmado depois sem `--update-snapshots`).
 > Encontrados e corrigidos dois bugs pré-existentes de locator na suíte (nunca executada de
 > fato até agora): `getByLabel("Senha")` sem `exact: true` colidia com o botão "Mostrar/Ocultar
 > senha" do `PasswordInput` (substring match); `DashboardPage.sidebar` (`page.locator("nav")`)
@@ -2008,22 +2015,22 @@ que o artefato ainda não existe no repositório.
 > são de `SPEC-20260716-003`, não desta spec — registrados em
 > `important/PENDENCIAS-E-PROCESSOS.md`.
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-01 | Sobrescrever `theme.extend.fontSize` com os 7 passos da escala formal (`xs/sm/base/md/lg/xl/2xl`), sem `fontWeight` (D-03) | `apps/web/tailwind.config.ts` | `next build` sem erro; verificação visual manual (dashboard, expenses, maintenance, expenses/new, showcase) | ✅ |
-| RF-02 | Importar `typographyScale` de `packages/ui/src/tokens/typography.ts` diretamente no Tailwind config — sem duplicar valores | `apps/web/tailwind.config.ts` (`import { typographyScale } from "@nave/ui/tokens"`) | `npx tsc --noEmit` limpo; `next build` resolve o import via workspace `@nave/ui` sem necessidade do fallback `.json` cogitado na spec | ✅ |
-| RF-03 | Comentário de rastreabilidade `@spec SPEC-20260731-005 RF-01` no bloco `extend.fontSize` | `apps/web/tailwind.config.ts` | — (documentação) | ✅ |
-| RF-04 | QA visual completo (D-05): visual regression com baseline atualizada + auditoria manual + `C-DS-01` íntegro | `apps/web/e2e/tests/visual-regression.spec.ts`, `apps/web/e2e/global-setup.ts`, `apps/web/e2e/pages/login.page.ts`, `apps/web/e2e/pages/dashboard.page.ts` | `visual-regression.spec.ts` 6/6 ✅ (baseline em `visual-regression.spec.ts-snapshots/`); auditoria manual sem regressão visível | ✅ |
-| RF-05 | `contrast.spec.ts` continua 100% após o remapeamento | `packages/ui/src/tokens/typography.ts` (fonte), `apps/web/tailwind.config.ts` (consumo) | `apps/web/src/app/(app)/design-system/_lib/contrast.spec.ts` — 22/22 ✅ | ✅ |
-| RF-06 | Atualizar comentário de `typography.ts` removendo a nota de "não remapeado" | `packages/ui/src/tokens/typography.ts` | — (documentação) | ✅ |
-| RF-07 | Atualizar `matrices/rastreabilidade.md` com esta entrada | `matrices/rastreabilidade.md` | — (documentação) | ✅ |
+| Req   | Descrição                                                                                                                  | Código                                                                                                                                                     | Teste                                                                                                                                      | Status |
+| ----- | -------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ | ------ |
+| RF-01 | Sobrescrever `theme.extend.fontSize` com os 7 passos da escala formal (`xs/sm/base/md/lg/xl/2xl`), sem `fontWeight` (D-03) | `apps/web/tailwind.config.ts`                                                                                                                              | `next build` sem erro; verificação visual manual (dashboard, expenses, maintenance, expenses/new, showcase)                                | ✅     |
+| RF-02 | Importar `typographyScale` de `packages/ui/src/tokens/typography.ts` diretamente no Tailwind config — sem duplicar valores | `apps/web/tailwind.config.ts` (`import { typographyScale } from "@navestory/ui/tokens"`)                                                                   | `npx tsc --noEmit` limpo; `next build` resolve o import via workspace `@navestory/ui` sem necessidade do fallback `.json` cogitado na spec | ✅     |
+| RF-03 | Comentário de rastreabilidade `@spec SPEC-20260731-005 RF-01` no bloco `extend.fontSize`                                   | `apps/web/tailwind.config.ts`                                                                                                                              | — (documentação)                                                                                                                           | ✅     |
+| RF-04 | QA visual completo (D-05): visual regression com baseline atualizada + auditoria manual + `C-DS-01` íntegro                | `apps/web/e2e/tests/visual-regression.spec.ts`, `apps/web/e2e/global-setup.ts`, `apps/web/e2e/pages/login.page.ts`, `apps/web/e2e/pages/dashboard.page.ts` | `visual-regression.spec.ts` 6/6 ✅ (baseline em `visual-regression.spec.ts-snapshots/`); auditoria manual sem regressão visível            | ✅     |
+| RF-05 | `contrast.spec.ts` continua 100% após o remapeamento                                                                       | `packages/ui/src/tokens/typography.ts` (fonte), `apps/web/tailwind.config.ts` (consumo)                                                                    | `apps/web/src/app/(app)/design-system/_lib/contrast.spec.ts` — 22/22 ✅                                                                    | ✅     |
+| RF-06 | Atualizar comentário de `typography.ts` removendo a nota de "não remapeado"                                                | `packages/ui/src/tokens/typography.ts`                                                                                                                     | — (documentação)                                                                                                                           | ✅     |
+| RF-07 | Atualizar `matrices/rastreabilidade.md` com esta entrada                                                                   | `matrices/rastreabilidade.md`                                                                                                                              | — (documentação)                                                                                                                           | ✅     |
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RNF-01 | Build sem erro após o remapeamento | — | `next build` (`apps/web`) ✅ | ✅ |
-| RNF-02 | Nenhuma regressão em testes unitários existentes | — | `packages/ui` 179/179; `apps/web` 356/356 | ✅ |
-| RNF-03 | `C-DS-01` preservado no novo limiar de "texto grande" (`text-2xl` cruza para ≥24px, `text-lg` permanece "normal") | `packages/ui/src/tokens/colors.ts` | `contrast.spec.ts` 22/22 ✅ | ✅ |
-| RNF-04 | Sem `text-[Npx]` novo introduzido pela mudança | — | Nenhum arquivo tocado por esta spec introduz valor arbitrário (`R-DS-12`) | ✅ |
+| Req    | Descrição                                                                                                         | Código                             | Teste                                                                     | Status |
+| ------ | ----------------------------------------------------------------------------------------------------------------- | ---------------------------------- | ------------------------------------------------------------------------- | ------ |
+| RNF-01 | Build sem erro após o remapeamento                                                                                | —                                  | `next build` (`apps/web`) ✅                                              | ✅     |
+| RNF-02 | Nenhuma regressão em testes unitários existentes                                                                  | —                                  | `packages/ui` 179/179; `apps/web` 356/356                                 | ✅     |
+| RNF-03 | `C-DS-01` preservado no novo limiar de "texto grande" (`text-2xl` cruza para ≥24px, `text-lg` permanece "normal") | `packages/ui/src/tokens/colors.ts` | `contrast.spec.ts` 22/22 ✅                                               | ✅     |
+| RNF-04 | Sem `text-[Npx]` novo introduzido pela mudança                                                                    | —                                  | Nenhum arquivo tocado por esta spec introduz valor arbitrário (`R-DS-12`) | ✅     |
 
 ---
 
@@ -2036,18 +2043,18 @@ que o artefato ainda não existe no repositório.
 > lógica de negócio. Spec em `specs/design-system/SPEC-20260731-007-migracao-emoji-lucide-producao.md`.
 > Análise de impacto: IMPACTO-046.
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-01 | `kpi-catalog.ts`: campo `icon: string` → `import type { LucideIcon }` de `lucide-react` | `apps/web/src/components/dashboard/kpi-catalog.ts` | Dispensado (ver `TEST_DECISIONS.md`) | ✅ |
-| RF-02 | 8 emojis do catálogo de KPI → componentes Lucide (Wallet, Fuel, HeartPulse, Wrench, Car, CalendarClock, Timer, TriangleAlert) | `apps/web/src/components/dashboard/kpi-catalog.ts` | Dispensado | ✅ |
-| RF-03 | `DashboardKpiGrid.tsx`: render de `meta.icon` de interpolação string → instância Lucide `size={16}` | `apps/web/src/components/dashboard/DashboardKpiGrid.tsx` | Dispensado — coberto por `dashboard/page.spec.tsx` (8 testes verdes) | ✅ |
-| RF-04 | `DashboardKpiGrid.tsx`: `<span aria-hidden>⚠</span>` hardcoded → `<TriangleAlert size={16} aria-hidden />` | `apps/web/src/components/dashboard/DashboardKpiGrid.tsx` | Dispensado | ✅ |
-| RF-05 | `KpiPicker.tsx`: render de `icon` → instância Lucide `size={16}` | `apps/web/src/components/dashboard/KpiPicker.tsx` | Dispensado | ✅ |
-| RF-06 | `atividades/page.tsx`: campo `icon` de `DOMAIN_LABELS` → `LucideIcon`; tipo de retorno de `domainInfo()` atualizado | `apps/web/src/app/(app)/atividades/page.tsx` | Dispensado — coberto por `atividades/page.spec.tsx` (3 testes verdes) | ✅ |
-| RF-07 | 9 domínios de `DOMAIN_LABELS` → componentes Lucide (Car, Receipt, Wrench, ShieldAlert, Repeat, Gauge, User, User, FileText) | `apps/web/src/app/(app)/atividades/page.tsx` | Dispensado | ✅ |
-| RF-08 | Render site da tabela de atividades: instanciar `LucideIcon` em vez de interpolar string emoji | `apps/web/src/app/(app)/atividades/page.tsx` | Dispensado | ✅ |
-| RF-09 | `<EmptyState icon="🛡️" />` → `<EmptyState icon={<ShieldAlert size={24} aria-hidden />} />` | `apps/web/src/app/(app)/atividades/page.tsx` | Dispensado | ✅ |
-| RF-10 | Comentários `@spec SPEC-20260731-007 RF-XX` nos arquivos alterados | `kpi-catalog.ts`, `DashboardKpiGrid.tsx`, `atividades/page.tsx` | — (documentação) | ✅ |
+| Req   | Descrição                                                                                                                     | Código                                                          | Teste                                                                 | Status |
+| ----- | ----------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- | --------------------------------------------------------------------- | ------ |
+| RF-01 | `kpi-catalog.ts`: campo `icon: string` → `import type { LucideIcon }` de `lucide-react`                                       | `apps/web/src/components/dashboard/kpi-catalog.ts`              | Dispensado (ver `TEST_DECISIONS.md`)                                  | ✅     |
+| RF-02 | 8 emojis do catálogo de KPI → componentes Lucide (Wallet, Fuel, HeartPulse, Wrench, Car, CalendarClock, Timer, TriangleAlert) | `apps/web/src/components/dashboard/kpi-catalog.ts`              | Dispensado                                                            | ✅     |
+| RF-03 | `DashboardKpiGrid.tsx`: render de `meta.icon` de interpolação string → instância Lucide `size={16}`                           | `apps/web/src/components/dashboard/DashboardKpiGrid.tsx`        | Dispensado — coberto por `dashboard/page.spec.tsx` (8 testes verdes)  | ✅     |
+| RF-04 | `DashboardKpiGrid.tsx`: `<span aria-hidden>⚠</span>` hardcoded → `<TriangleAlert size={16} aria-hidden />`                    | `apps/web/src/components/dashboard/DashboardKpiGrid.tsx`        | Dispensado                                                            | ✅     |
+| RF-05 | `KpiPicker.tsx`: render de `icon` → instância Lucide `size={16}`                                                              | `apps/web/src/components/dashboard/KpiPicker.tsx`               | Dispensado                                                            | ✅     |
+| RF-06 | `atividades/page.tsx`: campo `icon` de `DOMAIN_LABELS` → `LucideIcon`; tipo de retorno de `domainInfo()` atualizado           | `apps/web/src/app/(app)/atividades/page.tsx`                    | Dispensado — coberto por `atividades/page.spec.tsx` (3 testes verdes) | ✅     |
+| RF-07 | 9 domínios de `DOMAIN_LABELS` → componentes Lucide (Car, Receipt, Wrench, ShieldAlert, Repeat, Gauge, User, User, FileText)   | `apps/web/src/app/(app)/atividades/page.tsx`                    | Dispensado                                                            | ✅     |
+| RF-08 | Render site da tabela de atividades: instanciar `LucideIcon` em vez de interpolar string emoji                                | `apps/web/src/app/(app)/atividades/page.tsx`                    | Dispensado                                                            | ✅     |
+| RF-09 | `<EmptyState icon="🛡️" />` → `<EmptyState icon={<ShieldAlert size={24} aria-hidden />} />`                                    | `apps/web/src/app/(app)/atividades/page.tsx`                    | Dispensado                                                            | ✅     |
+| RF-10 | Comentários `@spec SPEC-20260731-007 RF-XX` nos arquivos alterados                                                            | `kpi-catalog.ts`, `DashboardKpiGrid.tsx`, `atividades/page.tsx` | — (documentação)                                                      | ✅     |
 
 ---
 
@@ -2077,32 +2084,32 @@ que o artefato ainda não existe no repositório.
 
 ### Catálogo de KPIs Configurável (RF-01, R-KPI-01, R-KPI-02)
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-01 | Migration `dashboard_kpi_ids text[]` em `user_preferences` (1–6 ids, default = 4 KPIs pré-existentes) | `supabase/migrations/20260721150000_dashboard_kpi_preferences.sql` | — (migration; sem harness de teste de banco no projeto) | ✅ |
-| RF-01 | Catálogo fixo de 8 KPIs + schema de validação (`KPI_CATALOG_IDS`, `dashboardKpiIdsSchema`, `FleetKpiCatalog`) | `packages/validators/src/dashboard.schemas.ts`, `packages/validators/src/preferences.schemas.ts` | `packages/validators/src/dashboard.schemas.spec.ts`, `packages/validators/src/preferences.schemas.spec.ts` | ✅ |
-| RF-01 | `GET /dashboard/kpi-catalog` — computa os 8 KPIs (`Promise.allSettled`, falha isolada por métrica); sparkline de 6 meses + delta com supressão por amostra pequena (R-KPI-02) em `expenses_month`/`cost_per_km` | `apps/api/src/modules/dashboard/dashboard.service.ts` (`getFleetKpiCatalog`), `apps/api/src/modules/dashboard/dashboard.controller.ts` | `apps/api/src/modules/dashboard/dashboard.service.spec.ts`, `apps/api/src/modules/dashboard/dashboard.controller.spec.ts` | ✅ |
-| RF-01 | `PATCH /preferences` aceita `dashboard_kpi_ids`; `GET /preferences` retorna com fallback default | `apps/api/src/modules/preferences/preferences.service.ts` | `apps/api/src/modules/preferences/preferences.service.spec.ts` | ✅ |
-| RF-01 | Grid de KPIs ativos + navegação por clique + picker de personalização (teto 6) | `apps/web/src/components/dashboard/DashboardKpiGrid.tsx`, `apps/web/src/components/dashboard/KpiPicker.tsx`, `apps/web/src/components/dashboard/kpi-catalog.ts`, `apps/web/src/app/(app)/dashboard/page.tsx` | `apps/web/src/app/(app)/dashboard/page.spec.tsx` | ✅ — `FleetKpis.tsx`/`FleetKpisData` removidos do codebase |
-| RF-09 | `horizon_days: 7` habilitado em `upcomingCostsQuerySchema`, reaproveitado por `upcoming_costs_7d` do catálogo | `packages/validators/src/expense.schemas.ts` | `packages/validators/src/expense.schemas.spec.ts` | ✅ |
-| RF-09, P6 | Widget "Próximos 7 dias": lista até 10 itens (`limit` opcional no schema, aplicado via `.limit()` no builder do RPC — nunca cortado em memória), urgência visual por faixa (≤2d `danger`, 3–5d `warning`, 6–7d neutro), total agregado, empty state e link "Ver todos" ao atingir o teto | `apps/web/src/components/dashboard/UpcomingCostsWidget.tsx`, `apps/api/src/modules/expenses/expenses.service.ts` (`getUpcomingCosts`), `packages/validators/src/expense.schemas.ts` | `apps/web/src/components/dashboard/UpcomingCostsWidget.spec.tsx`, `apps/api/src/modules/expenses/expenses.service.spec.ts`, `packages/validators/src/expense.schemas.spec.ts` | ✅ |
+| Req       | Descrição                                                                                                                                                                                                                                                                                | Código                                                                                                                                                                                                       | Teste                                                                                                                                                                         | Status                                                     |
+| --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| RF-01     | Migration `dashboard_kpi_ids text[]` em `user_preferences` (1–6 ids, default = 4 KPIs pré-existentes)                                                                                                                                                                                    | `supabase/migrations/20260721150000_dashboard_kpi_preferences.sql`                                                                                                                                           | — (migration; sem harness de teste de banco no projeto)                                                                                                                       | ✅                                                         |
+| RF-01     | Catálogo fixo de 8 KPIs + schema de validação (`KPI_CATALOG_IDS`, `dashboardKpiIdsSchema`, `FleetKpiCatalog`)                                                                                                                                                                            | `packages/validators/src/dashboard.schemas.ts`, `packages/validators/src/preferences.schemas.ts`                                                                                                             | `packages/validators/src/dashboard.schemas.spec.ts`, `packages/validators/src/preferences.schemas.spec.ts`                                                                    | ✅                                                         |
+| RF-01     | `GET /dashboard/kpi-catalog` — computa os 8 KPIs (`Promise.allSettled`, falha isolada por métrica); sparkline de 6 meses + delta com supressão por amostra pequena (R-KPI-02) em `expenses_month`/`cost_per_km`                                                                          | `apps/api/src/modules/dashboard/dashboard.service.ts` (`getFleetKpiCatalog`), `apps/api/src/modules/dashboard/dashboard.controller.ts`                                                                       | `apps/api/src/modules/dashboard/dashboard.service.spec.ts`, `apps/api/src/modules/dashboard/dashboard.controller.spec.ts`                                                     | ✅                                                         |
+| RF-01     | `PATCH /preferences` aceita `dashboard_kpi_ids`; `GET /preferences` retorna com fallback default                                                                                                                                                                                         | `apps/api/src/modules/preferences/preferences.service.ts`                                                                                                                                                    | `apps/api/src/modules/preferences/preferences.service.spec.ts`                                                                                                                | ✅                                                         |
+| RF-01     | Grid de KPIs ativos + navegação por clique + picker de personalização (teto 6)                                                                                                                                                                                                      | `apps/web/src/components/dashboard/DashboardKpiGrid.tsx`, `apps/web/src/components/dashboard/KpiPicker.tsx`, `apps/web/src/components/dashboard/kpi-catalog.ts`, `apps/web/src/app/(app)/dashboard/page.tsx` | `apps/web/src/app/(app)/dashboard/page.spec.tsx`                                                                                                                              | ✅ — `FleetKpis.tsx`/`FleetKpisData` removidos do codebase |
+| RF-09     | `horizon_days: 7` habilitado em `upcomingCostsQuerySchema`, reaproveitado por `upcoming_costs_7d` do catálogo                                                                                                                                                                            | `packages/validators/src/expense.schemas.ts`                                                                                                                                                                 | `packages/validators/src/expense.schemas.spec.ts`                                                                                                                             | ✅                                                         |
+| RF-09, P6 | Widget "Próximos 7 dias": lista até 10 itens (`limit` opcional no schema, aplicado via `.limit()` no builder do RPC — nunca cortado em memória), urgência visual por faixa (≤2d `danger`, 3–5d `warning`, 6–7d neutro), total agregado, empty state e link "Ver todos" ao atingir o teto | `apps/web/src/components/dashboard/UpcomingCostsWidget.tsx`, `apps/api/src/modules/expenses/expenses.service.ts` (`getUpcomingCosts`), `packages/validators/src/expense.schemas.ts`                          | `apps/web/src/components/dashboard/UpcomingCostsWidget.spec.tsx`, `apps/api/src/modules/expenses/expenses.service.spec.ts`, `packages/validators/src/expense.schemas.spec.ts` | ✅                                                         |
 
 ### Health Score, Tokens, Export e Grid (RF-02 a RF-06)
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-02 | `VehicleHealthScore` (anel SVG progress ring, score numérico, cor por faixa 0–49/50–74/75–100) substitui o "dot" em `VehicleHealthCard` | `packages/ui/src/components/vehicle-health-score.tsx`, `apps/web/src/components/dashboard/VehicleHealthCard.tsx` | `packages/ui/src/components/vehicle-health-score.test.tsx`, `apps/web/src/components/dashboard/VehicleHealthCard.spec.tsx` | ✅ |
-| RF-03 | Classes Tailwind literais (`bg-red-*`, `bg-amber-*`, `bg-green-*`) substituídas por tokens semânticos (`danger`/`warning`/`success` + `-pastel`/`-foreground`) | `apps/web/src/components/dashboard/FleetAlertBar.tsx`, `apps/web/src/components/dashboard/VehicleHealthCard.tsx` | `apps/web/src/components/dashboard/VehicleHealthCard.spec.tsx` | ✅ |
-| RF-04 | Tokens `--surface`, `--surface-elevated`, `--on-surface`, `--on-surface-muted`, `--on-surface-subtle`, `--chart-1..5`, `--chart-grid`, `--finance-outgoing` + classes `.glass-card`/`.kicker`, com par light/dark | `apps/web/src/app/globals.css` | — (tokens CSS; sem harness de teste visual) | ✅ |
-| RF-05 | `ExportControls` reposicionado após a Zona B (última seção antes do footer); estados loading (`fetch` + `Blob`, botão desabilitado) e erro (mensagem inline `role="alert"`, sem `alert()` do browser) | `apps/web/src/app/(app)/dashboard/page.tsx` (`ExportControls`) | — (sem spec dedicado; verificado por leitura de código) | 🔶 estado "desabilitado plano Grátis" (R-BIZ-12) não implementado — depende do mesmo gap de dado de plano do usuário citado em RF-07 |
-| RF-06 | Grid de veículos `grid-cols-2 sm:grid-cols-3 lg:grid-cols-4` (era `grid-cols-1 sm:grid-cols-2 lg:grid-cols-3`) | `apps/web/src/app/(app)/dashboard/page.tsx` (`VehicleGrid`) | — (sem teste de layout dedicado; validação visual manual pendente em breakpoint 360–375px) | 🔶 |
-| RF-08 | Gráficos inline de frota — decisão tomada em 2026-07-22: novo endpoint `GET /dashboard/fleet-charts` (não reaproveita `fleet-kpis`/`kpi-catalog`, RNF-05), reaproveitando `get_vehicle_cost_per_km` (custo/km) e estendendo `get_category_spending_highlights` com `p_limit` opcional (categorias). `fuel_liters` é volume de combustível (soma de `expenses.liters`) por mês, não eficiência km/L — métrica por veículo já existe em `GET /analytics/fuel-trend/:vehicleId` e não agrega de forma significativa numa frota mista (decisão registrada em `FleetChartsResponse`, `@nave/validators`) | `apps/api/src/modules/dashboard/dashboard.controller.ts` (`getFleetCharts`), `dashboard.service.ts` (`getFleetCharts`, `getCostPerKmChartSeries`, `getFuelLitersChartSeries`, `getFullCategoryBreakdown`), `packages/validators/src/dashboard.schemas.ts` (`FleetChartsResponse`, `MonthlySeriesPoint`), `supabase/migrations/20260722130000_fleet_charts.sql`, `apps/web/src/components/dashboard/FleetCharts.tsx` (`CostPerKmChart`, `FuelConsumptionChart`, `ExpenseCategoryPie`, `FleetChartsSection`) | `apps/api/src/modules/dashboard/dashboard.service.spec.ts`, `dashboard.controller.spec.ts`, `apps/web/src/components/dashboard/FleetCharts.spec.tsx` | ✅ |
+| Req   | Descrição                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | Código                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | Teste                                                                                                                                                | Status                                                                                                                               |
+| ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| RF-02 | `VehicleHealthScore` (anel SVG progress ring, score numérico, cor por faixa 0–49/50–74/75–100) substitui o "dot" em `VehicleHealthCard`                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | `packages/ui/src/components/vehicle-health-score.tsx`, `apps/web/src/components/dashboard/VehicleHealthCard.tsx`                                                                                                                                                                                                                                                                                                                                                                                           | `packages/ui/src/components/vehicle-health-score.test.tsx`, `apps/web/src/components/dashboard/VehicleHealthCard.spec.tsx`                           | ✅                                                                                                                                   |
+| RF-03 | Classes Tailwind literais (`bg-red-*`, `bg-amber-*`, `bg-green-*`) substituídas por tokens semânticos (`danger`/`warning`/`success` + `-pastel`/`-foreground`)                                                                                                                                                                                                                                                                                                                                                                                                                                           | `apps/web/src/components/dashboard/FleetAlertBar.tsx`, `apps/web/src/components/dashboard/VehicleHealthCard.tsx`                                                                                                                                                                                                                                                                                                                                                                                           | `apps/web/src/components/dashboard/VehicleHealthCard.spec.tsx`                                                                                       | ✅                                                                                                                                   |
+| RF-04 | Tokens `--surface`, `--surface-elevated`, `--on-surface`, `--on-surface-muted`, `--on-surface-subtle`, `--chart-1..5`, `--chart-grid`, `--finance-outgoing` + classes `.glass-card`/`.kicker`, com par light/dark                                                                                                                                                                                                                                                                                                                                                                                        | `apps/web/src/app/globals.css`                                                                                                                                                                                                                                                                                                                                                                                                                                                                             | — (tokens CSS; sem harness de teste visual)                                                                                                          | ✅                                                                                                                                   |
+| RF-05 | `ExportControls` reposicionado após a Zona B (última seção antes do footer); estados loading (`fetch` + `Blob`, botão desabilitado) e erro (mensagem inline `role="alert"`, sem `alert()` do browser)                                                                                                                                                                                                                                                                                                                                                                                                    | `apps/web/src/app/(app)/dashboard/page.tsx` (`ExportControls`)                                                                                                                                                                                                                                                                                                                                                                                                                                             | — (sem spec dedicado; verificado por leitura de código)                                                                                              | 🔶 estado "desabilitado plano Grátis" (R-BIZ-12) não implementado — depende do mesmo gap de dado de plano do usuário citado em RF-07 |
+| RF-06 | Grid de veículos `grid-cols-2 sm:grid-cols-3 lg:grid-cols-4` (era `grid-cols-1 sm:grid-cols-2 lg:grid-cols-3`)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           | `apps/web/src/app/(app)/dashboard/page.tsx` (`VehicleGrid`)                                                                                                                                                                                                                                                                                                                                                                                                                                                | — (sem teste de layout dedicado; validação visual manual pendente em breakpoint 360–375px)                                                           | 🔶                                                                                                                                   |
+| RF-08 | Gráficos inline de frota — decisão tomada em 2026-07-22: novo endpoint `GET /dashboard/fleet-charts` (não reaproveita `fleet-kpis`/`kpi-catalog`, RNF-05), reaproveitando `get_vehicle_cost_per_km` (custo/km) e estendendo `get_category_spending_highlights` com `p_limit` opcional (categorias). `fuel_liters` é volume de combustível (soma de `expenses.liters`) por mês, não eficiência km/L — métrica por veículo já existe em `GET /analytics/fuel-trend/:vehicleId` e não agrega de forma significativa numa frota mista (decisão registrada em `FleetChartsResponse`, `@navestory/validators`) | `apps/api/src/modules/dashboard/dashboard.controller.ts` (`getFleetCharts`), `dashboard.service.ts` (`getFleetCharts`, `getCostPerKmChartSeries`, `getFuelLitersChartSeries`, `getFullCategoryBreakdown`), `packages/validators/src/dashboard.schemas.ts` (`FleetChartsResponse`, `MonthlySeriesPoint`), `supabase/migrations/20260722130000_fleet_charts.sql`, `apps/web/src/components/dashboard/FleetCharts.tsx` (`CostPerKmChart`, `FuelConsumptionChart`, `ExpenseCategoryPie`, `FleetChartsSection`) | `apps/api/src/modules/dashboard/dashboard.service.spec.ts`, `dashboard.controller.spec.ts`, `apps/web/src/components/dashboard/FleetCharts.spec.tsx` | ✅                                                                                                                                   |
 
 ### Cabeçalho de Data Abreviada (RF-07 — revisado em 2026-07-22)
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-07 | Saudação personalizada removida do escopo (decisão do usuário, 2026-07-22 — gap de nome de usuário client-side em IMPACTO-040 #5 não resolvido, texto genérico sem nome tinha baixo valor). H1 "Dashboard" mantido `sr-only`; cabeçalho visível é a data abreviada "Dia-da-semana, DD Mês. AA" (ex.: "Qua, 22 Jul. 26") via `Intl.DateTimeFormat` | `apps/web/src/app/(app)/dashboard/page.tsx` (`DashboardDateHeader`) | — (sem teste dedicado nesta rodada — formatação de data client-side) | 🔶 |
+| Req   | Descrição                                                                                                                                                                                                                                                                                                                                         | Código                                                              | Teste                                                                | Status |
+| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- | -------------------------------------------------------------------- | ------ |
+| RF-07 | Saudação personalizada removida do escopo (decisão do usuário, 2026-07-22 — gap de nome de usuário client-side em IMPACTO-040 #5 não resolvido, texto genérico sem nome tinha baixo valor). H1 "Dashboard" mantido `sr-only`; cabeçalho visível é a data abreviada "Dia-da-semana, DD Mês. AA" (ex.: "Qua, 22 Jul. 26") via `Intl.DateTimeFormat` | `apps/web/src/app/(app)/dashboard/page.tsx` (`DashboardDateHeader`) | — (sem teste dedicado nesta rodada — formatação de data client-side) | 🔶     |
 
 ---
 
@@ -2113,17 +2120,17 @@ que o artefato ainda não existe no repositório.
 > Implementado em 2026-07-13 como parte da Fase 1 do roadmap (T1.1–T1.5). Schema Zod autoritativo
 > em `packages/validators/src/auth.schemas.ts` — SPEC-20260524-001 §4.1 supersedida por esta regra.
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-01/STORY-02 | `registerInputSchema`: aceita 6+ chars com letra + número + especial | `packages/validators/src/auth.schemas.ts` | `apps/web/` (Vitest, 42 testes, 91%+ cobertura) | ✅ |
-| RF-02/STORY-02 | `registerInputSchema`: rejeita senha sem letra, sem número, sem especial | `packages/validators/src/auth.schemas.ts` | `apps/web/` (Vitest) | ✅ |
-| RF-03/STORY-02 | `resetPasswordInputSchema`: mesma nova regra de senha | `packages/validators/src/auth.schemas.ts` | `apps/web/` (Vitest) | ✅ |
-| RF-04/STORY-02 | Mensagem inline por campo violado (não batch) | `apps/web/src/app/(auth)/register/page.tsx` | `apps/web/` (Vitest) | ✅ |
-| RF-05/STORY-03 | Email duplicado (409) → bloco amarelo com email, botão login e botão recuperar senha | `apps/web/src/app/(auth)/register/page.tsx` | `apps/web/` (Vitest) | ✅ |
-| RF-07/STORY-03 | Link "Recuperar senha" → `/recover-password?email={encoded}` | `apps/web/src/app/(auth)/register/page.tsx` | `apps/web/` (Vitest) | ✅ |
-| RF-08/STORY-04 | Erro de sistema (não-409) → bloco vermelho com mensagem do Supabase | `apps/web/src/app/(auth)/register/page.tsx` | `apps/web/` (Vitest) | ✅ |
-| RF-09/STORY-04 | Formulário NÃO resetado após erro — dados persistem para reenvio | `apps/web/src/app/(auth)/register/page.tsx` | `apps/web/` (Vitest) | ✅ |
-| RF-10/STORY-01 | Email normalizado para lowercase via `.transform()` no schema Zod | `packages/validators/src/auth.schemas.ts` | `apps/web/` (Vitest) | ✅ |
+| Req            | Descrição                                                                            | Código                                      | Teste                                           | Status |
+| -------------- | ------------------------------------------------------------------------------------ | ------------------------------------------- | ----------------------------------------------- | ------ |
+| RF-01/STORY-02 | `registerInputSchema`: aceita 6+ chars com letra + número + especial                 | `packages/validators/src/auth.schemas.ts`   | `apps/web/` (Vitest, 42 testes, 91%+ cobertura) | ✅     |
+| RF-02/STORY-02 | `registerInputSchema`: rejeita senha sem letra, sem número, sem especial             | `packages/validators/src/auth.schemas.ts`   | `apps/web/` (Vitest)                            | ✅     |
+| RF-03/STORY-02 | `resetPasswordInputSchema`: mesma nova regra de senha                                | `packages/validators/src/auth.schemas.ts`   | `apps/web/` (Vitest)                            | ✅     |
+| RF-04/STORY-02 | Mensagem inline por campo violado (não batch)                                        | `apps/web/src/app/(auth)/register/page.tsx` | `apps/web/` (Vitest)                            | ✅     |
+| RF-05/STORY-03 | Email duplicado (409) → bloco amarelo com email, botão login e botão recuperar senha | `apps/web/src/app/(auth)/register/page.tsx` | `apps/web/` (Vitest)                            | ✅     |
+| RF-07/STORY-03 | Link "Recuperar senha" → `/recover-password?email={encoded}`                         | `apps/web/src/app/(auth)/register/page.tsx` | `apps/web/` (Vitest)                            | ✅     |
+| RF-08/STORY-04 | Erro de sistema (não-409) → bloco vermelho com mensagem do Supabase                  | `apps/web/src/app/(auth)/register/page.tsx` | `apps/web/` (Vitest)                            | ✅     |
+| RF-09/STORY-04 | Formulário NÃO resetado após erro — dados persistem para reenvio                     | `apps/web/src/app/(auth)/register/page.tsx` | `apps/web/` (Vitest)                            | ✅     |
+| RF-10/STORY-01 | Email normalizado para lowercase via `.transform()` no schema Zod                    | `packages/validators/src/auth.schemas.ts`   | `apps/web/` (Vitest)                            | ✅     |
 
 ---
 
@@ -2136,31 +2143,31 @@ que o artefato ainda não existe no repositório.
 
 ### Backend — AuthModule
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| STORY-REG-01 | Registro com rollback atômico em falha de criação de perfil; `POST /auth/register` | `apps/api/src/modules/auth/auth.service.ts`, `apps/api/src/modules/auth/auth.controller.ts`, `apps/api/src/modules/auth/dto/register.dto.ts` | `apps/api/` (Jest, 67 testes, 90%+ cobertura); `apps/api/test/integration/auth.int-spec.ts` (CT-006) | ✅ |
-| STORY-REG-01 | E-mail duplicado → 409 + mensagem direcionada no frontend | `apps/api/src/modules/auth/auth.service.ts` | `apps/api/` (Jest) | ✅ |
-| STORY-01 | `POST /auth/login` — retorna JWT; audit REGISTER/LOGIN | `apps/api/src/modules/auth/auth.service.ts`, `apps/api/src/modules/auth/auth.controller.ts`, `apps/api/src/modules/auth/dto/login.dto.ts`, `apps/api/src/modules/auth/jwt.strategy.ts` (tipo `JwtPayload` — a `PassportStrategy` foi removida em 2026-07-19; validação migrada para `SupabaseAuthGuard`) | `apps/api/` (Jest); `apps/api/test/integration/auth.int-spec.ts` | ✅ |
-| STORY-02 | Mensagem INVALID_CREDENTIALS genérica (anti-enumeração) | `apps/api/src/modules/auth/auth.service.ts` | `apps/api/` (Jest) | ✅ |
-| STORY-03 | Bloqueio por tentativas via `supabase/migrations/20260713190000_auth_login_attempts.sql` | `supabase/migrations/20260713190000_auth_login_attempts.sql`, `apps/api/src/modules/auth/auth.service.ts` | `apps/api/` (Jest) | ✅ |
-| STORY-04 | `POST /auth/recover-password` → 200 sempre; rate limit 3/15min | `apps/api/src/modules/auth/auth.controller.ts`, `apps/api/src/modules/auth/dto/recover-password.dto.ts` | `apps/api/` (Jest) | ✅ |
-| STORY-05 | `POST /auth/reset-password` — valida token Supabase; invalida sessões anteriores | `apps/api/src/modules/auth/auth.controller.ts`, `apps/api/src/modules/auth/dto/reset-password.dto.ts` | `apps/api/` (Jest) | ✅ |
-| STORY-SEC-01 | `POST /auth/logout` e `POST /auth/refresh` com `SupabaseAuthGuard` | `apps/api/src/modules/auth/auth.controller.ts`, `apps/api/src/common/guards/supabase-auth.guard.ts` | `apps/api/` (Jest) | ✅ |
-| CA-20 | audit_logs registra REGISTER e LOGIN com campos corretos | `apps/api/src/modules/auth/auth.service.ts`, `apps/api/src/shared/audit/audit.service.ts` | `apps/api/` (Jest) | ✅ |
+| Req          | Descrição                                                                                | Código                                                                                                                                                                                                                                                                                                   | Teste                                                                                                | Status |
+| ------------ | ---------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- | ------ |
+| STORY-REG-01 | Registro com rollback atômico em falha de criação de perfil; `POST /auth/register`       | `apps/api/src/modules/auth/auth.service.ts`, `apps/api/src/modules/auth/auth.controller.ts`, `apps/api/src/modules/auth/dto/register.dto.ts`                                                                                                                                                             | `apps/api/` (Jest, 67 testes, 90%+ cobertura); `apps/api/test/integration/auth.int-spec.ts` (CT-006) | ✅     |
+| STORY-REG-01 | E-mail duplicado → 409 + mensagem direcionada no frontend                                | `apps/api/src/modules/auth/auth.service.ts`                                                                                                                                                                                                                                                              | `apps/api/` (Jest)                                                                                   | ✅     |
+| STORY-01     | `POST /auth/login` — retorna JWT; audit REGISTER/LOGIN                                   | `apps/api/src/modules/auth/auth.service.ts`, `apps/api/src/modules/auth/auth.controller.ts`, `apps/api/src/modules/auth/dto/login.dto.ts`, `apps/api/src/modules/auth/jwt.strategy.ts` (tipo `JwtPayload` — a `PassportStrategy` foi removida em 2026-07-19; validação migrada para `SupabaseAuthGuard`) | `apps/api/` (Jest); `apps/api/test/integration/auth.int-spec.ts`                                     | ✅     |
+| STORY-02     | Mensagem INVALID_CREDENTIALS genérica (anti-enumeração)                                  | `apps/api/src/modules/auth/auth.service.ts`                                                                                                                                                                                                                                                              | `apps/api/` (Jest)                                                                                   | ✅     |
+| STORY-03     | Bloqueio por tentativas via `supabase/migrations/20260713190000_auth_login_attempts.sql` | `supabase/migrations/20260713190000_auth_login_attempts.sql`, `apps/api/src/modules/auth/auth.service.ts`                                                                                                                                                                                                | `apps/api/` (Jest)                                                                                   | ✅     |
+| STORY-04     | `POST /auth/recover-password` → 200 sempre; rate limit 3/15min                           | `apps/api/src/modules/auth/auth.controller.ts`, `apps/api/src/modules/auth/dto/recover-password.dto.ts`                                                                                                                                                                                                  | `apps/api/` (Jest)                                                                                   | ✅     |
+| STORY-05     | `POST /auth/reset-password` — valida token Supabase; invalida sessões anteriores         | `apps/api/src/modules/auth/auth.controller.ts`, `apps/api/src/modules/auth/dto/reset-password.dto.ts`                                                                                                                                                                                                    | `apps/api/` (Jest)                                                                                   | ✅     |
+| STORY-SEC-01 | `POST /auth/logout` e `POST /auth/refresh` com `SupabaseAuthGuard`                       | `apps/api/src/modules/auth/auth.controller.ts`, `apps/api/src/common/guards/supabase-auth.guard.ts`                                                                                                                                                                                                      | `apps/api/` (Jest)                                                                                   | ✅     |
+| CA-20        | audit_logs registra REGISTER e LOGIN com campos corretos                                 | `apps/api/src/modules/auth/auth.service.ts`, `apps/api/src/shared/audit/audit.service.ts`                                                                                                                                                                                                                | `apps/api/` (Jest)                                                                                   | ✅     |
 
 ### Frontend — Páginas de Auth e Gestão de Sessão
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| STORY-01 | Redirect para rota original após login; usuário logado em /login → /dashboard | `apps/web/middleware.ts`, `apps/web/src/app/(auth)/login/page.tsx` | `apps/web/` (Vitest, 42 testes, 91%+ cobertura) | ✅ |
-| STORY-REG-02 | Toggle show/hide senha com aria-label acessível | `apps/web/src/components/password-input.tsx` | `apps/web/` (Vitest) | ✅ |
-| STORY-04 | Reenvio de e-mail com cooldown de 60 s + rate limit 3/15min | `apps/web/src/app/(auth)/recover-password/page.tsx` | `apps/web/` (Vitest) | ✅ |
-| STORY-05 | Link expirado/usado → mensagem amigável com botão de novo link | `apps/web/src/app/(auth)/reset-password/page.tsx` | `apps/web/` (Vitest) | ✅ |
-| STORY-06 | "Lembrar de mim" → preferência em sessionStorage; idle timer ativado apenas sem lembrar | `apps/web/src/app/(auth)/login/page.tsx`, `apps/web/src/lib/hooks/use-activity-tracker.ts` | `apps/web/` (Vitest) | ✅ |
-| STORY-07a | Hook `useActivityTracker`: idle timer 30 min, reset por evento/rota; renovação via `/auth/refresh` | `apps/web/src/lib/hooks/use-activity-tracker.ts`, `apps/web/src/lib/auth/decode-jwt-exp.ts` | `apps/web/` (Vitest) | ✅ |
-| STORY-07b | `<FormDraftGuard>`: salva/restaura estado de formulário em sessionStorage | `apps/web/src/components/form-draft-guard.tsx` | `apps/web/` (Vitest) | ✅ |
-| STORY-08 | Timeout/offline via `api-client.ts`; mensagem sem loading infinito | `apps/web/src/lib/http/api-client.ts` | `apps/web/` (Vitest) | ✅ |
-| IMPACTO-021 #1 | Middleware SSR `apps/web/middleware.ts` — proteção de rotas + renovação de sessão | `apps/web/middleware.ts`, `apps/web/next.config.ts` (rewrite `/api/backend/*`) | `apps/web/` (Vitest) | ✅ |
+| Req            | Descrição                                                                                          | Código                                                                                      | Teste                                           | Status |
+| -------------- | -------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- | ----------------------------------------------- | ------ |
+| STORY-01       | Redirect para rota original após login; usuário logado em /login → /dashboard                      | `apps/web/middleware.ts`, `apps/web/src/app/(auth)/login/page.tsx`                          | `apps/web/` (Vitest, 42 testes, 91%+ cobertura) | ✅     |
+| STORY-REG-02   | Toggle show/hide senha com aria-label acessível                                                    | `apps/web/src/components/password-input.tsx`                                                | `apps/web/` (Vitest)                            | ✅     |
+| STORY-04       | Reenvio de e-mail com cooldown de 60 s + rate limit 3/15min                                        | `apps/web/src/app/(auth)/recover-password/page.tsx`                                         | `apps/web/` (Vitest)                            | ✅     |
+| STORY-05       | Link expirado/usado → mensagem amigável com botão de novo link                                     | `apps/web/src/app/(auth)/reset-password/page.tsx`                                           | `apps/web/` (Vitest)                            | ✅     |
+| STORY-06       | "Lembrar de mim" → preferência em sessionStorage; idle timer ativado apenas sem lembrar            | `apps/web/src/app/(auth)/login/page.tsx`, `apps/web/src/lib/hooks/use-activity-tracker.ts`  | `apps/web/` (Vitest)                            | ✅     |
+| STORY-07a      | Hook `useActivityTracker`: idle timer 30 min, reset por evento/rota; renovação via `/auth/refresh` | `apps/web/src/lib/hooks/use-activity-tracker.ts`, `apps/web/src/lib/auth/decode-jwt-exp.ts` | `apps/web/` (Vitest)                            | ✅     |
+| STORY-07b      | `<FormDraftGuard>`: salva/restaura estado de formulário em sessionStorage                          | `apps/web/src/components/form-draft-guard.tsx`                                              | `apps/web/` (Vitest)                            | ✅     |
+| STORY-08       | Timeout/offline via `api-client.ts`; mensagem sem loading infinito                                 | `apps/web/src/lib/http/api-client.ts`                                                       | `apps/web/` (Vitest)                            | ✅     |
+| IMPACTO-021 #1 | Middleware SSR `apps/web/middleware.ts` — proteção de rotas + renovação de sessão                  | `apps/web/middleware.ts`, `apps/web/next.config.ts` (rewrite `/api/backend/*`)              | `apps/web/` (Vitest)                            | ✅     |
 
 ---
 
@@ -2170,16 +2177,16 @@ que o artefato ainda não existe no repositório.
 > somente em `development` ou com `SWAGGER_ENABLED=true`. Módulo `admin` incluído na documentação.
 > Implementado em 2026-07-13 como parte da Fase 1 do roadmap (T1.5).
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-01 | Swagger UI em `/api/docs` em `development` ou com `SWAGGER_ENABLED=true` | `apps/api/src/main.ts` | `apps/api/` (Jest, 90%+ cobertura — integração não exposta em produção via RNF-01) | ✅ |
-| RF-02 | Desabilitado em `production` (sem `SWAGGER_ENABLED=true`) | `apps/api/src/main.ts` | `apps/api/` (Jest) | ✅ |
-| RF-03 | `@ApiTags` em todos os controllers (auth, users, admin, vehicles, expenses, maintenance, dashboard) | `apps/api/src/modules/auth/auth.controller.ts`, `apps/api/src/modules/admin/admin.controller.ts`, demais controllers | `apps/api/` (Jest) | ✅ |
-| RF-04 | `@ApiOperation` e `@ApiResponse` em cada endpoint | Todos os controllers em `apps/api/src/modules/` | `apps/api/` (Jest) | ✅ |
-| RF-05 | Plugin automático via `apps/api/nest-cli.json` | `apps/api/nest-cli.json` | — (build-time) | ✅ |
-| RF-06 | Bearer JWT documentado globalmente via `addBearerAuth` | `apps/api/src/main.ts` | — (visual) | ✅ |
-| RF-07 | `@ApiBearerAuth` em endpoints protegidos | Todos os controllers com `SupabaseAuthGuard` | — (visual) | ✅ |
-| RF-08 | `openapi.json` gerado via `pnpm docs:generate` | `apps/api/src/main.ts` | — (script de build) | 🔶 |
+| Req   | Descrição                                                                                           | Código                                                                                                               | Teste                                                                              | Status |
+| ----- | --------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- | ------ |
+| RF-01 | Swagger UI em `/api/docs` em `development` ou com `SWAGGER_ENABLED=true`                            | `apps/api/src/main.ts`                                                                                               | `apps/api/` (Jest, 90%+ cobertura — integração não exposta em produção via RNF-01) | ✅     |
+| RF-02 | Desabilitado em `production` (sem `SWAGGER_ENABLED=true`)                                           | `apps/api/src/main.ts`                                                                                               | `apps/api/` (Jest)                                                                 | ✅     |
+| RF-03 | `@ApiTags` em todos os controllers (auth, users, admin, vehicles, expenses, maintenance, dashboard) | `apps/api/src/modules/auth/auth.controller.ts`, `apps/api/src/modules/admin/admin.controller.ts`, demais controllers | `apps/api/` (Jest)                                                                 | ✅     |
+| RF-04 | `@ApiOperation` e `@ApiResponse` em cada endpoint                                                   | Todos os controllers em `apps/api/src/modules/`                                                                      | `apps/api/` (Jest)                                                                 | ✅     |
+| RF-05 | Plugin automático via `apps/api/nest-cli.json`                                                      | `apps/api/nest-cli.json`                                                                                             | — (build-time)                                                                     | ✅     |
+| RF-06 | Bearer JWT documentado globalmente via `addBearerAuth`                                              | `apps/api/src/main.ts`                                                                                               | — (visual)                                                                         | ✅     |
+| RF-07 | `@ApiBearerAuth` em endpoints protegidos                                                            | Todos os controllers com `SupabaseAuthGuard`                                                                         | — (visual)                                                                         | ✅     |
+| RF-08 | `openapi.json` gerado via `pnpm docs:generate`                                                      | `apps/api/src/main.ts`                                                                                               | — (script de build)                                                                | 🔶     |
 
 ---
 
@@ -2194,24 +2201,24 @@ que o artefato ainda não existe no repositório.
 
 ### Backend — AdminModule e UsersModule
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-01 | `DELETE /users/me` — auto-exclusão com `{ confirm: true }` | `apps/api/src/modules/users/users.controller.ts`, `apps/api/src/modules/users/users.service.ts` | `apps/api/` (Jest, 67 testes, 90%+ cobertura) | ✅ |
-| RF-02 | Exclusão física via `auth.admin.deleteUser` + cascata FK `auth.users → profiles → demais` (satisfaz C1) | `apps/api/src/modules/users/users.service.ts` | `apps/api/` (Jest) | ✅ |
-| RF-03 | Revogação de JWT via `auth.admin.deleteUser` | `apps/api/src/modules/users/users.service.ts` | `apps/api/` (Jest) | ✅ |
-| RF-04 | `{ confirm: true }` obrigatório → 400 se ausente | `apps/api/src/modules/users/users.controller.ts` | `apps/api/` (Jest) | ✅ |
-| RF-05 | `AdminSupabaseService` com `SERVICE_ROLE_KEY`; `AdminModule` e `SupabaseAdminModule` separados | `apps/api/src/modules/admin/admin-supabase.service.ts`, `apps/api/src/shared/supabase/supabase-admin.module.ts` | `apps/api/` (Jest) | ✅ |
-| RF-06 | `GET /admin/users` — listar usuários (paginado, apenas admin) | `apps/api/src/modules/admin/admin.controller.ts`, `apps/api/src/modules/admin/admin.service.ts` | `apps/api/` (Jest) | ✅ |
-| RF-07 | `GET /admin/audit-logs` — filtro por `user_id` e período | `apps/api/src/modules/admin/admin.controller.ts`, `apps/api/src/modules/admin/admin.service.ts` | `apps/api/` (Jest) | ✅ |
-| RF-08 | `DELETE /admin/users/:id` — admin exclui qualquer conta (LGPD) | `apps/api/src/modules/admin/admin.controller.ts`, `apps/api/src/modules/admin/admin.service.ts` | `apps/api/` (Jest) | ✅ |
-| RF-09 | Admin identificado por `user_metadata.role = 'admin'` no JWT; `SupabaseAuthGuard + RolesGuard/@Roles('admin')` | `apps/api/src/common/guards/roles.guard.ts`, `apps/api/src/common/decorators/roles.decorator.ts`, `apps/api/src/modules/admin/admin.controller.ts` | `apps/api/` (Jest) | ✅ |
+| Req   | Descrição                                                                                                      | Código                                                                                                                                             | Teste                                         | Status |
+| ----- | -------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------- | ------ |
+| RF-01 | `DELETE /users/me` — auto-exclusão com `{ confirm: true }`                                                     | `apps/api/src/modules/users/users.controller.ts`, `apps/api/src/modules/users/users.service.ts`                                                    | `apps/api/` (Jest, 67 testes, 90%+ cobertura) | ✅     |
+| RF-02 | Exclusão física via `auth.admin.deleteUser` + cascata FK `auth.users → profiles → demais` (satisfaz C1)        | `apps/api/src/modules/users/users.service.ts`                                                                                                      | `apps/api/` (Jest)                            | ✅     |
+| RF-03 | Revogação de JWT via `auth.admin.deleteUser`                                                                   | `apps/api/src/modules/users/users.service.ts`                                                                                                      | `apps/api/` (Jest)                            | ✅     |
+| RF-04 | `{ confirm: true }` obrigatório → 400 se ausente                                                               | `apps/api/src/modules/users/users.controller.ts`                                                                                                   | `apps/api/` (Jest)                            | ✅     |
+| RF-05 | `AdminSupabaseService` com `SERVICE_ROLE_KEY`; `AdminModule` e `SupabaseAdminModule` separados                 | `apps/api/src/modules/admin/admin-supabase.service.ts`, `apps/api/src/shared/supabase/supabase-admin.module.ts`                                    | `apps/api/` (Jest)                            | ✅     |
+| RF-06 | `GET /admin/users` — listar usuários (paginado, apenas admin)                                                  | `apps/api/src/modules/admin/admin.controller.ts`, `apps/api/src/modules/admin/admin.service.ts`                                                    | `apps/api/` (Jest)                            | ✅     |
+| RF-07 | `GET /admin/audit-logs` — filtro por `user_id` e período                                                       | `apps/api/src/modules/admin/admin.controller.ts`, `apps/api/src/modules/admin/admin.service.ts`                                                    | `apps/api/` (Jest)                            | ✅     |
+| RF-08 | `DELETE /admin/users/:id` — admin exclui qualquer conta (LGPD)                                                 | `apps/api/src/modules/admin/admin.controller.ts`, `apps/api/src/modules/admin/admin.service.ts`                                                    | `apps/api/` (Jest)                            | ✅     |
+| RF-09 | Admin identificado por `user_metadata.role = 'admin'` no JWT; `SupabaseAuthGuard + RolesGuard/@Roles('admin')` | `apps/api/src/common/guards/roles.guard.ts`, `apps/api/src/common/decorators/roles.decorator.ts`, `apps/api/src/modules/admin/admin.controller.ts` | `apps/api/` (Jest)                            | ✅     |
 
 ### Backend — Decorators e Guards Comuns
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| — | `@UserId()` decorator — extrai userId do JWT para controllers | `apps/api/src/common/decorators/user-id.decorator.ts` | `apps/api/` (Jest) | ✅ |
-| — | `GET /users/me` e `PATCH /users/me` — perfil do usuário autenticado | `apps/api/src/modules/users/users.controller.ts`, `apps/api/src/modules/users/users.service.ts` | `apps/api/` (Jest) | ✅ |
+| Req | Descrição                                                           | Código                                                                                          | Teste              | Status |
+| --- | ------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- | ------------------ | ------ |
+| —   | `@UserId()` decorator — extrai userId do JWT para controllers       | `apps/api/src/common/decorators/user-id.decorator.ts`                                           | `apps/api/` (Jest) | ✅     |
+| —   | `GET /users/me` e `PATCH /users/me` — perfil do usuário autenticado | `apps/api/src/modules/users/users.controller.ts`, `apps/api/src/modules/users/users.service.ts` | `apps/api/` (Jest) | ✅     |
 
 ---
 
@@ -2232,30 +2239,30 @@ que o artefato ainda não existe no repositório.
 
 ### Backend — UsersModule
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-01 | `deleteAccount` refatorado: UPDATE em `profiles` (`deleted_at = now()` apenas, sem anonimização), audit log `ACCOUNT_DELETION_REQUESTED`. Sem chamada explícita de revogação de sessão — GoTrue Admin API não expõe invalidação por `userId` (só por JWT de sessão ou `deleteUser`); o bloqueio é garantido pelo guard (RF-09) | `apps/api/src/modules/users/users.service.ts` | `apps/api/src/modules/users/users.service.spec.ts` | ✅ |
-| RF-02 | 404 se `profiles` não encontrado ou já soft-deleted | `apps/api/src/modules/users/users.service.ts` | `apps/api/src/modules/users/users.service.spec.ts` | ✅ |
-| RF-03 | *(revisado)* Não há chamada de `signOut` a reverter — nota técnica da spec atualizada para refletir que a GoTrue Admin API não suporta essa operação por `userId` (ver RF-01) | — | — | ✅ (não aplicável — ver RF-01) |
-| RF-07 | `DELETE /admin/users/:id` mantém hard-delete imediato (sem período de graça) | já implementado (SPEC-20260521-004 RF-08) | já coberto | ✅ |
-| RF-08 | `POST /users/me/restore` — zera `deleted_at`, audit log `ACCOUNT_RESTORED`, retorna 200/409 | `apps/api/src/modules/users/users.service.ts`, `apps/api/src/modules/users/account-restore.controller.ts` | `apps/api/src/modules/users/users.service.spec.ts`, `apps/api/src/modules/users/account-restore.controller.spec.ts` | ✅ |
-| RF-09 | `SupabaseAuthGuard` retorna 403 + `{ code: "ACCOUNT_PENDING_DELETION" }` para contas soft-deleted (antes retornava 401 genérico). Inclui correção do `HttpExceptionFilter`, que descartava `code`/`deleted_at` antes de chegar ao frontend | `apps/api/src/common/guards/supabase-auth.guard.ts`, `apps/api/src/common/filters/http-exception.filter.ts` | `apps/api/src/common/guards/supabase-auth.guard.spec.ts`, `apps/api/src/common/filters/http-exception.filter.spec.ts` | ✅ |
-| RF-10 | `SoftDeletedUserGuard` — guard que aceita tokens de contas com `deleted_at IS NOT NULL`, usado exclusivamente em `POST /users/me/restore` | `apps/api/src/common/guards/soft-deleted-user.guard.ts` | `apps/api/src/common/guards/soft-deleted-user.guard.spec.ts` | ✅ |
+| Req   | Descrição                                                                                                                                                                                                                                                                                                                      | Código                                                                                                      | Teste                                                                                                                 | Status                         |
+| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- | ------------------------------ |
+| RF-01 | `deleteAccount` refatorado: UPDATE em `profiles` (`deleted_at = now()` apenas, sem anonimização), audit log `ACCOUNT_DELETION_REQUESTED`. Sem chamada explícita de revogação de sessão — GoTrue Admin API não expõe invalidação por `userId` (só por JWT de sessão ou `deleteUser`); o bloqueio é garantido pelo guard (RF-09) | `apps/api/src/modules/users/users.service.ts`                                                               | `apps/api/src/modules/users/users.service.spec.ts`                                                                    | ✅                             |
+| RF-02 | 404 se `profiles` não encontrado ou já soft-deleted                                                                                                                                                                                                                                                                            | `apps/api/src/modules/users/users.service.ts`                                                               | `apps/api/src/modules/users/users.service.spec.ts`                                                                    | ✅                             |
+| RF-03 | _(revisado)_ Não há chamada de `signOut` a reverter — nota técnica da spec atualizada para refletir que a GoTrue Admin API não suporta essa operação por `userId` (ver RF-01)                                                                                                                                                  | —                                                                                                           | —                                                                                                                     | ✅ (não aplicável — ver RF-01) |
+| RF-07 | `DELETE /admin/users/:id` mantém hard-delete imediato (sem período de graça)                                                                                                                                                                                                                                                   | já implementado (SPEC-20260521-004 RF-08)                                                                   | já coberto                                                                                                            | ✅                             |
+| RF-08 | `POST /users/me/restore` — zera `deleted_at`, audit log `ACCOUNT_RESTORED`, retorna 200/409                                                                                                                                                                                                                                    | `apps/api/src/modules/users/users.service.ts`, `apps/api/src/modules/users/account-restore.controller.ts`   | `apps/api/src/modules/users/users.service.spec.ts`, `apps/api/src/modules/users/account-restore.controller.spec.ts`   | ✅                             |
+| RF-09 | `SupabaseAuthGuard` retorna 403 + `{ code: "ACCOUNT_PENDING_DELETION" }` para contas soft-deleted (antes retornava 401 genérico). Inclui correção do `HttpExceptionFilter`, que descartava `code`/`deleted_at` antes de chegar ao frontend                                                                                     | `apps/api/src/common/guards/supabase-auth.guard.ts`, `apps/api/src/common/filters/http-exception.filter.ts` | `apps/api/src/common/guards/supabase-auth.guard.spec.ts`, `apps/api/src/common/filters/http-exception.filter.spec.ts` | ✅                             |
+| RF-10 | `SoftDeletedUserGuard` — guard que aceita tokens de contas com `deleted_at IS NOT NULL`, usado exclusivamente em `POST /users/me/restore`                                                                                                                                                                                      | `apps/api/src/common/guards/soft-deleted-user.guard.ts`                                                     | `apps/api/src/common/guards/soft-deleted-user.guard.spec.ts`                                                          | ✅                             |
 
 ### Database — Migration
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-04 | Migration: function `hard_delete_expired_accounts()` + job `pg_cron` | `supabase/migrations/20260720000000_soft_delete_account_job.sql` | manual (`supabase db reset` local) — sem harness de teste de migration no projeto | ✅ código / ⏳ teste manual |
-| RF-05 | Function executa audit log + DELETE em `auth.users` para contas com `deleted_at < now() - 30 days` | `supabase/migrations/20260720000000_soft_delete_account_job.sql` | idem RF-04 | ✅ código / ⏳ teste manual |
-| RF-06 | Migration dropa trigger `before_delete_profiles` | `supabase/migrations/20260720000000_soft_delete_account_job.sql` | idem RF-04 | ✅ |
+| Req   | Descrição                                                                                          | Código                                                           | Teste                                                                             | Status                      |
+| ----- | -------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- | --------------------------------------------------------------------------------- | --------------------------- |
+| RF-04 | Migration: function `hard_delete_expired_accounts()` + job `pg_cron`                               | `supabase/migrations/20260720000000_soft_delete_account_job.sql` | manual (`supabase db reset` local) — sem harness de teste de migration no projeto | ✅ código / ⏳ teste manual |
+| RF-05 | Function executa audit log + DELETE em `auth.users` para contas com `deleted_at < now() - 30 days` | `supabase/migrations/20260720000000_soft_delete_account_job.sql` | idem RF-04                                                                        | ✅ código / ⏳ teste manual |
+| RF-06 | Migration dropa trigger `before_delete_profiles`                                                   | `supabase/migrations/20260720000000_soft_delete_account_job.sql` | idem RF-04                                                                        | ✅                          |
 
 ### Storage e Limitações (MVP)
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-11 | Arquivos físicos no Storage permanecem intactos durante os 30 dias (sem job de limpeza antecipada) | (comportamento por omissão — sem código novo) | — | ✅ por omissão |
-| RF-12 | Limitação MVP: job SQL não remove objetos físicos do Storage no hard-delete. Dívida técnica documentada em `important/PENDENCIAS-E-PROCESSOS.md` | — | — | ❌ limitação MVP |
+| Req   | Descrição                                                                                                                                        | Código                                        | Teste | Status           |
+| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------- | ----- | ---------------- |
+| RF-11 | Arquivos físicos no Storage permanecem intactos durante os 30 dias (sem job de limpeza antecipada)                                               | (comportamento por omissão — sem código novo) | —     | ✅ por omissão   |
+| RF-12 | Limitação MVP: job SQL não remove objetos físicos do Storage no hard-delete. Dívida técnica documentada em `important/PENDENCIAS-E-PROCESSOS.md` | —                                             | —     | ❌ limitação MVP |
 
 ---
 
@@ -2274,34 +2281,34 @@ que o artefato ainda não existe no repositório.
 
 ### Design System — Componente Dialog
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-01 | Componente `Dialog` em `packages/ui/src/components/dialog.tsx` com subcomponentes Radix (`Dialog`, `DialogTrigger`, `DialogContent`, `DialogHeader`, `DialogFooter`, `DialogTitle`, `DialogDescription`, `DialogClose`) | `packages/ui/src/components/dialog.tsx` | `packages/ui/src/components/dialog.test.tsx` | ✅ |
-| RF-02 | `DialogContent` com focus-trap, `Esc`, `aria-labelledby`, `aria-describedby` (herdados do Radix via `Title`/`Description`) | `packages/ui/src/components/dialog.tsx` | `packages/ui/src/components/dialog.test.tsx` | ✅ |
-| RF-03 | Testes do Dialog (`dialog.test.tsx`) — abrir/fechar via trigger, close button, `DialogClose` customizado, Esc, `onOpenChange`, `hideCloseButton`, jest-axe | `packages/ui/src/components/dialog.test.tsx` | idem | ✅ |
-| RF-12 | Export do Dialog em `packages/ui/src/index.ts` | `packages/ui/src/index.ts` | `packages/ui/src/components/dialog.test.tsx` | ✅ |
+| Req   | Descrição                                                                                                                                                                                                               | Código                                       | Teste                                        | Status |
+| ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------- | -------------------------------------------- | ------ |
+| RF-01 | Componente `Dialog` em `packages/ui/src/components/dialog.tsx` com subcomponentes Radix (`Dialog`, `DialogTrigger`, `DialogContent`, `DialogHeader`, `DialogFooter`, `DialogTitle`, `DialogDescription`, `DialogClose`) | `packages/ui/src/components/dialog.tsx`      | `packages/ui/src/components/dialog.test.tsx` | ✅     |
+| RF-02 | `DialogContent` com focus-trap, `Esc`, `aria-labelledby`, `aria-describedby` (herdados do Radix via `Title`/`Description`)                                                                                              | `packages/ui/src/components/dialog.tsx`      | `packages/ui/src/components/dialog.test.tsx` | ✅     |
+| RF-03 | Testes do Dialog (`dialog.test.tsx`) — abrir/fechar via trigger, close button, `DialogClose` customizado, Esc, `onOpenChange`, `hideCloseButton`, jest-axe                                                              | `packages/ui/src/components/dialog.test.tsx` | idem                                         | ✅     |
+| RF-12 | Export do Dialog em `packages/ui/src/index.ts`                                                                                                                                                                          | `packages/ui/src/index.ts`                   | `packages/ui/src/components/dialog.test.tsx` | ✅     |
 
 ### Frontend — Página `/settings/account`
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-04 | Página `(app)/settings/account/page.tsx` com seção de identificação e "Zona de perigo"; `GET /users/me` estendido com `email` (extraído do JWT via `SupabaseAuthGuard`, não existe em `profiles`) | `apps/web/src/app/(app)/settings/account/page.tsx`, `apps/api/src/modules/users/users.controller.ts` | `apps/web/src/app/(app)/settings/account/page.spec.tsx`, `apps/api/src/modules/users/users.controller.spec.ts` | ✅ |
-| RF-05 | Botão `variant="destructive"` "Excluir minha conta" abre Dialog | `apps/web/src/app/(app)/settings/account/delete-account-dialog.tsx` | `apps/web/src/app/(app)/settings/account/page.spec.tsx` | ✅ |
-| RF-06 | Dialog de confirmação com consequências e campo de texto | `apps/web/src/app/(app)/settings/account/delete-account-dialog.tsx` | idem | ✅ |
-| RF-07 | Campo de confirmação: habilitado só com `value.trim() === 'EXCLUIR'` | `apps/web/src/app/(app)/settings/account/delete-account-dialog.tsx` | idem | ✅ |
-| RF-08 | Chama `DELETE /users/me` com `{ confirm: true }` | `apps/web/src/app/(app)/settings/account/delete-account-dialog.tsx` | idem | ✅ |
-| RF-09 | Em 204: fechar Dialog, redirecionar `/login?message=conta_excluida`, exibir `Alert variant="info"` na página de login informando que a solicitação foi registrada | `apps/web/src/app/(app)/settings/account/delete-account-dialog.tsx`, `apps/web/src/app/(auth)/login/page.tsx` | `apps/web/src/app/(app)/settings/account/page.spec.tsx`, `apps/web/src/app/(auth)/login/page.spec.tsx` | ✅ (sem chamada explícita de logout — o backend não invalida sessão por `userId`, ver SPEC-20260719-002 RF-01/RF-03; o próximo request autenticado já cai em 403 ACCOUNT_PENDING_DELETION e é redirecionado globalmente pelo `apiClient`, RF-13) |
-| RF-10 | Em erro: manter Dialog, exibir `Alert variant="error"`, limpar campo | `apps/web/src/app/(app)/settings/account/delete-account-dialog.tsx` | idem | ✅ |
-| RF-11 | Se `deleted_at IS NOT NULL`: Alert warning + data de hard-delete + botão "Cancelar exclusão" | — | — | ✅ não aplicável — o `SupabaseAuthGuard` já bloqueia **toda** rota autenticada com 403 `ACCOUNT_PENDING_DELETION` quando `deleted_at != null` (SPEC-20260719-002 RF-09); a interceptação global do `apiClient` (RF-13) redireciona para `/restore-account` antes de `/settings/account` conseguir renderizar com uma conta pendente — o estado descrito neste RF é inalcançável na prática, a UI de aviso vive inteiramente em `/restore-account` |
+| Req   | Descrição                                                                                                                                                                                         | Código                                                                                                        | Teste                                                                                                          | Status                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| RF-04 | Página `(app)/settings/account/page.tsx` com seção de identificação e "Zona de perigo"; `GET /users/me` estendido com `email` (extraído do JWT via `SupabaseAuthGuard`, não existe em `profiles`) | `apps/web/src/app/(app)/settings/account/page.tsx`, `apps/api/src/modules/users/users.controller.ts`          | `apps/web/src/app/(app)/settings/account/page.spec.tsx`, `apps/api/src/modules/users/users.controller.spec.ts` | ✅                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| RF-05 | Botão `variant="destructive"` "Excluir minha conta" abre Dialog                                                                                                                                   | `apps/web/src/app/(app)/settings/account/delete-account-dialog.tsx`                                           | `apps/web/src/app/(app)/settings/account/page.spec.tsx`                                                        | ✅                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| RF-06 | Dialog de confirmação com consequências e campo de texto                                                                                                                                          | `apps/web/src/app/(app)/settings/account/delete-account-dialog.tsx`                                           | idem                                                                                                           | ✅                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| RF-07 | Campo de confirmação: habilitado só com `value.trim() === 'EXCLUIR'`                                                                                                                              | `apps/web/src/app/(app)/settings/account/delete-account-dialog.tsx`                                           | idem                                                                                                           | ✅                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| RF-08 | Chama `DELETE /users/me` com `{ confirm: true }`                                                                                                                                                  | `apps/web/src/app/(app)/settings/account/delete-account-dialog.tsx`                                           | idem                                                                                                           | ✅                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| RF-09 | Em 204: fechar Dialog, redirecionar `/login?message=conta_excluida`, exibir `Alert variant="info"` na página de login informando que a solicitação foi registrada                                 | `apps/web/src/app/(app)/settings/account/delete-account-dialog.tsx`, `apps/web/src/app/(auth)/login/page.tsx` | `apps/web/src/app/(app)/settings/account/page.spec.tsx`, `apps/web/src/app/(auth)/login/page.spec.tsx`         | ✅ (sem chamada explícita de logout — o backend não invalida sessão por `userId`, ver SPEC-20260719-002 RF-01/RF-03; o próximo request autenticado já cai em 403 ACCOUNT_PENDING_DELETION e é redirecionado globalmente pelo `apiClient`, RF-13)                                                                                                                                                                                                  |
+| RF-10 | Em erro: manter Dialog, exibir `Alert variant="error"`, limpar campo                                                                                                                              | `apps/web/src/app/(app)/settings/account/delete-account-dialog.tsx`                                           | idem                                                                                                           | ✅                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| RF-11 | Se `deleted_at IS NOT NULL`: Alert warning + data de hard-delete + botão "Cancelar exclusão"                                                                                                      | —                                                                                                             | —                                                                                                              | ✅ não aplicável — o `SupabaseAuthGuard` já bloqueia **toda** rota autenticada com 403 `ACCOUNT_PENDING_DELETION` quando `deleted_at != null` (SPEC-20260719-002 RF-09); a interceptação global do `apiClient` (RF-13) redireciona para `/restore-account` antes de `/settings/account` conseguir renderizar com uma conta pendente — o estado descrito neste RF é inalcançável na prática, a UI de aviso vive inteiramente em `/restore-account` |
 
 ### Frontend — Fluxo de Restore
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-13 | Interceptação global: qualquer 403 `ACCOUNT_PENDING_DELETION` (não só no login) redireciona para `/restore-account` | `apps/web/src/lib/http/api-client.ts`, `apps/web/src/app/(auth)/login/page.tsx` | `apps/web/src/lib/http/api-client.spec.ts`, `apps/web/src/app/(auth)/login/page.spec.tsx` | ✅ |
-| RF-14 | Página `/restore-account` com data de exclusão, lista do que é preservado, botão de restore e botão de desistência. Rota sempre pública no middleware (sem redirect em nenhum sentido) — acesso direto sem cookie não força `/login` antes, alinhado à nota técnica da spec ("Tela de restore e grupo de rota") | `apps/web/src/app/(auth)/restore-account/page.tsx`, `apps/web/middleware.ts` | `apps/web/src/app/(auth)/restore-account/page.spec.tsx`, `apps/web/middleware.spec.ts` | ✅ |
-| RF-15 | Chama `POST /users/me/restore`; em 200: redireciona dashboard com toast; em erro: Alert sem deslogar | `apps/web/src/app/(auth)/restore-account/page.tsx` | `apps/web/src/app/(auth)/restore-account/page.spec.tsx` | ✅ |
-| RF-16 | Graceful degradation para imagens Storage com `onError` → placeholder `ImageOff` | — | — | ❌ não implementado — nenhuma tela do app hoje renderiza `<img>` de URL de Storage (nem `vehicles/[id]`, nem listagens); campo `photo_url`/`photo_thumbnail_url` existe no backend mas não tem consumidor de UI ainda. Sem elemento existente para aplicar `onError`. Dívida documentada em `important/PENDENCIAS-E-PROCESSOS.md` — revisitar quando a feature de fotos de veículo ganhar UI |
+| Req   | Descrição                                                                                                                                                                                                                                                                                                       | Código                                                                          | Teste                                                                                     | Status                                                                                                                                                                                                                                                                                                                                                                                       |
+| ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| RF-13 | Interceptação global: qualquer 403 `ACCOUNT_PENDING_DELETION` (não só no login) redireciona para `/restore-account`                                                                                                                                                                                             | `apps/web/src/lib/http/api-client.ts`, `apps/web/src/app/(auth)/login/page.tsx` | `apps/web/src/lib/http/api-client.spec.ts`, `apps/web/src/app/(auth)/login/page.spec.tsx` | ✅                                                                                                                                                                                                                                                                                                                                                                                           |
+| RF-14 | Página `/restore-account` com data de exclusão, lista do que é preservado, botão de restore e botão de desistência. Rota sempre pública no middleware (sem redirect em nenhum sentido) — acesso direto sem cookie não força `/login` antes, alinhado à nota técnica da spec ("Tela de restore e grupo de rota") | `apps/web/src/app/(auth)/restore-account/page.tsx`, `apps/web/middleware.ts`    | `apps/web/src/app/(auth)/restore-account/page.spec.tsx`, `apps/web/middleware.spec.ts`    | ✅                                                                                                                                                                                                                                                                                                                                                                                           |
+| RF-15 | Chama `POST /users/me/restore`; em 200: redireciona dashboard com toast; em erro: Alert sem deslogar                                                                                                                                                                                                            | `apps/web/src/app/(auth)/restore-account/page.tsx`                              | `apps/web/src/app/(auth)/restore-account/page.spec.tsx`                                   | ✅                                                                                                                                                                                                                                                                                                                                                                                           |
+| RF-16 | Graceful degradation para imagens Storage com `onError` → placeholder `ImageOff`                                                                                                                                                                                                                                | —                                                                               | —                                                                                         | ❌ não implementado — nenhuma tela do app hoje renderiza `<img>` de URL de Storage (nem `vehicles/[id]`, nem listagens); campo `photo_url`/`photo_thumbnail_url` existe no backend mas não tem consumidor de UI ainda. Sem elemento existente para aplicar `onError`. Dívida documentada em `important/PENDENCIAS-E-PROCESSOS.md` — revisitar quando a feature de fotos de veículo ganhar UI |
 
 ---
 
@@ -2311,14 +2318,14 @@ que o artefato ainda não existe no repositório.
 > única de verdade); faltava a distribuição — rotas públicas, link nos pontos de entrada e
 > aceite explícito no cadastro.
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-01 | Página `/privacidade` (Server Component) lê `docs/legal/privacy-policy.md` e renderiza como Markdown | `apps/web/src/app/privacidade/page.tsx`, `apps/web/src/components/legal-document.tsx` | `apps/web/src/app/privacidade/page.spec.tsx` | ✅ |
-| RF-02 | Página `/termos` análoga, lendo `docs/legal/terms-of-service.md` | `apps/web/src/app/termos/page.tsx` | `apps/web/src/app/termos/page.spec.tsx` | ✅ |
-| RF-03 | `react-markdown` + `remark-gfm` (tabelas) + `@tailwindcss/typography` adicionados a `apps/web` | `apps/web/package.json`, `apps/web/tailwind.config.ts` | build de produção (`next build`) gera `/privacidade` e `/termos` como rotas estáticas — confirma que a leitura de `docs/legal/*.md` funciona em build time | ✅ |
-| RF-04 | `/privacidade` e `/termos` sempre públicas no middleware (sem redirect em nenhum sentido) | `apps/web/middleware.ts` | `apps/web/middleware.spec.ts` | ✅ |
-| RF-05 | `LegalFooter` (links para `/termos` e `/privacidade`) incluído em `/`, `/login` e `/register` | `apps/web/src/components/legal-footer.tsx`, `apps/web/src/app/page.tsx`, `apps/web/src/app/(auth)/login/page.tsx`, `apps/web/src/app/(auth)/register/page.tsx` | coberto indiretamente pelos specs de cada página (rodapé estático, sem lógica) | ✅ |
-| RF-06 | Checkbox obrigatório de aceite dos Termos/Privacidade em `/register`; botão "Criar conta" desabilitado até marcar | `apps/web/src/app/(auth)/register/page.tsx` | `apps/web/src/app/(auth)/register/page.spec.tsx` | ✅ |
+| Req   | Descrição                                                                                                         | Código                                                                                                                                                         | Teste                                                                                                                                                      | Status |
+| ----- | ----------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| RF-01 | Página `/privacidade` (Server Component) lê `docs/legal/privacy-policy.md` e renderiza como Markdown              | `apps/web/src/app/privacidade/page.tsx`, `apps/web/src/components/legal-document.tsx`                                                                          | `apps/web/src/app/privacidade/page.spec.tsx`                                                                                                               | ✅     |
+| RF-02 | Página `/termos` análoga, lendo `docs/legal/terms-of-service.md`                                                  | `apps/web/src/app/termos/page.tsx`                                                                                                                             | `apps/web/src/app/termos/page.spec.tsx`                                                                                                                    | ✅     |
+| RF-03 | `react-markdown` + `remark-gfm` (tabelas) + `@tailwindcss/typography` adicionados a `apps/web`                    | `apps/web/package.json`, `apps/web/tailwind.config.ts`                                                                                                         | build de produção (`next build`) gera `/privacidade` e `/termos` como rotas estáticas — confirma que a leitura de `docs/legal/*.md` funciona em build time | ✅     |
+| RF-04 | `/privacidade` e `/termos` sempre públicas no middleware (sem redirect em nenhum sentido)                         | `apps/web/middleware.ts`                                                                                                                                       | `apps/web/middleware.spec.ts`                                                                                                                              | ✅     |
+| RF-05 | `LegalFooter` (links para `/termos` e `/privacidade`) incluído em `/`, `/login` e `/register`                     | `apps/web/src/components/legal-footer.tsx`, `apps/web/src/app/page.tsx`, `apps/web/src/app/(auth)/login/page.tsx`, `apps/web/src/app/(auth)/register/page.tsx` | coberto indiretamente pelos specs de cada página (rodapé estático, sem lógica)                                                                             | ✅     |
+| RF-06 | Checkbox obrigatório de aceite dos Termos/Privacidade em `/register`; botão "Criar conta" desabilitado até marcar | `apps/web/src/app/(auth)/register/page.tsx`                                                                                                                    | `apps/web/src/app/(auth)/register/page.spec.tsx`                                                                                                           | ✅     |
 
 ---
 
@@ -2331,18 +2338,18 @@ que o artefato ainda não existe no repositório.
 > `/dashboard` mínima criada apenas com o seletor de mês/veículo e o link de exportação; o
 > redesign completo do Dashboard (Fleet Command + Vehicle Spotlight) permanece objeto da Fase 5.
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-01 | `GET /dashboard/export` retorna arquivo CSV | `apps/api/src/modules/dashboard/dashboard.controller.ts`, `dashboard.service.ts` | `apps/api/src/modules/dashboard/dashboard.controller.spec.ts`, `dashboard.service.spec.ts` | ✅ |
-| RF-02 | Filtro obrigatório: `period` (YYYY-MM) | `packages/validators/src/dashboard.schemas.ts` (`exportExpensesQuerySchema`) | `apps/api/src/modules/dashboard/dashboard.controller.spec.ts` | ✅ |
-| RF-03 | Filtro opcional: `vehicle_id` | `apps/api/src/modules/dashboard/dashboard.service.ts` (`exportExpensesCsv`) | `apps/api/src/modules/dashboard/dashboard.service.spec.ts`, `dashboard.controller.spec.ts` | ✅ |
-| RF-04 | Colunas: Data, Placa, Modelo, Categoria, Descrição, Valor | `apps/api/src/modules/dashboard/dashboard.service.ts` | `apps/api/src/modules/dashboard/dashboard.service.spec.ts` | ✅ |
-| RF-05 | BOM UTF-8 no arquivo CSV (compatibilidade Excel) | `apps/api/src/modules/dashboard/dashboard.controller.ts` (`CSV_BOM`) | `apps/api/src/modules/dashboard/dashboard.controller.spec.ts` | ✅ |
-| RF-06 | Nome do arquivo: `nave-despesas-{YYYY-MM}.csv` | `apps/api/src/modules/dashboard/dashboard.controller.ts` (`Content-Disposition`) | `apps/api/src/modules/dashboard/dashboard.controller.spec.ts` | ✅ |
-| RF-07 | Botão "Exportar CSV" no Dashboard com seletor de mês | `apps/web/src/app/dashboard/page.tsx` | `apps/web/src/app/dashboard/page.spec.tsx` | ✅ |
-| RF-08 | Isolamento por `user_id` do JWT | `apps/api/src/modules/dashboard/dashboard.service.ts` (`.eq("user_id", userId)`, `SupabaseAuthGuard`) | `apps/api/src/modules/dashboard/dashboard.service.spec.ts` | ✅ |
-| RNF-03 | Limite de 5.000 linhas por exportação | `apps/api/src/modules/dashboard/dashboard.service.ts` (`CSV_MAX_ROWS`, `.limit`) | — | 🔶 (constante aplicada; sem teste de volume) |
-| RNF-04 | Rate limiting 10 req/5min | `apps/api/src/modules/dashboard/dashboard.controller.ts` (`@Throttle`) | — | 🔶 (decorator aplicado; sem teste de integração do throttler) |
+| Req    | Descrição                                                 | Código                                                                                                | Teste                                                                                      | Status                                                        |
+| ------ | --------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ | ------------------------------------------------------------- |
+| RF-01  | `GET /dashboard/export` retorna arquivo CSV               | `apps/api/src/modules/dashboard/dashboard.controller.ts`, `dashboard.service.ts`                      | `apps/api/src/modules/dashboard/dashboard.controller.spec.ts`, `dashboard.service.spec.ts` | ✅                                                            |
+| RF-02  | Filtro obrigatório: `period` (YYYY-MM)                    | `packages/validators/src/dashboard.schemas.ts` (`exportExpensesQuerySchema`)                          | `apps/api/src/modules/dashboard/dashboard.controller.spec.ts`                              | ✅                                                            |
+| RF-03  | Filtro opcional: `vehicle_id`                             | `apps/api/src/modules/dashboard/dashboard.service.ts` (`exportExpensesCsv`)                           | `apps/api/src/modules/dashboard/dashboard.service.spec.ts`, `dashboard.controller.spec.ts` | ✅                                                            |
+| RF-04  | Colunas: Data, Placa, Modelo, Categoria, Descrição, Valor | `apps/api/src/modules/dashboard/dashboard.service.ts`                                                 | `apps/api/src/modules/dashboard/dashboard.service.spec.ts`                                 | ✅                                                            |
+| RF-05  | BOM UTF-8 no arquivo CSV (compatibilidade Excel)          | `apps/api/src/modules/dashboard/dashboard.controller.ts` (`CSV_BOM`)                                  | `apps/api/src/modules/dashboard/dashboard.controller.spec.ts`                              | ✅                                                            |
+| RF-06  | Nome do arquivo: `navestory-despesas-{YYYY-MM}.csv`       | `apps/api/src/modules/dashboard/dashboard.controller.ts` (`Content-Disposition`)                      | `apps/api/src/modules/dashboard/dashboard.controller.spec.ts`                              | ✅                                                            |
+| RF-07  | Botão "Exportar CSV" no Dashboard com seletor de mês      | `apps/web/src/app/dashboard/page.tsx`                                                                 | `apps/web/src/app/dashboard/page.spec.tsx`                                                 | ✅                                                            |
+| RF-08  | Isolamento por `user_id` do JWT                           | `apps/api/src/modules/dashboard/dashboard.service.ts` (`.eq("user_id", userId)`, `SupabaseAuthGuard`) | `apps/api/src/modules/dashboard/dashboard.service.spec.ts`                                 | ✅                                                            |
+| RNF-03 | Limite de 5.000 linhas por exportação                     | `apps/api/src/modules/dashboard/dashboard.service.ts` (`CSV_MAX_ROWS`, `.limit`)                      | —                                                                                          | 🔶 (constante aplicada; sem teste de volume)                  |
+| RNF-04 | Rate limiting 10 req/5min                                 | `apps/api/src/modules/dashboard/dashboard.controller.ts` (`@Throttle`)                                | —                                                                                          | 🔶 (decorator aplicado; sem teste de integração do throttler) |
 
 ---
 
@@ -2354,15 +2361,15 @@ que o artefato ainda não existe no repositório.
 > decisão foi vincular este recurso ao lançamento da monetização (Fase 9, `SPEC-20260620-001`),
 > não à Fase 4. Retomar junto com T9.1, quando domínio e conta Resend estiverem disponíveis.
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-01 | Job diário via pg_cron às 11:00 UTC | — | — | ⏸️ Adiado para Fase 9 |
-| RF-02 | Edge Function busca manutenções `scheduled_date = +7d AND alert_sent = false` | — | — | ⏸️ Adiado para Fase 9 |
-| RF-03 | Email com nome, data, veículo via Resend (com retry idempotente) | — | — | ⏸️ Adiado para Fase 9 |
-| RF-04 | `alert_sent = true` somente após confirmação de envio | — | — | ⏸️ Adiado para Fase 9 |
-| RF-05 | Não reenvia alertas já enviados (filtro `alert_sent = false` na query) | — | — | ⏸️ Adiado para Fase 9 |
-| RF-06 | `MAINTENANCE_ALERT_SENT` em `audit_logs` com `record_id` da manutenção | — | — | ⏸️ Adiado para Fase 9 |
-| RF-07 | Respeita soft delete (filtro `.is('deleted_at', null)` na query) | — | — | ⏸️ Adiado para Fase 9 |
+| Req   | Descrição                                                                     | Código | Teste | Status                |
+| ----- | ----------------------------------------------------------------------------- | ------ | ----- | --------------------- |
+| RF-01 | Job diário via pg_cron às 11:00 UTC                                           | —      | —     | ⏸️ Adiado para Fase 9 |
+| RF-02 | Edge Function busca manutenções `scheduled_date = +7d AND alert_sent = false` | —      | —     | ⏸️ Adiado para Fase 9 |
+| RF-03 | Email com nome, data, veículo via Resend (com retry idempotente)              | —      | —     | ⏸️ Adiado para Fase 9 |
+| RF-04 | `alert_sent = true` somente após confirmação de envio                         | —      | —     | ⏸️ Adiado para Fase 9 |
+| RF-05 | Não reenvia alertas já enviados (filtro `alert_sent = false` na query)        | —      | —     | ⏸️ Adiado para Fase 9 |
+| RF-06 | `MAINTENANCE_ALERT_SENT` em `audit_logs` com `record_id` da manutenção        | —      | —     | ⏸️ Adiado para Fase 9 |
+| RF-07 | Respeita soft delete (filtro `.is('deleted_at', null)` na query)              | —      | —     | ⏸️ Adiado para Fase 9 |
 
 ---
 
@@ -2373,28 +2380,28 @@ que o artefato ainda não existe no repositório.
 > Implementado em 2026-07-13 como parte da Fase 1 do roadmap (T1.2).
 > Rate limits de auth supersedidos pela tabela de SPEC-20260524-001 §4.2 (valores idênticos — sem conflito).
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-SEC-001 | `SUPABASE_URL` (sem prefixo `NEXT_PUBLIC_`) via `ConfigService`; env vars via Joi | `apps/api/src/common/config/env.validation.ts`, `apps/api/src/modules/auth/auth.module.ts` | `apps/api/` (Jest, 67 testes, 90%+ cobertura) | ✅ |
-| RF-SEC-002 | `AuditService` — audit_logs com campos corretos (`action`, `table_name`, `record_id`, `changes`); fire-and-forget | `apps/api/src/shared/audit/audit.service.ts` | `apps/api/` (Jest) | ✅ |
-| RF-SEC-002b | `AuditService.log()` não propaga exceção — try/catch + NestJS Logger | `apps/api/src/shared/audit/audit.service.ts` | `apps/api/` (Jest) | ✅ |
-| RF-SEC-002c | Timestamp ISO injetado em `changes` (sobrescreve qualquer valor passado) | `apps/api/src/shared/audit/audit.service.ts` | `apps/api/` (Jest) | ✅ |
-| RF-SEC-003 | `HttpExceptionFilter` global — sem stack trace em produção; shape `{ statusCode, message, timestamp }` | `apps/api/src/common/filters/http-exception.filter.ts` | `apps/api/` (Jest) | ✅ |
-| RF-SEC-003b | Filter registrado em `main.ts` via `app.useGlobalFilters()` | `apps/api/src/main.ts` | `apps/api/` (Jest) | ✅ |
-| RF-SEC-004 | Rate limit diferenciado: register 5/15min, login 10/15min, demais 100/60s (ThrottlerGuard global) | `apps/api/src/modules/auth/auth.controller.ts`, `apps/api/src/main.ts` | `apps/api/` (Jest) | ✅ |
-| RF-SEC-005 | Rollback scripts para as migrations | `supabase/migrations/rollback/` | — (DDL manual) | ✅ |
-| RF-SEC-006 | `SUPABASE_SERVICE_ROLE_KEY` e demais vars obrigatórias validados no Joi na startup | `apps/api/src/common/config/env.validation.ts` | `apps/api/` (Jest) | ✅ |
-| RF-SEC-007 | `console.log` substituído por `Logger` do NestJS em `main.ts` | `apps/api/src/main.ts` | `apps/api/` (Jest) | ✅ |
-| RF-SEC-008 | `AdminSupabaseService` inicializa com `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` isolados | `apps/api/src/modules/admin/admin-supabase.service.ts`, `apps/api/src/shared/supabase/supabase-admin.module.ts` | `apps/api/` (Jest) | ✅ |
-| RF-SEC-009 | `SupabaseService` (anon) e `SupabaseAdminModule` (service-role) isolados; clients separados por módulo | `apps/api/src/shared/supabase/supabase.module.ts`, `apps/api/src/shared/supabase/create-user-scoped-client.ts`, `apps/api/src/shared/supabase/supabase.constants.ts` | `apps/api/` (Jest) | ✅ |
+| Req         | Descrição                                                                                                         | Código                                                                                                                                                               | Teste                                         | Status |
+| ----------- | ----------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------- | ------ |
+| RF-SEC-001  | `SUPABASE_URL` (sem prefixo `NEXT_PUBLIC_`) via `ConfigService`; env vars via Joi                                 | `apps/api/src/common/config/env.validation.ts`, `apps/api/src/modules/auth/auth.module.ts`                                                                           | `apps/api/` (Jest, 67 testes, 90%+ cobertura) | ✅     |
+| RF-SEC-002  | `AuditService` — audit_logs com campos corretos (`action`, `table_name`, `record_id`, `changes`); fire-and-forget | `apps/api/src/shared/audit/audit.service.ts`                                                                                                                         | `apps/api/` (Jest)                            | ✅     |
+| RF-SEC-002b | `AuditService.log()` não propaga exceção — try/catch + NestJS Logger                                              | `apps/api/src/shared/audit/audit.service.ts`                                                                                                                         | `apps/api/` (Jest)                            | ✅     |
+| RF-SEC-002c | Timestamp ISO injetado em `changes` (sobrescreve qualquer valor passado)                                          | `apps/api/src/shared/audit/audit.service.ts`                                                                                                                         | `apps/api/` (Jest)                            | ✅     |
+| RF-SEC-003  | `HttpExceptionFilter` global — sem stack trace em produção; shape `{ statusCode, message, timestamp }`            | `apps/api/src/common/filters/http-exception.filter.ts`                                                                                                               | `apps/api/` (Jest)                            | ✅     |
+| RF-SEC-003b | Filter registrado em `main.ts` via `app.useGlobalFilters()`                                                       | `apps/api/src/main.ts`                                                                                                                                               | `apps/api/` (Jest)                            | ✅     |
+| RF-SEC-004  | Rate limit diferenciado: register 5/15min, login 10/15min, demais 100/60s (ThrottlerGuard global)                 | `apps/api/src/modules/auth/auth.controller.ts`, `apps/api/src/main.ts`                                                                                               | `apps/api/` (Jest)                            | ✅     |
+| RF-SEC-005  | Rollback scripts para as migrations                                                                               | `supabase/migrations/rollback/`                                                                                                                                      | — (DDL manual)                                | ✅     |
+| RF-SEC-006  | `SUPABASE_SERVICE_ROLE_KEY` e demais vars obrigatórias validados no Joi na startup                                | `apps/api/src/common/config/env.validation.ts`                                                                                                                       | `apps/api/` (Jest)                            | ✅     |
+| RF-SEC-007  | `console.log` substituído por `Logger` do NestJS em `main.ts`                                                     | `apps/api/src/main.ts`                                                                                                                                               | `apps/api/` (Jest)                            | ✅     |
+| RF-SEC-008  | `AdminSupabaseService` inicializa com `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` isolados                       | `apps/api/src/modules/admin/admin-supabase.service.ts`, `apps/api/src/shared/supabase/supabase-admin.module.ts`                                                      | `apps/api/` (Jest)                            | ✅     |
+| RF-SEC-009  | `SupabaseService` (anon) e `SupabaseAdminModule` (service-role) isolados; clients separados por módulo            | `apps/api/src/shared/supabase/supabase.module.ts`, `apps/api/src/shared/supabase/create-user-scoped-client.ts`, `apps/api/src/shared/supabase/supabase.constants.ts` | `apps/api/` (Jest)                            | ✅     |
 
 ### Testes de Integração (novos — Fase 1)
 
-| ID | Descrição | Arquivo | Status |
-|----|-----------|---------|--------|
-| CT-006 | 401 sem JWT; fluxo real de registro/login contra Supabase local | `apps/api/test/integration/auth.int-spec.ts` | ✅ |
-| CT-007 | RLS bloqueia acesso a `profiles` de outro usuário | `apps/api/test/integration/rls.int-spec.ts` | ✅ |
-| — | CI `integration-test` job — `supabase start` + testes de integração no pipeline | `.github/workflows/ci.yml` | ✅ |
+| ID     | Descrição                                                                       | Arquivo                                      | Status |
+| ------ | ------------------------------------------------------------------------------- | -------------------------------------------- | ------ |
+| CT-006 | 401 sem JWT; fluxo real de registro/login contra Supabase local                 | `apps/api/test/integration/auth.int-spec.ts` | ✅     |
+| CT-007 | RLS bloqueia acesso a `profiles` de outro usuário                               | `apps/api/test/integration/rls.int-spec.ts`  | ✅     |
+| —      | CI `integration-test` job — `supabase start` + testes de integração no pipeline | `.github/workflows/ci.yml`                   | ✅     |
 
 ---
 
@@ -2423,6 +2430,7 @@ que o artefato ainda não existe no repositório.
 > migração para os componentes compartilhados fica para quando a Fase 8 avançar.
 >
 > **Lacunas reais encontradas durante a implementação (não previstas pela spec):**
+>
 > - `VEHICLE_COLUMNS` em `vehicles.service.ts` não selecionava `insurance_expires_at`/
 >   `crlv_expires_at`, apesar de as colunas existirem desde T0.2 — corrigido (afeta também
 >   `GET /vehicles`, não só o dashboard).
@@ -2441,70 +2449,70 @@ que o artefato ainda não existe no repositório.
 
 ### Backend (`apps/api`) — Sprint 1
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-SH-01, RF-SH-02 | `GET /dashboard/fleet-health` — wrapper de `calculate_fleet_health` | `apps/api/src/modules/dashboard/dashboard.service.ts` (`getFleetHealth`), `dashboard.controller.ts` | `dashboard.service.spec.ts`, `dashboard.controller.spec.ts` | ✅ |
-| RF-DA-01, RF-DA-02 | `GET /dashboard/alerts` — alertas de manutenção vencida/próxima (7 dias), ordenados por urgência. Escopo Sprint 1: só manutenção; documentos entram na Sprint 3 (CA-S3-02) | `dashboard.service.ts` (`getAlerts`) | `dashboard.service.spec.ts` | ✅ |
-| RF-DA-03, CA-S1-05, CA-S1-05.1 | `GET /dashboard/fleet-kpis` — 4 KPIs isolados via `Promise.allSettled`, `?vehicle_id=` só afeta "Próxima manutenção" | `dashboard.service.ts` (`getFleetKpis`, `countUrgentMaintenances`, `getFleetCostPerKm`, `getNextMaintenance`) | `dashboard.service.spec.ts` | ✅ |
-| RF-DA-04 | `GET /dashboard/vehicle-cards` — odômetro, último abastecimento, status de documentos (sem reconciliação com `vehicle_recurring_costs`, RF-DB-06 é Sprint 3) | `dashboard.service.ts` (`getVehicleCards`, `getLastFuelExpense`, `classifyDocument`) | `dashboard.service.spec.ts` | ✅ |
-| — | `VEHICLE_COLUMNS` passa a incluir `insurance_expires_at`/`crlv_expires_at` (lacuna pré-existente desde T0.2) | `apps/api/src/modules/vehicles/vehicles.service.ts` | `vehicles.service.spec.ts` (suíte existente, sem regressão) | ✅ |
-| RF-BD-04 | `odometer_km` obrigatório para `category=fuel` | `packages/validators/src/expense.schemas.ts` (`requireOdometerForFuel`) | `expense.schemas.spec.ts` | ✅ (já satisfeito antes desta tarefa) |
+| Req                            | Descrição                                                                                                                                                                  | Código                                                                                                        | Teste                                                       | Status                                |
+| ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- | ------------------------------------- |
+| RF-SH-01, RF-SH-02             | `GET /dashboard/fleet-health` — wrapper de `calculate_fleet_health`                                                                                                        | `apps/api/src/modules/dashboard/dashboard.service.ts` (`getFleetHealth`), `dashboard.controller.ts`           | `dashboard.service.spec.ts`, `dashboard.controller.spec.ts` | ✅                                    |
+| RF-DA-01, RF-DA-02             | `GET /dashboard/alerts` — alertas de manutenção vencida/próxima (7 dias), ordenados por urgência. Escopo Sprint 1: só manutenção; documentos entram na Sprint 3 (CA-S3-02) | `dashboard.service.ts` (`getAlerts`)                                                                          | `dashboard.service.spec.ts`                                 | ✅                                    |
+| RF-DA-03, CA-S1-05, CA-S1-05.1 | `GET /dashboard/fleet-kpis` — 4 KPIs isolados via `Promise.allSettled`, `?vehicle_id=` só afeta "Próxima manutenção"                                                       | `dashboard.service.ts` (`getFleetKpis`, `countUrgentMaintenances`, `getFleetCostPerKm`, `getNextMaintenance`) | `dashboard.service.spec.ts`                                 | ✅                                    |
+| RF-DA-04                       | `GET /dashboard/vehicle-cards` — odômetro, último abastecimento, status de documentos (sem reconciliação com `vehicle_recurring_costs`, RF-DB-06 é Sprint 3)               | `dashboard.service.ts` (`getVehicleCards`, `getLastFuelExpense`, `classifyDocument`)                          | `dashboard.service.spec.ts`                                 | ✅                                    |
+| —                              | `VEHICLE_COLUMNS` passa a incluir `insurance_expires_at`/`crlv_expires_at` (lacuna pré-existente desde T0.2)                                                               | `apps/api/src/modules/vehicles/vehicles.service.ts`                                                           | `vehicles.service.spec.ts` (suíte existente, sem regressão) | ✅                                    |
+| RF-BD-04                       | `odometer_km` obrigatório para `category=fuel`                                                                                                                             | `packages/validators/src/expense.schemas.ts` (`requireOdometerForFuel`)                                       | `expense.schemas.spec.ts`                                   | ✅ (já satisfeito antes desta tarefa) |
 
 ### Frontend (`apps/web`) — Sprint 1
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-ST-01 | `dockOpen`/`setDockOpen` no store global (sem recriar `activeVehicleId`) | `apps/web/src/lib/stores/use-dashboard-store.ts` | `use-dashboard-store.spec.ts` | ✅ |
-| RF-DA-01, RF-DA-02 | `FleetAlertBar` — máx. 3 itens + link "ver todos (+N)" para `/maintenance?filter=urgent` | `apps/web/src/components/dashboard/FleetAlertBar.tsx` | `FleetAlertBar.spec.tsx` | ✅ |
-| RF-DA-03, CA-S1-05.1 | `FleetKpis` — 4 KPIs com fallback "—"/tooltip por card em falha isolada | `apps/web/src/components/dashboard/FleetKpis.tsx` | `page.spec.tsx` (via `DashboardPage`) | ✅ |
-| RF-DA-04, RF-DA-05, RF-SH-01, RF-SH-02 | `VehicleHealthCard` — semáforo, odômetro, último abastecimento, badges de documento, click → `setActiveVehicle` | `apps/web/src/components/dashboard/VehicleHealthCard.tsx` | `VehicleHealthCard.spec.tsx` | ✅ |
-| RF-DA-08 | Auto-seleção com exatamente 1 veículo | `apps/web/src/app/(app)/dashboard/page.tsx` (efeito de auto-seleção) | `page.spec.tsx` | ✅ |
-| RF-DA-09 | `EmptyState` de boas-vindas sem veículos, sem KPIs "zerados" | `dashboard/page.tsx` (`NoVehiclesEmptyState`) | `page.spec.tsx` | ✅ |
-| RF-DA-10 | Grid sem virtualização até 15; acima disso, 10 piores primeiro + "ver mais" | `dashboard/page.tsx` (`VehicleGrid`) | — (comportamento >15 veículos não coberto por teste automatizado; validado por leitura de código) | 🟡 |
-| RF-DC-01 a RF-DC-06 | `ActionDock` — dock mobile 2×2, inline desktop ≥1024px, fecha ao navegar, sem "Multa"/"IA Nave"/"Novo Veículo" | `apps/web/src/components/layout/action-dock.tsx` | `action-dock.spec.tsx` | ✅ |
-| RF-DC-02 item 1 | `?category=` em `/expenses/new` (gap novo, ver nota acima) | `apps/web/src/app/(app)/expenses/new/page.tsx` | `expenses/new/page.spec.tsx` (mock de `useSearchParams` atualizado) | ✅ |
-| RF-DC-02 item 4 | Rota `/vehicles/[id]/odometer` (gap novo, ver nota acima) | `apps/web/src/app/(app)/vehicles/[id]/odometer/page.tsx` | `vehicles/[id]/odometer/page.spec.tsx` | ✅ |
-| — | Preservação do stub original (seletor mês/veículo + export CSV) dentro da nova estrutura (seção 12.3) | `dashboard/page.tsx` (`ExportControls`) | `page.spec.tsx` | ✅ |
+| Req                                    | Descrição                                                                                                                | Código                                                               | Teste                                                                                             | Status |
+| -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- | ------ |
+| RF-ST-01                               | `dockOpen`/`setDockOpen` no store global (sem recriar `activeVehicleId`)                                                 | `apps/web/src/lib/stores/use-dashboard-store.ts`                     | `use-dashboard-store.spec.ts`                                                                     | ✅     |
+| RF-DA-01, RF-DA-02                     | `FleetAlertBar` — máx. 3 itens + link "ver todos (+N)" para `/maintenance?filter=urgent`                                 | `apps/web/src/components/dashboard/FleetAlertBar.tsx`                | `FleetAlertBar.spec.tsx`                                                                          | ✅     |
+| RF-DA-03, CA-S1-05.1                   | `FleetKpis` — 4 KPIs com fallback "—"/tooltip por card em falha isolada                                                  | `apps/web/src/components/dashboard/FleetKpis.tsx`                    | `page.spec.tsx` (via `DashboardPage`)                                                             | ✅     |
+| RF-DA-04, RF-DA-05, RF-SH-01, RF-SH-02 | `VehicleHealthCard` — semáforo, odômetro, último abastecimento, badges de documento, click → `setActiveVehicle`          | `apps/web/src/components/dashboard/VehicleHealthCard.tsx`            | `VehicleHealthCard.spec.tsx`                                                                      | ✅     |
+| RF-DA-08                               | Auto-seleção com exatamente 1 veículo                                                                                    | `apps/web/src/app/(app)/dashboard/page.tsx` (efeito de auto-seleção) | `page.spec.tsx`                                                                                   | ✅     |
+| RF-DA-09                               | `EmptyState` de boas-vindas sem veículos, sem KPIs "zerados"                                                             | `dashboard/page.tsx` (`NoVehiclesEmptyState`)                        | `page.spec.tsx`                                                                                   | ✅     |
+| RF-DA-10                               | Grid sem virtualização até 15; acima disso, 10 piores primeiro + "ver mais"                                              | `dashboard/page.tsx` (`VehicleGrid`)                                 | — (comportamento >15 veículos não coberto por teste automatizado; validado por leitura de código) | 🟡     |
+| RF-DC-01 a RF-DC-06                    | `ActionDock` — dock mobile 2×2, inline desktop ≥1024px, fecha ao navegar, sem "Multa"/"IA navestory"/"Novo Veículo" | `apps/web/src/components/layout/action-dock.tsx`                     | `action-dock.spec.tsx`                                                                            | ✅     |
+| RF-DC-02 item 1                        | `?category=` em `/expenses/new` (gap novo, ver nota acima)                                                               | `apps/web/src/app/(app)/expenses/new/page.tsx`                       | `expenses/new/page.spec.tsx` (mock de `useSearchParams` atualizado)                               | ✅     |
+| RF-DC-02 item 4                        | Rota `/vehicles/[id]/odometer` (gap novo, ver nota acima)                                                                | `apps/web/src/app/(app)/vehicles/[id]/odometer/page.tsx`             | `vehicles/[id]/odometer/page.spec.tsx`                                                            | ✅     |
+| —                                      | Preservação do stub original (seletor mês/veículo + export CSV) dentro da nova estrutura (seção 12.3)                    | `dashboard/page.tsx` (`ExportControls`)                              | `page.spec.tsx`                                                                                   | ✅     |
 
 ### Validators (`packages/validators`) — Sprint 1
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-DA-01, RF-DA-03, RF-DA-04, RF-SH-01 | Tipos e schemas de runtime: `fleetKpisQuerySchema`, `FleetKpisQuery`, `FleetHealthEntry`, `FleetAlert`, `FleetAlertType`, `KpiResult`, `FleetKpis`, `DocumentStatus`, `VehicleDocumentsStatus`, `VehicleCard` | `packages/validators/src/dashboard.schemas.ts` | — (tipos e schema puro, sem branches condicionais; consumido por `dashboard.service.spec.ts`) | 🔶 |
-| RF-DA-03 | DTO thin wrapper: `fleetKpisDtoSchema`/`FleetKpisDto` (re-exporta `fleetKpisQuerySchema`) | `apps/api/src/modules/dashboard/dto/fleet-kpis.dto.ts` | — | 🔶 |
+| Req                                    | Descrição                                                                                                                                                                                                     | Código                                                 | Teste                                                                                         | Status |
+| -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ | --------------------------------------------------------------------------------------------- | ------ |
+| RF-DA-01, RF-DA-03, RF-DA-04, RF-SH-01 | Tipos e schemas de runtime: `fleetKpisQuerySchema`, `FleetKpisQuery`, `FleetHealthEntry`, `FleetAlert`, `FleetAlertType`, `KpiResult`, `FleetKpis`, `DocumentStatus`, `VehicleDocumentsStatus`, `VehicleCard` | `packages/validators/src/dashboard.schemas.ts`         | — (tipos e schema puro, sem branches condicionais; consumido por `dashboard.service.spec.ts`) | 🔶     |
+| RF-DA-03                               | DTO thin wrapper: `fleetKpisDtoSchema`/`FleetKpisDto` (re-exporta `fleetKpisQuerySchema`)                                                                                                                     | `apps/api/src/modules/dashboard/dto/fleet-kpis.dto.ts` | —                                                                                             | 🔶     |
 
 ### Backend (`apps/api`) — Sprint 2/3
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| CA-S3-02, RF-DB-06 | `GET /dashboard/alerts` estendido — alertas de documentos vencidos (IPVA/Seguro/CRLV), reconciliados com `vehicle_recurring_costs.paid_at` do ano corrente; combinado e ordenado com alertas de manutenção | `dashboard.service.ts` (`getDocumentOverdueAlerts`, `getPaidDocumentsCurrentYear`) | `dashboard.service.spec.ts` | ✅ |
-| RF-DB-07 | `GET /dashboard/vehicle-history?vehicle_id=` — combina últimas 20 despesas + manutenções, ordenadas por data decrescente, reaproveitando `ExpensesService`/`MaintenancesService.findAll` | `dashboard.service.ts` (`getVehicleHistory`), `dashboard.controller.ts` | `dashboard.service.spec.ts`, `dashboard.controller.spec.ts` | ✅ |
-| CA-S3-03 | `VehicleCard.last_fuel_odometer_missing` — true quando o último abastecimento não tem `odometer_km` | `dashboard.service.ts` (`getVehicleCards`, `getLastFuelExpense`) | `dashboard.service.spec.ts` (suíte existente, sem regressão) | ✅ |
-| RF-DB-04, RF-DB-05 | Reaproveitados (sem código novo): `GET /analytics/tco/:vehicleId`, `GET /analytics/fuel-trend/:vehicleId` (T6.1) | `apps/api/src/modules/analytics/analytics.controller.ts` | `analytics.controller.spec.ts` (suíte existente) | ✅ |
+| Req                | Descrição                                                                                                                                                                                                  | Código                                                                             | Teste                                                        | Status |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- | ------------------------------------------------------------ | ------ |
+| CA-S3-02, RF-DB-06 | `GET /dashboard/alerts` estendido — alertas de documentos vencidos (IPVA/Seguro/CRLV), reconciliados com `vehicle_recurring_costs.paid_at` do ano corrente; combinado e ordenado com alertas de manutenção | `dashboard.service.ts` (`getDocumentOverdueAlerts`, `getPaidDocumentsCurrentYear`) | `dashboard.service.spec.ts`                                  | ✅     |
+| RF-DB-07           | `GET /dashboard/vehicle-history?vehicle_id=` — combina últimas 20 despesas + manutenções, ordenadas por data decrescente, reaproveitando `ExpensesService`/`MaintenancesService.findAll`                   | `dashboard.service.ts` (`getVehicleHistory`), `dashboard.controller.ts`            | `dashboard.service.spec.ts`, `dashboard.controller.spec.ts`  | ✅     |
+| CA-S3-03           | `VehicleCard.last_fuel_odometer_missing` — true quando o último abastecimento não tem `odometer_km`                                                                                                        | `dashboard.service.ts` (`getVehicleCards`, `getLastFuelExpense`)                   | `dashboard.service.spec.ts` (suíte existente, sem regressão) | ✅     |
+| RF-DB-04, RF-DB-05 | Reaproveitados (sem código novo): `GET /analytics/tco/:vehicleId`, `GET /analytics/fuel-trend/:vehicleId` (T6.1)                                                                                           | `apps/api/src/modules/analytics/analytics.controller.ts`                           | `analytics.controller.spec.ts` (suíte existente)             | ✅     |
 
 ### Frontend (`apps/web`) — Sprint 2/3
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-DB-01 | Chip sticky "Em Foco: [Marca Modelo] [PLACA] ×", nomenclatura canônica de SPEC-20260602-001, "×" chama `clearAllSelection` | `apps/web/src/components/dashboard/VehicleSpotlight.tsx` (`StickyFocusChip`) | `VehicleSpotlight.spec.tsx` | ✅ |
-| RF-DB-02, RF-DB-03 | Tabs em mobile (`useMediaQuery`) / grid em desktop, sem tabs | `VehicleSpotlight.tsx` | `VehicleSpotlight.spec.tsx` | ✅ |
-| RF-DB-04 | Seção Despesas — `TcoBreakdownChart` reaproveitado; empty state quando `total===0`; estado de erro | `VehicleSpotlight.tsx` (`ExpensesSection`), `apps/web/src/components/charts/tco-breakdown-chart.tsx` | `VehicleSpotlight.spec.tsx` | ✅ |
-| RF-DB-05 | Seção Consumo — `FuelTrendChart` reaproveitado; empty state; estado de erro | `VehicleSpotlight.tsx` (`FuelSection`), `apps/web/src/components/charts/fuel-trend-chart.tsx` | — (padrão idêntico a `ExpensesSection`, coberto indiretamente via `analytics/page.spec.tsx` para o componente de gráfico) | 🟡 |
-| RF-DB-06 | Seção Docs — badges Vencido/Atenção/Pago, reconciliados com `GET /recurring-costs` do ano corrente | `VehicleSpotlight.tsx` (`DocsSection`) | `VehicleSpotlight.spec.tsx` | ✅ |
-| RF-DB-07 | Seção Histórico — últimas 20 despesas/manutenções + links "ver todos" | `VehicleSpotlight.tsx` (`HistorySection`) | `VehicleSpotlight.spec.tsx` | ✅ |
-| RF-DB-08 | `EmptyState` quando nenhum veículo em foco | `VehicleSpotlight.tsx` (`NoActiveVehicleEmptyState`) | `VehicleSpotlight.spec.tsx` | ✅ |
-| RF-DA-05 | Scroll suave até a Zona B ao clicar num `VehicleHealthCard` | `apps/web/src/app/(app)/dashboard/page.tsx` (`handleSelectVehicle`, `spotlightRef`) | `page.spec.tsx` | ✅ |
-| RF-SH-03 | Tooltip do semáforo detalha os `flags` da RPC (sem recalcular pesos) | `apps/web/src/components/dashboard/VehicleHealthCard.tsx` (`flagsTooltip`, `FLAG_LABEL`) | `VehicleHealthCard.spec.tsx` | ✅ |
-| CA-S3-03 | Badge de aviso no card quando `last_fuel_odometer_missing` | `VehicleHealthCard.tsx` | `VehicleHealthCard.spec.tsx` | ✅ |
-| — | `FleetAlertBar.type` estendido para `"document_overdue"` (sem mudança de lógica de estilo, já baseada em `days_until_due`) | `apps/web/src/components/dashboard/FleetAlertBar.tsx` | `FleetAlertBar.spec.tsx` (suíte existente, sem regressão) | ✅ |
+| Req                | Descrição                                                                                                                  | Código                                                                                               | Teste                                                                                                                     | Status |
+| ------------------ | -------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- | ------ |
+| RF-DB-01           | Chip sticky "Em Foco: [Marca Modelo] [PLACA] ×", nomenclatura canônica de SPEC-20260602-001, "×" chama `clearAllSelection` | `apps/web/src/components/dashboard/VehicleSpotlight.tsx` (`StickyFocusChip`)                         | `VehicleSpotlight.spec.tsx`                                                                                               | ✅     |
+| RF-DB-02, RF-DB-03 | Tabs em mobile (`useMediaQuery`) / grid em desktop, sem tabs                                                               | `VehicleSpotlight.tsx`                                                                               | `VehicleSpotlight.spec.tsx`                                                                                               | ✅     |
+| RF-DB-04           | Seção Despesas — `TcoBreakdownChart` reaproveitado; empty state quando `total===0`; estado de erro                         | `VehicleSpotlight.tsx` (`ExpensesSection`), `apps/web/src/components/charts/tco-breakdown-chart.tsx` | `VehicleSpotlight.spec.tsx`                                                                                               | ✅     |
+| RF-DB-05           | Seção Consumo — `FuelTrendChart` reaproveitado; empty state; estado de erro                                                | `VehicleSpotlight.tsx` (`FuelSection`), `apps/web/src/components/charts/fuel-trend-chart.tsx`        | — (padrão idêntico a `ExpensesSection`, coberto indiretamente via `analytics/page.spec.tsx` para o componente de gráfico) | 🟡     |
+| RF-DB-06           | Seção Docs — badges Vencido/Atenção/Pago, reconciliados com `GET /recurring-costs` do ano corrente                         | `VehicleSpotlight.tsx` (`DocsSection`)                                                               | `VehicleSpotlight.spec.tsx`                                                                                               | ✅     |
+| RF-DB-07           | Seção Histórico — últimas 20 despesas/manutenções + links "ver todos"                                                      | `VehicleSpotlight.tsx` (`HistorySection`)                                                            | `VehicleSpotlight.spec.tsx`                                                                                               | ✅     |
+| RF-DB-08           | `EmptyState` quando nenhum veículo em foco                                                                                 | `VehicleSpotlight.tsx` (`NoActiveVehicleEmptyState`)                                                 | `VehicleSpotlight.spec.tsx`                                                                                               | ✅     |
+| RF-DA-05           | Scroll suave até a Zona B ao clicar num `VehicleHealthCard`                                                                | `apps/web/src/app/(app)/dashboard/page.tsx` (`handleSelectVehicle`, `spotlightRef`)                  | `page.spec.tsx`                                                                                                           | ✅     |
+| RF-SH-03           | Tooltip do semáforo detalha os `flags` da RPC (sem recalcular pesos)                                                       | `apps/web/src/components/dashboard/VehicleHealthCard.tsx` (`flagsTooltip`, `FLAG_LABEL`)             | `VehicleHealthCard.spec.tsx`                                                                                              | ✅     |
+| CA-S3-03           | Badge de aviso no card quando `last_fuel_odometer_missing`                                                                 | `VehicleHealthCard.tsx`                                                                              | `VehicleHealthCard.spec.tsx`                                                                                              | ✅     |
+| —                  | `FleetAlertBar.type` estendido para `"document_overdue"` (sem mudança de lógica de estilo, já baseada em `days_until_due`) | `apps/web/src/components/dashboard/FleetAlertBar.tsx`                                                | `FleetAlertBar.spec.tsx` (suíte existente, sem regressão)                                                                 | ✅     |
 
 ### Validators (`packages/validators`) — Sprint 2/3
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| CA-S3-02 | `FleetAlertType` estendido com `"document_overdue"` | `packages/validators/src/dashboard.schemas.ts` | — (tipo puro) | 🔶 |
-| RF-DB-07 | `vehicleHistoryQuerySchema`/`VehicleHistoryItem` | `packages/validators/src/dashboard.schemas.ts` | — (tipo puro, consumido por `dashboard.service.spec.ts`) | 🔶 |
-| CA-S3-03 | `VehicleCard.last_fuel_odometer_missing` | `packages/validators/src/dashboard.schemas.ts` | — | 🔶 |
+| Req      | Descrição                                           | Código                                         | Teste                                                    | Status |
+| -------- | --------------------------------------------------- | ---------------------------------------------- | -------------------------------------------------------- | ------ |
+| CA-S3-02 | `FleetAlertType` estendido com `"document_overdue"` | `packages/validators/src/dashboard.schemas.ts` | — (tipo puro)                                            | 🔶     |
+| RF-DB-07 | `vehicleHistoryQuerySchema`/`VehicleHistoryItem`    | `packages/validators/src/dashboard.schemas.ts` | — (tipo puro, consumido por `dashboard.service.spec.ts`) | 🔶     |
+| CA-S3-03 | `VehicleCard.last_fuel_odometer_missing`            | `packages/validators/src/dashboard.schemas.ts` | —                                                        | 🔶     |
 
 **Fora de escopo desta rodada (documentado no changelog v1.3 da spec):** filtro de período de calendário (mês/trimestre/semestre/ano) no gráfico de Despesas por Categoria — RF-DB-04 reaproveita o breakdown por ciclo de odômetro ativo, já existente; layout master-detail horizontal em desktop (pendência já registrada na seção 14 da spec desde a v1.1); comparação multi-veículo na Zona B.
 
@@ -2541,25 +2549,25 @@ que o artefato ainda não existe no repositório.
 
 ### Backend (`apps/api`)
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-01 | `POST /fines` — valida veículo ativo do usuário e `amount_with_discount ≤ amount` antes do insert | `apps/api/src/modules/fines/fines.service.ts` (`create`) | `fines.service.spec.ts` | ✅ |
-| RF-02 | `GET /fines`, `GET /fines?status=`, `GET /fines/vehicle/:vehicleId` | `fines.service.ts` (`findAll`, `findByVehicle`) | `fines.service.spec.ts` | ✅ |
-| RF-03 | `GET /fines/:id` | `fines.service.ts` (`findOne`) | `fines.service.spec.ts` | ✅ |
-| RF-04 | `PATCH /fines/:id` — atualização parcial + preenchimento automático de `paid_at` | `fines.service.ts` (`update`) | `fines.service.spec.ts` | ✅ |
-| RF-05 | Grafo de transições de status, 409 para transição inválida | `fines.service.ts` (`update`, `FINE_STATUS_TRANSITIONS`) | `fines.service.spec.ts` | ✅ |
-| RF-06 | `DELETE /fines/:id` — soft-delete (R5) | `fines.service.ts` (`remove`) | `fines.service.spec.ts` | ✅ |
-| RF-07 | `countPending(userId, vehicleId?)` — método interno, sem rota própria | `fines.service.ts` (`countPending`) | — | ✅ |
-| S1, S2 | `SupabaseAuthGuard` + RLS (`auth.uid()`) em todas as rotas | `fines.controller.ts` | `fines.controller.spec.ts` | ✅ |
-| — | `amount_with_discount` ≤ `amount` (Regras de Negócio) | `fines.service.ts` (`create`, `update`) | `fines.service.spec.ts` | ✅ |
-| R-LED-02, R-LED-03, R-HUB-01, R-HUB-02 | Vinculação automática ao ledger via `ExpensesService.createFromSource`/`softDeleteBySource` | `fines.service.ts` (`create`, `update`, `remove`) | `fines.service.spec.ts` | ✅ |
-| Sprint 2, G-07 | Tela `/fines` no frontend — implementada em SPEC-20260722-005 | — | — | ✅ → ver SPEC-20260722-005 |
+| Req                                    | Descrição                                                                                         | Código                                                   | Teste                      | Status                     |
+| -------------------------------------- | ------------------------------------------------------------------------------------------------- | -------------------------------------------------------- | -------------------------- | -------------------------- |
+| RF-01                                  | `POST /fines` — valida veículo ativo do usuário e `amount_with_discount ≤ amount` antes do insert | `apps/api/src/modules/fines/fines.service.ts` (`create`) | `fines.service.spec.ts`    | ✅                         |
+| RF-02                                  | `GET /fines`, `GET /fines?status=`, `GET /fines/vehicle/:vehicleId`                               | `fines.service.ts` (`findAll`, `findByVehicle`)          | `fines.service.spec.ts`    | ✅                         |
+| RF-03                                  | `GET /fines/:id`                                                                                  | `fines.service.ts` (`findOne`)                           | `fines.service.spec.ts`    | ✅                         |
+| RF-04                                  | `PATCH /fines/:id` — atualização parcial + preenchimento automático de `paid_at`                  | `fines.service.ts` (`update`)                            | `fines.service.spec.ts`    | ✅                         |
+| RF-05                                  | Grafo de transições de status, 409 para transição inválida                                        | `fines.service.ts` (`update`, `FINE_STATUS_TRANSITIONS`) | `fines.service.spec.ts`    | ✅                         |
+| RF-06                                  | `DELETE /fines/:id` — soft-delete (R5)                                                            | `fines.service.ts` (`remove`)                            | `fines.service.spec.ts`    | ✅                         |
+| RF-07                                  | `countPending(userId, vehicleId?)` — método interno, sem rota própria                             | `fines.service.ts` (`countPending`)                      | —                          | ✅                         |
+| S1, S2                                 | `SupabaseAuthGuard` + RLS (`auth.uid()`) em todas as rotas                                        | `fines.controller.ts`                                    | `fines.controller.spec.ts` | ✅                         |
+| —                                      | `amount_with_discount` ≤ `amount` (Regras de Negócio)                                             | `fines.service.ts` (`create`, `update`)                  | `fines.service.spec.ts`    | ✅                         |
+| R-LED-02, R-LED-03, R-HUB-01, R-HUB-02 | Vinculação automática ao ledger via `ExpensesService.createFromSource`/`softDeleteBySource`       | `fines.service.ts` (`create`, `update`, `remove`)        | `fines.service.spec.ts`    | ✅                         |
+| Sprint 2, G-07                         | Tela `/fines` no frontend — implementada em SPEC-20260722-005                                     | —                                                        | —                          | ✅ → ver SPEC-20260722-005 |
 
 ### Validators (`packages/validators`)
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-01, RF-05 | `createFineInputSchema`/`updateFineInputSchema`/`FINE_STATUS_TRANSITIONS` | `packages/validators/src/fine.schemas.ts` | `packages/validators/src/fine.schemas.spec.ts` | ✅ |
+| Req          | Descrição                                                                 | Código                                    | Teste                                          | Status |
+| ------------ | ------------------------------------------------------------------------- | ----------------------------------------- | ---------------------------------------------- | ------ |
+| RF-01, RF-05 | `createFineInputSchema`/`updateFineInputSchema`/`FINE_STATUS_TRANSITIONS` | `packages/validators/src/fine.schemas.ts` | `packages/validators/src/fine.schemas.spec.ts` | ✅     |
 
 ---
 
@@ -2578,22 +2586,24 @@ que o artefato ainda não existe no repositório.
 
 ### Frontend (`apps/web`)
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-01 | KpiCards em `/fines`: total pendente (`pending`/`appealing`), multas vencidas (`pending` + `due_date < hoje`), total pago no ano (`paid` + `paid_at` no ano corrente) — calculados client-side | `apps/web/src/app/(app)/fines/page.tsx` (`computeKpis`) | `apps/web/src/app/(app)/fines/page.spec.tsx` | ✅ |
-| RF-02 | Filtro client-side por `activeVehicleId` quando `selectionMode === 'single'` (padrão de `expenses/page.tsx`) | `apps/web/src/app/(app)/fines/page.tsx` | — (mesmo padrão não testado isoladamente em `expenses/page.spec.tsx`) | ✅ |
-| RF-03 | Tabs "Lista" e "Em aberto" (`Tabs` de `@nave/ui`, variante `underline`); tab "Em aberto" filtra `status IN ('pending', 'appealing')` | `apps/web/src/app/(app)/fines/page.tsx` | `apps/web/src/app/(app)/fines/page.spec.tsx` (CA-04) | ✅ |
-| RF-04 | Ações de status inline na listagem respeitando `FINE_STATUS_TRANSITIONS`; estados terminais (`paid`/`cancelled`) sem controles de ação | `apps/web/src/app/(app)/fines/page.tsx` (`StatusActions`) | `apps/web/src/app/(app)/fines/page.spec.tsx` (CA-05, CA-06, CA-07) | ✅ |
-| RF-05 | Empty state com CTA "Registrar multa" → `/fines/new`; sem veículos → CTA para cadastrar veículo (R-FORM-07) | `apps/web/src/app/(app)/fines/page.tsx`, `apps/web/src/app/(app)/fines/new/page.tsx` | `apps/web/src/app/(app)/fines/page.spec.tsx` (CA-03), `apps/web/src/app/(app)/fines/new/page.spec.tsx` (CA-16) | ✅ |
-| RF-06 | Rota `/fines/new`: formulário de página própria com campos obrigatórios (vehicle_id, description, amount, occurred_at) + seção colapsável de campos opcionais; valida `createFineInputSchema`; redireciona para `/fines` em sucesso (R-FORM-04) | `apps/web/src/app/(app)/fines/new/page.tsx` | `apps/web/src/app/(app)/fines/new/page.spec.tsx` (CA-08, CA-09, CA-10) | ✅ |
-| RF-07 | Rota `/fines/[id]`: detalhe com todos os campos da entidade `Fine` + edição via `updateFineInputSchema` + ações de status (mesmas de RF-04); `invalidateQueries` sem redirect em sucesso | `apps/web/src/app/(app)/fines/[id]/page.tsx` | `apps/web/src/app/(app)/fines/[id]/page.spec.tsx` (CA-11, CA-12, CA-13) | ✅ |
-| RF-08 | Fechamento de dívida técnica: link "Multas" em `financial-subheader.tsx` → `/fines` (rota criada por esta spec encerra o 404 aceito em 2026-07-22) | `apps/web/src/components/layout/financial-subheader.tsx` (sem alteração — já correto), rota `apps/web/src/app/(app)/fines/page.tsx` | — (fechamento verificado por inspeção; sem teste de navegação E2E dedicado) | ✅ |
-| RF-09 | Fechamento de dívida técnica: botão "Ver" para `source_type='fine'` em `UpcomingCostsTab` (`expenses/page.tsx`) habilitado como link → `/fines/:source_id` | `apps/web/src/app/(app)/expenses/page.tsx` (`UpcomingCostsTab`) | — (sem teste dedicado; `expenses/page.spec.tsx` não cobre este ramo do ternário) | ✅ |
+| Req   | Descrição                                                                                                                                                                                                                                       | Código                                                                                                                              | Teste                                                                                                          | Status |
+| ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ------ |
+| RF-01 | KpiCards em `/fines`: total pendente (`pending`/`appealing`), multas vencidas (`pending` + `due_date < hoje`), total pago no ano (`paid` + `paid_at` no ano corrente) — calculados client-side                                                  | `apps/web/src/app/(app)/fines/page.tsx` (`computeKpis`)                                                                             | `apps/web/src/app/(app)/fines/page.spec.tsx`                                                                   | ✅     |
+| RF-02 | Filtro client-side por `activeVehicleId` quando `selectionMode === 'single'` (padrão de `expenses/page.tsx`)                                                                                                                                    | `apps/web/src/app/(app)/fines/page.tsx`                                                                                             | — (mesmo padrão não testado isoladamente em `expenses/page.spec.tsx`)                                          | ✅     |
+| RF-03 | Tabs "Lista" e "Em aberto" (`Tabs` de `@navestory/ui`, variante `underline`); tab "Em aberto" filtra `status IN ('pending', 'appealing')`                                                                                                       | `apps/web/src/app/(app)/fines/page.tsx`                                                                                             | `apps/web/src/app/(app)/fines/page.spec.tsx` (CA-04)                                                           | ✅     |
+| RF-04 | Ações de status inline na listagem respeitando `FINE_STATUS_TRANSITIONS`; estados terminais (`paid`/`cancelled`) sem controles de ação                                                                                                          | `apps/web/src/app/(app)/fines/page.tsx` (`StatusActions`)                                                                           | `apps/web/src/app/(app)/fines/page.spec.tsx` (CA-05, CA-06, CA-07)                                             | ✅     |
+| RF-05 | Empty state com CTA "Registrar multa" → `/fines/new`; sem veículos → CTA para cadastrar veículo (R-FORM-07)                                                                                                                                     | `apps/web/src/app/(app)/fines/page.tsx`, `apps/web/src/app/(app)/fines/new/page.tsx`                                                | `apps/web/src/app/(app)/fines/page.spec.tsx` (CA-03), `apps/web/src/app/(app)/fines/new/page.spec.tsx` (CA-16) | ✅     |
+| RF-06 | Rota `/fines/new`: formulário de página própria com campos obrigatórios (vehicle_id, description, amount, occurred_at) + seção colapsável de campos opcionais; valida `createFineInputSchema`; redireciona para `/fines` em sucesso (R-FORM-04) | `apps/web/src/app/(app)/fines/new/page.tsx`                                                                                         | `apps/web/src/app/(app)/fines/new/page.spec.tsx` (CA-08, CA-09, CA-10)                                         | ✅     |
+| RF-07 | Rota `/fines/[id]`: detalhe com todos os campos da entidade `Fine` + edição via `updateFineInputSchema` + ações de status (mesmas de RF-04); `invalidateQueries` sem redirect em sucesso                                                        | `apps/web/src/app/(app)/fines/[id]/page.tsx`                                                                                        | `apps/web/src/app/(app)/fines/[id]/page.spec.tsx` (CA-11, CA-12, CA-13)                                        | ✅     |
+| RF-08 | Fechamento de dívida técnica: link "Multas" em `financial-subheader.tsx` → `/fines` (rota criada por esta spec encerra o 404 aceito em 2026-07-22)                                                                                              | `apps/web/src/components/layout/financial-subheader.tsx` (sem alteração — já correto), rota `apps/web/src/app/(app)/fines/page.tsx` | — (fechamento verificado por inspeção; sem teste de navegação E2E dedicado)                               | ✅     |
+| RF-09 | Fechamento de dívida técnica: botão "Ver" para `source_type='fine'` em `UpcomingCostsTab` (`expenses/page.tsx`) habilitado como link → `/fines/:source_id`                                                                                      | `apps/web/src/app/(app)/expenses/page.tsx` (`UpcomingCostsTab`)                                                                     | — (sem teste dedicado; `expenses/page.spec.tsx` não cobre este ramo do ternário)                               | ✅     |
 
 ---
 
 ## SPEC-20260608-001 — Upcoming Costs — Próximas Despesas (approved)
+
 ## SPEC-20260608-002 — Expenses KPIs — Central Financeira (approved)
+
 ## SPEC-20260608-003 — Alertas de Custos Recorrentes (approved)
 
 > **2026-07-14 (T3.7):** As três specs foram implementadas juntas por compartilharem o mesmo
@@ -2605,6 +2615,7 @@ que o artefato ainda não existe no repositório.
 > `ExpensesService.getKpis()` com 3 somas em memória sobre `expenses` (mês corrente, mês anterior,
 > total histórico) mais uma chamada interna a `getUpcomingCosts(horizon=30)`, sem view/RPC nova no
 > banco (volume de dados por usuário não justifica). **Desvios deliberados de escopo:**
+>
 > - RF-06 (SPEC-608-001) — botão "Ver" nas rows da tab "Próximas": fica desabilitado com tooltip
 >   "Em breve" para as três origens (`maintenance`, `fine`, `recurring_cost`), não só para
 >   `recurring_cost` como a spec previa — `/maintenance` (Fase 4) e `/fines` (frontend, T3.6
@@ -2616,41 +2627,43 @@ que o artefato ainda não existe no repositório.
 >   introduziria um padrão arquitetural novo — nenhuma outra tela do projeto chama Supabase
 >   diretamente do browser, tudo passa pelo backend NestJS. Ambas as decisões ficam registradas
 >   aqui para quando a Fase 5 construir a sidebar.
-> RF-05 (badge de contagem na tab) usa `upcoming_30_days_count` já calculado pelo endpoint de KPIs
-> (evita uma segunda chamada de horizonte=30 só para o contador da tab).
+>   RF-05 (badge de contagem na tab) usa `upcoming_30_days_count` já calculado pelo endpoint de KPIs
+>   (evita uma segunda chamada de horizonte=30 só para o contador da tab).
 
 ### Backend (`apps/api`)
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| SPEC-608-001 RF-01, RF-02, RF-03, RNF-02 | `GET /expenses/upcoming?vehicle_id=&horizon_days=` — delega para RPC `get_upcoming_costs` | `apps/api/src/modules/expenses/expenses.service.ts` (`getUpcomingCosts`) | `expenses.service.spec.ts`, `.controller.spec.ts` | ✅ |
-| SPEC-608-001 RNF-03 | `horizon_days` fora de (30, 90) → 400 | `packages/validators/src/expense.schemas.ts` (`upcomingCostsQuerySchema`) | `expense.schemas.spec.ts` | ✅ |
-| SPEC-608-002 RF-01, RF-02 | `GET /expenses/kpis?vehicle_id=` — totais mês/mês anterior/histórico/upcoming | `expenses.service.ts` (`getKpis`, `sumExpensesAmount`) | `expenses.service.spec.ts` | ✅ |
-| SPEC-608-002 RF-03, CT-002/003/004 | `delta_percent` (null quando `prev=0`, arredondado a 1 casa) | `expenses.service.ts` (`getKpis`) | `expenses.service.spec.ts` | ✅ |
-| S1, S2 | `SupabaseAuthGuard` + RLS/`auth.uid()` (RPC `security definer` já valida por dentro) | `expenses.controller.ts` | `expenses.controller.spec.ts` | ✅ |
+| Req                                      | Descrição                                                                                 | Código                                                                    | Teste                                             | Status |
+| ---------------------------------------- | ----------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- | ------------------------------------------------- | ------ |
+| SPEC-608-001 RF-01, RF-02, RF-03, RNF-02 | `GET /expenses/upcoming?vehicle_id=&horizon_days=` — delega para RPC `get_upcoming_costs` | `apps/api/src/modules/expenses/expenses.service.ts` (`getUpcomingCosts`)  | `expenses.service.spec.ts`, `.controller.spec.ts` | ✅     |
+| SPEC-608-001 RNF-03                      | `horizon_days` fora de (30, 90) → 400                                                     | `packages/validators/src/expense.schemas.ts` (`upcomingCostsQuerySchema`) | `expense.schemas.spec.ts`                         | ✅     |
+| SPEC-608-002 RF-01, RF-02                | `GET /expenses/kpis?vehicle_id=` — totais mês/mês anterior/histórico/upcoming             | `expenses.service.ts` (`getKpis`, `sumExpensesAmount`)                    | `expenses.service.spec.ts`                        | ✅     |
+| SPEC-608-002 RF-03, CT-002/003/004       | `delta_percent` (null quando `prev=0`, arredondado a 1 casa)                              | `expenses.service.ts` (`getKpis`)                                         | `expenses.service.spec.ts`                        | ✅     |
+| S1, S2                                   | `SupabaseAuthGuard` + RLS/`auth.uid()` (RPC `security definer` já valida por dentro)      | `expenses.controller.ts`                                                  | `expenses.controller.spec.ts`                     | ✅     |
 
 ### Validators (`packages/validators`)
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| SPEC-608-001 RF-01, RF-03 | `upcomingCostsQuerySchema`, `UpcomingCostItem` | `packages/validators/src/expense.schemas.ts` | `expense.schemas.spec.ts` | ✅ |
-| SPEC-608-002 RF-01, RF-02 | `expenseKpisQuerySchema`, `ExpenseKpis` | `packages/validators/src/expense.schemas.ts` | `expense.schemas.spec.ts` | ✅ |
+| Req                       | Descrição                                      | Código                                       | Teste                     | Status |
+| ------------------------- | ---------------------------------------------- | -------------------------------------------- | ------------------------- | ------ |
+| SPEC-608-001 RF-01, RF-03 | `upcomingCostsQuerySchema`, `UpcomingCostItem` | `packages/validators/src/expense.schemas.ts` | `expense.schemas.spec.ts` | ✅     |
+| SPEC-608-002 RF-01, RF-02 | `expenseKpisQuerySchema`, `ExpenseKpis`        | `packages/validators/src/expense.schemas.ts` | `expense.schemas.spec.ts` | ✅     |
 
 ### Frontend (`apps/web`)
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| SPEC-608-002 RF-04, RF-05, RF-06 | KPI cards (total do mês + delta badge, próximos 30 dias, total histórico) | `apps/web/src/app/expenses/page.tsx` (`KpiCards`, `DeltaBadge`) | `page.spec.tsx` | ✅ |
-| SPEC-608-001 RF-04 | Tab "Lista"/"Próximas" com `?tab=proximas` na URL e badges de urgência por faixa de dias | `page.tsx` (`UpcomingCostsTab`, `urgencyBadge`) | `page.spec.tsx` | ✅ |
-| SPEC-608-001 RF-05 | Badge de contagem na tab "Próximas" (vermelho quando há item vencido) | `page.tsx` | `page.spec.tsx` | ✅ |
-| SPEC-608-003 RF-03 | Labels de `cost_type` (IPVA/CRLV/Seguro/Doc. Recorrente) | `page.tsx` (`SOURCE_TYPE_LABEL`) | — | ✅ |
-| SPEC-608-001 RF-06 | Navegação "Ver" para origem (`/maintenance`, `/fines`, `/settings`) | — | — | ⏳ |
-| SPEC-608-003 RF-02 | Badge numérico na sidebar | — | — | ⏳ |
+| Req                              | Descrição                                                                                | Código                                                          | Teste           | Status |
+| -------------------------------- | ---------------------------------------------------------------------------------------- | --------------------------------------------------------------- | --------------- | ------ |
+| SPEC-608-002 RF-04, RF-05, RF-06 | KPI cards (total do mês + delta badge, próximos 30 dias, total histórico)                | `apps/web/src/app/expenses/page.tsx` (`KpiCards`, `DeltaBadge`) | `page.spec.tsx` | ✅     |
+| SPEC-608-001 RF-04               | Tab "Lista"/"Próximas" com `?tab=proximas` na URL e badges de urgência por faixa de dias | `page.tsx` (`UpcomingCostsTab`, `urgencyBadge`)                 | `page.spec.tsx` | ✅     |
+| SPEC-608-001 RF-05               | Badge de contagem na tab "Próximas" (vermelho quando há item vencido)                    | `page.tsx`                                                      | `page.spec.tsx` | ✅     |
+| SPEC-608-003 RF-03               | Labels de `cost_type` (IPVA/CRLV/Seguro/Doc. Recorrente)                                 | `page.tsx` (`SOURCE_TYPE_LABEL`)                                | —               | ✅     |
+| SPEC-608-001 RF-06               | navegação "Ver" para origem (`/maintenance`, `/fines`, `/settings`)                 | —                                                               | —               | ⏳     |
+| SPEC-608-003 RF-02               | Badge numérico na sidebar                                                                | —                                                               | —               | ⏳     |
 
 ---
 
 ## SPEC-20260609-001 — CRUD de Custos Recorrentes (approved)
+
 ## SPEC-20260609-002 — Tab "Por Veículo" em /expenses (approved)
+
 ## SPEC-20260609-003 — Exportação CSV Consolidada (approved)
 
 > **2026-07-14 (T3.8):** As três specs foram implementadas juntas por serem incrementos pequenos
@@ -2688,29 +2701,29 @@ que o artefato ainda não existe no repositório.
 
 ### Backend (`apps/api`)
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| EPIC-FIN-001 R-LED-02, R-LED-05, R-HUB-01, R-HUB-02 | `ExpensesService.createFromSource()`/`softDeleteBySource()` — idempotente via checagem prévia + índice único parcial `uq_expenses_source` | `apps/api/src/modules/expenses/expenses.service.ts` | `expenses.service.spec.ts` | ✅ |
-| SPEC-609-001 RF-01 a RF-05, CT-REC-01 a 08 | `RecurringCostsModule` REST completo (`POST/GET/PATCH/DELETE /recurring-costs`) | `apps/api/src/modules/recurring-costs/recurring-costs.service.ts` | `recurring-costs.service.spec.ts`, `.controller.spec.ts` | ✅ |
-| SPEC-609-001 R-REC-01 | 409 em duplicata `(vehicle_id, cost_type, year)` — checagem sem filtro de `deleted_at` (bate com constraint full-table do banco) | `recurring-costs.service.ts` (`assertNoDuplicate`) | `recurring-costs.service.spec.ts` | ✅ |
-| SPEC-609-003 RF-01, RF-02 | `GET /expenses/export?from=&to=&vehicle_id=` — CSV consolidado com coluna Origem humanizada | `apps/api/src/modules/expenses/expenses.service.ts` (`exportConsolidatedCsv`) | `expenses.service.spec.ts`, `.controller.spec.ts` | ✅ |
-| — | `FinesModule` retrofitado para usar `createFromSource`/`softDeleteBySource` | `apps/api/src/modules/fines/fines.service.ts` | `fines.service.spec.ts` | ✅ |
-| S1, S2 | `SupabaseAuthGuard` + RLS (`auth.uid()`) em todas as rotas | `recurring-costs.controller.ts` | `recurring-costs.controller.spec.ts` | ✅ |
+| Req                                                 | Descrição                                                                                                                                 | Código                                                                        | Teste                                                    | Status |
+| --------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- | -------------------------------------------------------- | ------ |
+| EPIC-FIN-001 R-LED-02, R-LED-05, R-HUB-01, R-HUB-02 | `ExpensesService.createFromSource()`/`softDeleteBySource()` — idempotente via checagem prévia + índice único parcial `uq_expenses_source` | `apps/api/src/modules/expenses/expenses.service.ts`                           | `expenses.service.spec.ts`                               | ✅     |
+| SPEC-609-001 RF-01 a RF-05, CT-REC-01 a 08          | `RecurringCostsModule` REST completo (`POST/GET/PATCH/DELETE /recurring-costs`)                                                           | `apps/api/src/modules/recurring-costs/recurring-costs.service.ts`             | `recurring-costs.service.spec.ts`, `.controller.spec.ts` | ✅     |
+| SPEC-609-001 R-REC-01                               | 409 em duplicata `(vehicle_id, cost_type, year)` — checagem sem filtro de `deleted_at` (bate com constraint full-table do banco)          | `recurring-costs.service.ts` (`assertNoDuplicate`)                            | `recurring-costs.service.spec.ts`                        | ✅     |
+| SPEC-609-003 RF-01, RF-02                           | `GET /expenses/export?from=&to=&vehicle_id=` — CSV consolidado com coluna Origem humanizada                                               | `apps/api/src/modules/expenses/expenses.service.ts` (`exportConsolidatedCsv`) | `expenses.service.spec.ts`, `.controller.spec.ts`        | ✅     |
+| —                                                   | `FinesModule` retrofitado para usar `createFromSource`/`softDeleteBySource`                                                               | `apps/api/src/modules/fines/fines.service.ts`                                 | `fines.service.spec.ts`                                  | ✅     |
+| S1, S2                                              | `SupabaseAuthGuard` + RLS (`auth.uid()`) em todas as rotas                                                                                | `recurring-costs.controller.ts`                                               | `recurring-costs.controller.spec.ts`                     | ✅     |
 
 ### Validators (`packages/validators`)
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| SPEC-609-001 RF-02 | `createRecurringCostInputSchema`/`updateRecurringCostInputSchema`/`RECURRING_COST_TYPE_TO_CATEGORY` | `packages/validators/src/recurring-cost.schemas.ts` | `recurring-cost.schemas.spec.ts` | ✅ |
-| SPEC-609-003 RF-01 | `consolidatedExportQuerySchema` | `packages/validators/src/expense.schemas.ts` | `expense.schemas.spec.ts` | ✅ |
+| Req                | Descrição                                                                                           | Código                                              | Teste                            | Status |
+| ------------------ | --------------------------------------------------------------------------------------------------- | --------------------------------------------------- | -------------------------------- | ------ |
+| SPEC-609-001 RF-02 | `createRecurringCostInputSchema`/`updateRecurringCostInputSchema`/`RECURRING_COST_TYPE_TO_CATEGORY` | `packages/validators/src/recurring-cost.schemas.ts` | `recurring-cost.schemas.spec.ts` | ✅     |
+| SPEC-609-003 RF-01 | `consolidatedExportQuerySchema`                                                                     | `packages/validators/src/expense.schemas.ts`        | `expense.schemas.spec.ts`        | ✅     |
 
 ### Frontend (`apps/web`)
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| SPEC-609-002 RF-01, RF-02, RF-03, RF-05 | Tab "Por veículo" com accordion nativo, subtotal e total geral, ordenado por maior subtotal | `apps/web/src/app/expenses/page.tsx` (`ByVehicleTab`, `groupByVehicle`) | `page.spec.tsx` | ✅ |
-| SPEC-609-003 RF-03 | Botão "Exportar CSV Completo" | `page.tsx` | `page.spec.tsx` | ✅ |
-| SPEC-609-001 | Tela de CRUD de custos recorrentes | — | — | ⏳ (sem tela dedicada; gerenciamento fica para quando o Módulo de Documentos, G-08, existir) |
+| Req                                     | Descrição                                                                                   | Código                                                                  | Teste           | Status                                                                                       |
+| --------------------------------------- | ------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- | --------------- | -------------------------------------------------------------------------------------------- |
+| SPEC-609-002 RF-01, RF-02, RF-03, RF-05 | Tab "Por veículo" com accordion nativo, subtotal e total geral, ordenado por maior subtotal | `apps/web/src/app/expenses/page.tsx` (`ByVehicleTab`, `groupByVehicle`) | `page.spec.tsx` | ✅                                                                                           |
+| SPEC-609-003 RF-03                      | Botão "Exportar CSV Completo"                                                               | `page.tsx`                                                              | `page.spec.tsx` | ✅                                                                                           |
+| SPEC-609-001                            | Tela de CRUD de custos recorrentes                                                          | —                                                                       | —               | ⏳ (sem tela dedicada; gerenciamento fica para quando o Módulo de Documentos, G-08, existir) |
 
 ---
 
@@ -2730,17 +2743,17 @@ que o artefato ainda não existe no repositório.
 > **não foram atualizados** para o novo shape (`occurred_at` em vez de `date`) nesta rodada —
 > débito de teste explícito, sinalizado abaixo por RF, não fica implícito.
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-BD-01 a RF-BD-05 | Migration: `user_preferences.timezone`, rename+retype `expenses.date`→`occurred_at timestamptz`, retype `maintenances.scheduled_date`/`completion_date`, migração de dados existentes via JOIN, funções SQL dependentes ajustadas | `supabase/migrations/20260722060748_timezone_aware_datetime.sql` | ⏳ pendente (sem teste de migration automatizado) | ✅ |
-| RF-BK-01, RF-BK-02 | `PreferencesService`/`preferences.schemas.ts` — campo `timezone` (fallback `null` cru, validação IANA básica) | `apps/api/src/modules/preferences/preferences.service.ts`, `packages/validators/src/preferences.schemas.ts` | ⏳ pendente (spec não atualizado) | ✅ |
-| RF-BK-03, RF-BK-04, RF-BK-05 | `DashboardService` — `daysUntil`/`classifyDocument` recebem `tz`; `toCalendarDay`/`FALLBACK_TIMEZONE` em util compartilhado | `apps/api/src/modules/dashboard/dashboard.service.ts`, `apps/api/src/shared/utils/date.utils.ts` | ⏳ pendente (spec não atualizado) | ✅ |
-| RF-BK-06, RF-BK-08, RF-BK-09 | `ExpensesService.create/update` — aceita `occurred_at` (YYYY-MM-DD ou ISO+offset), duplicata por dia calendário no fuso do usuário, `future_date_warning` não-bloqueante | `apps/api/src/modules/expenses/expenses.service.ts` | ⏳ pendente (spec não atualizado) | ✅ |
-| RF-BK-07, RF-BK-10 | `MaintenancesService` — `scheduled_date`/`completion_date` timestamptz, `completion_date` > agora+24h rejeitado com 422 | `apps/api/src/modules/maintenances/maintenances.service.ts` | ⏳ pendente (spec não atualizado) | ✅ |
-| RF-FE-01, RF-FE-06 | Detecção automática silenciosa (`TimezoneDetector`), seletor de fuso com fusos IANA do Brasil obrigatórios | `apps/web/src/components/layout/timezone-detector.tsx`, `apps/web/src/app/(app)/settings/preferences/page.tsx` | ⏳ pendente | ✅ |
-| RF-FE-02 | Seção "Fuso horário" em `/settings/preferences` (exibir/editar/salvar) | `apps/web/src/app/(app)/settings/preferences/page.tsx` | ⏳ pendente | ✅ |
-| RF-FE-03, RF-FE-04 | Formulários de despesa/manutenção com `datetime-local`, preenchimento automático (despesa/agendamento) e campo `completion_date` manual em manutenção | `apps/web/src/app/(app)/expenses/new/page.tsx`, `apps/web/src/app/(app)/expenses/[id]/page.tsx`, `apps/web/src/app/(app)/maintenance/new/page.tsx`, `apps/web/src/app/(app)/maintenance/[id]/page.tsx`, `apps/web/src/lib/datetime-tz.ts` | ⏳ pendente | ✅ |
-| RF-FE-05 | Exibição de datas com `timeZone` explícito nas listagens de despesas e manutenções | `apps/web/src/app/(app)/expenses/page.tsx`, `apps/web/src/app/(app)/maintenance/page.tsx`, `apps/web/src/lib/datetime-tz.ts` | ⏳ pendente | 🟡 parcial (demais telas com data ainda usam formatação sem `timeZone` explícito) |
+| Req                          | Descrição                                                                                                                                                                                                                         | Código                                                                                                                                                                                                                                    | Teste                                             | Status                                                                            |
+| ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- | --------------------------------------------------------------------------------- |
+| RF-BD-01 a RF-BD-05          | Migration: `user_preferences.timezone`, rename+retype `expenses.date`→`occurred_at timestamptz`, retype `maintenances.scheduled_date`/`completion_date`, migração de dados existentes via JOIN, funções SQL dependentes ajustadas | `supabase/migrations/20260722060748_timezone_aware_datetime.sql`                                                                                                                                                                          | ⏳ pendente (sem teste de migration automatizado) | ✅                                                                                |
+| RF-BK-01, RF-BK-02           | `PreferencesService`/`preferences.schemas.ts` — campo `timezone` (fallback `null` cru, validação IANA básica)                                                                                                                     | `apps/api/src/modules/preferences/preferences.service.ts`, `packages/validators/src/preferences.schemas.ts`                                                                                                                               | ⏳ pendente (spec não atualizado)                 | ✅                                                                                |
+| RF-BK-03, RF-BK-04, RF-BK-05 | `DashboardService` — `daysUntil`/`classifyDocument` recebem `tz`; `toCalendarDay`/`FALLBACK_TIMEZONE` em util compartilhado                                                                                                       | `apps/api/src/modules/dashboard/dashboard.service.ts`, `apps/api/src/shared/utils/date.utils.ts`                                                                                                                                          | ⏳ pendente (spec não atualizado)                 | ✅                                                                                |
+| RF-BK-06, RF-BK-08, RF-BK-09 | `ExpensesService.create/update` — aceita `occurred_at` (YYYY-MM-DD ou ISO+offset), duplicata por dia calendário no fuso do usuário, `future_date_warning` não-bloqueante                                                          | `apps/api/src/modules/expenses/expenses.service.ts`                                                                                                                                                                                       | ⏳ pendente (spec não atualizado)                 | ✅                                                                                |
+| RF-BK-07, RF-BK-10           | `MaintenancesService` — `scheduled_date`/`completion_date` timestamptz, `completion_date` > agora+24h rejeitado com 422                                                                                                           | `apps/api/src/modules/maintenances/maintenances.service.ts`                                                                                                                                                                               | ⏳ pendente (spec não atualizado)                 | ✅                                                                                |
+| RF-FE-01, RF-FE-06           | Detecção automática silenciosa (`TimezoneDetector`), seletor de fuso com fusos IANA do Brasil obrigatórios                                                                                                                        | `apps/web/src/components/layout/timezone-detector.tsx`, `apps/web/src/app/(app)/settings/preferences/page.tsx`                                                                                                                            | ⏳ pendente                                       | ✅                                                                                |
+| RF-FE-02                     | Seção "Fuso horário" em `/settings/preferences` (exibir/editar/salvar)                                                                                                                                                            | `apps/web/src/app/(app)/settings/preferences/page.tsx`                                                                                                                                                                                    | ⏳ pendente                                       | ✅                                                                                |
+| RF-FE-03, RF-FE-04           | Formulários de despesa/manutenção com `datetime-local`, preenchimento automático (despesa/agendamento) e campo `completion_date` manual em manutenção                                                                             | `apps/web/src/app/(app)/expenses/new/page.tsx`, `apps/web/src/app/(app)/expenses/[id]/page.tsx`, `apps/web/src/app/(app)/maintenance/new/page.tsx`, `apps/web/src/app/(app)/maintenance/[id]/page.tsx`, `apps/web/src/lib/datetime-tz.ts` | ⏳ pendente                                       | ✅                                                                                |
+| RF-FE-05                     | Exibição de datas com `timeZone` explícito nas listagens de despesas e manutenções                                                                                                                                                | `apps/web/src/app/(app)/expenses/page.tsx`, `apps/web/src/app/(app)/maintenance/page.tsx`, `apps/web/src/lib/datetime-tz.ts`                                                                                                              | ⏳ pendente                                       | 🟡 parcial (demais telas com data ainda usam formatação sem `timeZone` explícito) |
 
 ---
 
@@ -2751,14 +2764,14 @@ que o artefato ainda não existe no repositório.
 > spec original). Implementado em 2026-07-20 durante a construção da suíte E2E
 > (SPEC-20260716-003 RF-E2E-05), que precisava validar o aviso no browser.
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-01 | `ExpenseResponse` estendido com `duplicate_warning?`, `duplicate_id?` | `apps/web/src/app/(app)/expenses/new/page.tsx` | `apps/web/src/app/(app)/expenses/new/page.spec.tsx` | ✅ |
-| RF-02 | `onSuccess` do mutation adia navegação quando `duplicate_warning === true`, guardando `duplicate_id` em estado | `apps/web/src/app/(app)/expenses/new/page.tsx` | `apps/web/src/app/(app)/expenses/new/page.spec.tsx` | ✅ |
-| RF-03 | Banner `role="alert"` com texto informativo, botão "Entendido" e link "Ver despesa duplicada" | `apps/web/src/app/(app)/expenses/new/page.tsx` | `apps/web/src/app/(app)/expenses/new/page.spec.tsx`, `apps/web/e2e/tests/expense-warnings.spec.ts` | ✅ |
-| RF-04 | Banner posicionado no padrão visual existente de alertas do formulário | `apps/web/src/app/(app)/expenses/new/page.tsx` | — (visual, não testado automaticamente) | ✅ |
-| RF-05 | Sem `duplicate_warning`, navegação direta para `/expenses` (comportamento preexistente preservado) | `apps/web/src/app/(app)/expenses/new/page.tsx` | `apps/web/src/app/(app)/expenses/new/page.spec.tsx` (demais testes do arquivo) | ✅ |
-| RF-06 | Banner de duplicata e alertas de erro (`fieldError`, `mutation.isError`) mutuamente exclusivos | `apps/web/src/app/(app)/expenses/new/page.tsx` | `apps/web/src/app/(app)/expenses/new/page.spec.tsx` | ✅ |
+| Req   | Descrição                                                                                                           | Código                                         | Teste                                                                                              | Status |
+| ----- | ------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- | -------------------------------------------------------------------------------------------------- | ------ |
+| RF-01 | `ExpenseResponse` estendido com `duplicate_warning?`, `duplicate_id?`                                               | `apps/web/src/app/(app)/expenses/new/page.tsx` | `apps/web/src/app/(app)/expenses/new/page.spec.tsx`                                                | ✅     |
+| RF-02 | `onSuccess` do mutation adia navegação quando `duplicate_warning === true`, guardando `duplicate_id` em estado | `apps/web/src/app/(app)/expenses/new/page.tsx` | `apps/web/src/app/(app)/expenses/new/page.spec.tsx`                                                | ✅     |
+| RF-03 | Banner `role="alert"` com texto informativo, botão "Entendido" e link "Ver despesa duplicada"                       | `apps/web/src/app/(app)/expenses/new/page.tsx` | `apps/web/src/app/(app)/expenses/new/page.spec.tsx`, `apps/web/e2e/tests/expense-warnings.spec.ts` | ✅     |
+| RF-04 | Banner posicionado no padrão visual existente de alertas do formulário                                              | `apps/web/src/app/(app)/expenses/new/page.tsx` | — (visual, não testado automaticamente)                                                            | ✅     |
+| RF-05 | Sem `duplicate_warning`, navegação direta para `/expenses` (comportamento preexistente preservado)             | `apps/web/src/app/(app)/expenses/new/page.tsx` | `apps/web/src/app/(app)/expenses/new/page.spec.tsx` (demais testes do arquivo)                     | ✅     |
+| RF-06 | Banner de duplicata e alertas de erro (`fieldError`, `mutation.isError`) mutuamente exclusivos                      | `apps/web/src/app/(app)/expenses/new/page.tsx` | `apps/web/src/app/(app)/expenses/new/page.spec.tsx`                                                | ✅     |
 
 ---
 
@@ -2796,67 +2809,67 @@ que o artefato ainda não existe no repositório.
 
 ### Configuração do Playwright (RF-CFG)
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-CFG-01 | `@playwright/test` adicionado como devDependency (`^1.61.1` ≥ 1.45) | `apps/web/package.json` | — | 🔶 |
-| RF-CFG-02 | `playwright.config.ts` com `testDir`, `baseURL`, `timeout 30s`, `retries CI?3:0`, relatório HTML | `apps/web/playwright.config.ts` | — | 🔶 |
-| RF-CFG-03 | Somente chromium configurado (firefox e webkit opcionais comentados) | `apps/web/playwright.config.ts` | — | 🔶 |
-| RF-CFG-04 | Scripts `e2e` e `e2e:ui` em `apps/web/package.json` | `apps/web/package.json` | — | 🔶 |
-| RF-CFG-05 | Estrutura `e2e/fixtures/`, `e2e/pages/`, `e2e/tests/` criada | `apps/web/e2e/` | — | 🔶 |
-| RF-CFG-06 | `e2e/fixtures/base.ts` exporta `test` e `expect` configurados com `storageState` | `apps/web/e2e/fixtures/base.ts` | — | 🔶 |
-| RF-CFG-07 | `e2e/.gitignore` ignorando `reports/`, `test-results/`, `playwright-report/`, `auth-state.json` | `apps/web/e2e/.gitignore` | — | 🔶 |
-| RF-CFG-08 | `e2e/global-setup.ts`: login via browser, salva cookies em `e2e/auth-state.json` | `apps/web/e2e/global-setup.ts` | — | 🔶 |
+| Req       | Descrição                                                                                        | Código                          | Teste | Status |
+| --------- | ------------------------------------------------------------------------------------------------ | ------------------------------- | ----- | ------ |
+| RF-CFG-01 | `@playwright/test` adicionado como devDependency (`^1.61.1` ≥ 1.45)                              | `apps/web/package.json`         | —     | 🔶     |
+| RF-CFG-02 | `playwright.config.ts` com `testDir`, `baseURL`, `timeout 30s`, `retries CI?3:0`, relatório HTML | `apps/web/playwright.config.ts` | —     | 🔶     |
+| RF-CFG-03 | Somente chromium configurado (firefox e webkit opcionais comentados)                             | `apps/web/playwright.config.ts` | —     | 🔶     |
+| RF-CFG-04 | Scripts `e2e` e `e2e:ui` em `apps/web/package.json`                                              | `apps/web/package.json`         | —     | 🔶     |
+| RF-CFG-05 | Estrutura `e2e/fixtures/`, `e2e/pages/`, `e2e/tests/` criada                                     | `apps/web/e2e/`                 | —     | 🔶     |
+| RF-CFG-06 | `e2e/fixtures/base.ts` exporta `test` e `expect` configurados com `storageState`                 | `apps/web/e2e/fixtures/base.ts` | —     | 🔶     |
+| RF-CFG-07 | `e2e/.gitignore` ignorando `reports/`, `test-results/`, `playwright-report/`, `auth-state.json`  | `apps/web/e2e/.gitignore`       | —     | 🔶     |
+| RF-CFG-08 | `e2e/global-setup.ts`: login via browser, salva cookies em `e2e/auth-state.json`                 | `apps/web/e2e/global-setup.ts`  | —     | 🔶     |
 
 ### Page Objects
 
-| Classe | Arquivo | RFs cobertos |
-|--------|---------|-------------|
-| `LoginPage` | `apps/web/e2e/pages/login.page.ts` | RF-E2E-01, RF-E2E-02, RF-E2E-03 |
-| `DashboardPage` | `apps/web/e2e/pages/dashboard.page.ts` | RF-E2E-02, RF-E2E-03 |
-| `ExpenseFormPage` | `apps/web/e2e/pages/expense-form.page.ts` | RF-E2E-04, RF-E2E-05, RF-E2E-07 |
-| `VehicleContextChipPage` | `apps/web/e2e/pages/vehicle-context-chip.page.ts` | RF-E2E-06, RF-E2E-07 |
+| Classe                   | Arquivo                                           | RFs cobertos                    |
+| ------------------------ | ------------------------------------------------- | ------------------------------- |
+| `LoginPage`              | `apps/web/e2e/pages/login.page.ts`                | RF-E2E-01, RF-E2E-02, RF-E2E-03 |
+| `DashboardPage`          | `apps/web/e2e/pages/dashboard.page.ts`            | RF-E2E-02, RF-E2E-03            |
+| `ExpenseFormPage`        | `apps/web/e2e/pages/expense-form.page.ts`         | RF-E2E-04, RF-E2E-05, RF-E2E-07 |
+| `VehicleContextChipPage` | `apps/web/e2e/pages/vehicle-context-chip.page.ts` | RF-E2E-06, RF-E2E-07            |
 
 ### Fluxos E2E Obrigatórios (RF-E2E)
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-E2E-01 | Acesso a rota privada sem sessão → redirect para `/login` (S1, CT-006) | `apps/web/middleware.ts` | `apps/web/e2e/tests/auth.spec.ts` | 🔶 implementado, não executado localmente |
-| RF-E2E-02 | Login com credenciais válidas → acesso ao dashboard (S1, CT-006) | `apps/web/src/app/(auth)/login/page.tsx` | `apps/web/e2e/tests/auth.spec.ts` | 🔶 implementado, não executado localmente |
-| RF-E2E-03 | Logout → redirect para `/login` e bloqueio de acesso (S1) | `apps/web/src/lib/auth/logout.ts` | `apps/web/e2e/tests/auth-logout.spec.ts` (projeto Playwright isolado `chromium-logout`, roda por último — `signOut` escopo "global" revoga o storageState compartilhado) | ✅ |
-| RF-E2E-04 | Odômetro fora de sequência → hard block com alerta na tela, sem salvar (R-ODO-01, CT-001) — spec corrigida em 2026-07-20 (changelog v1.1): descrevia soft warning (R1), comportamento real e testado é hard block via `strict=true`, exclusivo do fluxo web | `apps/web/src/app/(app)/expenses/new/page.tsx`, `apps/api/src/modules/expenses/expenses.service.ts` | `apps/web/e2e/tests/expense-warnings.spec.ts` | 🔶 implementado; requer `E2E_TEST_VEHICLE_PLATE` e odômetro pré-existente |
-| RF-E2E-05 | Duplicata → exibe banner de aviso (R2, CT-002) — banner implementado via SPEC-20260720-002 (RF-02, RF-03); teste destravado | `apps/web/src/app/(app)/expenses/new/page.tsx`, `apps/api/src/modules/expenses/expenses.service.ts` | `apps/web/e2e/tests/expense-warnings.spec.ts` | 🔶 implementado; requer `E2E_TEST_VEHICLE_PLATE` |
-| RF-E2E-06 | Clica no VehicleContextChip → abre dialog → seleciona veículo → chip atualiza (R-CTX-07) | `apps/web/src/components/layout/vehicle-context-chip.tsx` | `apps/web/e2e/tests/vehicle-context.spec.ts` | 🔶 implementado; requer `E2E_VEHICLE_B_PLATE` |
-| RF-E2E-07 | Troca de contexto propaga para `vehicle_id` do formulário de despesa (R-CTX-06, R-CTX-07) | `apps/web/src/lib/hooks/use-vehicle-context-field.ts` | `apps/web/e2e/tests/vehicle-context.spec.ts` | 🔶 implementado; requer `E2E_VEHICLE_A_PLATE` e `E2E_VEHICLE_B_PLATE` |
-| RF-E2E-08 | Login com credenciais inválidas → alerta de erro visível (`role="alert"`), URL permanece `/login` (S1) | `apps/web/src/app/(auth)/login/page.tsx` | `apps/web/e2e/tests/auth.spec.ts` | 🔶 implementado; aguarda secrets |
-| RF-E2E-09 | Cookie `nave_access_token` presente mas inválido em rota privada → redirect para `/login` (S1, CT-006) | `apps/web/middleware.ts` | `apps/web/e2e/tests/auth.spec.ts` | 🔶 implementado; aguarda secrets |
-| RF-E2E-10 | Usuário sem veículos: Dialog de contexto exibe "Nenhum veículo encontrado" e "Nenhum grupo encontrado" sem erro JS (R-CTX-07) | `apps/web/src/components/layout/vehicle-switcher-content.tsx` | `apps/web/e2e/tests/vehicle-context.spec.ts` | ⏸️ skip até `E2E_USER_NO_VEHICLES_EMAIL` ser provisionado como GitHub Secret e seed correspondente ser adicionado a `apps/api/scripts/seed-e2e.mjs` |
-| RF-E2E-11 | Busca sem resultado no Dialog de contexto: estado vazio exibido, Dialog continua respondendo após limpar busca (R-CTX-07) | `apps/web/src/components/layout/vehicle-switcher-content.tsx` | `apps/web/e2e/tests/vehicle-context.spec.ts` | 🔶 implementado; não depende de dado especial |
-| RF-E2E-12 | Visual regression leve — `toHaveScreenshot` de `dashboard`/`expenses`/`fines`, light/dark via `emulateMedia`, `maxDiffPixelRatio: 0.01` (C-DS-01) — escopo adicionado em `SPEC-20260716-003` v1.6, ver `specs/design-system/PLANO-MIGRACAO-SHOWCASE-INFRA.md` Rodada 5 | `apps/web/src/app/(app)/{dashboard,expenses,fines}/page.tsx` | `apps/web/e2e/tests/visual-regression.spec.ts` | 🔶 implementado; baseline PNG ainda não gerada (requer execução real com `--update-snapshots`, aguarda secrets/stack local — mesma pendência de RF-DATA-01) |
+| Req       | Descrição                                                                                                                                                                                                                                                              | Código                                                                                              | Teste                                                                                                                                                                    | Status                                                                                                                                                      |
+| --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| RF-E2E-01 | Acesso a rota privada sem sessão → redirect para `/login` (S1, CT-006)                                                                                                                                                                                                 | `apps/web/middleware.ts`                                                                            | `apps/web/e2e/tests/auth.spec.ts`                                                                                                                                        | 🔶 implementado, não executado localmente                                                                                                                   |
+| RF-E2E-02 | Login com credenciais válidas → acesso ao dashboard (S1, CT-006)                                                                                                                                                                                                       | `apps/web/src/app/(auth)/login/page.tsx`                                                            | `apps/web/e2e/tests/auth.spec.ts`                                                                                                                                        | 🔶 implementado, não executado localmente                                                                                                                   |
+| RF-E2E-03 | Logout → redirect para `/login` e bloqueio de acesso (S1)                                                                                                                                                                                                              | `apps/web/src/lib/auth/logout.ts`                                                                   | `apps/web/e2e/tests/auth-logout.spec.ts` (projeto Playwright isolado `chromium-logout`, roda por último — `signOut` escopo "global" revoga o storageState compartilhado) | ✅                                                                                                                                                          |
+| RF-E2E-04 | Odômetro fora de sequência → hard block com alerta na tela, sem salvar (R-ODO-01, CT-001) — spec corrigida em 2026-07-20 (changelog v1.1): descrevia soft warning (R1), comportamento real e testado é hard block via `strict=true`, exclusivo do fluxo web            | `apps/web/src/app/(app)/expenses/new/page.tsx`, `apps/api/src/modules/expenses/expenses.service.ts` | `apps/web/e2e/tests/expense-warnings.spec.ts`                                                                                                                            | 🔶 implementado; requer `E2E_TEST_VEHICLE_PLATE` e odômetro pré-existente                                                                                   |
+| RF-E2E-05 | Duplicata → exibe banner de aviso (R2, CT-002) — banner implementado via SPEC-20260720-002 (RF-02, RF-03); teste destravado                                                                                                                                            | `apps/web/src/app/(app)/expenses/new/page.tsx`, `apps/api/src/modules/expenses/expenses.service.ts` | `apps/web/e2e/tests/expense-warnings.spec.ts`                                                                                                                            | 🔶 implementado; requer `E2E_TEST_VEHICLE_PLATE`                                                                                                            |
+| RF-E2E-06 | Clica no VehicleContextChip → abre dialog → seleciona veículo → chip atualiza (R-CTX-07)                                                                                                                                                                               | `apps/web/src/components/layout/vehicle-context-chip.tsx`                                           | `apps/web/e2e/tests/vehicle-context.spec.ts`                                                                                                                             | 🔶 implementado; requer `E2E_VEHICLE_B_PLATE`                                                                                                               |
+| RF-E2E-07 | Troca de contexto propaga para `vehicle_id` do formulário de despesa (R-CTX-06, R-CTX-07)                                                                                                                                                                              | `apps/web/src/lib/hooks/use-vehicle-context-field.ts`                                               | `apps/web/e2e/tests/vehicle-context.spec.ts`                                                                                                                             | 🔶 implementado; requer `E2E_VEHICLE_A_PLATE` e `E2E_VEHICLE_B_PLATE`                                                                                       |
+| RF-E2E-08 | Login com credenciais inválidas → alerta de erro visível (`role="alert"`), URL permanece `/login` (S1)                                                                                                                                                                 | `apps/web/src/app/(auth)/login/page.tsx`                                                            | `apps/web/e2e/tests/auth.spec.ts`                                                                                                                                        | 🔶 implementado; aguarda secrets                                                                                                                            |
+| RF-E2E-09 | Cookie `navestory_access_token` presente mas inválido em rota privada → redirect para `/login` (S1, CT-006)                                                                                                                                                            | `apps/web/middleware.ts`                                                                            | `apps/web/e2e/tests/auth.spec.ts`                                                                                                                                        | 🔶 implementado; aguarda secrets                                                                                                                            |
+| RF-E2E-10 | Usuário sem veículos: Dialog de contexto exibe "Nenhum veículo encontrado" e "Nenhum grupo encontrado" sem erro JS (R-CTX-07)                                                                                                                                          | `apps/web/src/components/layout/vehicle-switcher-content.tsx`                                       | `apps/web/e2e/tests/vehicle-context.spec.ts`                                                                                                                             | ⏸️ skip até `E2E_USER_NO_VEHICLES_EMAIL` ser provisionado como GitHub Secret e seed correspondente ser adicionado a `apps/api/scripts/seed-e2e.mjs`         |
+| RF-E2E-11 | Busca sem resultado no Dialog de contexto: estado vazio exibido, Dialog continua respondendo após limpar busca (R-CTX-07)                                                                                                                                              | `apps/web/src/components/layout/vehicle-switcher-content.tsx`                                       | `apps/web/e2e/tests/vehicle-context.spec.ts`                                                                                                                             | 🔶 implementado; não depende de dado especial                                                                                                               |
+| RF-E2E-12 | Visual regression leve — `toHaveScreenshot` de `dashboard`/`expenses`/`fines`, light/dark via `emulateMedia`, `maxDiffPixelRatio: 0.01` (C-DS-01) — escopo adicionado em `SPEC-20260716-003` v1.6, ver `specs/design-system/PLANO-MIGRACAO-SHOWCASE-INFRA.md` Rodada 5 | `apps/web/src/app/(app)/{dashboard,expenses,fines}/page.tsx`                                        | `apps/web/e2e/tests/visual-regression.spec.ts`                                                                                                                           | 🔶 implementado; baseline PNG ainda não gerada (requer execução real com `--update-snapshots`, aguarda secrets/stack local — mesma pendência de RF-DATA-01) |
 
 ### Dados de Teste E2E (RF-DATA)
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-DATA-01 | Usuário de teste E2E via `E2E_USER_EMAIL`/`E2E_USER_PASSWORD`; credenciais nunca hardcodadas nos arquivos de teste | `apps/web/e2e/global-setup.ts`, `apps/web/e2e/fixtures/base.ts` | — | 🔶 implementado; secrets não provisionados |
-| RF-DATA-02 | Veículo(s) de teste pré-existente(s) via seed; placas identificadas por `E2E_TEST_VEHICLE_PLATE`, `E2E_VEHICLE_A_PLATE`, `E2E_VEHICLE_B_PLATE` | `apps/api/scripts/seed-e2e.mjs`, `apps/web/e2e/global-setup.ts` | — | 🔶 seed existe; execução em CI depende dos secrets |
-| RF-DATA-03 | Isolamento de estado entre testes (`afterEach` para remover registros criados) | `apps/web/e2e/tests/expense-warnings.spec.ts` | — | 🔶 implementado nos testes de despesa |
+| Req        | Descrição                                                                                                                                      | Código                                                          | Teste | Status                                             |
+| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- | ----- | -------------------------------------------------- |
+| RF-DATA-01 | Usuário de teste E2E via `E2E_USER_EMAIL`/`E2E_USER_PASSWORD`; credenciais nunca hardcodadas nos arquivos de teste                             | `apps/web/e2e/global-setup.ts`, `apps/web/e2e/fixtures/base.ts` | —     | 🔶 implementado; secrets não provisionados         |
+| RF-DATA-02 | Veículo(s) de teste pré-existente(s) via seed; placas identificadas por `E2E_TEST_VEHICLE_PLATE`, `E2E_VEHICLE_A_PLATE`, `E2E_VEHICLE_B_PLATE` | `apps/api/scripts/seed-e2e.mjs`, `apps/web/e2e/global-setup.ts` | —     | 🔶 seed existe; execução em CI depende dos secrets |
+| RF-DATA-03 | Isolamento de estado entre testes (`afterEach` para remover registros criados)                                                                 | `apps/web/e2e/tests/expense-warnings.spec.ts`                   | —     | 🔶 implementado nos testes de despesa              |
 
 ### Integração com CI (RF-CI)
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-CI-01 | Job `e2e` em `.github/workflows/ci.yml`, depende de `build`, executa em push para `main`/`master` OU PR com label `e2e` | `.github/workflows/ci.yml` | — | 🔶 |
-| RF-CI-02 | Instala chromium com `pnpm --filter @nave/web exec playwright install --with-deps chromium` | `.github/workflows/ci.yml` | — | 🔶 |
-| RF-CI-03 | Supabase local + API NestJS + Next.js iniciados antes dos testes; `wait-on` para health check | `.github/workflows/ci.yml` | — | 🔶 |
-| RF-CI-04 | Secrets `E2E_BASE_URL`, `E2E_USER_EMAIL`, `E2E_USER_PASSWORD` passados ao job via `env:` | `.github/workflows/ci.yml` | — | 🔶 |
-| RF-CI-05 | Relatório HTML publicado como artefato GitHub Actions em falha | `.github/workflows/ci.yml` | — | 🔶 |
-| RF-CI-06 | Falha nos testes E2E bloqueia o pipeline (job `e2e` no CI sem `continue-on-error`) | `.github/workflows/ci.yml` | — | 🔶 |
+| Req      | Descrição                                                                                                               | Código                     | Teste | Status |
+| -------- | ----------------------------------------------------------------------------------------------------------------------- | -------------------------- | ----- | ------ |
+| RF-CI-01 | Job `e2e` em `.github/workflows/ci.yml`, depende de `build`, executa em push para `main`/`master` OU PR com label `e2e` | `.github/workflows/ci.yml` | —     | 🔶     |
+| RF-CI-02 | Instala chromium com `pnpm --filter @navestory/web exec playwright install --with-deps chromium`                        | `.github/workflows/ci.yml` | —     | 🔶     |
+| RF-CI-03 | Supabase local + API NestJS + Next.js iniciados antes dos testes; `wait-on` para health check                           | `.github/workflows/ci.yml` | —     | 🔶     |
+| RF-CI-04 | Secrets `E2E_BASE_URL`, `E2E_USER_EMAIL`, `E2E_USER_PASSWORD` passados ao job via `env:`                                | `.github/workflows/ci.yml` | —     | 🔶     |
+| RF-CI-05 | Relatório HTML publicado como artefato GitHub Actions em falha                                                          | `.github/workflows/ci.yml` | —     | 🔶     |
+| RF-CI-06 | Falha nos testes E2E bloqueia o pipeline (job `e2e` no CI sem `continue-on-error`)                                      | `.github/workflows/ci.yml` | —     | 🔶     |
 
 ---
 
 ## SPEC-20260716-001 — Deploy Automatizado (CD) (approved)
 
-> Formaliza o pipeline de entrega contínua do Nave: deploy de preview automático de `apps/web`
+> Formaliza o pipeline de entrega contínua do navestory: deploy de preview automático de `apps/web`
 > no Vercel em cada PR; deploy de produção de `apps/web` automático via merge em `master`;
 > deploy de `apps/api` em staging automático + gate humano obrigatório para produção; job de
 > migrations Supabase CLI no pipeline; rollback documentado. Todos os jobs de deploy dependem
@@ -2868,20 +2881,20 @@ que o artefato ainda não existe no repositório.
 > changelog v1.1 da spec para as decisões de design tomadas durante a implementação (plataforma
 > Railway para `apps/api`, gate humano em `migrate-db`, gatilho `workflow_run`/`workflow_dispatch`).
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-01 | Deploy de preview de `apps/web` no Vercel em cada PR; URL postada como comentário | `.github/workflows/cd.yml` (`deploy-web-preview`) | — | 🟡 código pronto, não verificável sem conta Vercel |
-| RF-02 | Deploy de produção de `apps/web` no Vercel automático após merge em `master` com CI verde | `.github/workflows/cd.yml` (`deploy-web-prod`) | — | 🟡 código pronto, não verificável sem conta Vercel |
-| RF-03 | Deploy de `apps/api` em staging automático após merge em `master` com CI verde | `.github/workflows/cd.yml` (`deploy-api-staging`) | — | 🟡 código pronto, não verificável sem conta Railway |
-| RF-04 | Deploy de `apps/api` em produção exige aprovação manual via GitHub Environment `production` | `.github/workflows/cd.yml` (`environment: production` em `migrate-db`, herdado por `deploy-api-prod` via `needs`) | — | 🟡 código pronto, GitHub Environment ainda não criado/configurado |
-| RF-05 | Jobs de deploy dependem de lint, type-check, test e build (nenhum deploy em CI vermelho) | `.github/workflows/cd.yml` (gatilho `workflow_run` com `conclusion == 'success'` sobre o workflow CI) | — | ✅ |
-| RF-06 | Job `migrate-db` (Supabase CLI) executa após gate humano, antes do restart da API em produção | `.github/workflows/cd.yml` (`migrate-db`) | — | 🟡 código pronto, não verificável sem projeto Supabase de produção configurado no pipeline |
-| RF-07 | Rollback de `apps/web` via Vercel Instant Rollback em ≤ 2 min; procedimento em `docs/operations/runbooks.md` | `docs/operations/runbooks.md` | — | ✅ documentado |
-| RF-08 | Rollback de `apps/api` via re-dispatch do job de deploy apontando para tag anterior + gate humano | `.github/workflows/cd.yml` (gatilho `workflow_dispatch`), `docs/operations/runbooks.md` | — | ✅ documentado e implementado |
-| RF-09/S3 | Segredos de produção e staging como GitHub Secrets scoped por environment; nenhum hardcoded | `.github/workflows/cd.yml`, `docs/reference/environment-variables.md` (seção "GitHub Secrets — CD") | — | 🟡 workflow referencia os secrets corretos; secrets em si não provisionados |
-| RF-10/S3 | Variáveis de staging segregadas de produção; `SUPABASE_SERVICE_ROLE_KEY` de produção inacessível a jobs de staging | `.github/workflows/cd.yml` (`environment: staging` em `deploy-api-staging`, tokens Railway distintos) | — | 🟡 estrutura pronta, segregação real depende dos GitHub Environments serem criados |
-| RF-11 | Job `migrate-db` usa `supabase db push`; falha aborta deploy antes do restart | `.github/workflows/cd.yml` (`migrate-db`, `deploy-api-prod` via `needs`) | — | ✅ |
-| RF-12 | Status de deploy reportado como GitHub Deployment check no PR | `.github/workflows/cd.yml` (`github-comment: true` na action de preview) | — | 🟡 comentário de PR coberto; GitHub Deployments API formal não implementada (prioridade Média na spec) |
+| Req      | Descrição                                                                                                          | Código                                                                                                            | Teste | Status                                                                                                 |
+| -------- | ------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------- | ----- | ------------------------------------------------------------------------------------------------------ |
+| RF-01    | Deploy de preview de `apps/web` no Vercel em cada PR; URL postada como comentário                                  | `.github/workflows/cd.yml` (`deploy-web-preview`)                                                                 | —     | 🟡 código pronto, não verificável sem conta Vercel                                                     |
+| RF-02    | Deploy de produção de `apps/web` no Vercel automático após merge em `master` com CI verde                          | `.github/workflows/cd.yml` (`deploy-web-prod`)                                                                    | —     | 🟡 código pronto, não verificável sem conta Vercel                                                     |
+| RF-03    | Deploy de `apps/api` em staging automático após merge em `master` com CI verde                                     | `.github/workflows/cd.yml` (`deploy-api-staging`)                                                                 | —     | 🟡 código pronto, não verificável sem conta Railway                                                    |
+| RF-04    | Deploy de `apps/api` em produção exige aprovação manual via GitHub Environment `production`                        | `.github/workflows/cd.yml` (`environment: production` em `migrate-db`, herdado por `deploy-api-prod` via `needs`) | —     | 🟡 código pronto, GitHub Environment ainda não criado/configurado                                      |
+| RF-05    | Jobs de deploy dependem de lint, type-check, test e build (nenhum deploy em CI vermelho)                           | `.github/workflows/cd.yml` (gatilho `workflow_run` com `conclusion == 'success'` sobre o workflow CI)             | —     | ✅                                                                                                     |
+| RF-06    | Job `migrate-db` (Supabase CLI) executa após gate humano, antes do restart da API em produção                      | `.github/workflows/cd.yml` (`migrate-db`)                                                                         | —     | 🟡 código pronto, não verificável sem projeto Supabase de produção configurado no pipeline             |
+| RF-07    | Rollback de `apps/web` via Vercel Instant Rollback em ≤ 2 min; procedimento em `docs/operations/runbooks.md`       | `docs/operations/runbooks.md`                                                                                     | —     | ✅ documentado                                                                                         |
+| RF-08    | Rollback de `apps/api` via re-dispatch do job de deploy apontando para tag anterior + gate humano                  | `.github/workflows/cd.yml` (gatilho `workflow_dispatch`), `docs/operations/runbooks.md`                           | —     | ✅ documentado e implementado                                                                          |
+| RF-09/S3 | Segredos de produção e staging como GitHub Secrets scoped por environment; nenhum hardcoded                        | `.github/workflows/cd.yml`, `docs/reference/environment-variables.md` (seção "GitHub Secrets — CD")               | —     | 🟡 workflow referencia os secrets corretos; secrets em si não provisionados                            |
+| RF-10/S3 | Variáveis de staging segregadas de produção; `SUPABASE_SERVICE_ROLE_KEY` de produção inacessível a jobs de staging | `.github/workflows/cd.yml` (`environment: staging` em `deploy-api-staging`, tokens Railway distintos)             | —     | 🟡 estrutura pronta, segregação real depende dos GitHub Environments serem criados                     |
+| RF-11    | Job `migrate-db` usa `supabase db push`; falha aborta deploy antes do restart                                      | `.github/workflows/cd.yml` (`migrate-db`, `deploy-api-prod` via `needs`)                                          | —     | ✅                                                                                                     |
+| RF-12    | Status de deploy reportado como GitHub Deployment check no PR                                                      | `.github/workflows/cd.yml` (`github-comment: true` na action de preview)                                          | —     | 🟡 comentário de PR coberto; GitHub Deployments API formal não implementada (prioridade Média na spec) |
 
 ---
 
@@ -2900,38 +2913,38 @@ que o artefato ainda não existe no repositório.
 
 ### Error Tracking (Sentry)
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-01 | `@sentry/nestjs` integrado ao `apps/api`; DSN via `SENTRY_DSN`; ausência não impede inicialização | `apps/api/src/instrument.ts`, `apps/api/src/main.ts`, `apps/api/src/app.module.ts` | — | 🟡 código pronto, entrega ao Sentry não verificável sem conta real |
-| RF-02 | `@sentry/nextjs` integrado ao `apps/web`; DSN público via `NEXT_PUBLIC_SENTRY_DSN` (aplica S3) | `apps/web/instrumentation-client.ts`, `apps/web/instrumentation.ts` | — | 🟡 código pronto, idem |
-| RF-03 | `HttpExceptionFilter` captura exceções HTTP 5xx e não-HTTP via `Sentry.captureException()` | `apps/api/src/common/filters/http-exception.filter.ts` | `http-exception.filter.spec.ts` | ✅ |
-| RF-04 | Uncaught exceptions e unhandled rejections em `apps/api` capturados pelo `SentryModule` | `apps/api/src/instrument.ts` (`Sentry.init`), `apps/api/src/app.module.ts` (`SentryModule.forRoot()`) | — | 🟡 código pronto, captura automática do SDK não exercida em teste (exigiria matar o processo) |
-| RF-05 | Erros de renderização em `apps/web` capturados via `error.tsx` global integrado ao Sentry | `apps/web/src/app/global-error.tsx` | — | 🟡 código pronto, sem teste automatizado de error boundary |
-| RF-06 | Source maps enviados ao Sentry no build do CD (via `SENTRY_AUTH_TOKEN`); não expostos publicamente | `apps/web/next.config.ts` (`withSentryConfig`) | — | 🟡 build local verificado sem token (upload pulado); upload real depende de `SENTRY_AUTH_TOKEN` no CI/Vercel |
-| RF-07 | Alertas de issue nova/regressão configurados no painel Sentry (sem mudança de código) | — (config fora do repositório) | — | ⏳ depende da conta Sentry existir |
+| Req   | Descrição                                                                                          | Código                                                                                                | Teste                           | Status                                                                                                       |
+| ----- | -------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- | ------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| RF-01 | `@sentry/nestjs` integrado ao `apps/api`; DSN via `SENTRY_DSN`; ausência não impede inicialização  | `apps/api/src/instrument.ts`, `apps/api/src/main.ts`, `apps/api/src/app.module.ts`                    | —                               | 🟡 código pronto, entrega ao Sentry não verificável sem conta real                                           |
+| RF-02 | `@sentry/nextjs` integrado ao `apps/web`; DSN público via `NEXT_PUBLIC_SENTRY_DSN` (aplica S3)     | `apps/web/instrumentation-client.ts`, `apps/web/instrumentation.ts`                                   | —                               | 🟡 código pronto, idem                                                                                       |
+| RF-03 | `HttpExceptionFilter` captura exceções HTTP 5xx e não-HTTP via `Sentry.captureException()`         | `apps/api/src/common/filters/http-exception.filter.ts`                                                | `http-exception.filter.spec.ts` | ✅                                                                                                           |
+| RF-04 | Uncaught exceptions e unhandled rejections em `apps/api` capturados pelo `SentryModule`            | `apps/api/src/instrument.ts` (`Sentry.init`), `apps/api/src/app.module.ts` (`SentryModule.forRoot()`) | —                               | 🟡 código pronto, captura automática do SDK não exercida em teste (exigiria matar o processo)                |
+| RF-05 | Erros de renderização em `apps/web` capturados via `error.tsx` global integrado ao Sentry          | `apps/web/src/app/global-error.tsx`                                                                   | —                               | 🟡 código pronto, sem teste automatizado de error boundary                                                   |
+| RF-06 | Source maps enviados ao Sentry no build do CD (via `SENTRY_AUTH_TOKEN`); não expostos publicamente | `apps/web/next.config.ts` (`withSentryConfig`)                                                        | —                               | 🟡 build local verificado sem token (upload pulado); upload real depende de `SENTRY_AUTH_TOKEN` no CI/Vercel |
+| RF-07 | Alertas de issue nova/regressão configurados no painel Sentry (sem mudança de código)              | — (config fora do repositório)                                                                        | —                               | ⏳ depende da conta Sentry existir                                                                           |
 
 ### Logging Estruturado
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-08 | `nestjs-pino` + `pino-http` integrados; Pino substitui logger padrão do NestJS | `apps/api/src/common/logging/logger.module.ts`, `apps/api/src/main.ts` (`app.useLogger`) | build + suíte completa passando com o módulo importado | ✅ |
-| RF-09 | Cada log de request inclui `requestId`, `method`, `url`, `statusCode`, `responseTimeMs`, `userId` | `apps/api/src/common/logging/logger.module.ts` (`customAttributeKeys`, `customProps`) | — | 🟡 código pronto, sem teste de integração dedicado (exigiria supertest) |
-| RF-10 | JSON em produção; `pino-pretty` em desenvolvimento | `apps/api/src/common/logging/logger.module.ts` (`transport` condicional a `NODE_ENV`) | — | 🟡 código pronto, sem teste dedicado |
-| RF-11/S10 | Serializer de redaction: campos PII/sensíveis substituídos por `[REDACTED]`; lista em `PINO_REDACT_PATHS` | `apps/api/src/common/logging/redact-paths.ts` | `redact-paths.spec.ts` (CA-05) | ✅ |
-| RF-12/P3 | Zero `console.*` em `apps/api/src/`; fecha as 11 ocorrências residuais identificadas em IMPACTO-021 #6 | — (ausência verificada) | `grep -rn "console\." apps/api/src` sem resultado; `pnpm --filter api lint` (CA-03) | ✅ |
-| RF-13 | `requestId` propagado no header `X-Request-Id` e como tag no Sentry | `apps/api/src/common/interceptors/request-id.interceptor.ts` | — | 🟡 código pronto, sem teste dedicado |
+| Req       | Descrição                                                                                                 | Código                                                                                   | Teste                                                                               | Status                                                                  |
+| --------- | --------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| RF-08     | `nestjs-pino` + `pino-http` integrados; Pino substitui logger padrão do NestJS                            | `apps/api/src/common/logging/logger.module.ts`, `apps/api/src/main.ts` (`app.useLogger`) | build + suíte completa passando com o módulo importado                              | ✅                                                                      |
+| RF-09     | Cada log de request inclui `requestId`, `method`, `url`, `statusCode`, `responseTimeMs`, `userId`         | `apps/api/src/common/logging/logger.module.ts` (`customAttributeKeys`, `customProps`)    | —                                                                                   | 🟡 código pronto, sem teste de integração dedicado (exigiria supertest) |
+| RF-10     | JSON em produção; `pino-pretty` em desenvolvimento                                                        | `apps/api/src/common/logging/logger.module.ts` (`transport` condicional a `NODE_ENV`)    | —                                                                                   | 🟡 código pronto, sem teste dedicado                                    |
+| RF-11/S10 | Serializer de redaction: campos PII/sensíveis substituídos por `[REDACTED]`; lista em `PINO_REDACT_PATHS` | `apps/api/src/common/logging/redact-paths.ts`                                            | `redact-paths.spec.ts` (CA-05)                                                      | ✅                                                                      |
+| RF-12/P3  | Zero `console.*` em `apps/api/src/`; fecha as 11 ocorrências residuais identificadas em IMPACTO-021 #6    | — (ausência verificada)                                                                  | `grep -rn "console\." apps/api/src` sem resultado; `pnpm --filter api lint` (CA-03) | ✅                                                                      |
+| RF-13     | `requestId` propagado no header `X-Request-Id` e como tag no Sentry                                       | `apps/api/src/common/interceptors/request-id.interceptor.ts`                             | —                                                                                   | 🟡 código pronto, sem teste dedicado                                    |
 
 ### Health Check com Dependências
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-14 | `GET /health` executa ping mínimo no Supabase com timeout de 3s para verificar conectividade | `apps/api/src/health/health.controller.ts` | `health.controller.spec.ts` | ✅ |
-| RF-15 | Schema de resposta: `{ status, timestamp, checks: { supabase: { status, latencyMs, error? } } }` | `apps/api/src/health/health.controller.ts` | `health.controller.spec.ts` | ✅ |
-| RF-16 | Supabase acessível → `status: "ok"`, HTTP 200 | `apps/api/src/health/health.controller.ts` | `health.controller.spec.ts` (CA-06) | ✅ |
-| RF-17/P5 | Supabase inacessível/timeout → `status: "degraded"`, HTTP 200 (não 503) | `apps/api/src/health/health.controller.ts` | `health.controller.spec.ts` (CA-07) | ✅ |
-| RF-18/S5 | `checks.supabase.error` exibe apenas `"connection_timeout"` ou `"query_failed"`, nunca mensagem bruta de banco | `apps/api/src/health/health.controller.ts` | `health.controller.spec.ts` | ✅ |
-| RF-19/P5 | Timeout máximo total do endpoint: 5 segundos | `apps/api/src/health/health.controller.ts` (timeout de 3s da única dependência) | — | 🟡 garantido por construção (única dependência com timeout de 3s), sem teste de latência total dedicado |
-| RF-20 | `GET /health` permanece rota pública (sem `SupabaseAuthGuard`); comportamento preservado | `apps/api/src/health/health.controller.ts` (sem `@UseGuards`) | `health.controller.spec.ts` | ✅ |
+| Req      | Descrição                                                                                                      | Código                                                                          | Teste                               | Status                                                                                                  |
+| -------- | -------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- | ----------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| RF-14    | `GET /health` executa ping mínimo no Supabase com timeout de 3s para verificar conectividade                   | `apps/api/src/health/health.controller.ts`                                      | `health.controller.spec.ts`         | ✅                                                                                                      |
+| RF-15    | Schema de resposta: `{ status, timestamp, checks: { supabase: { status, latencyMs, error? } } }`               | `apps/api/src/health/health.controller.ts`                                      | `health.controller.spec.ts`         | ✅                                                                                                      |
+| RF-16    | Supabase acessível → `status: "ok"`, HTTP 200                                                                  | `apps/api/src/health/health.controller.ts`                                      | `health.controller.spec.ts` (CA-06) | ✅                                                                                                      |
+| RF-17/P5 | Supabase inacessível/timeout → `status: "degraded"`, HTTP 200 (não 503)                                        | `apps/api/src/health/health.controller.ts`                                      | `health.controller.spec.ts` (CA-07) | ✅                                                                                                      |
+| RF-18/S5 | `checks.supabase.error` exibe apenas `"connection_timeout"` ou `"query_failed"`, nunca mensagem bruta de banco | `apps/api/src/health/health.controller.ts`                                      | `health.controller.spec.ts`         | ✅                                                                                                      |
+| RF-19/P5 | Timeout máximo total do endpoint: 5 segundos                                                                   | `apps/api/src/health/health.controller.ts` (timeout de 3s da única dependência) | —                                   | 🟡 garantido por construção (única dependência com timeout de 3s), sem teste de latência total dedicado |
+| RF-20    | `GET /health` permanece rota pública (sem `SupabaseAuthGuard`); comportamento preservado                       | `apps/api/src/health/health.controller.ts` (sem `@UseGuards`)                   | `health.controller.spec.ts`         | ✅                                                                                                      |
 
 **Nota sobre RF-14:** o Supabase JS Client não expõe execução de SQL bruto (`SELECT 1`) sem uma
 function RPC dedicada; a implementação usa uma query `HEAD` (`select(..., { head: true })`) contra
@@ -2948,27 +2961,27 @@ depende da tabela `profiles` existir e ser acessível pelo client service role (
 
 ### Bloco A — Migração Tailwind v4
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-01 | Atualizar dependências: `tailwindcss@^4.x`, `@tailwindcss/postcss@^4.x`, remover `autoprefixer` | `apps/web/package.json` | `pnpm build` | ✅ |
-| RF-02 | Substituir plugin PostCSS de `tailwindcss` por `@tailwindcss/postcss` | `apps/web/postcss.config.js` | `pnpm build` | ✅ |
-| RF-03 | Converter `@tailwind base/components/utilities` para `@import "tailwindcss"` + `@config` no CSS | `apps/web/src/app/globals.css` | `pnpm build` sem erros de CSS | ✅ |
-| RF-04 | Validar `@tailwindcss/typography` compatível com v4 (mantido `^0.5.20`, já compatível) | `apps/web/package.json` | `pnpm build` | ✅ |
-| RF-05 | Build completo e dev sem erros em CI | — | `pnpm build` passando (validado localmente); CI confirma no próximo push | ✅ |
+| Req   | Descrição                                                                                       | Código                         | Teste                                                                    | Status |
+| ----- | ----------------------------------------------------------------------------------------------- | ------------------------------ | ------------------------------------------------------------------------ | ------ |
+| RF-01 | Atualizar dependências: `tailwindcss@^4.x`, `@tailwindcss/postcss@^4.x`, remover `autoprefixer` | `apps/web/package.json`        | `pnpm build`                                                             | ✅     |
+| RF-02 | Substituir plugin PostCSS de `tailwindcss` por `@tailwindcss/postcss`                           | `apps/web/postcss.config.js`   | `pnpm build`                                                             | ✅     |
+| RF-03 | Converter `@tailwind base/components/utilities` para `@import "tailwindcss"` + `@config` no CSS | `apps/web/src/app/globals.css` | `pnpm build` sem erros de CSS                                            | ✅     |
+| RF-04 | Validar `@tailwindcss/typography` compatível com v4 (mantido `^0.5.20`, já compatível)          | `apps/web/package.json`        | `pnpm build`                                                             | ✅     |
+| RF-05 | Build completo e dev sem erros em CI                                                            | —                              | `pnpm build` passando (validado localmente); CI confirma no próximo push | ✅     |
 
 ### Bloco B — Shell Mobile-First
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-06 | Sidebar como drawer/overlay em < 768 px (`translate-x-0`/`-translate-x-full`, `z-[250]`) | `apps/web/src/components/layout/sidebar.tsx` | `sidebar.spec.tsx` ("drawer mobile" — RF-06) | ✅ |
-| RF-07 | Backdrop com fechar ao clicar (`z-[240]`, `bg-black/60`) | `apps/web/src/components/layout/sidebar.tsx` | `sidebar.spec.tsx` (RF-07) | ✅ |
-| RF-08 | Fechar drawer via tecla `Esc` | `apps/web/src/components/layout/sidebar.tsx` | `sidebar.spec.tsx` (RF-08) | ✅ |
-| RF-09 | Fechar drawer ao navegar (via `usePathname`) | `apps/web/src/components/layout/sidebar.tsx` | ⏳ pendente (E2E em SPEC-20260716-003) | ✅ (código) |
-| RF-10 | Botão hamburger no header com ícone SVG inline (abrir/fechar) e `aria-label` dinâmico | `apps/web/src/components/layout/header.tsx` | `header.spec.tsx` (RF-10) | ✅ |
-| RF-11 | Header mobile-first: chip de contexto e Command Palette com `hidden md:flex` | `apps/web/src/components/layout/header.tsx` | `header.spec.tsx` (verifica renderização, cobertura visual pendente de revisão manual) | ✅ |
-| RF-12 | Layout shell com `md:pl-16`/`md:pl-64` responsivo em vez de `pl-16`/`pl-64` fixo | `apps/web/src/app/(app)/layout.tsx` | ⏳ pendente (E2E em SPEC-20260716-003) | ✅ (código) |
-| RF-13 | Touch targets mínimos 44 px (`min-h-[44px]`, revertido em `md:min-h-0`) nos itens do drawer e no hamburger | `sidebar.tsx`, `header.tsx` | ⏳ pendente (auditoria axe-core) | ✅ (código) |
-| RF-14 | `aria-expanded`/`aria-controls` no hamburger; drawer com `role="dialog"` e `aria-modal="true"` | `header.tsx`, `sidebar.tsx` | `header.spec.tsx` (RF-10/RF-14) | ✅ |
+| Req   | Descrição                                                                                                  | Código                                       | Teste                                                                                  | Status      |
+| ----- | ---------------------------------------------------------------------------------------------------------- | -------------------------------------------- | -------------------------------------------------------------------------------------- | ----------- |
+| RF-06 | Sidebar como drawer/overlay em < 768 px (`translate-x-0`/`-translate-x-full`, `z-[250]`)                   | `apps/web/src/components/layout/sidebar.tsx` | `sidebar.spec.tsx` ("drawer mobile" — RF-06)                                           | ✅          |
+| RF-07 | Backdrop com fechar ao clicar (`z-[240]`, `bg-black/60`)                                                   | `apps/web/src/components/layout/sidebar.tsx` | `sidebar.spec.tsx` (RF-07)                                                             | ✅          |
+| RF-08 | Fechar drawer via tecla `Esc`                                                                              | `apps/web/src/components/layout/sidebar.tsx` | `sidebar.spec.tsx` (RF-08)                                                             | ✅          |
+| RF-09 | Fechar drawer ao navegar (via `usePathname`)                                                          | `apps/web/src/components/layout/sidebar.tsx` | ⏳ pendente (E2E em SPEC-20260716-003)                                                 | ✅ (código) |
+| RF-10 | Botão hamburger no header com ícone SVG inline (abrir/fechar) e `aria-label` dinâmico                      | `apps/web/src/components/layout/header.tsx`  | `header.spec.tsx` (RF-10)                                                              | ✅          |
+| RF-11 | Header mobile-first: chip de contexto e Command Palette com `hidden md:flex`                               | `apps/web/src/components/layout/header.tsx`  | `header.spec.tsx` (verifica renderização, cobertura visual pendente de revisão manual) | ✅          |
+| RF-12 | Layout shell com `md:pl-16`/`md:pl-64` responsivo em vez de `pl-16`/`pl-64` fixo                           | `apps/web/src/app/(app)/layout.tsx`          | ⏳ pendente (E2E em SPEC-20260716-003)                                                 | ✅ (código) |
+| RF-13 | Touch targets mínimos 44 px (`min-h-[44px]`, revertido em `md:min-h-0`) nos itens do drawer e no hamburger | `sidebar.tsx`, `header.tsx`                  | ⏳ pendente (auditoria axe-core)                                                       | ✅ (código) |
+| RF-14 | `aria-expanded`/`aria-controls` no hamburger; drawer com `role="dialog"` e `aria-modal="true"`             | `header.tsx`, `sidebar.tsx`                  | `header.spec.tsx` (RF-10/RF-14)                                                        | ✅          |
 
 RNF-04 (foco preso no drawer + retorno ao hamburger ao fechar) implementado em `sidebar.tsx` (`useFocusTrap`) e `header.tsx` (ref + `useEffect` de retorno de foco) — cobertura automatizada dedicada ainda pendente (⏳), validado via leitura de código.
 
@@ -2991,22 +3004,22 @@ RNF-04 (foco preso no drawer + retorno ao hamburger ao fechar) implementado em `
 
 ### Backend — DashboardModule (extensão)
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-01 | `GET /dashboard/spending-highlights` — retorna até 3 categorias com maior `SUM(amount)` no mês corrente; params opcionais `vehicleId` e `groupIds[]`; `LIMIT 3` na query SQL (R-SUB-01, P7) | `apps/api/src/modules/dashboard/dashboard.controller.ts` (`getSpendingHighlights`), `dashboard.service.ts` (`getSpendingHighlights`), `supabase/migrations/20260722120000_category_spending_and_fines_status.sql` (`get_category_spending_highlights`) | `dashboard.service.spec.ts`, `dashboard.controller.spec.ts` | ✅ |
-| RF-02 | `GET /dashboard/fines-status` — retorna `{ status: 'none'\|'open'\|'overdue', count: number }` para multas ativas (`pending`/`appealing`, `deleted_at IS NULL`); vencida = `status='pending'` AND `due_date < hoje` (R-SUB-03, R-SUB-04) | `dashboard.controller.ts` (`getFinesStatus`), `dashboard.service.ts` (`getFinesStatus`), migração acima (`get_fines_status_summary`) | `dashboard.service.spec.ts`, `dashboard.controller.spec.ts` | ✅ |
-| RF-08 | Schemas Zod `categorySummaryQuerySchema` e `finesStatusResponseSchema` em `packages/validators` | `packages/validators/src/dashboard.schemas.ts` | — (schemas simples, cobertos indiretamente pelos testes de controller/service) | ✅ |
+| Req   | Descrição                                                                                                                                                                                                                                | Código                                                                                                                                                                                                                                                 | Teste                                                                          | Status |
+| ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------ | ------ |
+| RF-01 | `GET /dashboard/spending-highlights` — retorna até 3 categorias com maior `SUM(amount)` no mês corrente; params opcionais `vehicleId` e `groupIds[]`; `LIMIT 3` na query SQL (R-SUB-01, P7)                                              | `apps/api/src/modules/dashboard/dashboard.controller.ts` (`getSpendingHighlights`), `dashboard.service.ts` (`getSpendingHighlights`), `supabase/migrations/20260722120000_category_spending_and_fines_status.sql` (`get_category_spending_highlights`) | `dashboard.service.spec.ts`, `dashboard.controller.spec.ts`                    | ✅     |
+| RF-02 | `GET /dashboard/fines-status` — retorna `{ status: 'none'\|'open'\|'overdue', count: number }` para multas ativas (`pending`/`appealing`, `deleted_at IS NULL`); vencida = `status='pending'` AND `due_date < hoje` (R-SUB-03, R-SUB-04) | `dashboard.controller.ts` (`getFinesStatus`), `dashboard.service.ts` (`getFinesStatus`), migração acima (`get_fines_status_summary`)                                                                                                                   | `dashboard.service.spec.ts`, `dashboard.controller.spec.ts`                    | ✅     |
+| RF-08 | Schemas Zod `categorySummaryQuerySchema` e `finesStatusResponseSchema` em `packages/validators`                                                                                                                                          | `packages/validators/src/dashboard.schemas.ts`                                                                                                                                                                                                         | — (schemas simples, cobertos indiretamente pelos testes de controller/service) | ✅     |
 
 ### Frontend — Shell autenticado
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-03 | Componente `FinancialSubheader` montado no layout autenticado, com 44 px fixos, skeletons durante carregamento | `apps/web/src/components/layout/financial-subheader.tsx`, `apps/web/src/app/(app)/layout.tsx` | `financial-subheader.spec.tsx` | ✅ |
-| RF-04 | Chips de categoria: label, valor BRL formatado, badge de contagem; cada chip é `<Link>` para `/expenses?category=<slug>` com params de contexto (R-SUB-02, R-DS-04) | `financial-subheader.tsx` (`formatChipAmount`, `buildChipHref`) | `financial-subheader.spec.tsx` | ✅ |
-| RF-05 | Atalhos estáticos: "Despesas" → `/expenses`; "Manutenções" → `/maintenance` | `financial-subheader.tsx` | `financial-subheader.spec.tsx` | ✅ |
-| RF-06 | Link "Multas" → `/fines` com estilo dinâmico por status e badge de contagem (R-DS-01, R-SUB-03) | `financial-subheader.tsx` (`FINES_STYLE`, `NavBadge`) | `financial-subheader.spec.tsx` | ✅ |
-| RF-07 | Reatividade ao store: re-executa query de RF-01 ao mudar `activeVehicleId`/grupo ativo/`selectionMode` (R-CTX-01) — ver nota de adaptação acima | `financial-subheader.tsx` (query key inclui `selectionMode`, `activeVehicleId`, `activeGroupId`, `groupVehicleIds`) | `financial-subheader.spec.tsx` (caso RF-01/contexto `single`) | ✅ |
-| RF-09 | Separador visual (1 px × 18 px, `border/20`) entre área de chips e atalhos | `financial-subheader.tsx` | — (visual, sem asserção dedicada) | ✅ |
+| Req   | Descrição                                                                                                                                                           | Código                                                                                                              | Teste                                                         | Status |
+| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- | ------ |
+| RF-03 | Componente `FinancialSubheader` montado no layout autenticado, com 44 px fixos, skeletons durante carregamento                                                      | `apps/web/src/components/layout/financial-subheader.tsx`, `apps/web/src/app/(app)/layout.tsx`                       | `financial-subheader.spec.tsx`                                | ✅     |
+| RF-04 | Chips de categoria: label, valor BRL formatado, badge de contagem; cada chip é `<Link>` para `/expenses?category=<slug>` com params de contexto (R-SUB-02, R-DS-04) | `financial-subheader.tsx` (`formatChipAmount`, `buildChipHref`)                                                     | `financial-subheader.spec.tsx`                                | ✅     |
+| RF-05 | Atalhos estáticos: "Despesas" → `/expenses`; "Manutenções" → `/maintenance`                                                                                         | `financial-subheader.tsx`                                                                                           | `financial-subheader.spec.tsx`                                | ✅     |
+| RF-06 | Link "Multas" → `/fines` com estilo dinâmico por status e badge de contagem (R-DS-01, R-SUB-03)                                                                     | `financial-subheader.tsx` (`FINES_STYLE`, `NavBadge`)                                                               | `financial-subheader.spec.tsx`                                | ✅     |
+| RF-07 | Reatividade ao store: re-executa query de RF-01 ao mudar `activeVehicleId`/grupo ativo/`selectionMode` (R-CTX-01) — ver nota de adaptação acima                     | `financial-subheader.tsx` (query key inclui `selectionMode`, `activeVehicleId`, `activeGroupId`, `groupVehicleIds`) | `financial-subheader.spec.tsx` (caso RF-01/contexto `single`) | ✅     |
+| RF-09 | Separador visual (1 px × 18 px, `border/20`) entre área de chips e atalhos                                                                                          | `financial-subheader.tsx`                                                                                           | — (visual, sem asserção dedicada)                             | ✅     |
 
 ---
 
@@ -3032,81 +3045,81 @@ RNF-04 (foco preso no drawer + retorno ao hamburger ao fechar) implementado em `
 
 ### Algoritmo de Cálculo — RPC Postgres (RF-01 a RF-08, R-HS-01 a R-HS-09)
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-01 | Score parte de 100, piso 0; cálculo exclusivo da RPC `calculate_vehicle_health(p_vehicle_id)` (R-HS-01) | `supabase/migrations/20260712172020_analytics_functions.sql`, `20260712172220_fix_fleet_health_double_call.sql` | — | 🔶 |
-| RF-02 | Penalidade de manutenções pendentes: -5/item, máx -20 (R-HS-02) | `supabase/migrations/20260712172020_analytics_functions.sql` | — | 🔶 |
-| RF-03 | Penalidade adicional de manutenções vencidas: -15/item, máx -30, cumulativo com RF-02 (R-HS-03) | `supabase/migrations/20260712172020_analytics_functions.sql` | — | 🔶 |
-| RF-04 | Penalidade de documentos a vencer ≤30 dias: -10/doc (IPVA, Seguro, CRLV independentes); NULL ignorado (R-HS-04) | `supabase/migrations/20260712172020_analytics_functions.sql` | — | 🔶 |
-| RF-05 | Penalidade de alerta por km: `odometer >= next_maintenance_km - 1000` → -5 (R-HS-05) | `supabase/migrations/20260712172020_analytics_functions.sql` | — | 🔶 |
-| RF-06 | Penalidade de multas pendentes: -5/item, máx -15 (R-HS-06) | `supabase/migrations/20260712172020_analytics_functions.sql` | — | 🔶 |
-| RF-07 | RPC persiste `vehicles.health_score` como efeito colateral; coluna write-only pela RPC (R-HS-08, R-HS-09) | `supabase/migrations/20260712172020_analytics_functions.sql` | — | 🔶 |
-| RF-08 | `calculate_fleet_health` delega a `calculate_vehicle_health` por veículo; score de frota = média aritmética (R-HS-09) | `supabase/migrations/20260712172220_fix_fleet_health_double_call.sql` | — | 🔶 |
+| Req   | Descrição                                                                                                             | Código                                                                                                          | Teste | Status |
+| ----- | --------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- | ----- | ------ |
+| RF-01 | Score parte de 100, piso 0; cálculo exclusivo da RPC `calculate_vehicle_health(p_vehicle_id)` (R-HS-01)               | `supabase/migrations/20260712172020_analytics_functions.sql`, `20260712172220_fix_fleet_health_double_call.sql` | —     | 🔶     |
+| RF-02 | Penalidade de manutenções pendentes: -5/item, máx -20 (R-HS-02)                                                       | `supabase/migrations/20260712172020_analytics_functions.sql`                                                    | —     | 🔶     |
+| RF-03 | Penalidade adicional de manutenções vencidas: -15/item, máx -30, cumulativo com RF-02 (R-HS-03)                       | `supabase/migrations/20260712172020_analytics_functions.sql`                                                    | —     | 🔶     |
+| RF-04 | Penalidade de documentos a vencer ≤30 dias: -10/doc (IPVA, Seguro, CRLV independentes); NULL ignorado (R-HS-04)       | `supabase/migrations/20260712172020_analytics_functions.sql`                                                    | —     | 🔶     |
+| RF-05 | Penalidade de alerta por km: `odometer >= next_maintenance_km - 1000` → -5 (R-HS-05)                                  | `supabase/migrations/20260712172020_analytics_functions.sql`                                                    | —     | 🔶     |
+| RF-06 | Penalidade de multas pendentes: -5/item, máx -15 (R-HS-06)                                                            | `supabase/migrations/20260712172020_analytics_functions.sql`                                                    | —     | 🔶     |
+| RF-07 | RPC persiste `vehicles.health_score` como efeito colateral; coluna write-only pela RPC (R-HS-08, R-HS-09)             | `supabase/migrations/20260712172020_analytics_functions.sql`                                                    | —     | 🔶     |
+| RF-08 | `calculate_fleet_health` delega a `calculate_vehicle_health` por veículo; score de frota = média aritmética (R-HS-09) | `supabase/migrations/20260712172220_fix_fleet_health_double_call.sql`                                           | —     | 🔶     |
 
 ### Flags Emitidas (RF-09, RF-10, R-HS-10)
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-09 | Tipos canônicos: `maintenance_overdue` (count), `ipva_expiring`/`insurance_expiring`/`crlv_expiring` (days), `km_alert` (km_until), `fines_pending` (count) | `supabase/migrations/20260712172020_analytics_functions.sql` | — | 🔶 |
-| RF-10 | Pendentes não vencidas não emitem flag visual (R-HS-10) | `supabase/migrations/20260712172020_analytics_functions.sql` | — | 🔶 |
+| Req   | Descrição                                                                                                                                                   | Código                                                       | Teste | Status |
+| ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ | ----- | ------ |
+| RF-09 | Tipos canônicos: `maintenance_overdue` (count), `ipva_expiring`/`insurance_expiring`/`crlv_expiring` (days), `km_alert` (km_until), `fines_pending` (count) | `supabase/migrations/20260712172020_analytics_functions.sql` | —     | 🔶     |
+| RF-10 | Pendentes não vencidas não emitem flag visual (R-HS-10)                                                                                                     | `supabase/migrations/20260712172020_analytics_functions.sql` | —     | 🔶     |
 
 ### Semáforo (RF-11, RF-12, R-HS-07)
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-11 | Mapeamento canônico: 70-100 success "Em dia", 40-69 warning "Atenção", 0-39 danger "Crítico" (R-HS-07) | `packages/ui/src/components/vehicle-health-score.tsx` | `packages/ui/src/components/vehicle-health-score.test.tsx` | ✅ |
-| RF-12 | Score `undefined` exibe estado neutro "Calculando" sem erro | `packages/ui/src/components/vehicle-health-score.tsx` | `packages/ui/src/components/vehicle-health-score.test.tsx` | ✅ |
+| Req   | Descrição                                                                                              | Código                                                | Teste                                                      | Status |
+| ----- | ------------------------------------------------------------------------------------------------------ | ----------------------------------------------------- | ---------------------------------------------------------- | ------ |
+| RF-11 | Mapeamento canônico: 70-100 success "Em dia", 40-69 warning "Atenção", 0-39 danger "Crítico" (R-HS-07) | `packages/ui/src/components/vehicle-health-score.tsx` | `packages/ui/src/components/vehicle-health-score.test.tsx` | ✅     |
+| RF-12 | Score `undefined` exibe estado neutro "Calculando" sem erro                                            | `packages/ui/src/components/vehicle-health-score.tsx` | `packages/ui/src/components/vehicle-health-score.test.tsx` | ✅     |
 
 ### Frontend — Lista de Veículos `/vehicles` (RF-13 a RF-16)
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-13 | `VehicleHealthScore` exibido para cada veículo na listagem; score lido de `vehicles.health_score` (campo persistido pela última chamada à RPC) | `apps/web/src/app/(app)/vehicles/page.tsx` | `apps/web/src/app/(app)/vehicles/page.spec.tsx` | ✅ |
-| RF-14 | Listagem chama `calculate_fleet_health` via `GET /dashboard/fleet-health` ao carregar para atualizar os scores | `apps/web/src/app/(app)/vehicles/page.tsx`, `apps/api/src/modules/dashboard/dashboard.controller.ts`, `dashboard.service.ts` (`getFleetHealth`) | `apps/web/src/app/(app)/vehicles/page.spec.tsx`, `apps/api/src/modules/dashboard/dashboard.service.spec.ts`, `dashboard.controller.spec.ts` | ✅ |
-| RF-15 | Ordenação padrão por score ascendente (pior primeiro); score `undefined` vai para o fim | `apps/web/src/app/(app)/vehicles/page.tsx` (`byScoreAscending`) | `apps/web/src/app/(app)/vehicles/page.spec.tsx` | ✅ |
-| RF-16 | Falha da RPC de health não bloqueia a listagem; fallback para `undefined`/estado neutro | `apps/web/src/app/(app)/vehicles/page.tsx` (query de `fleet-health` sem `isError` tratado — falha só deixa `scores` vazio) | Verificado manualmente (query independente da de veículos, `retry: false`) | ✅ |
+| Req   | Descrição                                                                                                                                      | Código                                                                                                                                          | Teste                                                                                                                                       | Status |
+| ----- | ---------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| RF-13 | `VehicleHealthScore` exibido para cada veículo na listagem; score lido de `vehicles.health_score` (campo persistido pela última chamada à RPC) | `apps/web/src/app/(app)/vehicles/page.tsx`                                                                                                      | `apps/web/src/app/(app)/vehicles/page.spec.tsx`                                                                                             | ✅     |
+| RF-14 | Listagem chama `calculate_fleet_health` via `GET /dashboard/fleet-health` ao carregar para atualizar os scores                                 | `apps/web/src/app/(app)/vehicles/page.tsx`, `apps/api/src/modules/dashboard/dashboard.controller.ts`, `dashboard.service.ts` (`getFleetHealth`) | `apps/web/src/app/(app)/vehicles/page.spec.tsx`, `apps/api/src/modules/dashboard/dashboard.service.spec.ts`, `dashboard.controller.spec.ts` | ✅     |
+| RF-15 | Ordenação padrão por score ascendente (pior primeiro); score `undefined` vai para o fim                                                        | `apps/web/src/app/(app)/vehicles/page.tsx` (`byScoreAscending`)                                                                                 | `apps/web/src/app/(app)/vehicles/page.spec.tsx`                                                                                             | ✅     |
+| RF-16 | Falha da RPC de health não bloqueia a listagem; fallback para `undefined`/estado neutro                                                        | `apps/web/src/app/(app)/vehicles/page.tsx` (query de `fleet-health` sem `isError` tratado — falha só deixa `scores` vazio)                      | Verificado manualmente (query independente da de veículos, `retry: false`)                                                                  | ✅     |
 
 ### Frontend — Detalhe do Veículo `/vehicles/[id]` (RF-17 a RF-20)
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-17 | Seção "Saúde do Veículo" com `VehicleHealthScore` + lista de flags em linguagem humana | `apps/web/src/app/(app)/vehicles/[id]/page.tsx`, `apps/web/src/components/dashboard/VehicleHealthCard.tsx` (`FLAG_LABEL` reexportado) | `apps/web/src/app/(app)/vehicles/[id]/page.spec.tsx` | ✅ |
-| RF-18 | Flags vazio → "Nenhum problema identificado" em vez de lista vazia | `apps/web/src/app/(app)/vehicles/[id]/page.tsx` | `apps/web/src/app/(app)/vehicles/[id]/page.spec.tsx` | ✅ |
-| RF-19 | Página chama `calculate_vehicle_health(vehicle_id)` ao carregar para atualizar score individual | `apps/api/src/modules/vehicles/vehicles.controller.ts` (`GET /vehicles/:id/health`), `vehicles.service.ts` (`getHealth`), `apps/web/src/app/(app)/vehicles/[id]/page.tsx` | `apps/api/src/modules/vehicles/vehicles.service.spec.ts`, `vehicles.controller.spec.ts`, `apps/web/.../page.spec.tsx` | ✅ |
-| RF-20 | Links de ação por tipo de flag (manutenção vencida → `/maintenance`, docs → seção de docs, multas → `/fines`, km → `/maintenance/new`) | `apps/web/src/app/(app)/vehicles/[id]/page.tsx` (`flagActionLink`) | Verificado manualmente (flag `km_alert` com link funcional) | ✅ |
+| Req   | Descrição                                                                                                                              | Código                                                                                                                                                                    | Teste                                                                                                                 | Status |
+| ----- | -------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- | ------ |
+| RF-17 | Seção "Saúde do Veículo" com `VehicleHealthScore` + lista de flags em linguagem humana                                                 | `apps/web/src/app/(app)/vehicles/[id]/page.tsx`, `apps/web/src/components/dashboard/VehicleHealthCard.tsx` (`FLAG_LABEL` reexportado)                                     | `apps/web/src/app/(app)/vehicles/[id]/page.spec.tsx`                                                                  | ✅     |
+| RF-18 | Flags vazio → "Nenhum problema identificado" em vez de lista vazia                                                                     | `apps/web/src/app/(app)/vehicles/[id]/page.tsx`                                                                                                                           | `apps/web/src/app/(app)/vehicles/[id]/page.spec.tsx`                                                                  | ✅     |
+| RF-19 | Página chama `calculate_vehicle_health(vehicle_id)` ao carregar para atualizar score individual                                        | `apps/api/src/modules/vehicles/vehicles.controller.ts` (`GET /vehicles/:id/health`), `vehicles.service.ts` (`getHealth`), `apps/web/src/app/(app)/vehicles/[id]/page.tsx` | `apps/api/src/modules/vehicles/vehicles.service.spec.ts`, `vehicles.controller.spec.ts`, `apps/web/.../page.spec.tsx` | ✅     |
+| RF-20 | Links de ação por tipo de flag (manutenção vencida → `/maintenance`, docs → seção de docs, multas → `/fines`, km → `/maintenance/new`) | `apps/web/src/app/(app)/vehicles/[id]/page.tsx` (`flagActionLink`)                                                                                                        | Verificado manualmente (flag `km_alert` com link funcional)                                                           | ✅     |
 
 ---
 
 ## SPEC-20260730-002 — Melhorias de UX do Shell (approved)
 
-> Hold-to-confirm no logout da sidebar (1.000 ms + barra de progresso, R-NAV-05), dropdown de avatar no header com nome/email/link-settings/logout (R-NAV-08), persistência de `isSidebarCollapsed` em `sessionStorage` via `zustand persist` (R-NAV-06), reestruturação do layout para header full-width com sidebar in-flow em desktop (R-NAV-07) e, na extensão US-05, ícone sempre visível + destaque de rota ativa + remoção do texto "Nave" + largura calculada em runtime (fit-content + 20%) na sidebar expandida (R-NAV-09, R-NAV-10, R-NAV-11). Camadas: frontend. Regras: R-NAV-01, R-NAV-02, R-NAV-04, R-NAV-05, R-NAV-06, R-NAV-07, R-NAV-08, R-NAV-09, R-NAV-10, R-NAV-11. Segurança: S1.
+> Hold-to-confirm no logout da sidebar (1.000 ms + barra de progresso, R-NAV-05), dropdown de avatar no header com nome/email/link-settings/logout (R-NAV-08), persistência de `isSidebarCollapsed` em `sessionStorage` via `zustand persist` (R-NAV-06), reestruturação do layout para header full-width com sidebar in-flow em desktop (R-NAV-07) e, na extensão US-05, ícone sempre visível + destaque de rota ativa + remoção do texto "navestory" + largura calculada em runtime (fit-content + 20%) na sidebar expandida (R-NAV-09, R-NAV-10, R-NAV-11). Camadas: frontend. Regras: R-NAV-01, R-NAV-02, R-NAV-04, R-NAV-05, R-NAV-06, R-NAV-07, R-NAV-08, R-NAV-09, R-NAV-10, R-NAV-11. Segurança: S1.
 >
 > **2026-07-30 (criação):** Spec em `draft`. Nenhum dos requisitos implementado ainda.
 > **2026-07-31 (fechamento):** RF-01..RF-10 implementados e testados (código já existente antes desta atualização — matriz estava desatualizada). Spec estendida com US-05/RF-11..RF-14 e promovida a `approved`.
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-01 | Hold-to-confirm no botão "Sair" da sidebar (1.000 ms) substituindo clique simples | `apps/web/src/components/layout/sidebar.tsx` (`useHoldToConfirm`) | `apps/web/src/components/layout/sidebar.spec.tsx` (describe "hold-to-confirm logout") | ✅ |
-| RF-02 | Barra de progresso visual durante o hold; reset visual ao cancelar | `apps/web/src/components/layout/sidebar.tsx` (`isHoldingLogout`, barra `bg-danger/20`) | `apps/web/src/components/layout/sidebar.spec.tsx` (RF-02, RNF-03) | ✅ |
-| RF-03 | Eventos `onMouseDown`/`onTouchStart` (início) e `onMouseUp`/`onMouseLeave`/`onTouchEnd` (cancelamento); `logout()` invocado somente no callback interno de conclusão do timer | `apps/web/src/components/layout/sidebar.tsx` (`useHoldToConfirm`) | `apps/web/src/components/layout/sidebar.spec.tsx` (RF-03 ×2) | ✅ |
-| RF-04 | Componente `AvatarDropdown` no header: avatar (iniciais como fallback), nome, email, link `/settings/account`, botão "Sair" (clique simples) | `packages/ui/src/components/avatar-dropdown.tsx`; consumido em `apps/web/src/components/layout/header.tsx` | — (dispensado, ver `specs/TEST_DECISIONS.md`) | ✅ |
-| RF-05 | Dados de nome/email do `AvatarDropdown` obtidos via cache TanStack Query existente (sem nova chamada de API) | `apps/web/src/lib/hooks/use-current-user.ts` | — (dispensado) | ✅ |
-| RF-06 | `persist` do Zustand adicionado ao `useUIStore` (`sessionStorage`, key `"nave-ui-state"`, `partialize` apenas `isSidebarCollapsed`) | `apps/web/src/lib/stores/ui-store.ts` | `apps/web/src/lib/stores/ui-store.spec.ts` (describe "persistência de isSidebarCollapsed") | ✅ |
-| RF-07 | `logout()` remove `"nave-ui-state"` do `sessionStorage` junto com `"nave-dashboard-context"` | `apps/web/src/lib/auth/logout.ts` | `apps/web/src/lib/auth/logout.spec.ts` (RF-07) | ✅ |
-| RF-08 | Layout shell reestruturado para `flex-col` com `Header` como irmão de `flex` row (sidebar + conteúdo); elimina `md:pl-16`/`md:pl-64` | `apps/web/src/app/(app)/layout.tsx` | — (dispensado) | ✅ |
-| RF-09 | Sidebar: `md:static md:inset-auto` em desktop; `fixed inset-y-0 left-0` em mobile (R-NAV-01 preservada) | `apps/web/src/components/layout/sidebar.tsx` | — (dispensado) | ✅ |
-| RF-10 | `FinancialSubheader` sem ajuste adicional — continua dentro do `flex-1` de conteúdo | `apps/web/src/app/(app)/layout.tsx` | — (dispensado) | ✅ |
-| RF-11 | Ícone Lucide exibido junto ao label em todo item de navegação quando não colapsada | `apps/web/src/components/layout/sidebar.tsx` | `apps/web/src/components/layout/sidebar.spec.tsx` (RF-11) | ✅ |
-| RF-12 | Destaque visual + `aria-current="page"` na rota ativa (igualdade ou prefixo do `href`) | `apps/web/src/components/layout/sidebar.tsx` | `apps/web/src/components/layout/sidebar.spec.tsx` (RF-12 ×2) | ✅ |
-| RF-13 | Remoção do texto de marca "Nave" do topo da sidebar | `apps/web/src/components/layout/sidebar.tsx` | `apps/web/src/components/layout/sidebar.spec.tsx` (RF-13) | ✅ |
-| RF-14 | Largura da sidebar expandida calculada em runtime (`scrollWidth * 1.2`) via `ResizeObserver` | `apps/web/src/components/layout/sidebar.tsx` | — (dispensado, ver `specs/TEST_DECISIONS.md`) | ✅ |
+| Req   | Descrição                                                                                                                                                                     | Código                                                                                                     | Teste                                                                                      | Status |
+| ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ | ------ |
+| RF-01 | Hold-to-confirm no botão "Sair" da sidebar (1.000 ms) substituindo clique simples                                                                                             | `apps/web/src/components/layout/sidebar.tsx` (`useHoldToConfirm`)                                          | `apps/web/src/components/layout/sidebar.spec.tsx` (describe "hold-to-confirm logout")      | ✅     |
+| RF-02 | Barra de progresso visual durante o hold; reset visual ao cancelar                                                                                                            | `apps/web/src/components/layout/sidebar.tsx` (`isHoldingLogout`, barra `bg-danger/20`)                     | `apps/web/src/components/layout/sidebar.spec.tsx` (RF-02, RNF-03)                          | ✅     |
+| RF-03 | Eventos `onMouseDown`/`onTouchStart` (início) e `onMouseUp`/`onMouseLeave`/`onTouchEnd` (cancelamento); `logout()` invocado somente no callback interno de conclusão do timer | `apps/web/src/components/layout/sidebar.tsx` (`useHoldToConfirm`)                                          | `apps/web/src/components/layout/sidebar.spec.tsx` (RF-03 ×2)                               | ✅     |
+| RF-04 | Componente `AvatarDropdown` no header: avatar (iniciais como fallback), nome, email, link `/settings/account`, botão "Sair" (clique simples)                                  | `packages/ui/src/components/avatar-dropdown.tsx`; consumido em `apps/web/src/components/layout/header.tsx` | — (dispensado, ver `specs/TEST_DECISIONS.md`)                                              | ✅     |
+| RF-05 | Dados de nome/email do `AvatarDropdown` obtidos via cache TanStack Query existente (sem nova chamada de API)                                                                  | `apps/web/src/lib/hooks/use-current-user.ts`                                                               | — (dispensado)                                                                             | ✅     |
+| RF-06 | `persist` do Zustand adicionado ao `useUIStore` (`sessionStorage`, key `"navestory-ui-state"`, `partialize` apenas `isSidebarCollapsed`)                                      | `apps/web/src/lib/stores/ui-store.ts`                                                                      | `apps/web/src/lib/stores/ui-store.spec.ts` (describe "persistência de isSidebarCollapsed") | ✅     |
+| RF-07 | `logout()` remove `"navestory-ui-state"` do `sessionStorage` junto com `"navestory-dashboard-context"`                                                                        | `apps/web/src/lib/auth/logout.ts`                                                                          | `apps/web/src/lib/auth/logout.spec.ts` (RF-07)                                             | ✅     |
+| RF-08 | Layout shell reestruturado para `flex-col` com `Header` como irmão de `flex` row (sidebar + conteúdo); elimina `md:pl-16`/`md:pl-64`                                          | `apps/web/src/app/(app)/layout.tsx`                                                                        | — (dispensado)                                                                             | ✅     |
+| RF-09 | Sidebar: `md:static md:inset-auto` em desktop; `fixed inset-y-0 left-0` em mobile (R-NAV-01 preservada)                                                                       | `apps/web/src/components/layout/sidebar.tsx`                                                               | — (dispensado)                                                                             | ✅     |
+| RF-10 | `FinancialSubheader` sem ajuste adicional — continua dentro do `flex-1` de conteúdo                                                                                           | `apps/web/src/app/(app)/layout.tsx`                                                                        | — (dispensado)                                                                             | ✅     |
+| RF-11 | Ícone Lucide exibido junto ao label em todo item de navegação quando não colapsada                                                                                       | `apps/web/src/components/layout/sidebar.tsx`                                                               | `apps/web/src/components/layout/sidebar.spec.tsx` (RF-11)                                  | ✅     |
+| RF-12 | Destaque visual + `aria-current="page"` na rota ativa (igualdade ou prefixo do `href`)                                                                                        | `apps/web/src/components/layout/sidebar.tsx`                                                               | `apps/web/src/components/layout/sidebar.spec.tsx` (RF-12 ×2)                               | ✅     |
+| RF-13 | Remoção do texto de marca "navestory" do topo da sidebar                                                                                                                      | `apps/web/src/components/layout/sidebar.tsx`                                                               | `apps/web/src/components/layout/sidebar.spec.tsx` (RF-13)                                  | ✅     |
+| RF-14 | Largura da sidebar expandida calculada em runtime (`scrollWidth * 1.2`) via `ResizeObserver`                                                                                  | `apps/web/src/components/layout/sidebar.tsx`                                                               | — (dispensado, ver `specs/TEST_DECISIONS.md`)                                              | ✅     |
 
 ---
 
 ## SPEC-20260731-008 — Painel de Administração — Gestão de Roles e Interface Web (approved)
 
 > Implementa o escopo postergado da Fase 2 da SPEC-20260521-004: endpoint `PATCH
-> /admin/users/:id/role` (promoção/rebaixamento de admin, bloqueio de auto-rebaixamento S14,
+/admin/users/:id/role` (promoção/rebaixamento de admin, bloqueio de auto-rebaixamento S14,
 > auditoria obrigatória C2) e a primeira interface web `/admin` (usuários, audit logs, exclusão
 > de conta, gestão de role). `GET /admin/users` foi enriquecido para juntar `profiles`
 > (`name`/`deleted_at`) — campos exigidos por RF-10 que não existem no objeto de usuário bruto do
@@ -3120,44 +3133,44 @@ RNF-04 (foco preso no drawer + retorno ao hamburger ao fechar) implementado em `
 
 ### Backend — `PATCH /admin/users/:id/role` (RF-01 a RF-07)
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-01 | Endpoint novo protegido por `SupabaseAuthGuard` + `RolesGuard` + `@Roles("admin")` | `apps/api/src/modules/admin/admin.controller.ts` | `apps/api/src/modules/admin/admin.controller.spec.ts` | ✅ |
-| RF-02 | Body validado por Zod (`role: "admin" \| null`); fora do domínio → 400 | `apps/api/src/modules/admin/dto/update-user-role.dto.ts` | `apps/api/src/modules/admin/admin.controller.spec.ts` | ✅ |
-| RF-03 | Grava `app_metadata.role` via `auth.admin.updateUserById` (merge, não sobrescreve `app_metadata`) | `apps/api/src/modules/admin/admin-supabase.service.ts` | `apps/api/src/modules/admin/admin-supabase.service.spec.ts` | ✅ |
-| RF-04 | Bloqueio de auto-rebaixamento — 422, sem alteração, sem audit log (S14) | `apps/api/src/modules/admin/admin.service.ts` | `apps/api/src/modules/admin/admin.service.spec.ts` | ✅ |
-| RF-05 | Auditoria obrigatória: `ADMIN_ROLE_GRANTED`/`ADMIN_ROLE_REVOKED` com `role_before`/`role_after` (C2, S14) | `apps/api/src/modules/admin/admin.service.ts` | `apps/api/src/modules/admin/admin.service.spec.ts` | ✅ |
-| RF-06 | Usuário alvo inexistente → 404 | `apps/api/src/modules/admin/admin.service.ts`, `admin-supabase.service.ts` | `apps/api/src/modules/admin/admin.service.spec.ts`, `admin-supabase.service.spec.ts` | ✅ |
-| RF-07 | Idempotência: role igual antes/depois → sem update, sem audit log | `apps/api/src/modules/admin/admin.service.ts` | `apps/api/src/modules/admin/admin.service.spec.ts` | ✅ |
+| Req   | Descrição                                                                                                 | Código                                                                     | Teste                                                                                | Status |
+| ----- | --------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ | ------ |
+| RF-01 | Endpoint novo protegido por `SupabaseAuthGuard` + `RolesGuard` + `@Roles("admin")`                        | `apps/api/src/modules/admin/admin.controller.ts`                           | `apps/api/src/modules/admin/admin.controller.spec.ts`                                | ✅     |
+| RF-02 | Body validado por Zod (`role: "admin" \| null`); fora do domínio → 400                                    | `apps/api/src/modules/admin/dto/update-user-role.dto.ts`                   | `apps/api/src/modules/admin/admin.controller.spec.ts`                                | ✅     |
+| RF-03 | Grava `app_metadata.role` via `auth.admin.updateUserById` (merge, não sobrescreve `app_metadata`)         | `apps/api/src/modules/admin/admin-supabase.service.ts`                     | `apps/api/src/modules/admin/admin-supabase.service.spec.ts`                          | ✅     |
+| RF-04 | Bloqueio de auto-rebaixamento — 422, sem alteração, sem audit log (S14)                                   | `apps/api/src/modules/admin/admin.service.ts`                              | `apps/api/src/modules/admin/admin.service.spec.ts`                                   | ✅     |
+| RF-05 | Auditoria obrigatória: `ADMIN_ROLE_GRANTED`/`ADMIN_ROLE_REVOKED` com `role_before`/`role_after` (C2, S14) | `apps/api/src/modules/admin/admin.service.ts`                              | `apps/api/src/modules/admin/admin.service.spec.ts`                                   | ✅     |
+| RF-06 | Usuário alvo inexistente → 404                                                                            | `apps/api/src/modules/admin/admin.service.ts`, `admin-supabase.service.ts` | `apps/api/src/modules/admin/admin.service.spec.ts`, `admin-supabase.service.spec.ts` | ✅     |
+| RF-07 | Idempotência: role igual antes/depois → sem update, sem audit log                                         | `apps/api/src/modules/admin/admin.service.ts`                              | `apps/api/src/modules/admin/admin.service.spec.ts`                                   | ✅     |
 
 ### Frontend — rota `/admin` (RF-08 a RF-16)
 
-| Req | Descrição | Código | Teste | Status |
-|-----|-----------|--------|-------|--------|
-| RF-08 | Rota `/admin` com layout dedicado (sem sidebar de usuário comum) | `apps/web/src/app/admin/layout.tsx`, `admin-nav.tsx`, `page.tsx` | — | 🔶 |
-| RF-09 | Proteção client-side: middleware decodifica `app_metadata.role` do JWT e redireciona para `/403`; layout `/admin` repete a checagem (defesa em profundidade) | `apps/web/middleware.ts`, `apps/web/src/lib/auth/decode-jwt-role.ts`, `apps/web/src/app/admin/layout.tsx` | — | 🔶 |
-| RF-10 | Tabela de usuários paginada; colunas email/nome/role/status/cadastro; ações promover/revogar/excluir | `apps/web/src/app/admin/admin-users-table.tsx` | — | 🔶 |
-| RF-11 | Botão "Revogar admin" do próprio usuário desabilitado com tooltip (S14 — UI) | `apps/web/src/app/admin/admin-users-table.tsx` | — | 🔶 |
-| RF-12 | Tabela de audit logs paginada com filtros `user_id`/`from`/`to` refletidos na URL | `apps/web/src/app/admin/admin-audit-logs-table.tsx` | — | 🔶 |
-| RF-13 | Modal de confirmação de exclusão com email do usuário — usa `Dialog` de `@nave/ui` (não existe `AlertDialog` no pacote; ver changelog) | `apps/web/src/app/admin/delete-user-dialog.tsx` | — | 🔶 |
-| RF-14 | Loading state + toast de sucesso/erro na alteração de role; revalidação via `queryClient.invalidateQueries` | `apps/web/src/app/admin/admin-users-table.tsx` | — | 🔶 |
-| RF-15 | `Skeleton` de `@nave/ui` nos estados de carregamento | `apps/web/src/app/admin/admin-users-table.tsx`, `admin-audit-logs-table.tsx` | — | 🔶 |
-| RF-16 | `EmptyState` para listas vazias | `apps/web/src/app/admin/admin-users-table.tsx`, `admin-audit-logs-table.tsx` | — | 🔶 |
+| Req   | Descrição                                                                                                                                                    | Código                                                                                                    | Teste | Status |
+| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------- | ----- | ------ |
+| RF-08 | Rota `/admin` com layout dedicado (sem sidebar de usuário comum)                                                                                             | `apps/web/src/app/admin/layout.tsx`, `admin-nav.tsx`, `page.tsx`                                          | —     | 🔶     |
+| RF-09 | Proteção client-side: middleware decodifica `app_metadata.role` do JWT e redireciona para `/403`; layout `/admin` repete a checagem (defesa em profundidade) | `apps/web/middleware.ts`, `apps/web/src/lib/auth/decode-jwt-role.ts`, `apps/web/src/app/admin/layout.tsx` | —     | 🔶     |
+| RF-10 | Tabela de usuários paginada; colunas email/nome/role/status/cadastro; ações promover/revogar/excluir                                                         | `apps/web/src/app/admin/admin-users-table.tsx`                                                            | —     | 🔶     |
+| RF-11 | Botão "Revogar admin" do próprio usuário desabilitado com tooltip (S14 — UI)                                                                                 | `apps/web/src/app/admin/admin-users-table.tsx`                                                            | —     | 🔶     |
+| RF-12 | Tabela de audit logs paginada com filtros `user_id`/`from`/`to` refletidos na URL                                                                            | `apps/web/src/app/admin/admin-audit-logs-table.tsx`                                                       | —     | 🔶     |
+| RF-13 | Modal de confirmação de exclusão com email do usuário — usa `Dialog` de `@navestory/ui` (não existe `AlertDialog` no pacote; ver changelog)                  | `apps/web/src/app/admin/delete-user-dialog.tsx`                                                           | —     | 🔶     |
+| RF-14 | Loading state + toast de sucesso/erro na alteração de role; revalidação via `queryClient.invalidateQueries`                                                  | `apps/web/src/app/admin/admin-users-table.tsx`                                                            | —     | 🔶     |
+| RF-15 | `Skeleton` de `@navestory/ui` nos estados de carregamento                                                                                                    | `apps/web/src/app/admin/admin-users-table.tsx`, `admin-audit-logs-table.tsx`                              | —     | 🔶     |
+| RF-16 | `EmptyState` para listas vazias                                                                                                                              | `apps/web/src/app/admin/admin-users-table.tsx`, `admin-audit-logs-table.tsx`                              | —     | 🔶     |
 
 ---
 
 ## Requisitos do PRD sem Spec (Fase 2 / Backlog)
 
-| Req PRD | Descrição | Fase |
-|---------|-----------|------|
-| RF-008 | Push Notifications nativas (iOS/Android) | Fase 2 |
-| RF-009 | Configuração de horário de alerta por usuário | Fase 2 |
-| RF-010 | Exportação de dados pessoais (portabilidade LGPD Art. 18 II) | Fase 2 |
-| RF-012 | Hard delete automático de contas após 30 dias | Fase 2 |
-| RF-013 | MFA para operações administrativas | Fase 2 |
-| RF-015 | Export de manutenções em CSV | Fase 2 |
-| RF-016 | Versionamento de API (`/v1/`) | Fase 2 |
-| RF-017 | Export em XLSX nativo | Fase 2 |
+| Req PRD | Descrição                                                    | Fase   |
+| ------- | ------------------------------------------------------------ | ------ |
+| RF-008  | Push Notifications nativas (iOS/Android)                     | Fase 2 |
+| RF-009  | Configuração de horário de alerta por usuário                | Fase 2 |
+| RF-010  | Exportação de dados pessoais (portabilidade LGPD Art. 18 II) | Fase 2 |
+| RF-012  | Hard delete automático de contas após 30 dias                | Fase 2 |
+| RF-013  | MFA para operações administrativas                           | Fase 2 |
+| RF-015  | Export de manutenções em CSV                                 | Fase 2 |
+| RF-016  | Versionamento de API (`/v1/`)                                | Fase 2 |
+| RF-017  | Export em XLSX nativo                                        | Fase 2 |
 
 ---
 
@@ -3172,36 +3185,36 @@ RNF-04 (foco preso no drawer + retorno ao hamburger ao fechar) implementado em `
 > necessariamente a ausência de implementação; usar as seções de spec individuais acima para o
 > estado preciso por requisito.
 
-| Módulo | Arquivo de teste | Status |
-|--------|-----------------|--------|
-| `auth` | `apps/api/src/modules/auth/auth.service.spec.ts`, `auth.controller.spec.ts` + `apps/api/test/integration/auth.int-spec.ts` | ✅ (67 testes Jest, 90%+) |
-| `users` | `apps/api/src/modules/users/users.service.spec.ts`, `users.controller.spec.ts` | ✅ (Jest, 90%+) |
-| `admin` | `apps/api/src/modules/admin/admin.service.spec.ts`, `admin.controller.spec.ts`, `admin-supabase.service.spec.ts` | ✅ (Jest, 90%+; SPEC-20260731-008) |
-| `common/filters` | `apps/api/src/common/filters/http-exception.filter.spec.ts` | ✅ (Jest, 90%+) |
-| `common/guards` | `apps/api/src/common/guards/supabase-auth.guard.spec.ts`, `roles.guard.spec.ts` | ✅ (Jest, 90%+) |
-| `common/pipes` | `apps/api/src/common/pipes/zod-validation.pipe.spec.ts` | ✅ (Jest, 90%+) |
-| `shared/audit` | `apps/api/src/shared/audit/audit.service.spec.ts` | ✅ (Jest, 90%+) |
-| `validators/auth` | `packages/validators/src/auth.schemas.spec.ts` | ✅ (Vitest, 91%+) |
-| `web/middleware` | `apps/web/middleware.spec.ts` | ✅ (Vitest, 91%+) |
-| `web/use-activity-tracker` | `apps/web/src/lib/hooks/use-activity-tracker.spec.ts` | ✅ (Vitest, 91%+) |
-| `web/api-client` | `apps/web/src/lib/http/api-client.spec.ts` | ✅ (Vitest, 91%+) |
-| `web/form-draft-guard` | `apps/web/src/components/form-draft-guard.spec.ts` | ✅ (Vitest, 91%+) |
-| `web/password-input` | `apps/web/src/components/password-input.spec.ts` | ✅ (Vitest, 91%+) |
-| `integration/rls` | `apps/api/test/integration/rls.int-spec.ts` (CT-007) | ✅ (Jest + supabase local) |
-| `vehicles` | `apps/api/src/modules/vehicles/vehicles.service.spec.ts`, `vehicles.controller.spec.ts`, `value-objects/license-plate.vo.spec.ts` | 🔶 (os 3 arquivos confirmados por auditoria em 2026-07-31, rev. 60; módulo não usa padrão de repository separado, então não há `supabase-vehicle.repository.spec.ts` a esperar) |
-| `expenses` | `apps/api/src/modules/expenses/expenses.service.spec.ts` | 🔶 (service spec confirmado — cobre `getUpcomingCosts` e métodos de suporte; `expenses.controller.spec.ts` ainda ⏳; módulo não usa repository separado) |
-| `maintenances` | `apps/api/src/modules/maintenances/maintenances.service.spec.ts`, `maintenances.controller.spec.ts` | 🔶 (nome do módulo é `maintenances`, plural — corrigido nesta auditoria; ambos os arquivos confirmados em 2026-07-31, rev. 60; módulo não usa repository separado) |
-| `dashboard` | **Backend:** `apps/api/src/modules/dashboard/dashboard.service.spec.ts`, `dashboard.controller.spec.ts` (Jest) — **Frontend:** `apps/web/src/components/dashboard/FleetAlertBar.spec.tsx`, `VehicleHealthCard.spec.tsx`; `apps/web/src/app/(app)/dashboard/page.spec.tsx`; `apps/web/src/lib/stores/use-dashboard-store.spec.ts`; `apps/web/src/components/layout/action-dock.spec.tsx` (Vitest) | ✅ (Sprint 1, T5.1, 2026-07-15) |
-| `fines` | `apps/api/src/modules/fines/fines.service.spec.ts`, `fines.controller.spec.ts` | ✅ (Jest) |
-| `recurring-costs` | `apps/api/src/modules/recurring-costs/recurring-costs.service.spec.ts`, `.controller.spec.ts` | ✅ (Jest) |
-| `analytics` | `analytics.service.spec.ts`, `analytics.controller.spec.ts` | ⏳ |
-| `validators/vehicles` | `vehicles.schema.spec.ts` | ⏳ |
-| `validators/expenses` | `expenses.schema.spec.ts` | ⏳ |
-| `validators/maintenance` | `maintenance.schema.spec.ts` | ⏳ |
-| `validators/display-preferences` | `display-preferences.schema.spec.ts` | ⏳ |
-| `validators/categories` | `categories.schema.spec.ts` | ⏳ |
-| `validators/fines` | `packages/validators/src/fine.schemas.spec.ts` | ✅ (Vitest) |
-| `validators/recurring-costs` | `packages/validators/src/recurring-cost.schemas.spec.ts` | ✅ (Vitest) |
-| `web/expenses-new` | `apps/web/src/app/(app)/expenses/new/page.spec.tsx` | ✅ (Vitest — cobre SPEC-20260720-002 RF-01 a RF-06 e R-FORM-04/05/07, 2026-07-20) |
-| Edge Functions | Testes de integração via Supabase CLI | ⏳ (Fase 2) |
-| E2E (Playwright) | `apps/web/e2e/tests/auth.spec.ts`, `expense-warnings.spec.ts`, `vehicle-context.spec.ts`, `visual-regression.spec.ts` | 🔶 (SPEC-20260716-003 — arquivos existem; suíte não executada; aguarda GitHub Secrets provisionados; `visual-regression.spec.ts` também aguarda baseline PNG) |
+| Módulo                           | Arquivo de teste                                                                                                                                                                                                                                                                                                                                                                                 | Status                                                                                                                                                                          |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `auth`                           | `apps/api/src/modules/auth/auth.service.spec.ts`, `auth.controller.spec.ts` + `apps/api/test/integration/auth.int-spec.ts`                                                                                                                                                                                                                                                                       | ✅ (67 testes Jest, 90%+)                                                                                                                                                       |
+| `users`                          | `apps/api/src/modules/users/users.service.spec.ts`, `users.controller.spec.ts`                                                                                                                                                                                                                                                                                                                   | ✅ (Jest, 90%+)                                                                                                                                                                 |
+| `admin`                          | `apps/api/src/modules/admin/admin.service.spec.ts`, `admin.controller.spec.ts`, `admin-supabase.service.spec.ts`                                                                                                                                                                                                                                                                                 | ✅ (Jest, 90%+; SPEC-20260731-008)                                                                                                                                              |
+| `common/filters`                 | `apps/api/src/common/filters/http-exception.filter.spec.ts`                                                                                                                                                                                                                                                                                                                                      | ✅ (Jest, 90%+)                                                                                                                                                                 |
+| `common/guards`                  | `apps/api/src/common/guards/supabase-auth.guard.spec.ts`, `roles.guard.spec.ts`                                                                                                                                                                                                                                                                                                                  | ✅ (Jest, 90%+)                                                                                                                                                                 |
+| `common/pipes`                   | `apps/api/src/common/pipes/zod-validation.pipe.spec.ts`                                                                                                                                                                                                                                                                                                                                          | ✅ (Jest, 90%+)                                                                                                                                                                 |
+| `shared/audit`                   | `apps/api/src/shared/audit/audit.service.spec.ts`                                                                                                                                                                                                                                                                                                                                                | ✅ (Jest, 90%+)                                                                                                                                                                 |
+| `validators/auth`                | `packages/validators/src/auth.schemas.spec.ts`                                                                                                                                                                                                                                                                                                                                                   | ✅ (Vitest, 91%+)                                                                                                                                                               |
+| `web/middleware`                 | `apps/web/middleware.spec.ts`                                                                                                                                                                                                                                                                                                                                                                    | ✅ (Vitest, 91%+)                                                                                                                                                               |
+| `web/use-activity-tracker`       | `apps/web/src/lib/hooks/use-activity-tracker.spec.ts`                                                                                                                                                                                                                                                                                                                                            | ✅ (Vitest, 91%+)                                                                                                                                                               |
+| `web/api-client`                 | `apps/web/src/lib/http/api-client.spec.ts`                                                                                                                                                                                                                                                                                                                                                       | ✅ (Vitest, 91%+)                                                                                                                                                               |
+| `web/form-draft-guard`           | `apps/web/src/components/form-draft-guard.spec.ts`                                                                                                                                                                                                                                                                                                                                               | ✅ (Vitest, 91%+)                                                                                                                                                               |
+| `web/password-input`             | `apps/web/src/components/password-input.spec.ts`                                                                                                                                                                                                                                                                                                                                                 | ✅ (Vitest, 91%+)                                                                                                                                                               |
+| `integration/rls`                | `apps/api/test/integration/rls.int-spec.ts` (CT-007)                                                                                                                                                                                                                                                                                                                                             | ✅ (Jest + supabase local)                                                                                                                                                      |
+| `vehicles`                       | `apps/api/src/modules/vehicles/vehicles.service.spec.ts`, `vehicles.controller.spec.ts`, `value-objects/license-plate.vo.spec.ts`                                                                                                                                                                                                                                                                | 🔶 (os 3 arquivos confirmados por auditoria em 2026-07-31, rev. 60; módulo não usa padrão de repository separado, então não há `supabase-vehicle.repository.spec.ts` a esperar) |
+| `expenses`                       | `apps/api/src/modules/expenses/expenses.service.spec.ts`                                                                                                                                                                                                                                                                                                                                         | 🔶 (service spec confirmado — cobre `getUpcomingCosts` e métodos de suporte; `expenses.controller.spec.ts` ainda ⏳; módulo não usa repository separado)                        |
+| `maintenances`                   | `apps/api/src/modules/maintenances/maintenances.service.spec.ts`, `maintenances.controller.spec.ts`                                                                                                                                                                                                                                                                                              | 🔶 (nome do módulo é `maintenances`, plural — corrigido nesta auditoria; ambos os arquivos confirmados em 2026-07-31, rev. 60; módulo não usa repository separado)              |
+| `dashboard`                      | **Backend:** `apps/api/src/modules/dashboard/dashboard.service.spec.ts`, `dashboard.controller.spec.ts` (Jest) — **Frontend:** `apps/web/src/components/dashboard/FleetAlertBar.spec.tsx`, `VehicleHealthCard.spec.tsx`; `apps/web/src/app/(app)/dashboard/page.spec.tsx`; `apps/web/src/lib/stores/use-dashboard-store.spec.ts`; `apps/web/src/components/layout/action-dock.spec.tsx` (Vitest) | ✅ (Sprint 1, T5.1, 2026-07-15)                                                                                                                                                 |
+| `fines`                          | `apps/api/src/modules/fines/fines.service.spec.ts`, `fines.controller.spec.ts`                                                                                                                                                                                                                                                                                                                   | ✅ (Jest)                                                                                                                                                                       |
+| `recurring-costs`                | `apps/api/src/modules/recurring-costs/recurring-costs.service.spec.ts`, `.controller.spec.ts`                                                                                                                                                                                                                                                                                                    | ✅ (Jest)                                                                                                                                                                       |
+| `analytics`                      | `analytics.service.spec.ts`, `analytics.controller.spec.ts`                                                                                                                                                                                                                                                                                                                                      | ⏳                                                                                                                                                                              |
+| `validators/vehicles`            | `vehicles.schema.spec.ts`                                                                                                                                                                                                                                                                                                                                                                        | ⏳                                                                                                                                                                              |
+| `validators/expenses`            | `expenses.schema.spec.ts`                                                                                                                                                                                                                                                                                                                                                                        | ⏳                                                                                                                                                                              |
+| `validators/maintenance`         | `maintenance.schema.spec.ts`                                                                                                                                                                                                                                                                                                                                                                     | ⏳                                                                                                                                                                              |
+| `validators/display-preferences` | `display-preferences.schema.spec.ts`                                                                                                                                                                                                                                                                                                                                                             | ⏳                                                                                                                                                                              |
+| `validators/categories`          | `categories.schema.spec.ts`                                                                                                                                                                                                                                                                                                                                                                      | ⏳                                                                                                                                                                              |
+| `validators/fines`               | `packages/validators/src/fine.schemas.spec.ts`                                                                                                                                                                                                                                                                                                                                                   | ✅ (Vitest)                                                                                                                                                                     |
+| `validators/recurring-costs`     | `packages/validators/src/recurring-cost.schemas.spec.ts`                                                                                                                                                                                                                                                                                                                                         | ✅ (Vitest)                                                                                                                                                                     |
+| `web/expenses-new`               | `apps/web/src/app/(app)/expenses/new/page.spec.tsx`                                                                                                                                                                                                                                                                                                                                              | ✅ (Vitest — cobre SPEC-20260720-002 RF-01 a RF-06 e R-FORM-04/05/07, 2026-07-20)                                                                                               |
+| Edge Functions                   | Testes de integração via Supabase CLI                                                                                                                                                                                                                                                                                                                                                            | ⏳ (Fase 2)                                                                                                                                                                     |
+| E2E (Playwright)                 | `apps/web/e2e/tests/auth.spec.ts`, `expense-warnings.spec.ts`, `vehicle-context.spec.ts`, `visual-regression.spec.ts`                                                                                                                                                                                                                                                                            | 🔶 (SPEC-20260716-003 — arquivos existem; suíte não executada; aguarda GitHub Secrets provisionados; `visual-regression.spec.ts` também aguarda baseline PNG)                   |

@@ -20,28 +20,27 @@ test.describe("Autenticação", () => {
    * RF-E2E-01 / CT-006: acesso sem sessão deve redirecionar para /login.
    *
    * Valida que o middleware SSR (`apps/web/middleware.ts`) rejeita a requisição
-   * quando não há `nave_access_token` válido nos cookies e faz redirect para /login.
+   * quando não há `navestory_access_token` válido nos cookies e faz redirect para /login.
    * Não pode ser coberto por teste unitário (requer browser + middleware SSR).
    *
    * @spec SPEC-20260716-003 RF-E2E-01
    */
-  test(
-    "CT-006: redirect para /login ao acessar /dashboard sem sessão (S1)",
-    async ({ browser }) => {
-      // Contexto SEM storageState — simula usuário não autenticado
-      const context = await browser.newContext({ storageState: undefined });
-      const page = await context.newPage();
+  test("CT-006: redirect para /login ao acessar /dashboard sem sessão (S1)", async ({
+    browser,
+  }) => {
+    // Contexto SEM storageState — simula usuário não autenticado
+    const context = await browser.newContext({ storageState: undefined });
+    const page = await context.newPage();
 
-      try {
-        // domcontentloaded em vez do "load" padrão — ver nota em dashboard.page.ts
-        await page.goto("/dashboard", { waitUntil: "domcontentloaded" });
-        // Middleware SSR redireciona para /login?redirect=/dashboard
-        await expect(page).toHaveURL(/\/login/, { timeout: 10_000 });
-      } finally {
-        await context.close();
-      }
-    },
-  );
+    try {
+      // domcontentloaded em vez do "load" padrão — ver nota em dashboard.page.ts
+      await page.goto("/dashboard", { waitUntil: "domcontentloaded" });
+      // Middleware SSR redireciona para /login?redirect=/dashboard
+      await expect(page).toHaveURL(/\/login/, { timeout: 10_000 });
+    } finally {
+      await context.close();
+    }
+  });
 
   /**
    * RF-E2E-02: login com credenciais válidas → dashboard.
@@ -51,41 +50,40 @@ test.describe("Autenticação", () => {
    *
    * @spec SPEC-20260716-003 RF-E2E-02
    */
-  test(
-    "CT-006: login com credenciais válidas redireciona para /dashboard (S1)",
-    async ({ browser }) => {
-      // Contexto SEM storageState — testa o próprio fluxo de login
-      const context = await browser.newContext({ storageState: undefined });
-      const page = await context.newPage();
+  test("CT-006: login com credenciais válidas redireciona para /dashboard (S1)", async ({
+    browser,
+  }) => {
+    // Contexto SEM storageState — testa o próprio fluxo de login
+    const context = await browser.newContext({ storageState: undefined });
+    const page = await context.newPage();
 
-      const loginPage = new LoginPage(page);
-      const dashboardPage = new DashboardPage(page);
+    const loginPage = new LoginPage(page);
+    const dashboardPage = new DashboardPage(page);
 
-      const email = process.env.E2E_USER_EMAIL;
-      const password = process.env.E2E_USER_PASSWORD;
+    const email = process.env.E2E_USER_EMAIL;
+    const password = process.env.E2E_USER_PASSWORD;
 
-      if (!email || !password) {
-        throw new Error(
-          "E2E_USER_EMAIL e E2E_USER_PASSWORD são obrigatórias para RF-E2E-02",
-        );
-      }
+    if (!email || !password) {
+      throw new Error(
+        "E2E_USER_EMAIL e E2E_USER_PASSWORD são obrigatórias para RF-E2E-02",
+      );
+    }
 
-      try {
-        await loginPage.goto();
-        await loginPage.login(email, password);
-        await loginPage.waitForDashboard();
+    try {
+      await loginPage.goto();
+      await loginPage.login(email, password);
+      await loginPage.waitForDashboard();
 
-        // Verifica que o app shell (header + sidebar) foi renderizado
-        await dashboardPage.waitForLoad();
+      // Verifica que o app shell (header + sidebar) foi renderizado
+      await dashboardPage.waitForLoad();
 
-        await expect(page).toHaveURL(/\/dashboard/);
-        await expect(dashboardPage.header).toBeVisible();
-        await expect(dashboardPage.sidebar).toBeVisible();
-      } finally {
-        await context.close();
-      }
-    },
-  );
+      await expect(page).toHaveURL(/\/dashboard/);
+      await expect(dashboardPage.header).toBeVisible();
+      await expect(dashboardPage.sidebar).toBeVisible();
+    } finally {
+      await context.close();
+    }
+  });
 
   /**
    * RF-E2E-08: login com credenciais inválidas → alerta de erro visível, URL permanece /login.
@@ -100,42 +98,41 @@ test.describe("Autenticação", () => {
    * @spec SPEC-20260716-003 RF-E2E-08
    * @spec RULES.md S1
    */
-  test(
-    "RF-E2E-08: login com credenciais inválidas exibe alerta de erro e mantém /login (S1)",
-    async ({ browser }) => {
-      // Contexto SEM storageState — testa o próprio fluxo de login
-      const context = await browser.newContext({ storageState: undefined });
-      const page = await context.newPage();
+  test("RF-E2E-08: login com credenciais inválidas exibe alerta de erro e mantém /login (S1)", async ({
+    browser,
+  }) => {
+    // Contexto SEM storageState — testa o próprio fluxo de login
+    const context = await browser.newContext({ storageState: undefined });
+    const page = await context.newPage();
 
-      const loginPage = new LoginPage(page);
+    const loginPage = new LoginPage(page);
 
-      try {
-        await loginPage.goto();
+    try {
+      await loginPage.goto();
 
-        // Credenciais deliberadamente erradas — nunca hardcoded via variável real
-        await loginPage.login(
-          "usuario-invalido-e2e@nave-nonexistent.invalid",
-          "senha-errada-12345",
-        );
+      // Credenciais deliberadamente erradas — nunca hardcoded via variável real
+      await loginPage.login(
+        "usuario-invalido-e2e@navestory-nonexistent.invalid",
+        "senha-errada-12345",
+      );
 
-        // Alerta de erro deve aparecer (role="alert" é o seletor em LoginPage.errorAlert)
-        await expect(loginPage.errorAlert).toBeVisible({ timeout: 10_000 });
+      // Alerta de erro deve aparecer (role="alert" é o seletor em LoginPage.errorAlert)
+      await expect(loginPage.errorAlert).toBeVisible({ timeout: 10_000 });
 
-        // URL deve permanecer em /login — nenhum redirect para /dashboard
-        await expect(page).toHaveURL(/\/login/);
-      } finally {
-        await context.close();
-      }
-    },
-  );
+      // URL deve permanecer em /login — nenhum redirect para /dashboard
+      await expect(page).toHaveURL(/\/login/);
+    } finally {
+      await context.close();
+    }
+  });
 
   /**
-   * RF-E2E-09: cookie `nave_access_token` presente mas inválido → redirect para /login.
+   * RF-E2E-09: cookie `navestory_access_token` presente mas inválido → redirect para /login.
    *
    * Diferente de RF-E2E-01 (ausência total de cookie), este testa um cookie PRESENTE
    * com valor corrompido (string aleatória, não um JWT decodificável). O middleware
    * `apps/web/middleware.ts` chama `isTokenValid()` → `decodeJwtExp()`, que retorna
-   * `null` para valor não-JWT, tornando o token inválido. Sem `nave_refresh_token`,
+   * `null` para valor não-JWT, tornando o token inválido. Sem `navestory_refresh_token`,
    * o middleware redireciona para /login.
    *
    * Valida especificamente a branch `accessTokenValid = false` do middleware quando
@@ -144,37 +141,36 @@ test.describe("Autenticação", () => {
    * @spec SPEC-20260716-003 RF-E2E-09
    * @spec RULES.md S1
    */
-  test(
-    "RF-E2E-09: cookie nave_access_token inválido/corrompido em rota privada redireciona para /login (S1)",
-    async ({ browser }) => {
-      // Contexto limpo (sem storageState legítimo) para injetar cookie corrompido manualmente
-      const context = await browser.newContext({ storageState: undefined });
-      const page = await context.newPage();
+  test("RF-E2E-09: cookie navestory_access_token inválido/corrompido em rota privada redireciona para /login (S1)", async ({
+    browser,
+  }) => {
+    // Contexto limpo (sem storageState legítimo) para injetar cookie corrompido manualmente
+    const context = await browser.newContext({ storageState: undefined });
+    const page = await context.newPage();
 
-      try {
-        // Injeta cookie com nome correto (`nave_access_token`, conforme middleware.ts linha 22)
-        // mas valor inválido — não é um JWT, portanto decodeJwtExp() retornará null
-        await context.addCookies([
-          {
-            name: "nave_access_token",
-            value: "token-corrompido-nao-e-um-jwt-valido-xXxXxXxX",
-            domain: "localhost",
-            path: "/",
-            httpOnly: false,
-            secure: false,
-            sameSite: "Lax",
-          },
-        ]);
+    try {
+      // Injeta cookie com nome correto (`navestory_access_token`, conforme middleware.ts linha 22)
+      // mas valor inválido — não é um JWT, portanto decodeJwtExp() retornará null
+      await context.addCookies([
+        {
+          name: "navestory_access_token",
+          value: "token-corrompido-nao-e-um-jwt-valido-xXxXxXxX",
+          domain: "localhost",
+          path: "/",
+          httpOnly: false,
+          secure: false,
+          sameSite: "Lax",
+        },
+      ]);
 
-        // Navega para rota privada — middleware deve detectar token inválido e redirecionar
-        // domcontentloaded em vez do "load" padrão — ver nota em dashboard.page.ts
-        await page.goto("/dashboard", { waitUntil: "domcontentloaded" });
-        await expect(page).toHaveURL(/\/login/, { timeout: 10_000 });
-      } finally {
-        await context.close();
-      }
-    },
-  );
+      // navega para rota privada — middleware deve detectar token inválido e redirecionar
+      // domcontentloaded em vez do "load" padrão — ver nota em dashboard.page.ts
+      await page.goto("/dashboard", { waitUntil: "domcontentloaded" });
+      await expect(page).toHaveURL(/\/login/, { timeout: 10_000 });
+    } finally {
+      await context.close();
+    }
+  });
 
   // RF-E2E-03 (logout) mora em `auth-logout.spec.ts`, em projeto Playwright à parte
   // que depende de `chromium` (roda por último) — ver nota nesse arquivo.

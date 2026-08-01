@@ -25,7 +25,7 @@ O backend já expõe o endpoint `DELETE /users/me` com body `{ confirm: true }` 
 
 Contudo, não existe nenhuma UI para este fluxo. O usuário não consegue solicitar a exclusão da própria conta sem intervenção manual de um desenvolvedor, violando o Art. 18 da LGPD (direito ao esquecimento em autoatendimento). A ausência de UI foi confirmada na auditoria: não há tela de `settings/account`, nem `settings/conta`, nem nenhum link ou componente que exponha `DELETE /users/me` ao usuário final.
 
-Adicionalmente, o design system (`@nave/ui` em `packages/ui/`) não possui um componente `Dialog` genérico e reutilizável. O único uso de `@radix-ui/react-dialog` no projeto é ad hoc em `apps/web/src/components/layout/vehicle-context-dialog.tsx`, sem extração para o pacote compartilhado. Esta spec inclui a criação do componente `Dialog` em `packages/ui/`, pois é o pré-requisito para o fluxo de confirmação aqui definido e beneficia o projeto como um todo.
+Adicionalmente, o design system (`@navestory/ui` em `packages/ui/`) não possui um componente `Dialog` genérico e reutilizável. O único uso de `@radix-ui/react-dialog` no projeto é ad hoc em `apps/web/src/components/layout/vehicle-context-dialog.tsx`, sem extração para o pacote compartilhado. Esta spec inclui a criação do componente `Dialog` em `packages/ui/`, pois é o pré-requisito para o fluxo de confirmação aqui definido e beneficia o projeto como um todo.
 
 ## Objetivo
 
@@ -40,7 +40,7 @@ Adicionalmente, o design system (`@nave/ui` em `packages/ui/`) não possui um co
 
 ### US-01: Acessar a página de configurações de conta
 
-**Como** usuário autenticado do Nave, **quero** acessar uma tela de configurações da minha conta, **para** visualizar opções de gerenciamento, incluindo a exclusão permanente.
+**Como** usuário autenticado do navestory, **quero** acessar uma tela de configurações da minha conta, **para** visualizar opções de gerenciamento, incluindo a exclusão permanente.
 
 - **Dado que** estou autenticado e navego para `/settings/account`, **quando** a página carrega, **então** vejo uma seção de identificação da conta (nome, e-mail) e uma seção "Zona de perigo" contendo o botão "Excluir minha conta".
 - **Dado que** acesso a página sem estar autenticado, **quando** o middleware avalia a rota, **então** sou redirecionado para `/login` (S1 aplicado pelo middleware SSR).
@@ -76,7 +76,7 @@ tentar fazer login normalmente o sistema detecte o estado e me ofereça a opçã
 a exclusão, **para** não precisar entrar em contato com suporte.
 
 - **Dado que** faço login com email/senha válidos de uma conta soft-deleted, **quando** o
-  Supabase Auth autentica com sucesso mas a chamada subsequente à API do Nave retorna 403
+  Supabase Auth autentica com sucesso mas a chamada subsequente à API do navestory retorna 403
   com `code: "ACCOUNT_PENDING_DELETION"`, **então** sou direcionado para a tela de restore
   (RF-13) em vez de uma mensagem de erro genérica.
 - **Dado que** estou na tela de restore, **quando** a página carrega, **então** vejo: (a) a
@@ -101,36 +101,36 @@ a exclusão, **para** não precisar entrar em contato com suporte.
 
 ## Requisitos Funcionais
 
-| ID | Requisito | Prioridade | História |
-|----|-----------|------------|----------|
-| RF-01 | Criar componente `Dialog` em `packages/ui/src/components/dialog.tsx`, baseado em `@radix-ui/react-dialog`, exportando: `Dialog`, `DialogTrigger`, `DialogContent`, `DialogHeader`, `DialogFooter`, `DialogTitle`, `DialogDescription`, `DialogClose` — nomenclatura alinhada com shadcn/ui para facilitar migração futura | Alta | — |
-| RF-02 | `DialogContent` deve incluir: overlay com foco preso (`focus-trap` nativo do Radix), fechamento via `Esc` e clique no overlay, `aria-labelledby` apontando para `DialogTitle`, `aria-describedby` apontando para `DialogDescription` | Alta | US-02 |
-| RF-03 | Criar `packages/ui/src/components/dialog.test.tsx` cobrindo: abertura/fechamento por trigger, fechamento por `Esc`, acessibilidade (`aria-*`) via `@testing-library/react` | Alta | RF-01 |
-| RF-04 | Criar página `apps/web/src/app/(app)/settings/account/page.tsx` (Server Component), acessível via `/settings/account`, com: seção de informações da conta (nome, e-mail) e seção "Zona de perigo" | Alta | US-01 |
-| RF-05 | A seção "Zona de perigo" contém o botão `<Button variant="destructive">Excluir minha conta</Button>` que abre o `Dialog` de confirmação | Alta | US-01 |
-| RF-06 | O `Dialog` de confirmação (Client Component) exibe em `DialogDescription`: a lista de consequências, o aviso do prazo de 30 dias, e o campo de texto para confirmação manual | Alta | US-02 |
-| RF-07 | O campo de confirmação aceita entrada livre de texto; o botão "Confirmar exclusão" só fica `disabled={false}` quando `value.trim() === 'EXCLUIR'` (case-sensitive, sem normalização de case) | Alta | US-02 |
-| RF-08 | Ao clicar em "Confirmar exclusão", chamar `DELETE /users/me` com body `{ confirm: true }` e header `Authorization: Bearer <token>` via o cliente HTTP existente | Alta | US-03 |
-| RF-09 | Em caso de resposta 204: fechar Dialog, disparar logout do cliente Supabase (para limpar tokens locais) e redirecionar para `/login?message=conta_excluida` | Alta | US-03 |
-| RF-10 | Em caso de erro de rede ou resposta não-2xx: manter Dialog aberto, exibir `Alert variant="error"` dentro do `DialogContent`, limpar o campo de confirmação | Alta | US-03, US-05 |
-| RF-11 | A página `settings/account` deve verificar `profiles.deleted_at` do usuário autenticado ao carregar; se `NOT NULL`, exibir `Alert variant="warning"` com data prevista de hard delete, desabilitar o botão de exclusão e exibir o botão/link "Cancelar exclusão" que aciona o fluxo de restore (RF-15) | Média | US-04 |
-| RF-12 | Exportar `Dialog` e subcomponentes em `packages/ui/src/index.ts` (seguir o padrão de export nomeado dos demais componentes) | Alta | RF-01 |
-| RF-13 | Na página de login (`apps/web/src/app/(auth)/login/page.tsx`), após autenticação Supabase bem-sucedida, verificar se a chamada a qualquer endpoint protegido (ex: `GET /users/me`) retorna 403 com `code: "ACCOUNT_PENDING_DELETION"`. Se sim, redirecionar para `/restore-account` em vez do dashboard, passando a data de exclusão prevista via query param ou session storage | Alta | US-06 |
-| RF-14 | Criar página `apps/web/src/app/(auth)/restore-account/page.tsx` — Client Component exibindo: (a) `Alert variant="warning"` com data de exclusão prevista, (b) lista do que será preservado no restore ("veículos, despesas, histórico e todos os dados de conta ficam intactos — o restore é completo"), (c) botão primário "Cancelar exclusão e restaurar minha conta" e botão secundário "Continuar com a exclusão" (apenas fecha sessão sem chamar API) | Alta | US-06 |
-| RF-15 | Ao clicar em "Cancelar exclusão e restaurar minha conta" (RF-14): chamar `POST /users/me/restore` com token JWT; em caso de 200: redirecionar para `/` (dashboard) com toast `variant="success"` "Sua conta foi restaurada com sucesso!"; em caso de erro: exibir `Alert variant="error"` na tela de restore sem deslogar | Alta | US-06 |
-| RF-16 | Em qualquer componente que exiba imagens de veículo ou documentos vinculados a URLs do Supabase Storage: ao detectar falha de carregamento da imagem (evento `onError`), exibir ícone de placeholder "arquivo indisponível" (`ImageOff` do `lucide-react`) em vez de imagem quebrada. Aplica-se especialmente a `vehicles/[id]` e listagens de veículos — edge case de arquivos órfãos após hard-delete (ver SPEC-20260719-002 RF-12) | Média | — |
+| ID    | Requisito                                                                                                                                                                                                                                                                                                                                                                                                                                                  | Prioridade | História     |
+| ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------------ |
+| RF-01 | Criar componente `Dialog` em `packages/ui/src/components/dialog.tsx`, baseado em `@radix-ui/react-dialog`, exportando: `Dialog`, `DialogTrigger`, `DialogContent`, `DialogHeader`, `DialogFooter`, `DialogTitle`, `DialogDescription`, `DialogClose` — nomenclatura alinhada com shadcn/ui para facilitar migração futura                                                                                                                                  | Alta       | —            |
+| RF-02 | `DialogContent` deve incluir: overlay com foco preso (`focus-trap` nativo do Radix), fechamento via `Esc` e clique no overlay, `aria-labelledby` apontando para `DialogTitle`, `aria-describedby` apontando para `DialogDescription`                                                                                                                                                                                                                       | Alta       | US-02        |
+| RF-03 | Criar `packages/ui/src/components/dialog.test.tsx` cobrindo: abertura/fechamento por trigger, fechamento por `Esc`, acessibilidade (`aria-*`) via `@testing-library/react`                                                                                                                                                                                                                                                                                 | Alta       | RF-01        |
+| RF-04 | Criar página `apps/web/src/app/(app)/settings/account/page.tsx` (Server Component), acessível via `/settings/account`, com: seção de informações da conta (nome, e-mail) e seção "Zona de perigo"                                                                                                                                                                                                                                                          | Alta       | US-01        |
+| RF-05 | A seção "Zona de perigo" contém o botão `<Button variant="destructive">Excluir minha conta</Button>` que abre o `Dialog` de confirmação                                                                                                                                                                                                                                                                                                                    | Alta       | US-01        |
+| RF-06 | O `Dialog` de confirmação (Client Component) exibe em `DialogDescription`: a lista de consequências, o aviso do prazo de 30 dias, e o campo de texto para confirmação manual                                                                                                                                                                                                                                                                               | Alta       | US-02        |
+| RF-07 | O campo de confirmação aceita entrada livre de texto; o botão "Confirmar exclusão" só fica `disabled={false}` quando `value.trim() === 'EXCLUIR'` (case-sensitive, sem normalização de case)                                                                                                                                                                                                                                                               | Alta       | US-02        |
+| RF-08 | Ao clicar em "Confirmar exclusão", chamar `DELETE /users/me` com body `{ confirm: true }` e header `Authorization: Bearer <token>` via o cliente HTTP existente                                                                                                                                                                                                                                                                                            | Alta       | US-03        |
+| RF-09 | Em caso de resposta 204: fechar Dialog, disparar logout do cliente Supabase (para limpar tokens locais) e redirecionar para `/login?message=conta_excluida`                                                                                                                                                                                                                                                                                                | Alta       | US-03        |
+| RF-10 | Em caso de erro de rede ou resposta não-2xx: manter Dialog aberto, exibir `Alert variant="error"` dentro do `DialogContent`, limpar o campo de confirmação                                                                                                                                                                                                                                                                                                 | Alta       | US-03, US-05 |
+| RF-11 | A página `settings/account` deve verificar `profiles.deleted_at` do usuário autenticado ao carregar; se `NOT NULL`, exibir `Alert variant="warning"` com data prevista de hard delete, desabilitar o botão de exclusão e exibir o botão/link "Cancelar exclusão" que aciona o fluxo de restore (RF-15)                                                                                                                                                     | Média      | US-04        |
+| RF-12 | Exportar `Dialog` e subcomponentes em `packages/ui/src/index.ts` (seguir o padrão de export nomeado dos demais componentes)                                                                                                                                                                                                                                                                                                                                | Alta       | RF-01        |
+| RF-13 | Na página de login (`apps/web/src/app/(auth)/login/page.tsx`), após autenticação Supabase bem-sucedida, verificar se a chamada a qualquer endpoint protegido (ex: `GET /users/me`) retorna 403 com `code: "ACCOUNT_PENDING_DELETION"`. Se sim, redirecionar para `/restore-account` em vez do dashboard, passando a data de exclusão prevista via query param ou session storage                                                                           | Alta       | US-06        |
+| RF-14 | Criar página `apps/web/src/app/(auth)/restore-account/page.tsx` — Client Component exibindo: (a) `Alert variant="warning"` com data de exclusão prevista, (b) lista do que será preservado no restore ("veículos, despesas, histórico e todos os dados de conta ficam intactos — o restore é completo"), (c) botão primário "Cancelar exclusão e restaurar minha conta" e botão secundário "Continuar com a exclusão" (apenas fecha sessão sem chamar API) | Alta       | US-06        |
+| RF-15 | Ao clicar em "Cancelar exclusão e restaurar minha conta" (RF-14): chamar `POST /users/me/restore` com token JWT; em caso de 200: redirecionar para `/` (dashboard) com toast `variant="success"` "Sua conta foi restaurada com sucesso!"; em caso de erro: exibir `Alert variant="error"` na tela de restore sem deslogar                                                                                                                                  | Alta       | US-06        |
+| RF-16 | Em qualquer componente que exiba imagens de veículo ou documentos vinculados a URLs do Supabase Storage: ao detectar falha de carregamento da imagem (evento `onError`), exibir ícone de placeholder "arquivo indisponível" (`ImageOff` do `lucide-react`) em vez de imagem quebrada. Aplica-se especialmente a `vehicles/[id]` e listagens de veículos — edge case de arquivos órfãos após hard-delete (ver SPEC-20260719-002 RF-12)                      | Média      | —            |
 
 ---
 
 ## Requisitos Não-Funcionais
 
-| ID | Requisito | Métrica de Aceite |
-|----|-----------|------------------|
-| RNF-01 | Acessibilidade | Dialog deve passar `axe` sem violações críticas; foco preso enquanto aberto; retorna foco ao trigger ao fechar; todos os controles interativos com `aria-label` ou texto visível |
-| RNF-02 | Autenticação | Rota `/settings/account` protegida pelo middleware SSR (S1); qualquer requisição sem token válido retorna 401 no backend |
-| RNF-03 | Feedback visual | Estados de loading, erro e sucesso visualmente distintos; botão com `aria-busy="true"` durante a requisição |
+| ID     | Requisito             | Métrica de Aceite                                                                                                                                                                         |
+| ------ | --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| RNF-01 | Acessibilidade        | Dialog deve passar `axe` sem violações críticas; foco preso enquanto aberto; retorna foco ao trigger ao fechar; todos os controles interativos com `aria-label` ou texto visível          |
+| RNF-02 | Autenticação          | Rota `/settings/account` protegida pelo middleware SSR (S1); qualquer requisição sem token válido retorna 401 no backend                                                                  |
+| RNF-03 | Feedback visual       | Estados de loading, erro e sucesso visualmente distintos; botão com `aria-busy="true"` durante a requisição                                                                               |
 | RNF-04 | Confirmação explícita | O campo de digitação de `EXCLUIR` deve ter `autocomplete="off"`, `autocorrect="off"`, `autocapitalize="off"`, `spellcheck="false"` — impedir auto-preenchimento ou autocorreção acidental |
-| RNF-05 | Nenhum PII em log | A chamada ao endpoint não deve logar o token ou corpo da requisição (aplica S10) |
+| RNF-05 | Nenhum PII em log     | A chamada ao endpoint não deve logar o token ou corpo da requisição (aplica S10)                                                                                                          |
 
 ---
 
@@ -147,16 +147,16 @@ a exclusão, **para** não precisar entrar em contato com suporte.
 
 ## Dependências
 
-| Tipo | Referência | Descrição |
-|------|-----------|-----------|
-| Spec draft | [SPEC-20260719-002](../admin/SPEC-20260719-002-soft-delete-retencao-conta.md) | Pré-requisito direto: define `DELETE /users/me` como soft-delete real (RF-01), `POST /users/me/restore` (RF-08), `SupabaseAuthGuard` com 403 ACCOUNT_PENDING_DELETION (RF-09) e `SoftDeletedUserGuard` (RF-10) — todos consumidos por esta spec |
-| Spec aprovada | [SPEC-20260521-004](../admin/SPEC-20260521-004.md) | Define o endpoint `DELETE /users/me` original; SPEC-20260719-002 refina o comportamento, mas a infraestrutura de guards e audit logs vem de SPEC-20260521-004 |
-| Spec aprovada | [SPEC-20260525-001](../design-system/SPEC-20260525-001.md) | Padrão de componentes `@nave/ui`; `Dialog` deve seguir as mesmas convenções de tokens, variantes CVA e estrutura de arquivo |
-| Biblioteca | `@radix-ui/react-dialog` | Já presente no monorepo como dependência transitiva; verificar se precisa ser adicionada explicitamente ao `package.json` de `packages/ui` |
-| Componente existente | `packages/ui/src/components/alert.tsx` | Usado para banners de aviso de exclusão pendente (US-04) e mensagens de erro no Dialog (US-03, US-05) |
-| Componente existente | `packages/ui/src/components/button.tsx` | Botão `variant="destructive"` para o gatilho de exclusão; estados `disabled` e `aria-busy` |
-| Regra | `R-BIZ-05` (`RULES.md`) | Período de graça de 30 dias para exclusão de conta (LGPD) |
-| Regra | C1 (`RULES.md`) | Exclusão completa via `DELETE /users/me` com cascata — a UI deve ser o canal de autoatendimento desta operação |
+| Tipo                 | Referência                                                                    | Descrição                                                                                                                                                                                                                                       |
+| -------------------- | ----------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Spec draft           | [SPEC-20260719-002](../admin/SPEC-20260719-002-soft-delete-retencao-conta.md) | Pré-requisito direto: define `DELETE /users/me` como soft-delete real (RF-01), `POST /users/me/restore` (RF-08), `SupabaseAuthGuard` com 403 ACCOUNT_PENDING_DELETION (RF-09) e `SoftDeletedUserGuard` (RF-10) — todos consumidos por esta spec |
+| Spec aprovada        | [SPEC-20260521-004](../admin/SPEC-20260521-004.md)                            | Define o endpoint `DELETE /users/me` original; SPEC-20260719-002 refina o comportamento, mas a infraestrutura de guards e audit logs vem de SPEC-20260521-004                                                                                   |
+| Spec aprovada        | [SPEC-20260525-001](../design-system/SPEC-20260525-001.md)                    | Padrão de componentes `@navestory/ui`; `Dialog` deve seguir as mesmas convenções de tokens, variantes CVA e estrutura de arquivo                                                                                                                |
+| Biblioteca           | `@radix-ui/react-dialog`                                                      | Já presente no monorepo como dependência transitiva; verificar se precisa ser adicionada explicitamente ao `package.json` de `packages/ui`                                                                                                      |
+| Componente existente | `packages/ui/src/components/alert.tsx`                                        | Usado para banners de aviso de exclusão pendente (US-04) e mensagens de erro no Dialog (US-03, US-05)                                                                                                                                           |
+| Componente existente | `packages/ui/src/components/button.tsx`                                       | Botão `variant="destructive"` para o gatilho de exclusão; estados `disabled` e `aria-busy`                                                                                                                                                      |
+| Regra                | `R-BIZ-05` (`RULES.md`)                                                       | Período de graça de 30 dias para exclusão de conta (LGPD)                                                                                                                                                                                       |
+| Regra                | C1 (`RULES.md`)                                                               | Exclusão completa via `DELETE /users/me` com cascata — a UI deve ser o canal de autoatendimento desta operação                                                                                                                                  |
 
 ---
 
@@ -165,6 +165,7 @@ a exclusão, **para** não precisar entrar em contato com suporte.
 ### Componente `Dialog` em `packages/ui`
 
 Seguir exatamente o padrão dos componentes existentes:
+
 - Arquivo: `packages/ui/src/components/dialog.tsx`
 - Teste: `packages/ui/src/components/dialog.test.tsx`
 - Export em `packages/ui/src/index.ts`
@@ -190,10 +191,10 @@ O campo `profiles.deleted_at timestamptz` existe no schema (`20260712171830_core
 
 ```typescript
 const { data: profile } = await supabase
-  .from('profiles')
-  .select('deleted_at')
-  .eq('id', userId)
-  .single()
+  .from("profiles")
+  .select("deleted_at")
+  .eq("id", userId)
+  .single();
 ```
 
 Se `profile.deleted_at` não for `null`, a conta está marcada. A data de hard delete projetada é `new Date(profile.deleted_at).getTime() + 30 * 24 * 60 * 60 * 1000`.
@@ -215,7 +216,7 @@ em `matrices/rastreabilidade.md` deve refletir essa dependência.
 ### Tela de restore (`/restore-account`) e grupo de rota
 
 A página `/restore-account` (RF-14) vive no grupo `(auth)`, não no grupo `(app)`, pois o
-usuário acessa essa rota sem sessão válida nos termos do Nave (conta bloqueada). O middleware
+usuário acessa essa rota sem sessão válida nos termos do navestory (conta bloqueada). O middleware
 não deve redirecionar essa rota para `/login`. Verificar se `apps/web/middleware.ts` inclui
 `/restore-account` na lista de rotas públicas/de auth — se não, adicionar.
 
@@ -224,6 +225,7 @@ não deve redirecionar essa rota para `/login`. Verificar se `apps/web/middlewar
 Decidido: o usuário deve digitar `EXCLUIR` (letras maiúsculas, em português, sem espaços extras) no campo de texto antes de o botão "Confirmar exclusão" ficar habilitado (RF-07).
 
 Alternativas avaliadas e descartadas:
+
 - **Digitar o e-mail da conta**: requer que o usuário saiba o e-mail de login (pode variar se houver OAuth), e causa troca de contexto (checar o e-mail). Fricção desnecessária.
 - **Checkbox "Entendo que esta ação é irreversível"**: pouco atrito — pode ser clicado por reflexo sem ler o aviso. Não é suficiente para uma ação destrutiva permanente.
 - **Digitar `delete` (inglês)**: o projeto usa pt-BR como idioma principal; usar inglês no campo seria inconsistente.
@@ -242,7 +244,7 @@ O placeholder deve ser `EXCLUIR` para guiar o usuário. O campo deve ter `data-1
 
 A rota `/settings/account` é nova. As rotas existentes são `/settings/preferences` e `/settings/vehicles/[vehicleId]/odometer-cycles`. Não há layout compartilhado de settings identificado. Se necessário, criar `apps/web/src/app/(app)/settings/layout.tsx` com navegação lateral de settings (tabs ou sidebar) — mas apenas se isso estiver alinhado ao design geral; caso contrário, a página pode existir de forma standalone sem nav de settings por ora.
 
-### Navegação até a página
+### navegação até a página
 
 A página `/settings/account` precisa ser linkada em pelo menos um ponto da UI existente. O local recomendado é o menu de perfil do usuário (header/nav), se existir — verificar durante implementação. A spec não define o ponto de entrada exato, apenas que deve existir.
 
@@ -252,7 +254,7 @@ A página `/settings/account` precisa ser linkada em pelo menos um ponto da UI e
 
 > Preencher apenas após `status: approved`.
 
-| Data | O que mudou | Por quê |
-|------|-------------|---------|
+| Data       | O que mudou                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | Por quê                                                                                                                                                                      |
+| ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 2026-07-20 | `status: draft` → `approved`. Implementação concluída para RF-01 a RF-15 (Dialog no design system, `/settings/account`, fluxo de exclusão em duas etapas, interceptação global de `ACCOUNT_PENDING_DELETION`, `/restore-account`). RF-11 (banner in-app de conta pendente) descartado por ser inalcançável: o `SupabaseAuthGuard` já bloqueia toda rota autenticada antes de qualquer página do grupo `(app)` renderizar com `deleted_at` preenchido — RF-13 (redirecionamento global) cobre o mesmo caso de uso de forma mais simples. RF-16 (fallback de imagem) não implementado — não há hoje nenhum `<img>` de Storage renderizado no app; sem elemento existente para aplicar `onError` | Gate de sincronia satisfeito em `matrices/rastreabilidade.md`; RF-11/RF-16 documentados como decisão arquitetural / dívida técnica, não pendência de implementação esquecida |
-| 2026-07-20 | Correção pós-revisão (`reviewer`): RF-09 estava incompleto — o redirect para `/login?message=conta_excluida` acontecia, mas a página de login nunca lia o parâmetro `message` nem exibia o `Alert` que a US-03 exige. Corrigido em `apps/web/src/app/(auth)/login/page.tsx`. Também: `/restore-account` adicionada à lista de rotas sempre-públicas do middleware (`ALWAYS_PUBLIC_PATHS`) — antes, acesso direto sem cookie forçava `/login` primeiro, contrariando a nota técnica desta spec sobre o grupo de rota | Mudança pequena, sem alteração de requisito — corrige divergência entre spec e implementação encontrada em revisão |
+| 2026-07-20 | Correção pós-revisão (`reviewer`): RF-09 estava incompleto — o redirect para `/login?message=conta_excluida` acontecia, mas a página de login nunca lia o parâmetro `message` nem exibia o `Alert` que a US-03 exige. Corrigido em `apps/web/src/app/(auth)/login/page.tsx`. Também: `/restore-account` adicionada à lista de rotas sempre-públicas do middleware (`ALWAYS_PUBLIC_PATHS`) — antes, acesso direto sem cookie forçava `/login` primeiro, contrariando a nota técnica desta spec sobre o grupo de rota                                                                                                                                                                           | Mudança pequena, sem alteração de requisito — corrige divergência entre spec e implementação encontrada em revisão                                                           |

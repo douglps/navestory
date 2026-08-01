@@ -5,8 +5,16 @@ import {
   updateMaintenanceInputSchema,
   type MaintenanceStatus,
   type UpdateMaintenanceInput,
-} from "@nave/validators";
-import { Alert, Button, Combobox, Container, CurrencyInput, Input, OdometerInput } from "@nave/ui";
+} from "@navestory/validators";
+import {
+  Alert,
+  Button,
+  Combobox,
+  Container,
+  CurrencyInput,
+  Input,
+  OdometerInput,
+} from "@navestory/ui";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
@@ -78,7 +86,9 @@ export default function MaintenanceDetailPage({
     setDescription(maintenance.description);
     setScheduledDate(isoToDatetimeLocal(maintenance.scheduled_date, tz));
     setCompletionDate(
-      maintenance.completion_date ? isoToDatetimeLocal(maintenance.completion_date, tz) : "",
+      maintenance.completion_date
+        ? isoToDatetimeLocal(maintenance.completion_date, tz)
+        : "",
     );
     setCost(maintenance.cost ?? undefined);
     setOdometerKm(maintenance.odometer_km ?? undefined);
@@ -87,7 +97,10 @@ export default function MaintenanceDetailPage({
 
   const mutation = useMutation({
     mutationFn: (input: UpdateMaintenanceInput) =>
-      apiClient<Maintenance>(`/maintenances/${id}`, { method: "PATCH", body: input }),
+      apiClient<Maintenance>(`/maintenances/${id}`, {
+        method: "PATCH",
+        body: input,
+      }),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["maintenances"] });
       router.push("/maintenance");
@@ -103,8 +116,12 @@ export default function MaintenanceDetailPage({
 
     const result = updateMaintenanceInputSchema.safeParse({
       description,
-      scheduled_date: scheduledDate ? datetimeLocalToIso(scheduledDate, tz) : "",
-      completion_date: completionDate ? datetimeLocalToIso(completionDate, tz) : null,
+      scheduled_date: scheduledDate
+        ? datetimeLocalToIso(scheduledDate, tz)
+        : "",
+      completion_date: completionDate
+        ? datetimeLocalToIso(completionDate, tz)
+        : null,
       cost: cost ?? null,
       odometer_km: odometerKm ?? null,
       ...(nextStatus ? { status: nextStatus } : {}),
@@ -170,7 +187,11 @@ export default function MaintenanceDetailPage({
         <CurrencyInput id="cost" value={cost} onChange={setCost} />
 
         <label htmlFor="odometer_km">Odômetro (km)</label>
-        <OdometerInput id="odometer_km" value={odometerKm} onChange={setOdometerKm} />
+        <OdometerInput
+          id="odometer_km"
+          value={odometerKm}
+          onChange={setOdometerKm}
+        />
 
         {!isTerminal && (
           <>
@@ -186,7 +207,9 @@ export default function MaintenanceDetailPage({
                 })),
               ]}
               value={nextStatus}
-              onValueChange={(value) => setNextStatus(value as MaintenanceStatus | "")}
+              onValueChange={(value) =>
+                setNextStatus(value as MaintenanceStatus | "")
+              }
               placeholder="Manter status atual"
               searchPlaceholder="Buscar status..."
               emptyMessage="Nenhum status encontrado"
@@ -196,7 +219,10 @@ export default function MaintenanceDetailPage({
 
         {fieldError && <Alert variant="error" description={fieldError} />}
         {mutation.isError && !fieldError && (
-          <Alert variant="error" description="Não foi possível atualizar a manutenção." />
+          <Alert
+            variant="error"
+            description="Não foi possível atualizar a manutenção."
+          />
         )}
 
         <div className="flex gap-2">

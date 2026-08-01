@@ -2,10 +2,10 @@
 
 Regras: R5, R-CTX-01, R-CTX-02, R-CTX-03, R-CTX-04, R-CTX-05, R-CTX-06, R-CTX-07, S1, S2
 
-| Spec | Título | Status |
-|------|--------|--------|
-| [SPEC-20260602-001](SPEC-20260602-001-em-foco-contexto-global.md) | Sistema Em Foco — Contexto de Veículo Global | Aprovado |
-| [SPEC-20260603-001](SPEC-20260603-001-context-chip-subheader.md) | Chip de Contexto de Veículo no Subheader + Dialog/Sheet de Seleção | Rascunho |
+| Spec                                                              | Título                                                             | Status   |
+| ----------------------------------------------------------------- | ------------------------------------------------------------------ | -------- |
+| [SPEC-20260602-001](SPEC-20260602-001-em-foco-contexto-global.md) | Sistema Em Foco — Contexto de Veículo Global                       | Aprovado |
+| [SPEC-20260603-001](SPEC-20260603-001-context-chip-subheader.md)  | Chip de Contexto de Veículo no Subheader + Dialog/Sheet de Seleção | Rascunho |
 
 ### SPEC-20260602-001 — implementação atual
 

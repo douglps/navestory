@@ -17,7 +17,11 @@ import { DashboardPage } from "../pages/dashboard.page";
  * `specs/qa/SPEC-20260716-003-e2e-playwright.md` para o processo de atualização intencional).
  */
 
-const PAGES: { name: string; path: string; waitFor: (page: import("@playwright/test").Page) => Promise<void> }[] = [
+const PAGES: {
+  name: string;
+  path: string;
+  waitFor: (page: import("@playwright/test").Page) => Promise<void>;
+}[] = [
   {
     name: "dashboard",
     path: "/dashboard",
@@ -30,34 +34,35 @@ const PAGES: { name: string; path: string; waitFor: (page: import("@playwright/t
     name: "expenses",
     path: "/expenses",
     waitFor: async (page) => {
-      await page.locator("header").waitFor({ state: "visible", timeout: 10_000 });
+      await page
+        .locator("header")
+        .waitFor({ state: "visible", timeout: 10_000 });
     },
   },
   {
     name: "fines",
     path: "/fines",
     waitFor: async (page) => {
-      await page.locator("header").waitFor({ state: "visible", timeout: 10_000 });
+      await page
+        .locator("header")
+        .waitFor({ state: "visible", timeout: 10_000 });
     },
   },
 ];
 
 for (const { name, path, waitFor } of PAGES) {
   for (const colorScheme of ["light", "dark"] as const) {
-    test(
-      `visual: ${name} (${colorScheme})`,
-      async ({ page }) => {
-        await page.emulateMedia({ colorScheme });
-        // domcontentloaded em vez do "load" padrão — ver nota em dashboard.page.ts
-        await page.goto(path, { waitUntil: "domcontentloaded" });
-        await waitFor(page);
-        // Tolerância pequena (ratio) absorve antialiasing/font-rendering entre runs sem
-        // mascarar regressão visual real.
-        await expect(page).toHaveScreenshot(`${name}-${colorScheme}.png`, {
-          fullPage: true,
-          maxDiffPixelRatio: 0.01,
-        });
-      },
-    );
+    test(`visual: ${name} (${colorScheme})`, async ({ page }) => {
+      await page.emulateMedia({ colorScheme });
+      // domcontentloaded em vez do "load" padrão — ver nota em dashboard.page.ts
+      await page.goto(path, { waitUntil: "domcontentloaded" });
+      await waitFor(page);
+      // Tolerância pequena (ratio) absorve antialiasing/font-rendering entre runs sem
+      // mascarar regressão visual real.
+      await expect(page).toHaveScreenshot(`${name}-${colorScheme}.png`, {
+        fullPage: true,
+        maxDiffPixelRatio: 0.01,
+      });
+    });
   }
 }

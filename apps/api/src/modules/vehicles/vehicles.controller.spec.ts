@@ -14,17 +14,27 @@ describe("VehiclesController", () => {
       getHealth: jest.fn().mockResolvedValue({ score: 100, flags: [] }),
       ...overrides,
     } as unknown as VehiclesService;
-    return { controller: new VehiclesController(vehiclesService), vehiclesService };
+    return {
+      controller: new VehiclesController(vehiclesService),
+      vehiclesService,
+    };
   }
 
-  const req = { headers: { authorization: "Bearer token-123" }, cookies: {} } as Request;
+  const req = {
+    headers: { authorization: "Bearer token-123" },
+    cookies: {},
+  } as Request;
 
   it("create extrai o token e cria o veículo", async () => {
     const { controller, vehiclesService } = createController();
 
-    const result = await controller.create(req, "u1", { plate: "ABC1234" } as never);
+    const result = await controller.create(req, "u1", {
+      plate: "ABC1234",
+    } as never);
 
-    expect(vehiclesService.create).toHaveBeenCalledWith("token-123", "u1", { plate: "ABC1234" });
+    expect(vehiclesService.create).toHaveBeenCalledWith("token-123", "u1", {
+      plate: "ABC1234",
+    });
     expect(result.data).toEqual({ id: "v1" });
   });
 
@@ -42,18 +52,29 @@ describe("VehiclesController", () => {
 
     const result = await controller.findOne(req, "u1", "v1");
 
-    expect(vehiclesService.findOne).toHaveBeenCalledWith("token-123", "u1", "v1");
+    expect(vehiclesService.findOne).toHaveBeenCalledWith(
+      "token-123",
+      "u1",
+      "v1",
+    );
     expect(result.data).toEqual({ id: "v1" });
   });
 
   it("update atualiza o veículo", async () => {
     const { controller, vehiclesService } = createController();
 
-    const result = await controller.update(req, "u1", "v1", { color: "Azul" } as never);
-
-    expect(vehiclesService.update).toHaveBeenCalledWith("token-123", "u1", "v1", {
+    const result = await controller.update(req, "u1", "v1", {
       color: "Azul",
-    });
+    } as never);
+
+    expect(vehiclesService.update).toHaveBeenCalledWith(
+      "token-123",
+      "u1",
+      "v1",
+      {
+        color: "Azul",
+      },
+    );
     expect(result.data).toEqual({ id: "v1", color: "Azul" });
   });
 
@@ -71,7 +92,11 @@ describe("VehiclesController", () => {
 
     await controller.remove(req, "u1", "v1");
 
-    expect(vehiclesService.remove).toHaveBeenCalledWith("token-123", "u1", "v1");
+    expect(vehiclesService.remove).toHaveBeenCalledWith(
+      "token-123",
+      "u1",
+      "v1",
+    );
   });
 
   it("lança 401 quando não há token disponível", async () => {
@@ -87,7 +112,7 @@ describe("VehiclesController", () => {
     const { controller, vehiclesService } = createController();
     const reqComCookie = {
       headers: {},
-      cookies: { nave_access_token: "cookie-token" },
+      cookies: { navestory_access_token: "cookie-token" },
     } as unknown as Request;
 
     await controller.findAll(reqComCookie, "u1");

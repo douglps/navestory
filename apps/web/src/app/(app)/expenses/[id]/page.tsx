@@ -6,8 +6,16 @@ import {
   type CreateExpenseTemplateInput,
   type ExpenseTemplate,
   type UpdateExpenseInput,
-} from "@nave/validators";
-import { Alert, Button, Combobox, Container, CurrencyInput, Input, OdometerInput } from "@nave/ui";
+} from "@navestory/validators";
+import {
+  Alert,
+  Button,
+  Combobox,
+  Container,
+  CurrencyInput,
+  Input,
+  OdometerInput,
+} from "@navestory/ui";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
@@ -80,7 +88,9 @@ export default function ExpenseDetailPage({
   const [savingTemplate, setSavingTemplate] = useState(false);
   const [templateName, setTemplateName] = useState("");
   const [templateError, setTemplateError] = useState<string | null>(null);
-  const [savedTemplateName, setSavedTemplateName] = useState<string | null>(null);
+  const [savedTemplateName, setSavedTemplateName] = useState<string | null>(
+    null,
+  );
   const fuelCalc = useFuelCrossCalc();
 
   const isFuel = category === "fuel";
@@ -91,7 +101,8 @@ export default function ExpenseDetailPage({
    */
   const { data: suppliers } = useQuery({
     queryKey: ["expense-suppliers"],
-    queryFn: () => apiClient<{ data: string[] }>("/expenses/suppliers").then((r) => r.data),
+    queryFn: () =>
+      apiClient<{ data: string[] }>("/expenses/suppliers").then((r) => r.data),
     enabled: isFuel,
     retry: false,
   });
@@ -102,7 +113,10 @@ export default function ExpenseDetailPage({
       setOccurredAt(isoToDatetimeLocal(expense.occurred_at, tz));
       setDescription(expense.description ?? "");
       setOdometerKm(expense.odometer_km ?? undefined);
-      fuelCalc.reset({ amount: expense.amount, liters: expense.liters ?? undefined });
+      fuelCalc.reset({
+        amount: expense.amount,
+        liters: expense.liters ?? undefined,
+      });
       setFuelType(expense.fuel_type ?? "");
       setFullTank(expense.full_tank);
       setSupplier(expense.supplier ?? "");
@@ -112,7 +126,10 @@ export default function ExpenseDetailPage({
 
   const updateMutation = useMutation({
     mutationFn: (input: UpdateExpenseInput) =>
-      apiClient<Expense>(`/expenses/${id}?strict=true`, { method: "PATCH", body: input }),
+      apiClient<Expense>(`/expenses/${id}?strict=true`, {
+        method: "PATCH",
+        body: input,
+      }),
     onSuccess: () => {
       setFieldError(null);
       void queryClient.invalidateQueries({ queryKey: ["expenses"] });
@@ -189,7 +206,10 @@ export default function ExpenseDetailPage({
 
   const saveTemplateMutation = useMutation({
     mutationFn: (input: CreateExpenseTemplateInput) =>
-      apiClient<{ data: ExpenseTemplate }>("/expense-templates", { method: "POST", body: input }),
+      apiClient<{ data: ExpenseTemplate }>("/expense-templates", {
+        method: "POST",
+        body: input,
+      }),
     onSuccess: (response) => {
       setSavingTemplate(false);
       setTemplateName("");
@@ -216,14 +236,18 @@ export default function ExpenseDetailPage({
       supplier: expense.supplier,
     });
     if (!result.success) {
-      setTemplateError(result.error.issues[0]?.message ?? "Dados inválidos para criar o modelo");
+      setTemplateError(
+        result.error.issues[0]?.message ??
+          "Dados inválidos para criar o modelo",
+      );
       return;
     }
 
     saveTemplateMutation.mutate(result.data);
   }
 
-  if (id === null || isLoading) return <main className="p-8">Carregando...</main>;
+  if (id === null || isLoading)
+    return <main className="p-8">Carregando...</main>;
   if (isError || !expense)
     return (
       <main className="p-8">
@@ -236,7 +260,8 @@ export default function ExpenseDetailPage({
     fuelCalc.amount != null &&
     fuelCalc.liters != null &&
     fuelCalc.pricePerLiter != null &&
-    Math.abs(fuelCalc.liters * fuelCalc.pricePerLiter - fuelCalc.amount) <= 0.01;
+    Math.abs(fuelCalc.liters * fuelCalc.pricePerLiter - fuelCalc.amount) <=
+      0.01;
 
   return (
     <Container size="sm">
@@ -291,7 +316,9 @@ export default function ExpenseDetailPage({
               maxLength={4}
               value={year ?? ""}
               onChange={(event) => {
-                const digits = event.target.value.replace(/\D/g, "").slice(0, 4);
+                const digits = event.target.value
+                  .replace(/\D/g, "")
+                  .slice(0, 4);
                 handleYearChange(digits ? Number(digits) : undefined);
               }}
               disabled={expense.is_readonly}
@@ -322,7 +349,10 @@ export default function ExpenseDetailPage({
         />
 
         {isFuel && (
-          <section aria-label="Dados do abastecimento" className="flex flex-col gap-3 rounded border p-3">
+          <section
+            aria-label="Dados do abastecimento"
+            className="flex flex-col gap-3 rounded border p-3"
+          >
             <span className="text-sm font-medium">Tipo de combustível</span>
             <Combobox
               aria-label="Tipo de combustível"
@@ -339,14 +369,20 @@ export default function ExpenseDetailPage({
             />
 
             <span id="full_tank_label">Tanque cheio?</span>
-            <div role="group" aria-labelledby="full_tank_label" className="flex gap-2">
+            <div
+              role="group"
+              aria-labelledby="full_tank_label"
+              className="flex gap-2"
+            >
               <Button
                 type="button"
                 variant={fullTank === true ? "default" : "outline"}
                 size="sm"
                 aria-pressed={fullTank === true}
                 disabled={expense.is_readonly}
-                onClick={() => setFullTank((current) => (current === true ? null : true))}
+                onClick={() =>
+                  setFullTank((current) => (current === true ? null : true))
+                }
               >
                 Sim
               </Button>
@@ -356,7 +392,9 @@ export default function ExpenseDetailPage({
                 size="sm"
                 aria-pressed={fullTank === false}
                 disabled={expense.is_readonly}
-                onClick={() => setFullTank((current) => (current === false ? null : false))}
+                onClick={() =>
+                  setFullTank((current) => (current === false ? null : false))
+                }
               >
                 Não
               </Button>
@@ -381,7 +419,8 @@ export default function ExpenseDetailPage({
 
             {summaryConsistent && (
               <p className="text-sm text-muted-foreground">
-                {fuelCalc.liters} L × R$ {fuelCalc.pricePerLiter}/L = R$ {fuelCalc.amount}
+                {fuelCalc.liters} L × R$ {fuelCalc.pricePerLiter}/L = R${" "}
+                {fuelCalc.amount}
               </p>
             )}
 
@@ -394,19 +433,27 @@ export default function ExpenseDetailPage({
               disabled={expense.is_readonly}
             />
             <datalist id="supplier-suggestions">
-              {suppliers?.map((name) => <option key={name} value={name} />)}
+              {suppliers?.map((name) => (
+                <option key={name} value={name} />
+              ))}
             </datalist>
           </section>
         )}
 
         {fieldError && <Alert variant="error" description={fieldError} />}
         {updateMutation.isError && !fieldError && (
-          <Alert variant="error" description="Não foi possível atualizar a despesa." />
+          <Alert
+            variant="error"
+            description="Não foi possível atualizar a despesa."
+          />
         )}
         {updateMutation.isSuccess && <p>Despesa atualizada.</p>}
 
         <div className="flex gap-2">
-          <Button type="submit" disabled={updateMutation.isPending || expense.is_readonly}>
+          <Button
+            type="submit"
+            disabled={updateMutation.isPending || expense.is_readonly}
+          >
             {updateMutation.isPending ? "Salvando..." : "Salvar"}
           </Button>
           <Button type="button" variant="outline" onClick={handleCancel}>
@@ -424,10 +471,17 @@ export default function ExpenseDetailPage({
         {deleteMutation.isPending ? "Removendo..." : "Remover despesa"}
       </Button>
       {deleteMutation.isError && (
-        <Alert variant="error" description="Não foi possível remover a despesa." />
+        <Alert
+          variant="error"
+          description="Não foi possível remover a despesa."
+        />
       )}
 
-      <Button type="button" variant="outline" onClick={() => setSavingTemplate((prev) => !prev)}>
+      <Button
+        type="button"
+        variant="outline"
+        onClick={() => setSavingTemplate((prev) => !prev)}
+      >
         Salvar como modelo
       </Button>
       {savingTemplate && (
@@ -439,13 +493,17 @@ export default function ExpenseDetailPage({
             onChange={(event) => setTemplateName(event.target.value)}
             required
           />
-          {templateError && <Alert variant="error" description={templateError} />}
+          {templateError && (
+            <Alert variant="error" description={templateError} />
+          )}
           <Button type="submit" disabled={saveTemplateMutation.isPending}>
             {saveTemplateMutation.isPending ? "Salvando..." : "Salvar modelo"}
           </Button>
         </form>
       )}
-      {savedTemplateName && <p>Modelo &apos;{savedTemplateName}&apos; criado com sucesso.</p>}
+      {savedTemplateName && (
+        <p>Modelo &apos;{savedTemplateName}&apos; criado com sucesso.</p>
+      )}
     </Container>
   );
 }

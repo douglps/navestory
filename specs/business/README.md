@@ -1,21 +1,21 @@
 # Business Strategy — Specs
 
-Especificacoes relacionadas a regras de negocio, monetizacao, planos de assinatura, retenção, onboarding e crescimento do Nave SaaS.
+Especificacoes relacionadas a regras de negocio, monetizacao, planos de assinatura, retenção, onboarding e crescimento do navestory SaaS.
 
 ---
 
 ## Specs
 
-| ID | Titulo | Status | Data |
-|----|--------|--------|------|
-| [SPEC-20260620-001](SPEC-20260620-001-business-strategy-stories.md) | Business Strategy Stories — Regras de Negocio e Crescimento | draft | 2026-06-20 |
+| ID                                                                  | Titulo                                                      | Status | Data       |
+| ------------------------------------------------------------------- | ----------------------------------------------------------- | ------ | ---------- |
+| [SPEC-20260620-001](SPEC-20260620-001-business-strategy-stories.md) | Business Strategy Stories — Regras de Negocio e Crescimento | draft  | 2026-06-20 |
 
 ---
 
 ## Documentos de Referência
 
-| Documento | Propósito |
-|-----------|-----------|
+| Documento                                                                      | Propósito                                                                                                                                                                                                                                                                                                                 |
+| ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [PLANO-MARKETING-PUBLICIDADE-FUTURO.md](PLANO-MARKETING-PUBLICIDADE-FUTURO.md) | Plano represado (2026-07-30) para Marketing System (ICP, funil, SEO, métricas) e Publicidade/Mídia (campanha, formatos, plano de mídia) — frameworks de mercado prontos, sem números fabricados. Só ativar quando um gatilho real acontecer (ver §0 do documento: soft launch, primeiro pagante, verba de mídia aprovada) |
 
 ---

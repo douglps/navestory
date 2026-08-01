@@ -6,8 +6,16 @@ import {
   type Fine,
   type FineStatus,
   type UpdateFineInput,
-} from "@nave/validators";
-import { Alert, Badge, Button, Container, CurrencyInput, Input, OdometerInput } from "@nave/ui";
+} from "@navestory/validators";
+import {
+  Alert,
+  Badge,
+  Button,
+  Container,
+  CurrencyInput,
+  Input,
+  OdometerInput,
+} from "@navestory/ui";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
@@ -64,7 +72,9 @@ export default function FineDetailPage({
   const [occurredAt, setOccurredAt] = useState("");
   const [autoNumber, setAutoNumber] = useState("");
   const [infractionCode, setInfractionCode] = useState("");
-  const [amountWithDiscount, setAmountWithDiscount] = useState<number | undefined>(undefined);
+  const [amountWithDiscount, setAmountWithDiscount] = useState<
+    number | undefined
+  >(undefined);
   const [dueDate, setDueDate] = useState("");
   const [appealDeadline, setAppealDeadline] = useState("");
   const [location, setLocation] = useState("");
@@ -115,8 +125,14 @@ export default function FineDetailPage({
     event.preventDefault();
     setFieldError(null);
 
-    if (amountWithDiscount != null && amount != null && amountWithDiscount > amount) {
-      setFieldError("Valor com desconto não pode ser maior que o valor original");
+    if (
+      amountWithDiscount != null &&
+      amount != null &&
+      amountWithDiscount > amount
+    ) {
+      setFieldError(
+        "Valor com desconto não pode ser maior que o valor original",
+      );
       return;
     }
 
@@ -163,7 +179,8 @@ export default function FineDetailPage({
     router.push("/fines");
   }
 
-  if (id === null || isLoading) return <main className="p-8">Carregando...</main>;
+  if (id === null || isLoading)
+    return <main className="p-8">Carregando...</main>;
   if (isError || !fine)
     return (
       <main className="p-8">
@@ -180,7 +197,9 @@ export default function FineDetailPage({
         <h1 className="text-xl font-semibold">
           {fine.description} — {fine.occurred_at.slice(0, 10)}
         </h1>
-        <Badge variant={STATUS_VARIANT[fine.status]}>{STATUS_LABEL[fine.status]}</Badge>
+        <Badge variant={STATUS_VARIANT[fine.status]}>
+          {STATUS_LABEL[fine.status]}
+        </Badge>
       </div>
 
       {!isTerminal && (
@@ -212,7 +231,12 @@ export default function FineDetailPage({
         />
 
         <label htmlFor="amount">Valor (R$) *</label>
-        <CurrencyInput id="amount" value={amount} onChange={setAmount} required />
+        <CurrencyInput
+          id="amount"
+          value={amount}
+          onChange={setAmount}
+          required
+        />
 
         <label htmlFor="occurred_at">Data da infração *</label>
         <Input
@@ -261,14 +285,24 @@ export default function FineDetailPage({
         />
 
         {fine.paid_at && (
-          <p className="text-sm text-muted-foreground">Pago em {fine.paid_at}</p>
+          <p className="text-sm text-muted-foreground">
+            Pago em {fine.paid_at}
+          </p>
         )}
 
         <label htmlFor="location">Local</label>
-        <Input id="location" value={location} onChange={(event) => setLocation(event.target.value)} />
+        <Input
+          id="location"
+          value={location}
+          onChange={(event) => setLocation(event.target.value)}
+        />
 
         <label htmlFor="odometer_km">Odômetro (km)</label>
-        <OdometerInput id="odometer_km" value={odometerKm} onChange={setOdometerKm} />
+        <OdometerInput
+          id="odometer_km"
+          value={odometerKm}
+          onChange={setOdometerKm}
+        />
 
         <label htmlFor="driver_name">Condutor</label>
         <Input
@@ -278,13 +312,22 @@ export default function FineDetailPage({
         />
 
         <label htmlFor="notes">Observações</label>
-        <Input id="notes" value={notes} onChange={(event) => setNotes(event.target.value)} />
+        <Input
+          id="notes"
+          value={notes}
+          onChange={(event) => setNotes(event.target.value)}
+        />
 
         {fieldError && <Alert variant="error" description={fieldError} />}
         {updateMutation.isError && !fieldError && (
-          <Alert variant="error" description="Não foi possível atualizar a multa." />
+          <Alert
+            variant="error"
+            description="Não foi possível atualizar a multa."
+          />
         )}
-        {updateMutation.isSuccess && <Alert variant="success" description="Multa atualizada." />}
+        {updateMutation.isSuccess && (
+          <Alert variant="success" description="Multa atualizada." />
+        )}
 
         <div className="flex gap-2">
           <Button type="submit" disabled={updateMutation.isPending}>

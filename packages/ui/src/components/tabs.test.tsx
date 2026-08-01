@@ -14,8 +14,14 @@ describe("Tabs", () => {
   it("marca a primeira aba (ou defaultValue) como selecionada", () => {
     render(<Tabs items={ITEMS} defaultValue="expenses" aria-label="Seções" />);
 
-    expect(screen.getByRole("tab", { name: /Despesas/ })).toHaveAttribute("aria-selected", "true");
-    expect(screen.getByRole("tab", { name: "Visão Geral" })).toHaveAttribute("aria-selected", "false");
+    expect(screen.getByRole("tab", { name: /Despesas/ })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+    expect(screen.getByRole("tab", { name: "Visão Geral" })).toHaveAttribute(
+      "aria-selected",
+      "false",
+    );
   });
 
   it("troca a aba ativa ao clicar (não controlado)", async () => {
@@ -23,27 +29,45 @@ describe("Tabs", () => {
     render(<Tabs items={ITEMS} defaultValue="overview" aria-label="Seções" />);
 
     await user.click(screen.getByRole("tab", { name: "Visão Geral" }));
-    expect(screen.getByRole("tab", { name: "Visão Geral" })).toHaveAttribute("aria-selected", "true");
+    expect(screen.getByRole("tab", { name: "Visão Geral" })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
 
     await user.click(screen.getByRole("tab", { name: /Despesas/ }));
-    expect(screen.getByRole("tab", { name: /Despesas/ })).toHaveAttribute("aria-selected", "true");
+    expect(screen.getByRole("tab", { name: /Despesas/ })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
   });
 
   it("modo controlado chama onValueChange e não muda sozinho sem o valor ser atualizado", async () => {
     const user = userEvent.setup();
     const onValueChange = vi.fn();
-    render(<Tabs items={ITEMS} value="overview" onValueChange={onValueChange} aria-label="Seções" />);
+    render(
+      <Tabs
+        items={ITEMS}
+        value="overview"
+        onValueChange={onValueChange}
+        aria-label="Seções"
+      />,
+    );
 
     await user.click(screen.getByRole("tab", { name: /Despesas/ }));
 
     expect(onValueChange).toHaveBeenCalledWith("expenses");
-    expect(screen.getByRole("tab", { name: "Visão Geral" })).toHaveAttribute("aria-selected", "true");
+    expect(screen.getByRole("tab", { name: "Visão Geral" })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
   });
 
   it("exibe o badge da aba", () => {
     render(<Tabs items={ITEMS} defaultValue="overview" aria-label="Seções" />);
 
-    expect(screen.getByRole("tab", { name: /Despesas/ })).toHaveTextContent("3");
+    expect(screen.getByRole("tab", { name: /Despesas/ })).toHaveTextContent(
+      "3",
+    );
   });
 
   it("desabilita a aba marcada como disabled", () => {
@@ -66,7 +90,12 @@ describe("Tabs", () => {
     "não possui violações de acessibilidade na variante %s",
     async (variant) => {
       const { container } = render(
-        <Tabs items={ITEMS} defaultValue="overview" variant={variant} aria-label="Seções" />,
+        <Tabs
+          items={ITEMS}
+          defaultValue="overview"
+          variant={variant}
+          aria-label="Seções"
+        />,
       );
 
       expect(await axe(container)).toHaveNoViolations();

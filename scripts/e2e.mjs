@@ -21,8 +21,8 @@ import { spawnSync } from "node:child_process";
 
 const DEFAULT_ENV = {
   E2E_BASE_URL: "http://localhost:3000",
-  E2E_USER_EMAIL: "e2e-tester@nave.test",
-  E2E_USER_PASSWORD: "Nave-E2E-Local-Test-2026",
+  E2E_USER_EMAIL: "e2e-tester@navestory.test",
+  E2E_USER_PASSWORD: "navestory-E2E-Local-Test-2026",
   E2E_TEST_VEHICLE_PLATE: "E2E0A01",
   E2E_VEHICLE_A_PLATE: "E2E0A01",
   E2E_VEHICLE_B_PLATE: "E2E0B02",
@@ -39,7 +39,9 @@ async function checkServer(url, name) {
     return res.ok || res.status < 500;
   } catch {
     console.error(`\n[e2e] ${name} não respondeu em ${url}.`);
-    console.error(`[e2e] Rode "pnpm dev" (na raiz) numa janela separada e tente de novo.\n`);
+    console.error(
+      `[e2e] Rode "pnpm dev" (na raiz) numa janela separada e tente de novo.\n`,
+    );
     return false;
   }
 }
@@ -55,12 +57,18 @@ function run(command, args, options = {}) {
 }
 
 async function main() {
-  const apiOk = await checkServer("http://localhost:3001/health", "API (localhost:3001)");
-  const webOk = await checkServer("http://localhost:3000", "Web (localhost:3000)");
+  const apiOk = await checkServer(
+    "http://localhost:3001/health",
+    "API (localhost:3001)",
+  );
+  const webOk = await checkServer(
+    "http://localhost:3000",
+    "Web (localhost:3000)",
+  );
   if (!apiOk || !webOk) process.exit(1);
 
   console.log("[e2e] Seedando usuário/veículos de teste...");
-  const seedStatus = run("pnpm", ["--filter", "@nave/api", "seed:e2e"]);
+  const seedStatus = run("pnpm", ["--filter", "@navestory/api", "seed:e2e"]);
   if (seedStatus !== 0) {
     console.error("[e2e] Seed falhou — abortando antes de rodar a suíte.");
     process.exit(seedStatus);
@@ -68,10 +76,15 @@ async function main() {
 
   const extraArgs = process.argv.slice(2);
   console.log("\n[e2e] Rodando Playwright (--workers=1)...");
-  const testStatus = run(
-    "pnpm",
-    ["--filter", "@nave/web", "exec", "playwright", "test", "--workers=1", ...extraArgs],
-  );
+  const testStatus = run("pnpm", [
+    "--filter",
+    "@navestory/web",
+    "exec",
+    "playwright",
+    "test",
+    "--workers=1",
+    ...extraArgs,
+  ]);
   process.exit(testStatus);
 }
 

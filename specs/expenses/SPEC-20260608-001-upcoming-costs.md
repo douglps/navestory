@@ -33,24 +33,24 @@ Cobre as user stories: **US-FIN-B01** (8pts), **US-FIN-B03** (3pts), **US-FIN-B0
 
 ### RF-02 — Fontes de dados do RPC
 
-| Source type | Tabela | Condição de inclusão |
-|---|---|---|
-| `maintenance` | `maintenances` | `status IN ('pending', 'in_progress')` AND `scheduled_date` dentro do horizonte |
-| `fine` | `fines` | `status = 'pending'` AND `due_date` dentro do horizonte AND `due_date IS NOT NULL` |
-| `recurring_cost` | `vehicle_recurring_costs` | `paid_at IS NULL` AND `due_date` dentro do horizonte |
+| Source type      | Tabela                    | Condição de inclusão                                                               |
+| ---------------- | ------------------------- | ---------------------------------------------------------------------------------- |
+| `maintenance`    | `maintenances`            | `status IN ('pending', 'in_progress')` AND `scheduled_date` dentro do horizonte    |
+| `fine`           | `fines`                   | `status = 'pending'` AND `due_date` dentro do horizonte AND `due_date IS NOT NULL` |
+| `recurring_cost` | `vehicle_recurring_costs` | `paid_at IS NULL` AND `due_date` dentro do horizonte                               |
 
 ### RF-03 — Estrutura de UpcomingCostItem
 
 ```typescript
 interface UpcomingCostItem {
-  source_type: 'maintenance' | 'fine' | 'recurring_cost';
-  source_id: string;           // UUID do registro de origem
-  title: string;               // descrição/cost_type
-  amount: number | null;       // null para manutenções sem custo definido
-  due_date: string;            // YYYY-MM-DD
+  source_type: "maintenance" | "fine" | "recurring_cost";
+  source_id: string; // UUID do registro de origem
+  title: string; // descrição/cost_type
+  amount: number | null; // null para manutenções sem custo definido
+  due_date: string; // YYYY-MM-DD
   vehicle_id: string;
   vehicle_plate: string | null;
-  is_estimated: boolean;       // true para manutenções sem cost definido
+  is_estimated: boolean; // true para manutenções sem cost definido
 }
 ```
 
@@ -59,21 +59,21 @@ interface UpcomingCostItem {
 - URL: `/expenses?tab=proximas`
 - Itens agrupados por urgência com badge visual:
 
-| Prazo | Cor do card | Ícone |
-|---|---|---|
-| Vencido (< hoje) | `bg-danger/10 border-danger` | `AlertOctagon` |
-| 0–7 dias | `bg-danger/5 border-danger` | `AlertTriangle` |
-| 8–14 dias | `bg-warning/10 border-warning` | `Clock` |
-| 15–30 dias | `bg-warning/5` | `Calendar` |
-| 31–60 dias | `bg-info/5` | `CalendarDays` |
-| +60 dias | `text-muted-foreground` | `CalendarCheck2` |
+| Prazo            | Cor do card                    | Ícone            |
+| ---------------- | ------------------------------ | ---------------- |
+| Vencido (< hoje) | `bg-danger/10 border-danger`   | `AlertOctagon`   |
+| 0–7 dias         | `bg-danger/5 border-danger`    | `AlertTriangle`  |
+| 8–14 dias        | `bg-warning/10 border-warning` | `Clock`          |
+| 15–30 dias       | `bg-warning/5`                 | `Calendar`       |
+| 31–60 dias       | `bg-info/5`                    | `CalendarDays`   |
+| +60 dias         | `text-muted-foreground`        | `CalendarCheck2` |
 
 ### RF-05 — Badge de contagem na tab
 
 - Tab "Próximas" exibe contador `①` com total de itens do horizonte de 30 dias
 - Badge vermelho quando há itens vencidos (due_date < hoje)
 
-### RF-06 — Navegação da row para origem
+### RF-06 — navegação da row para origem
 
 - Cada row na tab "Próximas" tem botão "Ver" que navega para:
   - `/maintenance` → para `source_type = 'maintenance'`
@@ -92,11 +92,11 @@ interface UpcomingCostItem {
 
 ## Casos de Teste
 
-| ID | Cenário | Resultado esperado |
-|---|---|---|
-| CT-001 valida RF-01 | `GET /expenses/upcoming` sem params | Retorna array, horizon=30 |
-| CT-002 valida RF-01 | `GET /expenses/upcoming?horizon_days=90` | Retorna array com janela de 90 dias |
-| CT-003 valida RNF-03 | `GET /expenses/upcoming?horizon_days=15` | HTTP 400 |
-| CT-004 valida RF-02 | Manutenção com status=completed não deve aparecer | Ausente do resultado |
-| CT-005 valida RF-02 | Fine com status=paid não deve aparecer | Ausente do resultado |
-| CT-006 valida RF-03 | Manutenção sem cost → is_estimated=true, amount=null | Campos corretos |
+| ID                   | Cenário                                              | Resultado esperado                  |
+| -------------------- | ---------------------------------------------------- | ----------------------------------- |
+| CT-001 valida RF-01  | `GET /expenses/upcoming` sem params                  | Retorna array, horizon=30           |
+| CT-002 valida RF-01  | `GET /expenses/upcoming?horizon_days=90`             | Retorna array com janela de 90 dias |
+| CT-003 valida RNF-03 | `GET /expenses/upcoming?horizon_days=15`             | HTTP 400                            |
+| CT-004 valida RF-02  | Manutenção com status=completed não deve aparecer    | Ausente do resultado                |
+| CT-005 valida RF-02  | Fine com status=paid não deve aparecer               | Ausente do resultado                |
+| CT-006 valida RF-03  | Manutenção sem cost → is_estimated=true, amount=null | Campos corretos                     |

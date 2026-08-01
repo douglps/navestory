@@ -2,7 +2,7 @@
 import { defineConfig, devices } from "@playwright/test";
 
 /**
- * Configuração do Playwright para testes E2E do Nave.
+ * Configuração do Playwright para testes E2E do navestory.
  *
  * Variáveis de ambiente necessárias:
  *   E2E_BASE_URL      — URL base do Next.js (default: http://localhost:3000)

@@ -11,7 +11,7 @@ import {
   DialogTitle,
   DialogTrigger,
   Input,
-} from "@nave/ui";
+} from "@navestory/ui";
 import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useState, type ReactNode } from "react";
@@ -28,7 +28,11 @@ export function DeleteAccountDialog(): ReactNode {
   const [confirmationText, setConfirmationText] = useState("");
 
   const mutation = useMutation({
-    mutationFn: () => apiClient<void>("/users/me", { method: "DELETE", body: { confirm: true } }),
+    mutationFn: () =>
+      apiClient<void>("/users/me", {
+        method: "DELETE",
+        body: { confirm: true },
+      }),
     onSuccess: () => {
       setOpen(false);
       router.push("/login?message=conta_excluida");
@@ -59,16 +63,21 @@ export function DeleteAccountDialog(): ReactNode {
         <DialogHeader>
           <DialogTitle>Excluir minha conta</DialogTitle>
           <DialogDescription>
-            Sua conta será marcada para exclusão. A exclusão definitiva ocorre após 30 dias.
-            Você pode cancelar a qualquer momento dentro desse prazo fazendo login novamente —
-            todos os seus dados (veículos, despesas, histórico e preferências) permanecem
-            intactos até lá. Após o prazo, a exclusão é irreversível.
+            Sua conta será marcada para exclusão. A exclusão definitiva ocorre
+            após 30 dias. Você pode cancelar a qualquer momento dentro desse
+            prazo fazendo login novamente — todos os seus dados (veículos,
+            despesas, histórico e preferências) permanecem intactos até lá. Após
+            o prazo, a exclusão é irreversível.
           </DialogDescription>
         </DialogHeader>
 
         <div className="flex flex-col gap-2">
-          <label htmlFor="delete-account-confirmation" className="text-sm font-medium">
-            Para confirmar, digite <strong>{CONFIRMATION_WORD}</strong> no campo abaixo:
+          <label
+            htmlFor="delete-account-confirmation"
+            className="text-sm font-medium"
+          >
+            Para confirmar, digite <strong>{CONFIRMATION_WORD}</strong> no campo
+            abaixo:
           </label>
           <Input
             id="delete-account-confirmation"

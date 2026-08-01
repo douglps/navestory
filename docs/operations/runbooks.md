@@ -1,4 +1,4 @@
-# Runbooks — Nave SaaS
+# Runbooks — navestory SaaS
 
 <!-- @spec SPEC-20260716-001 RF-07 RF-08 -->
 
@@ -21,15 +21,15 @@
 
 Reverte em menos de 2 minutos porque a Vercel mantém o build anterior pronto — não há rebuild.
 
-1. **Via painel:** Vercel → projeto `nave-web` → aba *Deployments* → localizar o último deploy
-   de produção saudável → menu *"…"* → **Promote to Production**.
+1. **Via painel:** Vercel → projeto `navestory-web` → aba _Deployments_ → localizar o último deploy
+   de produção saudável → menu _"…"_ → **Promote to Production**.
 2. **Via CLI:**
    ```bash
    vercel rollback <url-do-deploy-anterior> --token=$VERCEL_TOKEN
    ```
-   A URL do deploy anterior está no histórico da aba *Deployments* ou no comentário que o bot
+   A URL do deploy anterior está no histórico da aba _Deployments_ ou no comentário que o bot
    da Vercel deixou no PR correspondente.
-3. Confirmar em `https://nave.app` (ou domínio de produção) que a versão anterior está no ar.
+3. Confirmar em `https://navestory.app` (ou domínio de produção) que a versão anterior está no ar.
 
 ### Rollback de `apps/api` (Railway)
 

@@ -1,4 +1,4 @@
--- @spec RULES.md S2/S9 -- extensões e enums base do domínio Nave
+-- @spec RULES.md S2/S9 -- extensões e enums base do domínio navestory
 create extension if not exists pg_cron;
 
 create type profile_type as enum ('autonomous', 'small_fleet', 'large_fleet');

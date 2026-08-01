@@ -3,7 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { Alert, Container, EmptyState } from "@nave/ui";
+import { Alert, Container, EmptyState } from "@navestory/ui";
 import { apiClient } from "@/lib/http/api-client";
 
 interface VehicleGroup {
@@ -17,7 +17,11 @@ interface VehicleGroup {
  * @spec SPEC-20260602-003 RF-08
  */
 export default function VehicleGroupsPage(): ReactNode {
-  const { data: groups, isLoading, isError } = useQuery({
+  const {
+    data: groups,
+    isLoading,
+    isError,
+  } = useQuery({
     queryKey: ["vehicle-groups"],
     queryFn: () => apiClient<VehicleGroup[]>("/vehicle-groups"),
     retry: false,
@@ -31,7 +35,12 @@ export default function VehicleGroupsPage(): ReactNode {
       </div>
 
       {isLoading && <p>Carregando...</p>}
-      {isError && <Alert variant="error" description="Não foi possível carregar os grupos." />}
+      {isError && (
+        <Alert
+          variant="error"
+          description="Não foi possível carregar os grupos."
+        />
+      )}
       {!isLoading && !isError && groups?.length === 0 && (
         <EmptyState size="sm" title="Você ainda não criou nenhum grupo." />
       )}
@@ -39,13 +48,17 @@ export default function VehicleGroupsPage(): ReactNode {
       <ul className="flex flex-col gap-2">
         {groups?.map((group) => (
           <li key={group.id}>
-            <Link href={`/vehicle-groups/${group.id}`} className="flex items-center gap-2">
+            <Link
+              href={`/vehicle-groups/${group.id}`}
+              className="flex items-center gap-2"
+            >
               <span
                 aria-hidden
                 className="inline-block h-3 w-3 rounded-full"
                 style={{ backgroundColor: group.color }}
               />
-              {group.name} — {group.member_count} veículo{group.member_count === 1 ? "" : "s"}
+              {group.name} — {group.member_count} veículo
+              {group.member_count === 1 ? "" : "s"}
             </Link>
           </li>
         ))}

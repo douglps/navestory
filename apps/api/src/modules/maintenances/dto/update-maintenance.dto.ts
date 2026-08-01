@@ -1,4 +1,4 @@
-import { updateMaintenanceInputSchema } from "@nave/validators";
+import { updateMaintenanceInputSchema } from "@navestory/validators";
 import type { z } from "zod";
 
 export const updateMaintenanceDtoSchema = updateMaintenanceInputSchema;

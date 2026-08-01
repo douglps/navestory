@@ -1,4 +1,4 @@
-import { expenseKpisQuerySchema } from "@nave/validators";
+import { expenseKpisQuerySchema } from "@navestory/validators";
 import type { z } from "zod";
 
 export const expenseKpisDtoSchema = expenseKpisQuerySchema;

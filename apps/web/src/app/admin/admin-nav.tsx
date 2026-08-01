@@ -9,7 +9,7 @@ export function AdminNav(): ReactNode {
     <header className="flex items-center justify-between border-b border-border p-4">
       <h1 className="text-lg font-semibold">Painel de Administração</h1>
       <Link href="/dashboard" className="text-sm text-primary underline">
-        Voltar ao Nave
+        Voltar ao navestory
       </Link>
     </header>
   );

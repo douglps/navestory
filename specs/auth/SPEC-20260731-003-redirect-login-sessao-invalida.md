@@ -38,6 +38,7 @@ O erro caía no `throw new ApiError(...)` genérico, e cada página apenas verif
 ## Requisitos
 
 ### RF-01 — Interceptação global de 401
+
 Qualquer resposta `401` de `/api/backend/*` (não só de uma página específica) dispara redirect
 global para `/login?redirect=<pathname atual>` — mesmo contrato de query param já usado pelo
 middleware SSR (`apps/web/middleware.ts:58-60`), permitindo que a página de login devolva o
@@ -45,6 +46,7 @@ usuário à rota original após reautenticar (`apps/web/src/app/(auth)/login/pag
 esse parâmetro).
 
 ### RF-02 — Exclusão dos endpoints de `/auth/*`
+
 Endpoints sob `/auth/` (`login`, `register`, `recover-password`, `reset-password`, `refresh`,
 `logout`) **não** disparam o redirect global em 401. `POST /auth/login` retorna 401 como fluxo
 normal de credenciais inválidas (STORY-02, já coberto em `api-client.spec.ts`) — se o redirect
@@ -52,10 +54,12 @@ global disparasse aqui, o usuário seria empurrado de volta para `/login` antes 
 "E-mail ou senha inválidos.", quebrando o formulário.
 
 ### RF-03 — Sem loop de redirect
+
 Se o usuário já está em `/login` (ex.: um 401 de uma chamada em segundo plano nessa página),
 não repetir o redirect — mesmo padrão de guarda já usado em `getRestoreAccountRedirectUrl`.
 
 ### RF-04 — Erro ainda propaga
+
 Assim como o padrão de RF-13 da SPEC-20260719-001 (403 `ACCOUNT_PENDING_DELETION`), o redirect é
 um efeito colateral — a função ainda lança `ApiError` normalmente. Isso evita necessidade de
 tratamento especial em cada `useQuery`; a navegação ocorre antes de qualquer novo render relevante

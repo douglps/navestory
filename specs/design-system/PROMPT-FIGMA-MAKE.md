@@ -1,4 +1,4 @@
-# Prompt-base para Figma Make — Nave
+# Prompt-base para Figma Make — navestory
 
 **Propósito:** prompt reutilizável para o Figma Make gerar telas consistentes com o design system já implementado em `packages/ui`.
 **Fonte:** `specs/design-system/INVENTARIO-DESIGN-SYSTEM.md`
@@ -9,7 +9,7 @@
 ## 1. Prompt-base (colar primeiro, uma vez por projeto)
 
 ```
-Você vai me ajudar a desenhar as telas do Nave, um app de gestão de frota (veículos, despesas, manutenções, multas) mobile-first. Já existe um design system implementado em código que você deve seguir rigorosamente — não invente cores, espaçamentos ou estilos de componente fora do que está descrito abaixo.
+Você vai me ajudar a desenhar as telas do navestory, um app de gestão de frota (veículos, despesas, manutenções, multas) mobile-first. Já existe um design system implementado em código que você deve seguir rigorosamente — não invente cores, espaçamentos ou estilos de componente fora do que está descrito abaixo.
 
 ## Identidade visual
 
@@ -74,10 +74,10 @@ Interface densa em informação mas organizada, prioriza clareza e leitura rápi
 
 Peça telas reaproveitando os nomes de componentes do prompt-base, para o Figma Make manter consistência entre gerações. Exemplos:
 
-- *"Crie a tela de Dashboard: header com nome do usuário e veículo ativo, uma grade 2×2 de KpiCard (combustível, manutenção, multas, quilometragem do mês), um ChartWrapper com gráfico de gastos mensais, e uma Table com as últimas 5 despesas."*
-- *"Crie a tela de listagem de Despesas: Breadcrumb no topo (Frota / Veículo / Despesas), filtros com DateRangePicker e Combobox de categoria, Table com padrão two-row (data, detalhes em 2 linhas, valor, ações), EmptyState quando não há resultados."*
-- *"Crie o fluxo de cadastro de veículo em 3 passos usando o componente Steps (Dados do veículo, Documentos, Confirmação), cada passo em um Card, com FileUpload no passo de documentos."*
-- *"Crie o modal de confirmação de exclusão usando Dialog: título 'Excluir despesa?', descrição de aviso, botão destructive 'Excluir' e botão outline 'Cancelar'."*
+- _"Crie a tela de Dashboard: header com nome do usuário e veículo ativo, uma grade 2×2 de KpiCard (combustível, manutenção, multas, quilometragem do mês), um ChartWrapper com gráfico de gastos mensais, e uma Table com as últimas 5 despesas."_
+- _"Crie a tela de listagem de Despesas: Breadcrumb no topo (Frota / Veículo / Despesas), filtros com DateRangePicker e Combobox de categoria, Table com padrão two-row (data, detalhes em 2 linhas, valor, ações), EmptyState quando não há resultados."_
+- _"Crie o fluxo de cadastro de veículo em 3 passos usando o componente Steps (Dados do veículo, Documentos, Confirmação), cada passo em um Card, com FileUpload no passo de documentos."_
+- _"Crie o modal de confirmação de exclusão usando Dialog: título 'Excluir despesa?', descrição de aviso, botão destructive 'Excluir' e botão outline 'Cancelar'."_
 
 Ao revisar o resultado, confira sempre contra a seção 3.6 (Pontos de Atenção) do `INVENTARIO-DESIGN-SYSTEM.md` — são os detalhes que o Figma Make mais tende a errar (largura do KpiCard, posição do Toast, ícones semânticos como SVG simples, Tabs sem painel de conteúdo embutido).
 

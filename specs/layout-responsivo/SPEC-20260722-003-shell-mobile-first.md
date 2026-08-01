@@ -11,9 +11,9 @@ camadas: [frontend, devops]
 
 ## Contexto
 
-O shell de navegação do Nave (`apps/web/src/components/layout/sidebar.tsx`, `header.tsx` e `apps/web/src/app/(app)/layout.tsx`) foi construído para desktop: a sidebar é `fixed inset-y-0 left-0` sem nenhum breakpoint responsivo, e o layout reserva `pl-16`/`pl-64` de padding fixo em qualquer largura de viewport. Em telas de 375 px (iPhone SE, dispositivo de referência mínimo), sobram apenas ~215 px de área útil de conteúdo — inutilizável para formulários e tabelas.
+O shell de navegação do navestory (`apps/web/src/components/layout/sidebar.tsx`, `header.tsx` e `apps/web/src/app/(app)/layout.tsx`) foi construído para desktop: a sidebar é `fixed inset-y-0 left-0` sem nenhum breakpoint responsivo, e o layout reserva `pl-16`/`pl-64` de padding fixo em qualquer largura de viewport. Em telas de 375 px (iPhone SE, dispositivo de referência mínimo), sobram apenas ~215 px de área útil de conteúdo — inutilizável para formulários e tabelas.
 
-O projeto irmão de referência **Nave-SaaS** (em `C:\Dev\Antigravity\Nave-SaaS-main`, Tailwind v4) já resolve isso com sidebar como drawer/overlay em mobile, header mobile-first com hamburger e bottom nav. Esta spec cobre os dois blocos de infraestrutura que desbloqueiam a paridade de experiência mobile:
+O projeto irmão de referência **navestory-SaaS** (em `C:\Dev\Antigravity\navestory-SaaS-main`, Tailwind v4) já resolve isso com sidebar como drawer/overlay em mobile, header mobile-first com hamburger e bottom nav. Esta spec cobre os dois blocos de infraestrutura que desbloqueiam a paridade de experiência mobile:
 
 - **Bloco A** — Migração do Tailwind v3 para v4 (infraestrutura de estilos): sem essa atualização, qualquer tentativa de copiar classes do projeto de referência produz erros de build.
 - **Bloco B** — Shell mobile-first: converte a sidebar para drawer/overlay em mobile, torna o header responsivo com hamburger e elimina o padding de layout fixo.
@@ -30,9 +30,9 @@ Ao final da implementação: (1) o build do Next.js 16 + Turbopack usa Tailwind 
 
 ## Histórias de Usuário e Critérios de Aceitação
 
-### US-01 — Navegação mobile via drawer
+### US-01 — navegação mobile via drawer
 
-**Como** usuário do Nave em dispositivo móvel (< 768 px de largura), **quero** acessar o menu lateral por meio de um painel deslizável, **para** não perder área útil de conteúdo enquanto navego.
+**Como** usuário do navestory em dispositivo móvel (< 768 px de largura), **quero** acessar o menu lateral por meio de um painel deslizável, **para** não perder área útil de conteúdo enquanto navego.
 
 - **Dado que** estou em tela < 768 px e o drawer está fechado, **quando** carrego qualquer página autenticada, **então** a sidebar está fora do viewport (`-translate-x-full`) e o conteúdo principal ocupa 100% da largura sem scroll horizontal.
 - **Dado que** o drawer está fechado, **quando** toco no botão hamburger do header, **então** a sidebar aparece sobreposta ao conteúdo com backdrop semitransparente (`bg-black/60`), e o foco é preso no drawer (trap focus).
@@ -71,38 +71,38 @@ Ao final da implementação: (1) o build do Next.js 16 + Turbopack usa Tailwind 
 
 ### Bloco A — Migração Tailwind v3 → v4
 
-| ID | Requisito | Prioridade | História relacionada |
-|----|-----------|------------|----------------------|
-| RF-01 | Atualizar `tailwindcss` para `^4.x`, adicionar `@tailwindcss/postcss@^4.x`, remover `autoprefixer` (v4 inclui autoprefixing nativo) em `apps/web/package.json` e `packages/ui/package.json` (se presente) | Alta | US-04 |
-| RF-02 | Em `apps/web/postcss.config.js` (ou `.mjs`), substituir o plugin `tailwindcss` por `@tailwindcss/postcss`; remover `autoprefixer` da cadeia de plugins | Alta | US-04 |
-| RF-03 | Em `apps/web/src/app/globals.css`, substituir as diretivas `@tailwind base`, `@tailwind components`, `@tailwind utilities` por `@import "tailwindcss"` seguida de `@config "../../../tailwind.config.ts"` (caminho relativo ao arquivo CSS) — estratégia compat layer `@config`, que mantém o `tailwind.config.ts` existente sem alterações | Alta | US-04 |
-| RF-04 | Validar que `@tailwindcss/typography` na versão compatível com v4 está instalado; atualizar a versão no `package.json` se necessário; confirmar que o plugin continua funcional nas páginas que usam a classe `prose` | Alta | US-04 |
-| RF-05 | Executar build completo (`pnpm build`) e `pnpm dev` localmente e em CI, confirmar ausência de erros; documentar resultado no PR | Alta | US-04 |
+| ID    | Requisito                                                                                                                                                                                                                                                                                                                                   | Prioridade | História relacionada |
+| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | -------------------- |
+| RF-01 | Atualizar `tailwindcss` para `^4.x`, adicionar `@tailwindcss/postcss@^4.x`, remover `autoprefixer` (v4 inclui autoprefixing nativo) em `apps/web/package.json` e `packages/ui/package.json` (se presente)                                                                                                                                   | Alta       | US-04                |
+| RF-02 | Em `apps/web/postcss.config.js` (ou `.mjs`), substituir o plugin `tailwindcss` por `@tailwindcss/postcss`; remover `autoprefixer` da cadeia de plugins                                                                                                                                                                                      | Alta       | US-04                |
+| RF-03 | Em `apps/web/src/app/globals.css`, substituir as diretivas `@tailwind base`, `@tailwind components`, `@tailwind utilities` por `@import "tailwindcss"` seguida de `@config "../../../tailwind.config.ts"` (caminho relativo ao arquivo CSS) — estratégia compat layer `@config`, que mantém o `tailwind.config.ts` existente sem alterações | Alta       | US-04                |
+| RF-04 | Validar que `@tailwindcss/typography` na versão compatível com v4 está instalado; atualizar a versão no `package.json` se necessário; confirmar que o plugin continua funcional nas páginas que usam a classe `prose`                                                                                                                       | Alta       | US-04                |
+| RF-05 | Executar build completo (`pnpm build`) e `pnpm dev` localmente e em CI, confirmar ausência de erros; documentar resultado no PR                                                                                                                                                                                                             | Alta       | US-04                |
 
 ### Bloco B — Shell mobile-first
 
-| ID | Requisito | Prioridade | História relacionada |
-|----|-----------|------------|----------------------|
-| RF-06 | Em `apps/web/src/components/layout/sidebar.tsx`: abaixo de `md` (< 768 px), a sidebar usa `fixed inset-y-0 left-0 z-[4000]` e alterna `translate-x-0` / `-translate-x-full` conforme `isMobileNavOpen`; acima de `md`, mantém o comportamento atual de sidebar inline | Alta | US-01 |
-| RF-07 | Adicionar backdrop em `apps/web/src/components/layout/sidebar.tsx` (ou no layout pai): `<div className="fixed inset-0 z-[3999] bg-black/60 backdrop-blur-sm md:hidden" />` visível apenas quando `isMobileNavOpen === true`; clique no backdrop chama `toggleMobileNav()` | Alta | US-01 |
-| RF-08 | Implementar fechamento do drawer por tecla `Esc` via `useEffect` com `keydown` listener em `sidebar.tsx` ou no componente de backdrop; o listener é registrado apenas quando o drawer está aberto | Alta | US-01 |
-| RF-09 | Implementar fechamento automático do drawer ao navegar: usar `usePathname()` do Next.js em um `useEffect`; ao detectar mudança de pathname com `isMobileNavOpen === true`, chamar `toggleMobileNav()` | Alta | US-01 |
-| RF-10 | Em `apps/web/src/components/layout/header.tsx`: adicionar botão hamburger visível apenas em mobile (`md:hidden`) que chama `toggleMobileNav()`; ícone alterna entre `Menu` e `X` (Lucide) conforme `isMobileNavOpen`; `aria-label` atualiza conforme estado | Alta | US-02 |
-| RF-11 | Em `apps/web/src/components/layout/header.tsx`: converter para mobile-first — elementos que só fazem sentido em desktop (ex: breadcrumb estendido, título de seção com hierarquia) devem ser `hidden md:flex` ou equivalente; versão mobile mantém apenas logo/nome do app e hamburger | Média | US-02 |
-| RF-12 | Em `apps/web/src/app/(app)/layout.tsx`: substituir `pl-16`/`pl-64` condicional fixo por classes responsivas mobile-first; em mobile (`< md`) padding-left = 0; em `md` e acima, o offset é condicionado a `isSidebarCollapsed` conforme hoje — ex: `md:pl-16` / `md:pl-64` | Alta | US-03 |
-| RF-13 | Garantir que todos os elementos interativos do drawer/header em mobile tenham área de toque `min-h-[44px] min-w-[44px]` (R-NAV-02); itens de menu da sidebar com `py-3` ou equivalente que resulte em ≥ 44 px de altura de toque | Alta | US-01, US-02 |
-| RF-14 | Adicionar `aria-expanded` e `aria-controls` ao botão hamburger; o drawer deve ter `role="dialog"` e `aria-modal="true"` em mobile para a semântica de sobreposição | Média | US-01, US-02 |
+| ID    | Requisito                                                                                                                                                                                                                                                                              | Prioridade | História relacionada |
+| ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | -------------------- |
+| RF-06 | Em `apps/web/src/components/layout/sidebar.tsx`: abaixo de `md` (< 768 px), a sidebar usa `fixed inset-y-0 left-0 z-[4000]` e alterna `translate-x-0` / `-translate-x-full` conforme `isMobileNavOpen`; acima de `md`, mantém o comportamento atual de sidebar inline                  | Alta       | US-01                |
+| RF-07 | Adicionar backdrop em `apps/web/src/components/layout/sidebar.tsx` (ou no layout pai): `<div className="fixed inset-0 z-[3999] bg-black/60 backdrop-blur-sm md:hidden" />` visível apenas quando `isMobileNavOpen === true`; clique no backdrop chama `toggleMobileNav()`              | Alta       | US-01                |
+| RF-08 | Implementar fechamento do drawer por tecla `Esc` via `useEffect` com `keydown` listener em `sidebar.tsx` ou no componente de backdrop; o listener é registrado apenas quando o drawer está aberto                                                                                      | Alta       | US-01                |
+| RF-09 | Implementar fechamento automático do drawer ao navegar: usar `usePathname()` do Next.js em um `useEffect`; ao detectar mudança de pathname com `isMobileNavOpen === true`, chamar `toggleMobileNav()`                                                                             | Alta       | US-01                |
+| RF-10 | Em `apps/web/src/components/layout/header.tsx`: adicionar botão hamburger visível apenas em mobile (`md:hidden`) que chama `toggleMobileNav()`; ícone alterna entre `Menu` e `X` (Lucide) conforme `isMobileNavOpen`; `aria-label` atualiza conforme estado                            | Alta       | US-02                |
+| RF-11 | Em `apps/web/src/components/layout/header.tsx`: converter para mobile-first — elementos que só fazem sentido em desktop (ex: breadcrumb estendido, título de seção com hierarquia) devem ser `hidden md:flex` ou equivalente; versão mobile mantém apenas logo/nome do app e hamburger | Média      | US-02                |
+| RF-12 | Em `apps/web/src/app/(app)/layout.tsx`: substituir `pl-16`/`pl-64` condicional fixo por classes responsivas mobile-first; em mobile (`< md`) padding-left = 0; em `md` e acima, o offset é condicionado a `isSidebarCollapsed` conforme hoje — ex: `md:pl-16` / `md:pl-64`             | Alta       | US-03                |
+| RF-13 | Garantir que todos os elementos interativos do drawer/header em mobile tenham área de toque `min-h-[44px] min-w-[44px]` (R-NAV-02); itens de menu da sidebar com `py-3` ou equivalente que resulte em ≥ 44 px de altura de toque                                                       | Alta       | US-01, US-02         |
+| RF-14 | Adicionar `aria-expanded` e `aria-controls` ao botão hamburger; o drawer deve ter `role="dialog"` e `aria-modal="true"` em mobile para a semântica de sobreposição                                                                                                                     | Média      | US-01, US-02         |
 
 ---
 
 ## Requisitos Não-Funcionais
 
-| ID | Requisito | Métrica de Aceite |
-|----|-----------|------------------|
-| RNF-01 | Sem regressão visual no shell desktop | Screenshot diff em CI (ou revisão manual em PR) sem diferenças em viewports ≥ 768 px |
-| RNF-02 | Performance de build não regride com v4 | `pnpm build` em CI concluindo no mesmo tempo ± 20% do baseline atual |
-| RNF-03 | Ausência de scroll horizontal em mobile | Viewport 375 px × 812 px sem `overflow-x` detectável em nenhuma rota autenticada |
-| RNF-04 | Acessibilidade do drawer | Foco preso no drawer enquanto aberto; ao fechar, foco retorna ao botão hamburger; leitor de tela anuncia abertura/fechamento via `aria-live` ou `role="dialog"` |
+| ID     | Requisito                               | Métrica de Aceite                                                                                                                                               |
+| ------ | --------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| RNF-01 | Sem regressão visual no shell desktop   | Screenshot diff em CI (ou revisão manual em PR) sem diferenças em viewports ≥ 768 px                                                                            |
+| RNF-02 | Performance de build não regride com v4 | `pnpm build` em CI concluindo no mesmo tempo ± 20% do baseline atual                                                                                            |
+| RNF-03 | Ausência de scroll horizontal em mobile | Viewport 375 px × 812 px sem `overflow-x` detectável em nenhuma rota autenticada                                                                                |
+| RNF-04 | Acessibilidade do drawer                | Foco preso no drawer enquanto aberto; ao fechar, foco retorna ao botão hamburger; leitor de tela anuncia abertura/fechamento via `aria-live` ou `role="dialog"` |
 
 ---
 
@@ -118,14 +118,14 @@ Ao final da implementação: (1) o build do Next.js 16 + Turbopack usa Tailwind 
 
 ## Dependências
 
-| Tipo | Referência | Descrição |
-|------|-----------|-----------|
-| Biblioteca | `tailwindcss@^4.x` | Motor de CSS — substitui v3 |
-| Biblioteca | `@tailwindcss/postcss@^4.x` | Plugin PostCSS para v4 (substitui integração direta `tailwindcss` no postcss.config) |
-| Biblioteca | `@tailwindcss/typography@^0.5.x` (confirmar versão v4-compat) | Plugin `prose` — deve permanecer funcional após migração |
-| Store | `apps/web/src/lib/stores/ui-store.ts` | `isMobileNavOpen`, `toggleMobileNav()` — já existem, não requerem alteração de contrato |
-| Spec | [SPEC-20260525-001](../design-system/SPEC-20260525-001.md) | Design system fundamentos — paleta de tokens que continua inalterada nesta migração |
-| Spec | [SPEC-20260716-003](../qa/SPEC-20260716-003.md) | E2E Playwright — cobertura de regressão do shell pode ser expandida pós-entrega |
+| Tipo       | Referência                                                    | Descrição                                                                               |
+| ---------- | ------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| Biblioteca | `tailwindcss@^4.x`                                            | Motor de CSS — substitui v3                                                             |
+| Biblioteca | `@tailwindcss/postcss@^4.x`                                   | Plugin PostCSS para v4 (substitui integração direta `tailwindcss` no postcss.config)    |
+| Biblioteca | `@tailwindcss/typography@^0.5.x` (confirmar versão v4-compat) | Plugin `prose` — deve permanecer funcional após migração                                |
+| Store      | `apps/web/src/lib/stores/ui-store.ts`                         | `isMobileNavOpen`, `toggleMobileNav()` — já existem, não requerem alteração de contrato |
+| Spec       | [SPEC-20260525-001](../design-system/SPEC-20260525-001.md)    | Design system fundamentos — paleta de tokens que continua inalterada nesta migração     |
+| Spec       | [SPEC-20260716-003](../qa/SPEC-20260716-003.md)               | E2E Playwright — cobertura de regressão do shell pode ser expandida pós-entrega         |
 
 ---
 
@@ -135,22 +135,24 @@ Ao final da implementação: (1) o build do Next.js 16 + Turbopack usa Tailwind 
 
 **Diagnóstico do repositório antes da decisão:**
 
-| Aspecto | Estado atual |
-|---------|-------------|
-| Diretivas CSS | `@tailwind base/components/utilities` — substituição direta por `@import "tailwindcss"` |
-| Config | `apps/web/tailwind.config.ts` (TypeScript) — permanece inalterado |
-| Cores | `oklch(var(--x) / <alpha-value>)` em `theme.extend` — compatível com v4 |
-| Plugin único | `@tailwindcss/typography` — tem build v4 compatível (`@tailwindcss/typography@next` ou `^0.5.15+`) |
-| `@apply` / `theme()` / `@screen` | Zero ocorrências — risco zero de sintaxe legada |
-| Token duplication | `packages/ui/src/tokens/colors.ts` (canais OKLCH) e `globals.css` (variáveis CSS) sincronizados à mão |
+| Aspecto                          | Estado atual                                                                                          |
+| -------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| Diretivas CSS                    | `@tailwind base/components/utilities` — substituição direta por `@import "tailwindcss"`               |
+| Config                           | `apps/web/tailwind.config.ts` (TypeScript) — permanece inalterado                                     |
+| Cores                            | `oklch(var(--x) / <alpha-value>)` em `theme.extend` — compatível com v4                               |
+| Plugin único                     | `@tailwindcss/typography` — tem build v4 compatível (`@tailwindcss/typography@next` ou `^0.5.15+`)    |
+| `@apply` / `theme()` / `@screen` | Zero ocorrências — risco zero de sintaxe legada                                                       |
+| Token duplication                | `packages/ui/src/tokens/colors.ts` (canais OKLCH) e `globals.css` (variáveis CSS) sincronizados à mão |
 
 **Decisão:** estratégia `@config` (compat layer), utilizando `@import "tailwindcss"` + `@config "./tailwind.config.ts"` no CSS. Esta abordagem:
+
 - Mantém o `tailwind.config.ts` existente sem qualquer alteração
 - Tem o menor risco de regressão visual (engine v4, config idêntica)
-- É a mesma utilizada pelo projeto de referência Nave-SaaS (Antigravity)
+- É a mesma utilizada pelo projeto de referência navestory-SaaS (Antigravity)
 - Permite reverter para v3 em um commit se necessário
 
 **Alternativa descartada:** migração idiomática para `@theme { }` (CSS-first config), que:
+
 - Resolveria a duplicação de tokens com `packages/ui/src/tokens/colors.ts` ao centralizar tudo no CSS
 - Requer coordenação com o design system (`packages/ui`) e reescrita parcial de `globals.css`
 - Tem escopo maior, mais adequado a uma spec dedicada em `specs/design-system/` após esta entrega estabilizar
@@ -173,13 +175,13 @@ Implementar com a biblioteca `@radix-ui/react-focus-trap` (se já disponível no
 
 Gate satisfeito — entrada completa em `matrices/rastreabilidade.md`, com código real e testes unitários preenchidos (RF-09, RF-12, RF-13 seguem com E2E/axe-core marcados como `⏳ pendente`, escopo de `SPEC-20260716-003`):
 
-| Requisito | Spec | Código | Teste |
-|-----------|------|--------|-------|
-| RF-01 a RF-05 (Tailwind v4) | SPEC-20260722-003 | `apps/web/package.json`, `apps/web/postcss.config.*`, `apps/web/src/app/globals.css` | Build CI (`pnpm build`) — sem falha |
-| RF-06, RF-07, RF-08, RF-09 (Sidebar drawer) | SPEC-20260722-003 | `apps/web/src/components/layout/sidebar.tsx` | ⏳ pendente (E2E em SPEC-20260716-003) |
-| RF-10, RF-11 (Header responsivo) | SPEC-20260722-003 | `apps/web/src/components/layout/header.tsx` | `apps/web/src/components/layout/header.spec.tsx` |
-| RF-12 (Layout padding) | SPEC-20260722-003 | `apps/web/src/app/(app)/layout.tsx` | ⏳ pendente (E2E em SPEC-20260716-003) |
-| RF-13, RF-14 (A11y touch targets) | SPEC-20260722-003 | `sidebar.tsx`, `header.tsx` | ⏳ pendente (auditoria axe-core) |
+| Requisito                                   | Spec              | Código                                                                               | Teste                                            |
+| ------------------------------------------- | ----------------- | ------------------------------------------------------------------------------------ | ------------------------------------------------ |
+| RF-01 a RF-05 (Tailwind v4)                 | SPEC-20260722-003 | `apps/web/package.json`, `apps/web/postcss.config.*`, `apps/web/src/app/globals.css` | Build CI (`pnpm build`) — sem falha              |
+| RF-06, RF-07, RF-08, RF-09 (Sidebar drawer) | SPEC-20260722-003 | `apps/web/src/components/layout/sidebar.tsx`                                         | ⏳ pendente (E2E em SPEC-20260716-003)           |
+| RF-10, RF-11 (Header responsivo)            | SPEC-20260722-003 | `apps/web/src/components/layout/header.tsx`                                          | `apps/web/src/components/layout/header.spec.tsx` |
+| RF-12 (Layout padding)                      | SPEC-20260722-003 | `apps/web/src/app/(app)/layout.tsx`                                                  | ⏳ pendente (E2E em SPEC-20260716-003)           |
+| RF-13, RF-14 (A11y touch targets)           | SPEC-20260722-003 | `sidebar.tsx`, `header.tsx`                                                          | ⏳ pendente (auditoria axe-core)                 |
 
 ---
 
@@ -188,5 +190,5 @@ Gate satisfeito — entrada completa em `matrices/rastreabilidade.md`, com códi
 > Preencher apenas após `status: approved`. Mudança estrutural (reverte/substitui requisito) não edita aqui — cria spec nova com `superseded_by`.
 
 | Data | O que mudou | Por quê |
-|------|-------------|---------|
-| | | |
+| ---- | ----------- | ------- |
+|      |             |         |

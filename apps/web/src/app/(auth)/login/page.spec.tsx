@@ -39,8 +39,12 @@ describe("LoginPage", () => {
     vi.mocked(apiClient).mockResolvedValue({ message: "ok" });
     renderPage();
 
-    fireEvent.change(screen.getByLabelText("E-mail"), { target: { value: "ana@example.com" } });
-    fireEvent.change(screen.getByLabelText("Senha"), { target: { value: "abc12!" } });
+    fireEvent.change(screen.getByLabelText("E-mail"), {
+      target: { value: "ana@example.com" },
+    });
+    fireEvent.change(screen.getByLabelText("Senha"), {
+      target: { value: "abc12!" },
+    });
     fireEvent.click(screen.getByRole("button", { name: "Entrar" }));
 
     await waitFor(() => expect(pushMock).toHaveBeenCalledWith("/dashboard"));
@@ -51,46 +55,72 @@ describe("LoginPage", () => {
     vi.mocked(apiClient).mockResolvedValue({ message: "ok" });
     renderPage();
 
-    fireEvent.change(screen.getByLabelText("E-mail"), { target: { value: "ana@example.com" } });
-    fireEvent.change(screen.getByLabelText("Senha"), { target: { value: "abc12!" } });
+    fireEvent.change(screen.getByLabelText("E-mail"), {
+      target: { value: "ana@example.com" },
+    });
+    fireEvent.change(screen.getByLabelText("Senha"), {
+      target: { value: "abc12!" },
+    });
     fireEvent.click(screen.getByRole("button", { name: "Entrar" }));
 
     await waitFor(() => expect(pushMock).toHaveBeenCalledWith("/dashboard"));
   });
 
   it("mostra mensagem genérica de credenciais inválidas (anti-enumeração, STORY-02)", async () => {
-    vi.mocked(apiClient).mockRejectedValue(new ApiError("INVALID_CREDENTIALS", 401));
+    vi.mocked(apiClient).mockRejectedValue(
+      new ApiError("INVALID_CREDENTIALS", 401),
+    );
     renderPage();
 
-    fireEvent.change(screen.getByLabelText("E-mail"), { target: { value: "ana@example.com" } });
-    fireEvent.change(screen.getByLabelText("Senha"), { target: { value: "errada" } });
+    fireEvent.change(screen.getByLabelText("E-mail"), {
+      target: { value: "ana@example.com" },
+    });
+    fireEvent.change(screen.getByLabelText("Senha"), {
+      target: { value: "errada" },
+    });
     fireEvent.click(screen.getByRole("button", { name: "Entrar" }));
 
-    expect(await screen.findByText(/e-mail ou senha inválidos/i)).toBeInTheDocument();
+    expect(
+      await screen.findByText(/e-mail ou senha inválidos/i),
+    ).toBeInTheDocument();
   });
 
   it("mostra mensagem de bloqueio após excesso de tentativas (STORY-03)", async () => {
     vi.mocked(apiClient).mockRejectedValue(new ApiError("bloqueado", 403));
     renderPage();
 
-    fireEvent.change(screen.getByLabelText("E-mail"), { target: { value: "ana@example.com" } });
-    fireEvent.change(screen.getByLabelText("Senha"), { target: { value: "errada" } });
+    fireEvent.change(screen.getByLabelText("E-mail"), {
+      target: { value: "ana@example.com" },
+    });
+    fireEvent.change(screen.getByLabelText("Senha"), {
+      target: { value: "errada" },
+    });
     fireEvent.click(screen.getByRole("button", { name: "Entrar" }));
 
-    expect(await screen.findByText(/temporariamente bloqueada/i)).toBeInTheDocument();
+    expect(
+      await screen.findByText(/temporariamente bloqueada/i),
+    ).toBeInTheDocument();
   });
 
   it("SPEC-20260719-001 RF-13: não navega para /dashboard quando a conta está soft-deleted", async () => {
     vi.mocked(apiClient).mockImplementation((path: string) => {
       if (path === "/auth/login") return Promise.resolve({ message: "ok" });
       return Promise.reject(
-        new ApiError("Conta marcada para exclusão.", 403, "ACCOUNT_PENDING_DELETION"),
+        new ApiError(
+          "Conta marcada para exclusão.",
+          403,
+          "ACCOUNT_PENDING_DELETION",
+        ),
       );
     });
     renderPage();
 
-    fireEvent.change(screen.getByLabelText("E-mail"), { target: { value: "ana@example.com" } });
-    fireEvent.change(screen.getByLabelText("Senha"), { target: { value: "abc12!" } });
+    fireEvent.change(screen.getByLabelText("E-mail"), {
+      target: { value: "ana@example.com" },
+    });
+    fireEvent.change(screen.getByLabelText("Senha"), {
+      target: { value: "abc12!" },
+    });
     fireEvent.click(screen.getByRole("button", { name: "Entrar" }));
 
     await waitFor(() => expect(apiClient).toHaveBeenCalledWith("/users/me"));
@@ -104,8 +134,12 @@ describe("LoginPage", () => {
     });
     renderPage();
 
-    fireEvent.change(screen.getByLabelText("E-mail"), { target: { value: "ana@example.com" } });
-    fireEvent.change(screen.getByLabelText("Senha"), { target: { value: "abc12!" } });
+    fireEvent.change(screen.getByLabelText("E-mail"), {
+      target: { value: "ana@example.com" },
+    });
+    fireEvent.change(screen.getByLabelText("Senha"), {
+      target: { value: "abc12!" },
+    });
     fireEvent.click(screen.getByRole("button", { name: "Entrar" }));
 
     await waitFor(() => expect(pushMock).toHaveBeenCalledWith("/dashboard"));
@@ -115,7 +149,9 @@ describe("LoginPage", () => {
     searchParams.set("message", "conta_excluida");
     renderPage();
 
-    expect(screen.getByText(/solicitação de exclusão de conta foi registrada/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/solicitação de exclusão de conta foi registrada/i),
+    ).toBeInTheDocument();
   });
 
   it("não exibe o aviso de exclusão sem o parâmetro message na URL", () => {

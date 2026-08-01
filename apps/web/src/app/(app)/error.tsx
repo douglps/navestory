@@ -1,7 +1,7 @@
 "use client";
 
 import * as Sentry from "@sentry/nextjs";
-import { Alert } from "@nave/ui";
+import { Alert } from "@navestory/ui";
 import { useEffect, type ReactNode } from "react";
 
 /**
@@ -12,7 +12,13 @@ import { useEffect, type ReactNode } from "react";
  * um crash de render com dado inesperado — ex. resposta antiga presa no cache do Service
  * Worker — derrubava a página inteira sem nenhum boundary local).
  */
-export default function AppError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }): ReactNode {
+export default function AppError({
+  error,
+  reset,
+}: {
+  error: Error & { digest?: string };
+  reset: () => void;
+}): ReactNode {
   useEffect(() => {
     Sentry.captureException(error);
   }, [error]);

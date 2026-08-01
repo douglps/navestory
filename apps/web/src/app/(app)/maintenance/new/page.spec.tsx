@@ -137,4 +137,52 @@ describe("NewMaintenancePage", () => {
 
     expect(await screen.findByText(/Selecionado manualmente/)).toBeInTheDocument();
   });
+
+  it("SPEC-20260619-001 R-FORM-05: cancela sem confirmação quando o formulário está limpo", async () => {
+    const confirmSpy = vi.spyOn(window, "confirm");
+    mockLookups();
+    renderPage();
+
+    await waitForVehiclesLoaded();
+    fireEvent.click(screen.getByRole("button", { name: "Cancelar" }));
+
+    expect(confirmSpy).not.toHaveBeenCalled();
+    expect(pushMock).toHaveBeenCalledWith("/maintenance");
+  });
+
+  it("SPEC-20260619-001 R-FORM-05: pede confirmação ao cancelar com o formulário sujo", async () => {
+    const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(false);
+    mockLookups();
+    renderPage();
+
+    await waitForVehiclesLoaded();
+    // Torna o formulário sujo preenchendo a descrição
+    fireEvent.change(screen.getByLabelText("Descrição *"), { target: { value: "Troca de pneu" } });
+    fireEvent.click(screen.getByRole("button", { name: "Cancelar" }));
+
+    expect(confirmSpy).toHaveBeenCalledWith("Descartar alterações?");
+    expect(pushMock).not.toHaveBeenCalled();
+    confirmSpy.mockRestore();
+  });
+
+  it("exibe erro da API quando o POST falha (onError)", async () => {
+    const { ApiError: RealApiError } = await import("@/lib/http/api-client");
+    vi.mocked(apiClient).mockImplementation((path: string) => {
+      if (path === "/vehicles") return Promise.resolve(vehicles) as never;
+      return Promise.reject(new RealApiError("Veículo não encontrado", 404)) as never;
+    });
+    renderPage();
+
+    await waitForVehiclesLoaded();
+    await selectCombobox("Veículo *", "Fiat Uno");
+    fireEvent.change(screen.getByLabelText("Descrição *"), { target: { value: "Revisão" } });
+    fireEvent.change(screen.getByLabelText("Data e hora agendada *"), {
+      target: { value: "2026-08-01T10:00" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Agendar" }));
+
+    await waitFor(() =>
+      expect(screen.getByRole("alert")).toHaveTextContent("Veículo não encontrado"),
+    );
+  });
 });

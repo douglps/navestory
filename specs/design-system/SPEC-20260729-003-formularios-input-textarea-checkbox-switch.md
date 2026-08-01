@@ -53,7 +53,7 @@ cobria campos monetários).
 
 ## Histórias de Usuário e Critérios de Aceitação
 
-**Persona P1 — Douglas, mantenedor do Nave.**
+**Persona P1 — Douglas, mantenedor do navestory.**
 **Persona P2 — Gestor de frota**, usuário final.
 
 ### US-01 — Formulários com aparência consistente com a marca
@@ -63,15 +63,15 @@ visual do resto do produto, **para** não ter a sensação de estar usando uma t
 inacabada.
 
 - **Dado que** uma tela renderiza um campo de texto livre, número ou data, **quando** inspecionada,
-  **então** usa `Input`/`Textarea` de `@nave/ui` (ou `CurrencyInput`/`OdometerInput`, já corrigidos),
+  **então** usa `Input`/`Textarea` de `@navestory/ui` (ou `CurrencyInput`/`OdometerInput`, já corrigidos),
   nunca `<input>`/`<textarea>` sem estilo.
 - **Dado que** uma tela renderiza um botão de ação, **quando** inspecionada, **então** usa `Button`
-  de `@nave/ui`, nunca `<button>` sem estilo (exceções: controles com forma customizada que a API do
+  de `@navestory/ui`, nunca `<button>` sem estilo (exceções: controles com forma customizada que a API do
   `Button` não cobre, ex.: swatch de cor circular em `vehicle-groups`).
 - **Dado que** uma tela renderiza um checkbox, **quando** inspecionada, **então** usa `Checkbox` de
-  `@nave/ui`.
+  `@navestory/ui`.
 - **Dado que** uma tela renderiza um `<select>` nativo, **quando** inspecionada, **então** usa
-  `Combobox` de `@nave/ui` (mesmo padrão já estabelecido na Rodada 4 do plano de migração).
+  `Combobox` de `@navestory/ui` (mesmo padrão já estabelecido na Rodada 4 do plano de migração).
 
 ### US-02 — Nenhuma regressão de comportamento ou teste
 
@@ -87,21 +87,21 @@ estilizado equivalente), **para** não introduzir bugs funcionais numa varredura
 
 ## Requisitos Funcionais
 
-| ID | Requisito | Código |
-|----|-----------|--------|
-| RF-01 | Criar `Input` (texto genérico, `error` opcional) e `Textarea` em `packages/ui/src/components/`, reaproveitando a classe-base já validada em produção (`rounded-md border border-border bg-background px-3 py-2 text-sm focus-visible:ring-2 focus-visible:ring-primary`) | `packages/ui/src/components/input.tsx`, `textarea.tsx` |
-| RF-02 | Criar `Checkbox` (nativo + `accent-primary`) e `Switch` (`role="switch"`, sem dependência Radix nova) | `packages/ui/src/components/checkbox.tsx`, `switch.tsx` |
-| RF-03 | Corrigir `CurrencyInput`/`OdometerInput` para aceitar `className` e aplicar a mesma classe-base (`inputBaseClass`, exportada por `input.tsx`) por padrão | `packages/ui/src/components/masked-input.tsx` |
-| RF-04 | Migrar os formulários de escrita (`expenses`, `maintenance`, `vehicles`, `vehicle-groups`, `fines`, `settings/preferences`, `settings/vehicles/.../odometer-cycles`) para os componentes novos + `Button`/`Combobox`/`Table` já existentes | `apps/web/src/app/(app)/**/page.tsx` |
-| RF-05 | Migrar as telas de autenticação (`login`, `register`, `recover-password`, `reset-password`) e `components/password-input.tsx` | `apps/web/src/app/(auth)/**/page.tsx`, `apps/web/src/components/password-input.tsx` |
-| RF-06 | Migrar componentes/telas com elementos crus remanescentes identificados na varredura final: `KpiPicker`, seletor de veículo em `analytics`/`dashboard`, botões de `expenses`/`fines` (listagem e detalhe), `settings/account/delete-account-dialog.tsx` | `apps/web/src/components/dashboard/KpiPicker.tsx`, demais arquivos listados |
+| ID    | Requisito                                                                                                                                                                                                                                                                | Código                                                                              |
+| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------- |
+| RF-01 | Criar `Input` (texto genérico, `error` opcional) e `Textarea` em `packages/ui/src/components/`, reaproveitando a classe-base já validada em produção (`rounded-md border border-border bg-background px-3 py-2 text-sm focus-visible:ring-2 focus-visible:ring-primary`) | `packages/ui/src/components/input.tsx`, `textarea.tsx`                              |
+| RF-02 | Criar `Checkbox` (nativo + `accent-primary`) e `Switch` (`role="switch"`, sem dependência Radix nova)                                                                                                                                                                    | `packages/ui/src/components/checkbox.tsx`, `switch.tsx`                             |
+| RF-03 | Corrigir `CurrencyInput`/`OdometerInput` para aceitar `className` e aplicar a mesma classe-base (`inputBaseClass`, exportada por `input.tsx`) por padrão                                                                                                                 | `packages/ui/src/components/masked-input.tsx`                                       |
+| RF-04 | Migrar os formulários de escrita (`expenses`, `maintenance`, `vehicles`, `vehicle-groups`, `fines`, `settings/preferences`, `settings/vehicles/.../odometer-cycles`) para os componentes novos + `Button`/`Combobox`/`Table` já existentes                               | `apps/web/src/app/(app)/**/page.tsx`                                                |
+| RF-05 | Migrar as telas de autenticação (`login`, `register`, `recover-password`, `reset-password`) e `components/password-input.tsx`                                                                                                                                            | `apps/web/src/app/(auth)/**/page.tsx`, `apps/web/src/components/password-input.tsx` |
+| RF-06 | Migrar componentes/telas com elementos crus remanescentes identificados na varredura final: `KpiPicker`, seletor de veículo em `analytics`/`dashboard`, botões de `expenses`/`fines` (listagem e detalhe), `settings/account/delete-account-dialog.tsx`                  | `apps/web/src/components/dashboard/KpiPicker.tsx`, demais arquivos listados         |
 
 ## Requisitos Não-Funcionais
 
-| ID | Requisito | Métrica de Aceite |
-|----|-----------|------------------|
-| RNF-01 | Nenhuma regressão | `tsc --noEmit` limpo em `packages/ui`/`apps/web`; suíte `vitest` completa de `packages/ui` (157 testes, 141 + 16 novos) e `apps/web` (329 testes) passando |
-| RNF-02 | Nenhum `<input>`/`<button>`/`<select>`/`<textarea>` sem estilo fora das exceções documentadas | `grep` confirmando zero ocorrências fora de `brand-showcase/` e `dashboard/concept/*` |
+| ID     | Requisito                                                                                     | Métrica de Aceite                                                                                                                                          |
+| ------ | --------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| RNF-01 | Nenhuma regressão                                                                             | `tsc --noEmit` limpo em `packages/ui`/`apps/web`; suíte `vitest` completa de `packages/ui` (157 testes, 141 + 16 novos) e `apps/web` (329 testes) passando |
+| RNF-02 | Nenhum `<input>`/`<button>`/`<select>`/`<textarea>` sem estilo fora das exceções documentadas | `grep` confirmando zero ocorrências fora de `brand-showcase/` e `dashboard/concept/*`                                                                      |
 
 ---
 
@@ -120,12 +120,12 @@ estilizado equivalente), **para** não introduzir bugs funcionais numa varredura
 
 ## Dependências
 
-| Tipo | Referência |
-|------|-----------|
-| Spec | SPEC-20260525-001 (componentes base de `packages/ui`, incl. `Button`) |
-| Spec | SPEC-20260729-001, SPEC-20260729-002 (adoção da direção Prata) |
-| Documento | `specs/design-system/PLANO-MIGRACAO-CONSUMIDORES.md` (Rodada 5) |
-| Regra | R-FORM-03 (precedente: `CurrencyInput` obrigatório para valores monetários) |
+| Tipo      | Referência                                                                  |
+| --------- | --------------------------------------------------------------------------- |
+| Spec      | SPEC-20260525-001 (componentes base de `packages/ui`, incl. `Button`)       |
+| Spec      | SPEC-20260729-001, SPEC-20260729-002 (adoção da direção Prata)              |
+| Documento | `specs/design-system/PLANO-MIGRACAO-CONSUMIDORES.md` (Rodada 5)             |
+| Regra     | R-FORM-03 (precedente: `CurrencyInput` obrigatório para valores monetários) |
 
 ---
 
@@ -141,6 +141,6 @@ ainda, mesmo status de "sem ação por ora" dos demais componentes órfãos.
 
 ## Changelog (pós-aprovação)
 
-| Data | O que mudou | Por quê |
-|------|-------------|---------|
+| Data       | O que mudou                                                                                                                                                        | Por quê                                                                                          |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
 | 2026-07-30 | Implementação concluída (RF-01 a RF-06) e spec criada já como `approved` — decisão e implementação ocorreram na mesma sessão, mesmo padrão de `SPEC-20260729-002`. | Gate de sincronia exige matriz atualizada com caminhos reais; ver `matrices/rastreabilidade.md`. |

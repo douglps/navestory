@@ -30,15 +30,38 @@
  */
 
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+} from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTheme } from "next-themes";
-import { Bell, Car, FileWarning, Inbox, Power, Upload, Wallet, Wrench } from "lucide-react";
-import { type FleetKpiCatalog, type KpiCatalogId, type Maintenance } from "@nave/validators";
+import {
+  Bell,
+  Car,
+  FileWarning,
+  Inbox,
+  Power,
+  Upload,
+  Wallet,
+  Wrench,
+} from "lucide-react";
+import {
+  type FleetKpiCatalog,
+  type KpiCatalogId,
+  type Maintenance,
+} from "@navestory/validators";
 import { apiClient } from "@/lib/http/api-client";
 import { useDashboardStore } from "@/lib/stores/use-dashboard-store";
 import type { FleetAlertItem } from "@/components/dashboard/FleetAlertBar";
-import type { HealthFlag, VehicleCardData } from "@/components/dashboard/VehicleHealthCard";
+import type {
+  HealthFlag,
+  VehicleCardData,
+} from "@/components/dashboard/VehicleHealthCard";
 
 const MOCK_VEHICLE_LIMIT = 5;
 const TIMELINE_MAX_ITEMS = 8;
@@ -98,8 +121,12 @@ const DARK_CARD = "#1B262A";
  * modificador de opacidade (`/50`) funciona normalmente sobre `var(...)` via `color-mix`.
  */
 const TONE_CSS_VARS = {
-  ...Object.fromEntries(Object.entries(PAPER).map(([step, hex]) => [`--paper-${step}`, hex])),
-  ...Object.fromEntries(Object.entries(PETROL).map(([step, hex]) => [`--petrol-${step}`, hex])),
+  ...Object.fromEntries(
+    Object.entries(PAPER).map(([step, hex]) => [`--paper-${step}`, hex]),
+  ),
+  ...Object.fromEntries(
+    Object.entries(PETROL).map(([step, hex]) => [`--petrol-${step}`, hex]),
+  ),
   "--petrol-vivid": PETROL_VIVID,
   "--dark-card": DARK_CARD,
 } as CSSProperties;
@@ -129,11 +156,18 @@ interface TimelineEvent {
 }
 
 function vehicleLabel(vehicle: VehicleCardData): string {
-  return vehicle.nickname ?? (`${vehicle.make ?? ""} ${vehicle.model ?? ""}`.trim() || vehicle.plate);
+  return (
+    vehicle.nickname ??
+    (`${vehicle.make ?? ""} ${vehicle.model ?? ""}`.trim() || vehicle.plate)
+  );
 }
 
 function currency(value: number): string {
-  return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
+  return value.toLocaleString("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+    maximumFractionDigits: 0,
+  });
 }
 
 function formatDate(dateStr: string): string {
@@ -142,7 +176,11 @@ function formatDate(dateStr: string): string {
 
 function daysUntilDate(dateStr: string): number {
   const today = new Date();
-  const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const startOfToday = new Date(
+    today.getFullYear(),
+    today.getMonth(),
+    today.getDate(),
+  );
   const target = new Date(`${dateStr}T00:00:00`);
   return Math.round((target.getTime() - startOfToday.getTime()) / 86_400_000);
 }
@@ -218,7 +256,15 @@ function useCountUp(target: number, durationMs = 700): number {
 }
 
 /** Gauge semicircular — trilho reage ao tema (claro/escuro), preenchimento sempre no gradiente de marca. */
-function SemiGauge({ value, label, isDark }: { value: number; label: string; isDark: boolean }): ReactNode {
+function SemiGauge({
+  value,
+  label,
+  isDark,
+}: {
+  value: number;
+  label: string;
+  isDark: boolean;
+}): ReactNode {
   const clamped = Math.max(0, Math.min(100, value));
   const radius = 90;
   const circumference = Math.PI * radius;
@@ -227,8 +273,19 @@ function SemiGauge({ value, label, isDark }: { value: number; label: string; isD
 
   return (
     <div className="flex flex-col items-center">
-      <svg viewBox="0 0 200 110" className="w-full max-w-[260px]" role="img" aria-label={`${label}: ${Math.round(clamped)}%`}>
-        <path d="M 10 100 A 90 90 0 0 1 190 100" fill="none" stroke={trackColor} strokeWidth={14} strokeLinecap="round" />
+      <svg
+        viewBox="0 0 200 110"
+        className="w-full max-w-[260px]"
+        role="img"
+        aria-label={`${label}: ${Math.round(clamped)}%`}
+      >
+        <path
+          d="M 10 100 A 90 90 0 0 1 190 100"
+          fill="none"
+          stroke={trackColor}
+          strokeWidth={14}
+          strokeLinecap="round"
+        />
         <path
           d="M 10 100 A 90 90 0 0 1 190 100"
           fill="none"
@@ -238,7 +295,10 @@ function SemiGauge({ value, label, isDark }: { value: number; label: string; isD
           strokeDasharray={circumference}
           strokeDashoffset={offset}
           // Carbon standard productive easing — movimento perceptível sem ser excessivo
-          style={{ transition: "stroke-dashoffset 600ms cubic-bezier(0.2, 0, 0.38, 0.9)" }}
+          style={{
+            transition:
+              "stroke-dashoffset 600ms cubic-bezier(0.2, 0, 0.38, 0.9)",
+          }}
         />
         <defs>
           <linearGradient id="gaugeGradient" x1="0" y1="0" x2="1" y2="0">
@@ -264,7 +324,11 @@ function SemiGauge({ value, label, isDark }: { value: number; label: string; isD
 /** Timeline cronológica de próximos eventos — substitui o painel "Fluxo de Frota" removido. */
 function EventTimeline({ events }: { events: TimelineEvent[] }): ReactNode {
   if (events.length === 0) {
-    return <p className="text-sm text-[var(--paper-100)]/55 dark:text-white/45">Nenhum evento próximo.</p>;
+    return (
+      <p className="text-sm text-[var(--paper-100)]/55 dark:text-white/45">
+        Nenhum evento próximo.
+      </p>
+    );
   }
 
   return (
@@ -274,15 +338,28 @@ function EventTimeline({ events }: { events: TimelineEvent[] }): ReactNode {
           key={event.id}
           className="flex items-center gap-3 rounded-md px-2 py-2 transition hover:bg-[var(--paper-90)]/5 dark:hover:bg-white/5"
         >
-          <span aria-hidden="true" className={`h-2 w-2 shrink-0 rounded-full ${SEVERITY_DOT[event.severity]}`} />
+          <span
+            aria-hidden="true"
+            className={`h-2 w-2 shrink-0 rounded-full ${SEVERITY_DOT[event.severity]}`}
+          />
           {event.kind === "maintenance" ? (
-            <Wrench aria-hidden="true" className="h-4 w-4 shrink-0 text-[var(--paper-100)]/50 dark:text-white/45" />
+            <Wrench
+              aria-hidden="true"
+              className="h-4 w-4 shrink-0 text-[var(--paper-100)]/50 dark:text-white/45"
+            />
           ) : (
-            <FileWarning aria-hidden="true" className="h-4 w-4 shrink-0 text-[var(--paper-100)]/50 dark:text-white/45" />
+            <FileWarning
+              aria-hidden="true"
+              className="h-4 w-4 shrink-0 text-[var(--paper-100)]/50 dark:text-white/45"
+            />
           )}
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-medium text-[var(--paper-100)] dark:text-white">{event.label}</p>
-            <p className="font-mono text-xs tabular-nums text-[var(--paper-100)]/55 dark:text-white/45">{event.vehiclePlate}</p>
+            <p className="truncate text-sm font-medium text-[var(--paper-100)] dark:text-white">
+              {event.label}
+            </p>
+            <p className="font-mono text-xs tabular-nums text-[var(--paper-100)]/55 dark:text-white/45">
+              {event.vehiclePlate}
+            </p>
           </div>
           <div className="shrink-0 text-right">
             <p className="text-xs font-semibold uppercase tracking-wide text-[var(--paper-100)]/60 dark:text-white/55">
@@ -307,7 +384,11 @@ function EventTimeline({ events }: { events: TimelineEvent[] }): ReactNode {
  * (`useState<Set<string>>`), sem lógica real de comparação de gráficos — isso fica para a frente de
  * estudo "análise multi-veículo" registrada no topo do arquivo.
  */
-function MultiSelectDemo({ vehicles }: { vehicles: VehicleCardData[] }): ReactNode {
+function MultiSelectDemo({
+  vehicles,
+}: {
+  vehicles: VehicleCardData[];
+}): ReactNode {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const sample = vehicles.slice(0, 3);
 
@@ -336,11 +417,15 @@ function MultiSelectDemo({ vehicles }: { vehicles: VehicleCardData[] }): ReactNo
               onClick={() => toggle(vehicle.id)}
               className="flex w-full cursor-pointer items-center justify-between gap-3 rounded-md px-2 py-1.5 text-left transition hover:bg-[var(--paper-90)]/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--petrol-50)] focus-visible:ring-offset-1 focus-visible:ring-offset-white dark:hover:bg-white/5 dark:focus-visible:ring-offset-[var(--dark-card)]"
             >
-              <span className="truncate text-sm text-[var(--paper-100)] dark:text-white/85">{vehicleLabel(vehicle)}</span>
+              <span className="truncate text-sm text-[var(--paper-100)] dark:text-white/85">
+                {vehicleLabel(vehicle)}
+              </span>
               <span
                 aria-hidden="true"
                 className={`relative h-5 w-9 shrink-0 rounded-full transition-colors duration-[70ms] ease-[cubic-bezier(0.2,0,1,0.9)] ${
-                  checked ? "bg-[var(--petrol-vivid)]" : "bg-[var(--paper-90)]/20 dark:bg-white/10"
+                  checked
+                    ? "bg-[var(--petrol-vivid)]"
+                    : "bg-[var(--paper-90)]/20 dark:bg-white/10"
                 }`}
               >
                 <span
@@ -354,7 +439,9 @@ function MultiSelectDemo({ vehicles }: { vehicles: VehicleCardData[] }): ReactNo
         })}
       </div>
       <p className="mt-2 text-xs uppercase tracking-wide text-[var(--paper-100)]/45 dark:text-white/40">
-        {selected.size > 1 ? `Comparando ${selected.size} veículos` : "Selecione 2+ para comparar (demonstração)"}
+        {selected.size > 1
+          ? `Comparando ${selected.size} veículos`
+          : "Selecione 2+ para comparar (demonstração)"}
       </p>
     </div>
   );
@@ -385,7 +472,10 @@ function FormExample(): ReactNode {
       className="flex flex-col gap-3"
     >
       <div className="flex flex-col gap-1">
-        <label htmlFor="concept-nickname" className="text-xs font-semibold uppercase tracking-wide text-[var(--paper-100)]/60 dark:text-white/50">
+        <label
+          htmlFor="concept-nickname"
+          className="text-xs font-semibold uppercase tracking-wide text-[var(--paper-100)]/60 dark:text-white/50"
+        >
           Apelido do veículo
         </label>
         <input
@@ -435,18 +525,27 @@ function OverlayExample(): ReactNode {
         Abrir overlay
       </button>
       {open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="concept-overlay-title">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="concept-overlay-title"
+        >
           <div
             className="absolute inset-0 bg-black/40 backdrop-blur-sm"
             aria-hidden="true"
             onClick={() => setOpen(false)}
           />
           <div className="relative w-full max-w-sm rounded-xl border border-[var(--paper-90)]/10 bg-white p-5 shadow-xl dark:border-white/10 dark:bg-[var(--dark-card)]">
-            <h3 id="concept-overlay-title" className="text-sm font-bold text-[var(--paper-100)] dark:text-white">
+            <h3
+              id="concept-overlay-title"
+              className="text-sm font-bold text-[var(--paper-100)] dark:text-white"
+            >
               Confirmar ação
             </h3>
             <p className="mt-2 text-sm text-[var(--paper-100)]/70 dark:text-white/60">
-              Exemplo de overlay — fecha no backdrop, em Esc ou nos botões abaixo.
+              Exemplo de overlay — fecha no backdrop, em Esc ou nos botões
+              abaixo.
             </p>
             <div className="mt-4 flex justify-end gap-2">
               <button
@@ -504,8 +603,12 @@ function AnimationExample(): ReactNode {
 function DepthExample(): ReactNode {
   return (
     <div className="rounded-lg border border-[var(--paper-90)]/8 bg-white p-4 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-lg dark:border-white/8 dark:bg-[var(--dark-card)] dark:shadow-none dark:hover:shadow-[0_12px_24px_rgba(0,0,0,0.35)]">
-      <p className="text-sm font-medium text-[var(--paper-100)] dark:text-white">Passe o mouse aqui</p>
-      <p className="mt-1 text-xs text-[var(--paper-100)]/55 dark:text-white/45">translateY + sombra progressiva no hover.</p>
+      <p className="text-sm font-medium text-[var(--paper-100)] dark:text-white">
+        Passe o mouse aqui
+      </p>
+      <p className="mt-1 text-xs text-[var(--paper-100)]/55 dark:text-white/45">
+        translateY + sombra progressiva no hover.
+      </p>
     </div>
   );
 }
@@ -543,7 +646,10 @@ function BreadcrumbExample(): ReactNode {
     { label: "Gol do trabalho", href: null },
   ];
   return (
-    <nav aria-label="Breadcrumb" className="flex flex-wrap items-center gap-1 text-sm">
+    <nav
+      aria-label="Breadcrumb"
+      className="flex flex-wrap items-center gap-1 text-sm"
+    >
       {items.map((item, i) => (
         <span key={item.label} className="flex items-center gap-1">
           {i > 0 && (
@@ -560,7 +666,10 @@ function BreadcrumbExample(): ReactNode {
               {item.label}
             </a>
           ) : (
-            <span aria-current="page" className="font-medium text-[var(--paper-100)] dark:text-white">
+            <span
+              aria-current="page"
+              className="font-medium text-[var(--paper-100)] dark:text-white"
+            >
               {item.label}
             </span>
           )}
@@ -577,7 +686,11 @@ function TabsExample(): ReactNode {
 
   return (
     <div>
-      <div role="tablist" aria-label="Detalhes do veículo" className="flex gap-1 border-b border-[var(--paper-90)]/10 dark:border-white/10">
+      <div
+        role="tablist"
+        aria-label="Detalhes do veículo"
+        className="flex gap-1 border-b border-[var(--paper-90)]/10 dark:border-white/10"
+      >
         {tabs.map((tab, i) => (
           <button
             key={tab}
@@ -608,7 +721,10 @@ function PaginationExample(): ReactNode {
   const totalPages = 5;
 
   return (
-    <nav aria-label="Paginação" className="flex items-center justify-between text-sm">
+    <nav
+      aria-label="Paginação"
+      className="flex items-center justify-between text-sm"
+    >
       <button
         type="button"
         disabled={page === 1}
@@ -654,7 +770,8 @@ function ContextMenuExample(): ReactNode {
   useEffect(() => {
     if (!open) return;
     function onClickOutside(event: MouseEvent): void {
-      if (ref.current && !ref.current.contains(event.target as Node)) setOpen(false);
+      if (ref.current && !ref.current.contains(event.target as Node))
+        setOpen(false);
     }
     window.addEventListener("mousedown", onClickOutside);
     return () => window.removeEventListener("mousedown", onClickOutside);
@@ -700,7 +817,10 @@ function ContextMenuExample(): ReactNode {
 /** Conteúdo expansível — um item aberto por vez, seta gira via `aria-expanded`. */
 function AccordionExample(): ReactNode {
   const items = [
-    { q: "Como funciona a saúde da frota?", a: "Combina odômetro, manutenções e documentos vencidos em um score de 0 a 100." },
+    {
+      q: "Como funciona a saúde da frota?",
+      a: "Combina odômetro, manutenções e documentos vencidos em um score de 0 a 100.",
+    },
     { q: "Posso remover um veículo?", a: "Sim, em Configurações → Veículos." },
   ];
   const [openIndex, setOpenIndex] = useState<number | null>(0);
@@ -718,11 +838,16 @@ function AccordionExample(): ReactNode {
               className={`flex w-full items-center justify-between py-2 text-left text-sm font-medium text-[var(--paper-100)] dark:text-white ${PATTERN_FOCUS_RING}`}
             >
               {item.q}
-              <span aria-hidden="true" className={`transition-transform ${expanded ? "rotate-180" : ""}`}>
+              <span
+                aria-hidden="true"
+                className={`transition-transform ${expanded ? "rotate-180" : ""}`}
+              >
                 ⌄
               </span>
             </button>
-            {expanded && <p className={`pb-2 text-sm ${PATTERN_MUTED}`}>{item.a}</p>}
+            {expanded && (
+              <p className={`pb-2 text-sm ${PATTERN_MUTED}`}>{item.a}</p>
+            )}
           </div>
         );
       })}
@@ -755,7 +880,10 @@ function ToastExample(): ReactNode {
           aria-live="polite"
           className="mt-3 flex items-center gap-2 rounded-lg border border-[var(--paper-90)]/10 bg-white px-3 py-2 text-sm shadow-md dark:border-white/10 dark:bg-[var(--dark-card)]"
         >
-          <span aria-hidden="true" className="h-2 w-2 shrink-0 rounded-full bg-[#2F7D4F] dark:bg-[#66C493]" />
+          <span
+            aria-hidden="true"
+            className="h-2 w-2 shrink-0 rounded-full bg-[#2F7D4F] dark:bg-[#66C493]"
+          />
           Despesa salva com sucesso.
         </div>
       )}
@@ -768,12 +896,18 @@ function PersistentBannerExample(): ReactNode {
   const [dismissed, setDismissed] = useState(false);
 
   if (dismissed) {
-    return <p className={`text-xs ${PATTERN_MUTED}`}>Banner dispensado (demonstração — recarregue para ver de novo).</p>;
+    return (
+      <p className={`text-xs ${PATTERN_MUTED}`}>
+        Banner dispensado (demonstração — recarregue para ver de novo).
+      </p>
+    );
   }
 
   return (
     <div className="flex items-start justify-between gap-3 rounded-lg border border-[#A8632E]/25 bg-[#A8632E]/[0.06] p-3 dark:border-[#c98a53]/25 dark:bg-[#c98a53]/[0.08]">
-      <p className="text-sm text-[#A8632E]/90 dark:text-[#c98a53]">O IPVA de 2 veículos vence este mês.</p>
+      <p className="text-sm text-[#A8632E]/90 dark:text-[#c98a53]">
+        O IPVA de 2 veículos vence este mês.
+      </p>
       <button
         type="button"
         aria-label="Dispensar aviso"
@@ -791,7 +925,10 @@ function BadgeCountExample(): ReactNode {
   return (
     <div className="flex items-center gap-4">
       <span className="relative inline-flex">
-        <Bell aria-hidden="true" className="h-6 w-6 text-[var(--paper-100)]/70 dark:text-white/60" />
+        <Bell
+          aria-hidden="true"
+          className="h-6 w-6 text-[var(--paper-100)]/70 dark:text-white/60"
+        />
         <span className="absolute -right-1.5 -top-1.5 flex h-4 w-4 items-center justify-center rounded-md bg-[#B3261E] text-[9px] font-bold text-white dark:bg-[#E2685A]">
           3
         </span>
@@ -818,7 +955,10 @@ function DeterminateProgressExample(): ReactNode {
         aria-valuemax={100}
         className="mt-1.5 h-2 w-full overflow-hidden rounded-full bg-[var(--paper-90)]/10 dark:bg-white/10"
       >
-        <div className="h-full rounded-md bg-[var(--petrol-50)] transition-[width] duration-300" style={{ width: `${value}%` }} />
+        <div
+          className="h-full rounded-md bg-[var(--petrol-50)] transition-[width] duration-300"
+          style={{ width: `${value}%` }}
+        />
       </div>
     </div>
   );
@@ -828,10 +968,20 @@ function DeterminateProgressExample(): ReactNode {
 function EmptyStateExample(): ReactNode {
   return (
     <div className="flex flex-col items-center gap-2 py-4 text-center">
-      <Inbox aria-hidden="true" className="h-8 w-8 text-[var(--paper-100)]/25 dark:text-white/25" />
-      <p className="text-sm font-medium text-[var(--paper-100)] dark:text-white">Nenhuma despesa registrada</p>
-      <p className={`text-xs ${PATTERN_MUTED}`}>Adicione a primeira despesa para começar a acompanhar custos.</p>
-      <button type="button" className={`mt-1 rounded-md bg-[var(--petrol-50)] px-3 py-1.5 text-xs font-semibold text-[var(--paper-100)] ${PATTERN_FOCUS_RING}`}>
+      <Inbox
+        aria-hidden="true"
+        className="h-8 w-8 text-[var(--paper-100)]/25 dark:text-white/25"
+      />
+      <p className="text-sm font-medium text-[var(--paper-100)] dark:text-white">
+        Nenhuma despesa registrada
+      </p>
+      <p className={`text-xs ${PATTERN_MUTED}`}>
+        Adicione a primeira despesa para começar a acompanhar custos.
+      </p>
+      <button
+        type="button"
+        className={`mt-1 rounded-md bg-[var(--petrol-50)] px-3 py-1.5 text-xs font-semibold text-[var(--paper-100)] ${PATTERN_FOCUS_RING}`}
+      >
         Adicionar despesa
       </button>
     </div>
@@ -844,9 +994,16 @@ function ErrorStateExample(): ReactNode {
 
   return (
     <div className="flex flex-col items-center gap-2 py-4 text-center">
-      <FileWarning aria-hidden="true" className="h-8 w-8 text-[#B3261E]/70 dark:text-[#E2685A]/80" />
-      <p className="text-sm font-medium text-[var(--paper-100)] dark:text-white">Falha ao carregar dados</p>
-      <p className={`text-xs ${PATTERN_MUTED}`}>Tentativa {attempt + 1} — verifique sua conexão.</p>
+      <FileWarning
+        aria-hidden="true"
+        className="h-8 w-8 text-[#B3261E]/70 dark:text-[#E2685A]/80"
+      />
+      <p className="text-sm font-medium text-[var(--paper-100)] dark:text-white">
+        Falha ao carregar dados
+      </p>
+      <p className={`text-xs ${PATTERN_MUTED}`}>
+        Tentativa {attempt + 1} — verifique sua conexão.
+      </p>
       <button
         type="button"
         onClick={() => setAttempt((a) => a + 1)}
@@ -864,10 +1021,18 @@ function SelectExample(): ReactNode {
 
   return (
     <div className="flex flex-col gap-1">
-      <label htmlFor="concept-fuel" className="text-xs font-semibold uppercase tracking-wide text-[var(--paper-100)]/60 dark:text-white/50">
+      <label
+        htmlFor="concept-fuel"
+        className="text-xs font-semibold uppercase tracking-wide text-[var(--paper-100)]/60 dark:text-white/50"
+      >
         Tipo de combustível
       </label>
-      <select id="concept-fuel" value={value} onChange={(event) => setValue(event.target.value)} className={PATTERN_INPUT_CLASS}>
+      <select
+        id="concept-fuel"
+        value={value}
+        onChange={(event) => setValue(event.target.value)}
+        className={PATTERN_INPUT_CLASS}
+      >
         <option value="gasolina">Gasolina</option>
         <option value="etanol">Etanol</option>
         <option value="diesel">Diesel</option>
@@ -894,9 +1059,14 @@ function CheckboxRadioExample(): ReactNode {
         Notificar por e-mail
       </label>
       <fieldset className="flex flex-col gap-1.5">
-        <legend className="text-xs font-semibold uppercase tracking-wide text-[var(--paper-100)]/60 dark:text-white/50">Frequência</legend>
+        <legend className="text-xs font-semibold uppercase tracking-wide text-[var(--paper-100)]/60 dark:text-white/50">
+          Frequência
+        </legend>
         {["semanal", "mensal"].map((option) => (
-          <label key={option} className="flex items-center gap-2 text-sm capitalize text-[var(--paper-100)] dark:text-white/85">
+          <label
+            key={option}
+            className="flex items-center gap-2 text-sm capitalize text-[var(--paper-100)] dark:text-white/85"
+          >
             <input
               type="radio"
               name="concept-freq"
@@ -919,7 +1089,10 @@ function TextareaExample(): ReactNode {
 
   return (
     <div className="flex flex-col gap-1">
-      <label htmlFor="concept-notes" className="text-xs font-semibold uppercase tracking-wide text-[var(--paper-100)]/60 dark:text-white/50">
+      <label
+        htmlFor="concept-notes"
+        className="text-xs font-semibold uppercase tracking-wide text-[var(--paper-100)]/60 dark:text-white/50"
+      >
         Observações
       </label>
       <textarea
@@ -940,10 +1113,19 @@ function DatePickerExample(): ReactNode {
 
   return (
     <div className="flex flex-col gap-1">
-      <label htmlFor="concept-date" className="text-xs font-semibold uppercase tracking-wide text-[var(--paper-100)]/60 dark:text-white/50">
+      <label
+        htmlFor="concept-date"
+        className="text-xs font-semibold uppercase tracking-wide text-[var(--paper-100)]/60 dark:text-white/50"
+      >
         Data da manutenção
       </label>
-      <input id="concept-date" type="date" value={value} onChange={(event) => setValue(event.target.value)} className={PATTERN_INPUT_CLASS} />
+      <input
+        id="concept-date"
+        type="date"
+        value={value}
+        onChange={(event) => setValue(event.target.value)}
+        className={PATTERN_INPUT_CLASS}
+      />
     </div>
   );
 }
@@ -966,10 +1148,15 @@ function FileUploadExample(): ReactNode {
         setFileName(event.dataTransfer.files[0]?.name ?? null);
       }}
       className={`flex flex-col items-center gap-2 rounded-lg border-2 border-dashed p-4 text-center transition ${
-        dragOver ? "border-[var(--petrol-50)] bg-[var(--petrol-50)]/5" : "border-[var(--paper-90)]/20 dark:border-white/15"
+        dragOver
+          ? "border-[var(--petrol-50)] bg-[var(--petrol-50)]/5"
+          : "border-[var(--paper-90)]/20 dark:border-white/15"
       }`}
     >
-      <Upload aria-hidden="true" className="h-6 w-6 text-[var(--paper-100)]/40 dark:text-white/35" />
+      <Upload
+        aria-hidden="true"
+        className="h-6 w-6 text-[var(--paper-100)]/40 dark:text-white/35"
+      />
       <label
         htmlFor="concept-file"
         className={`cursor-pointer rounded-sm text-sm font-medium text-[var(--paper-100)] underline decoration-dotted dark:text-white ${PATTERN_FOCUS_RING}`}
@@ -979,24 +1166,39 @@ function FileUploadExample(): ReactNode {
           id="concept-file"
           type="file"
           className="sr-only"
-          onChange={(event) => setFileName(event.target.files?.[0]?.name ?? null)}
+          onChange={(event) =>
+            setFileName(event.target.files?.[0]?.name ?? null)
+          }
         />
       </label>
-      <p className={`text-xs ${PATTERN_MUTED}`}>{fileName ?? "ou arraste e solte o comprovante aqui"}</p>
+      <p className={`text-xs ${PATTERN_MUTED}`}>
+        {fileName ?? "ou arraste e solte o comprovante aqui"}
+      </p>
     </div>
   );
 }
 
 /** Busca com autocomplete — `role="combobox"`/`"listbox"`, `onBlur` com delay para permitir o clique na opção. */
 function AutocompleteExample(): ReactNode {
-  const options = ["Posto Ipiranga", "Posto Shell", "Posto BR", "Oficina do João", "Concessionária VW"];
+  const options = [
+    "Posto Ipiranga",
+    "Posto Shell",
+    "Posto BR",
+    "Oficina do João",
+    "Concessionária VW",
+  ];
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
-  const filtered = options.filter((option) => option.toLowerCase().includes(query.toLowerCase()));
+  const filtered = options.filter((option) =>
+    option.toLowerCase().includes(query.toLowerCase()),
+  );
 
   return (
     <div className="relative flex flex-col gap-1">
-      <label htmlFor="concept-place" className="text-xs font-semibold uppercase tracking-wide text-[var(--paper-100)]/60 dark:text-white/50">
+      <label
+        htmlFor="concept-place"
+        className="text-xs font-semibold uppercase tracking-wide text-[var(--paper-100)]/60 dark:text-white/50"
+      >
         Local
       </label>
       <input
@@ -1056,13 +1258,24 @@ function StepperExample(): ReactNode {
           <li key={label} className="flex items-center gap-2">
             <span
               className={`flex h-6 w-6 items-center justify-center rounded-full font-mono text-xs tabular-nums ${
-                i <= step ? "bg-[var(--petrol-50)] text-[var(--paper-100)]" : "bg-[var(--paper-90)]/10 text-[var(--paper-100)]/40 dark:bg-white/10 dark:text-white/40"
+                i <= step
+                  ? "bg-[var(--petrol-50)] text-[var(--paper-100)]"
+                  : "bg-[var(--paper-90)]/10 text-[var(--paper-100)]/40 dark:bg-white/10 dark:text-white/40"
               }`}
             >
               {i + 1}
             </span>
-            <span className={`text-xs font-medium ${i === step ? "text-[var(--paper-100)] dark:text-white" : PATTERN_MUTED}`}>{label}</span>
-            {i < steps.length - 1 && <span aria-hidden="true" className="h-px w-6 bg-[var(--paper-90)]/15 dark:bg-white/12" />}
+            <span
+              className={`text-xs font-medium ${i === step ? "text-[var(--paper-100)] dark:text-white" : PATTERN_MUTED}`}
+            >
+              {label}
+            </span>
+            {i < steps.length - 1 && (
+              <span
+                aria-hidden="true"
+                className="h-px w-6 bg-[var(--paper-90)]/15 dark:bg-white/12"
+              />
+            )}
           </li>
         ))}
       </ol>
@@ -1108,10 +1321,13 @@ function SortableTableExample(): ReactNode {
   const sorted = useMemo(() => {
     return rows
       .filter(
-        (row) => row.plate.toLowerCase().includes(filter.toLowerCase()) || row.type.toLowerCase().includes(filter.toLowerCase()),
+        (row) =>
+          row.plate.toLowerCase().includes(filter.toLowerCase()) ||
+          row.type.toLowerCase().includes(filter.toLowerCase()),
       )
       .sort((a, b) => {
-        const cmp = a[sortKey] > b[sortKey] ? 1 : a[sortKey] < b[sortKey] ? -1 : 0;
+        const cmp =
+          a[sortKey] > b[sortKey] ? 1 : a[sortKey] < b[sortKey] ? -1 : 0;
         return asc ? cmp : -cmp;
       });
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -1151,7 +1367,9 @@ function SortableTableExample(): ReactNode {
                   className={`flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-[var(--paper-100)]/60 dark:text-white/50 ${PATTERN_FOCUS_RING}`}
                 >
                   {col.label}
-                  {sortKey === col.key && <span aria-hidden="true">{asc ? "↑" : "↓"}</span>}
+                  {sortKey === col.key && (
+                    <span aria-hidden="true">{asc ? "↑" : "↓"}</span>
+                  )}
                 </button>
               </th>
             ))}
@@ -1159,10 +1377,15 @@ function SortableTableExample(): ReactNode {
         </thead>
         <tbody>
           {sorted.map((row, i) => (
-            <tr key={i} className="border-b border-[var(--paper-90)]/5 last:border-0 dark:border-white/5">
+            <tr
+              key={i}
+              className="border-b border-[var(--paper-90)]/5 last:border-0 dark:border-white/5"
+            >
               <td className="py-1.5 font-mono tabular-nums">{row.plate}</td>
               <td className="py-1.5">{row.type}</td>
-              <td className="py-1.5 font-mono tabular-nums">{currency(row.cost)}</td>
+              <td className="py-1.5 font-mono tabular-nums">
+                {currency(row.cost)}
+              </td>
             </tr>
           ))}
         </tbody>
@@ -1186,8 +1409,12 @@ function KpiTileCompactExample(): ReactNode {
           key={kpi.label}
           className="flex flex-1 flex-col gap-0.5 rounded-md border border-[var(--paper-90)]/8 bg-[var(--paper-20)] px-3 py-2 dark:border-white/8 dark:bg-white/5"
         >
-          <span className="font-mono text-lg font-bold tabular-nums text-[var(--paper-100)] dark:text-white">{kpi.value}</span>
-          <span className="text-[10px] uppercase tracking-wide text-[var(--paper-100)]/50 dark:text-white/40">{kpi.label}</span>
+          <span className="font-mono text-lg font-bold tabular-nums text-[var(--paper-100)] dark:text-white">
+            {kpi.value}
+          </span>
+          <span className="text-[10px] uppercase tracking-wide text-[var(--paper-100)]/50 dark:text-white/40">
+            {kpi.label}
+          </span>
         </div>
       ))}
     </div>
@@ -1206,9 +1433,16 @@ function VerticalTimelineExample(): ReactNode {
     <ol className="relative flex flex-col gap-4 border-l border-[var(--paper-90)]/15 pl-4 dark:border-white/12">
       {events.map((event) => (
         <li key={event.label} className="relative">
-          <span aria-hidden="true" className="absolute -left-[21px] top-1 h-2.5 w-2.5 rounded-md bg-[var(--petrol-50)]" />
-          <p className="text-sm font-medium text-[var(--paper-100)] dark:text-white">{event.label}</p>
-          <p className={`font-mono text-xs tabular-nums ${PATTERN_MUTED}`}>{event.date}</p>
+          <span
+            aria-hidden="true"
+            className="absolute -left-[21px] top-1 h-2.5 w-2.5 rounded-md bg-[var(--petrol-50)]"
+          />
+          <p className="text-sm font-medium text-[var(--paper-100)] dark:text-white">
+            {event.label}
+          </p>
+          <p className={`font-mono text-xs tabular-nums ${PATTERN_MUTED}`}>
+            {event.date}
+          </p>
         </li>
       ))}
     </ol>
@@ -1266,7 +1500,9 @@ function RemovableChipExample(): ReactNode {
           </button>
         </span>
       ))}
-      {tags.length === 0 && <p className={`text-xs ${PATTERN_MUTED}`}>Nenhuma tag.</p>}
+      {tags.length === 0 && (
+        <p className={`text-xs ${PATTERN_MUTED}`}>Nenhuma tag.</p>
+      )}
     </div>
   );
 }
@@ -1279,7 +1515,8 @@ function DropdownMenuExample(): ReactNode {
   useEffect(() => {
     if (!open) return;
     function onClickOutside(event: MouseEvent): void {
-      if (ref.current && !ref.current.contains(event.target as Node)) setOpen(false);
+      if (ref.current && !ref.current.contains(event.target as Node))
+        setOpen(false);
     }
     window.addEventListener("mousedown", onClickOutside);
     return () => window.removeEventListener("mousedown", onClickOutside);
@@ -1327,7 +1564,8 @@ function PopoverExample(): ReactNode {
   useEffect(() => {
     if (!open) return;
     function onClickOutside(event: MouseEvent): void {
-      if (ref.current && !ref.current.contains(event.target as Node)) setOpen(false);
+      if (ref.current && !ref.current.contains(event.target as Node))
+        setOpen(false);
     }
     window.addEventListener("mousedown", onClickOutside);
     return () => window.removeEventListener("mousedown", onClickOutside);
@@ -1349,9 +1587,16 @@ function PopoverExample(): ReactNode {
           role="dialog"
           className="absolute left-0 z-10 mt-1 w-64 rounded-lg border border-[var(--paper-90)]/10 bg-white p-3 shadow-xl dark:border-white/10 dark:bg-[var(--dark-card)]"
         >
-          <p className="text-sm font-bold text-[var(--paper-100)] dark:text-white">Plano Grátis</p>
-          <p className={`mt-1 text-xs ${PATTERN_MUTED}`}>Até 5 veículos, histórico de 12 meses, sem exportação avançada.</p>
-          <Link href="/settings/account" className="mt-2 inline-block text-xs font-semibold text-[var(--petrol-60)] hover:underline">
+          <p className="text-sm font-bold text-[var(--paper-100)] dark:text-white">
+            Plano Grátis
+          </p>
+          <p className={`mt-1 text-xs ${PATTERN_MUTED}`}>
+            Até 5 veículos, histórico de 12 meses, sem exportação avançada.
+          </p>
+          <Link
+            href="/settings/account"
+            className="mt-2 inline-block text-xs font-semibold text-[var(--petrol-60)] hover:underline"
+          >
             Ver planos →
           </Link>
         </div>
@@ -1366,13 +1611,19 @@ function InlineConfirmExample(): ReactNode {
   const [deleted, setDeleted] = useState(false);
 
   if (deleted) {
-    return <p className={`text-sm ${PATTERN_MUTED}`}>Item removido (demonstração).</p>;
+    return (
+      <p className={`text-sm ${PATTERN_MUTED}`}>
+        Item removido (demonstração).
+      </p>
+    );
   }
 
   if (confirming) {
     return (
       <div className="flex items-center gap-2 text-sm">
-        <span className="text-[var(--paper-100)] dark:text-white/85">Tem certeza?</span>
+        <span className="text-[var(--paper-100)] dark:text-white/85">
+          Tem certeza?
+        </span>
         <button
           type="button"
           onClick={() => setDeleted(true)}
@@ -1404,7 +1655,11 @@ function InlineConfirmExample(): ReactNode {
 
 /** Drag and drop para reordenar itens — HTML5 DnD nativo, sem lib externa para uma lista simples. */
 function DragReorderExample(): ReactNode {
-  const [items, setItems] = useState(["Combustível", "Manutenção", "Documentos"]);
+  const [items, setItems] = useState([
+    "Combustível",
+    "Manutenção",
+    "Documentos",
+  ]);
   const dragIndex = useRef<number | null>(null);
 
   function onDrop(targetIndex: number): void {
@@ -1433,7 +1688,10 @@ function DragReorderExample(): ReactNode {
           onDrop={() => onDrop(i)}
           className="flex cursor-grab items-center gap-2 rounded-md border border-[var(--paper-90)]/10 bg-[var(--paper-20)] px-3 py-2 text-sm text-[var(--paper-100)] active:cursor-grabbing dark:border-white/10 dark:bg-white/5 dark:text-white/85"
         >
-          <span aria-hidden="true" className="text-[var(--paper-100)]/30 dark:text-white/25">
+          <span
+            aria-hidden="true"
+            className="text-[var(--paper-100)]/30 dark:text-white/25"
+          >
             ⠿
           </span>
           {item}
@@ -1444,7 +1702,11 @@ function DragReorderExample(): ReactNode {
 }
 
 /** Context switcher — troca rápida entre veículos, mesmo `role="listbox"`/`"option"` do autocomplete. */
-function ContextSwitcherExample({ vehicles }: { vehicles: VehicleCardData[] }): ReactNode {
+function ContextSwitcherExample({
+  vehicles,
+}: {
+  vehicles: VehicleCardData[];
+}): ReactNode {
   const sample = vehicles.slice(0, 3);
   const [activeId, setActiveId] = useState(sample[0]?.id);
   const [open, setOpen] = useState(false);
@@ -1453,15 +1715,20 @@ function ContextSwitcherExample({ vehicles }: { vehicles: VehicleCardData[] }): 
   useEffect(() => {
     if (!open) return;
     function onClickOutside(event: MouseEvent): void {
-      if (ref.current && !ref.current.contains(event.target as Node)) setOpen(false);
+      if (ref.current && !ref.current.contains(event.target as Node))
+        setOpen(false);
     }
     window.addEventListener("mousedown", onClickOutside);
     return () => window.removeEventListener("mousedown", onClickOutside);
   }, [open]);
 
   const firstVehicle = sample[0];
-  if (firstVehicle === undefined) return <p className={`text-sm ${PATTERN_MUTED}`}>Nenhum veículo cadastrado.</p>;
-  const active = sample.find((vehicle) => vehicle.id === activeId) ?? firstVehicle;
+  if (firstVehicle === undefined)
+    return (
+      <p className={`text-sm ${PATTERN_MUTED}`}>Nenhum veículo cadastrado.</p>
+    );
+  const active =
+    sample.find((vehicle) => vehicle.id === activeId) ?? firstVehicle;
 
   return (
     <div ref={ref} className="relative inline-block">
@@ -1504,7 +1771,7 @@ function ContextSwitcherExample({ vehicles }: { vehicles: VehicleCardData[] }): 
 }
 
 /**
- * Sem logo/"NAVE"/toggle de tema aqui — o `Header` global (`src/components/layout/header.tsx`, já
+ * Sem logo/"navestory"/toggle de tema aqui — o `Header` global (`src/components/layout/header.tsx`, já
  * renderizado pelo layout `(app)` que envolve esta página) já mostra os dois; duplicar era
  * redundância de chrome, não uma segunda fonte de verdade.
  */
@@ -1512,12 +1779,20 @@ function NavBar({ vehicleCount }: { vehicleCount: number }): ReactNode {
   return (
     <header className="flex items-center justify-between gap-3">
       <nav className="hidden items-center gap-8 text-xs font-semibold uppercase tracking-widest text-[var(--paper-100)]/45 dark:text-white/40 md:flex">
-        <span className="text-[var(--paper-100)] dark:text-white">Dashboard</span>
-        <Link href="/analytics" className="rounded-sm transition hover:text-[var(--paper-100)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--petrol-50)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--paper-10)] dark:hover:text-white dark:focus-visible:ring-offset-[#10181B]">
+        <span className="text-[var(--paper-100)] dark:text-white">
+          Dashboard
+        </span>
+        <Link
+          href="/analytics"
+          className="rounded-sm transition hover:text-[var(--paper-100)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--petrol-50)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--paper-10)] dark:hover:text-white dark:focus-visible:ring-offset-[#10181B]"
+        >
           Estatísticas
         </Link>
         <span className="cursor-not-allowed opacity-50">Suporte</span>
-        <Link href="/settings/preferences" className="rounded-sm transition hover:text-[var(--paper-100)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--petrol-50)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--paper-10)] dark:hover:text-white dark:focus-visible:ring-offset-[#10181B]">
+        <Link
+          href="/settings/preferences"
+          className="rounded-sm transition hover:text-[var(--paper-100)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--petrol-50)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--paper-10)] dark:hover:text-white dark:focus-visible:ring-offset-[#10181B]"
+        >
           Configurações
         </Link>
       </nav>
@@ -1558,7 +1833,8 @@ export default function DesignSystemV2FullPage(): ReactNode {
 
   const { data: alerts } = useQuery({
     queryKey: ["dashboard", "alerts", "include-upcoming"],
-    queryFn: () => apiClient<FleetAlertItem[]>("/dashboard/alerts?include_upcoming=true"),
+    queryFn: () =>
+      apiClient<FleetAlertItem[]>("/dashboard/alerts?include_upcoming=true"),
     retry: false,
   });
 
@@ -1573,46 +1849,61 @@ export default function DesignSystemV2FullPage(): ReactNode {
 
   const { data: preferences } = useQuery({
     queryKey: ["preferences"],
-    queryFn: () => apiClient<{ dashboard_kpi_ids?: KpiCatalogId[] }>("/preferences"),
+    queryFn: () =>
+      apiClient<{ dashboard_kpi_ids?: KpiCatalogId[] }>("/preferences"),
     retry: false,
   });
   void preferences; // catálogo consumido diretamente abaixo; ids mantidos apenas para paridade com /dashboard
 
   const { data: scheduledMaintenances } = useQuery({
     queryKey: ["dashboard-concept", "maintenances-scheduled"],
-    queryFn: () => apiClient<Maintenance[]>("/maintenances?status=scheduled&limit=5"),
+    queryFn: () =>
+      apiClient<Maintenance[]>("/maintenances?status=scheduled&limit=5"),
     retry: false,
   });
 
   const healthByVehicleId = useMemo(() => {
     const map = new Map<string, number>();
-    for (const entry of fleetHealth ?? []) map.set(entry.vehicle_id, entry.score);
+    for (const entry of fleetHealth ?? [])
+      map.set(entry.vehicle_id, entry.score);
     return map;
   }, [fleetHealth]);
 
-  const activeVehicle = vehicles?.find((vehicle) => vehicle.id === activeVehicleId) ?? vehicles?.[0];
-  const activeFlags = activeVehicle ? healthByVehicleId.get(activeVehicle.id) : undefined;
+  const activeVehicle =
+    vehicles?.find((vehicle) => vehicle.id === activeVehicleId) ??
+    vehicles?.[0];
+  const activeFlags = activeVehicle
+    ? healthByVehicleId.get(activeVehicle.id)
+    : undefined;
   void activeFlags;
 
   const avgHealth = useMemo(() => {
     if (fleetHealth && fleetHealth.length > 0) {
-      return fleetHealth.reduce((sum, entry) => sum + entry.score, 0) / fleetHealth.length;
+      return (
+        fleetHealth.reduce((sum, entry) => sum + entry.score, 0) /
+        fleetHealth.length
+      );
     }
     const catalogValue = kpiCatalog?.fleet_health;
-    return catalogValue?.ok && catalogValue.value !== null ? catalogValue.value : 0;
+    return catalogValue?.ok && catalogValue.value !== null
+      ? catalogValue.value
+      : 0;
   }, [fleetHealth, kpiCatalog]);
 
   const animatedHealth = useCountUp(avgHealth);
   const animatedVehicleCount = useCountUp(fleetHealth?.length ?? 0);
 
   const timelineEvents = useMemo<TimelineEvent[]>(() => {
-    const maintenanceEvents: TimelineEvent[] = (scheduledMaintenances ?? []).map((maintenance) => {
+    const maintenanceEvents: TimelineEvent[] = (
+      scheduledMaintenances ?? []
+    ).map((maintenance) => {
       const days = daysUntilDate(maintenance.scheduled_date);
       return {
         id: `maintenance:${maintenance.id}`,
         kind: "maintenance",
         label: maintenance.description,
-        vehiclePlate: vehicles?.find((v) => v.id === maintenance.vehicle_id)?.plate ?? "—",
+        vehiclePlate:
+          vehicles?.find((v) => v.id === maintenance.vehicle_id)?.plate ?? "—",
         date: maintenance.scheduled_date,
         daysUntil: days,
         severity: severityFromDays(days),
@@ -1620,7 +1911,11 @@ export default function DesignSystemV2FullPage(): ReactNode {
     });
 
     const documentEvents: TimelineEvent[] = (alerts ?? [])
-      .filter((alert) => alert.type === "document_overdue" || alert.type === "document_upcoming")
+      .filter(
+        (alert) =>
+          alert.type === "document_overdue" ||
+          alert.type === "document_upcoming",
+      )
       .map((alert) => ({
         id: alert.id,
         kind: "document",
@@ -1646,9 +1941,15 @@ export default function DesignSystemV2FullPage(): ReactNode {
     [alerts],
   );
 
-  const expensesMonth = kpiCatalog?.expenses_month.ok ? kpiCatalog.expenses_month.value : null;
-  const costPerKm = kpiCatalog?.cost_per_km.ok ? kpiCatalog.cost_per_km.value : null;
-  const nextMaintenance = kpiCatalog?.next_maintenance.ok ? kpiCatalog.next_maintenance.value : null;
+  const expensesMonth = kpiCatalog?.expenses_month.ok
+    ? kpiCatalog.expenses_month.value
+    : null;
+  const costPerKm = kpiCatalog?.cost_per_km.ok
+    ? kpiCatalog.cost_per_km.value
+    : null;
+  const nextMaintenance = kpiCatalog?.next_maintenance.ok
+    ? kpiCatalog.next_maintenance.value
+    : null;
 
   return (
     <main
@@ -1684,19 +1985,32 @@ export default function DesignSystemV2FullPage(): ReactNode {
               <div className="flex flex-col justify-between gap-6">
                 <div className="flex items-center gap-3 rounded-lg border border-[var(--paper-90)]/8 bg-[var(--paper-20)] p-3 dark:border-white/8 dark:bg-white/5">
                   <span className="flex h-10 w-10 items-center justify-center rounded-md bg-gradient-to-br from-[var(--paper-80)] to-[var(--paper-90)] text-white">
-                    <Wallet aria-hidden="true" fill="currentColor" fillOpacity={0.25} className="h-5 w-5" />
+                    <Wallet
+                      aria-hidden="true"
+                      fill="currentColor"
+                      fillOpacity={0.25}
+                      className="h-5 w-5"
+                    />
                   </span>
                   <div>
-                    <p className="text-xs uppercase tracking-wide text-[var(--paper-100)]/50 dark:text-white/40">Despesas do mês</p>
+                    <p className="text-xs uppercase tracking-wide text-[var(--paper-100)]/50 dark:text-white/40">
+                      Despesas do mês
+                    </p>
                     <p className="font-mono text-xl font-bold tabular-nums">
-                      {expensesMonth !== null ? currency(expensesMonth.value) : "—"}
+                      {expensesMonth !== null
+                        ? currency(expensesMonth.value)
+                        : "—"}
                     </p>
                   </div>
                 </div>
 
                 <div>
-                  <p className="font-mono text-3xl font-bold tabular-nums">{Math.round(animatedVehicleCount)}</p>
-                  <p className="text-xs uppercase tracking-wide text-[var(--paper-100)]/50 dark:text-white/40">veículos monitorados</p>
+                  <p className="font-mono text-3xl font-bold tabular-nums">
+                    {Math.round(animatedVehicleCount)}
+                  </p>
+                  <p className="text-xs uppercase tracking-wide text-[var(--paper-100)]/50 dark:text-white/40">
+                    veículos monitorados
+                  </p>
                 </div>
               </div>
 
@@ -1734,7 +2048,9 @@ export default function DesignSystemV2FullPage(): ReactNode {
             <div className="relative flex flex-col items-center gap-3 bg-gradient-to-b from-[var(--paper-20)] to-transparent px-6 pb-6 pt-6 dark:from-white/5">
               <div className="flex w-full items-center justify-between">
                 <h2 className="text-xl font-bold tracking-tight">
-                  {activeVehicle ? vehicleLabel(activeVehicle).toUpperCase() : "SEM VEÍCULO"}
+                  {activeVehicle
+                    ? vehicleLabel(activeVehicle).toUpperCase()
+                    : "SEM VEÍCULO"}
                 </h2>
                 {activeVehicle && (
                   <span className="flex min-w-[92px] flex-col overflow-hidden rounded-md border border-black/15 bg-white shadow-sm">
@@ -1749,11 +2065,16 @@ export default function DesignSystemV2FullPage(): ReactNode {
               </div>
 
               <div className="flex h-36 w-full items-center justify-center rounded-lg border border-[var(--paper-90)]/8 bg-[var(--paper-20)] dark:border-white/8 dark:bg-black/30">
-                <Car aria-hidden="true" className="h-16 w-16 text-[var(--paper-100)]/30 dark:text-white/30" />
+                <Car
+                  aria-hidden="true"
+                  className="h-16 w-16 text-[var(--paper-100)]/30 dark:text-white/30"
+                />
               </div>
 
               <div className="flex w-full items-center justify-between pt-1">
-                <span className="text-xs uppercase tracking-wide text-[var(--paper-100)]/50 dark:text-white/40">Status</span>
+                <span className="text-xs uppercase tracking-wide text-[var(--paper-100)]/50 dark:text-white/40">
+                  Status
+                </span>
                 <button
                   type="button"
                   onClick={() => setPowerOn((prev) => !prev)}
@@ -1771,10 +2092,14 @@ export default function DesignSystemV2FullPage(): ReactNode {
             </div>
 
             <div className="flex flex-col items-center gap-1 border-t border-[var(--paper-90)]/8 px-6 py-6 dark:border-white/8">
-              <p className="text-xs font-semibold uppercase tracking-wide text-[var(--paper-100)]/50 dark:text-white/40">Saúde da frota</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-[var(--paper-100)]/50 dark:text-white/40">
+                Saúde da frota
+              </p>
               <SemiGauge value={animatedHealth} label="saúde" isDark={isDark} />
               <div className="mt-1 flex w-full justify-between font-mono text-xs tabular-nums text-[var(--paper-100)]/50 dark:text-white/40">
-                <span>Custo/km {costPerKm ? currency(costPerKm.value) : "—"}</span>
+                <span>
+                  Custo/km {costPerKm ? currency(costPerKm.value) : "—"}
+                </span>
                 <span>{fleetHealth?.length ?? 0} veículos</span>
               </div>
             </div>
@@ -1793,44 +2118,67 @@ export default function DesignSystemV2FullPage(): ReactNode {
         {/* Linha inferior de detalhes */}
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           <section className="rounded-xl border border-[var(--paper-90)]/8 bg-white p-5 dark:border-white/8 dark:bg-[var(--dark-card)]">
-            <h3 className="mb-4 text-sm font-bold uppercase tracking-wide text-[var(--paper-100)]/70 dark:text-white/70">Detalhes</h3>
+            <h3 className="mb-4 text-sm font-bold uppercase tracking-wide text-[var(--paper-100)]/70 dark:text-white/70">
+              Detalhes
+            </h3>
             <dl className="grid grid-cols-2 gap-y-4 text-sm">
               <div>
-                <dt className="text-xs text-[var(--paper-100)]/50 dark:text-white/40">Odômetro</dt>
+                <dt className="text-xs text-[var(--paper-100)]/50 dark:text-white/40">
+                  Odômetro
+                </dt>
                 <dd className="font-mono font-semibold tabular-nums">
-                  {activeVehicle?.odometer !== null && activeVehicle?.odometer !== undefined
+                  {activeVehicle?.odometer !== null &&
+                  activeVehicle?.odometer !== undefined
                     ? `${activeVehicle.odometer.toLocaleString("pt-BR")} km`
                     : "—"}
                 </dd>
               </div>
               <div>
-                <dt className="text-xs text-[var(--paper-100)]/50 dark:text-white/40">Último abastec.</dt>
+                <dt className="text-xs text-[var(--paper-100)]/50 dark:text-white/40">
+                  Último abastec.
+                </dt>
                 <dd className="font-mono font-semibold tabular-nums">
-                  {activeVehicle?.last_fuel_date ? formatDate(activeVehicle.last_fuel_date) : "—"}
+                  {activeVehicle?.last_fuel_date
+                    ? formatDate(activeVehicle.last_fuel_date)
+                    : "—"}
                 </dd>
               </div>
               <div>
-                <dt className="text-xs text-[var(--paper-100)]/50 dark:text-white/40">IPVA</dt>
-                <dd className="font-semibold capitalize">{activeVehicle?.documents.ipva ?? "—"}</dd>
+                <dt className="text-xs text-[var(--paper-100)]/50 dark:text-white/40">
+                  IPVA
+                </dt>
+                <dd className="font-semibold capitalize">
+                  {activeVehicle?.documents.ipva ?? "—"}
+                </dd>
               </div>
               <div>
-                <dt className="text-xs text-[var(--paper-100)]/50 dark:text-white/40">Seguro</dt>
-                <dd className="font-semibold capitalize">{activeVehicle?.documents.insurance ?? "—"}</dd>
+                <dt className="text-xs text-[var(--paper-100)]/50 dark:text-white/40">
+                  Seguro
+                </dt>
+                <dd className="font-semibold capitalize">
+                  {activeVehicle?.documents.insurance ?? "—"}
+                </dd>
               </div>
             </dl>
           </section>
 
           <section className="rounded-xl border border-[var(--paper-90)]/8 bg-white p-5 dark:border-white/8 dark:bg-[var(--dark-card)]">
-            <h3 className="mb-4 text-sm font-bold uppercase tracking-wide text-[var(--paper-100)]/70 dark:text-white/70">Próxima manutenção</h3>
+            <h3 className="mb-4 text-sm font-bold uppercase tracking-wide text-[var(--paper-100)]/70 dark:text-white/70">
+              Próxima manutenção
+            </h3>
             {nextMaintenance ? (
               <div className="flex flex-col gap-2">
-                <p className="font-mono text-3xl font-bold tabular-nums">{formatDate(nextMaintenance.date)}</p>
+                <p className="font-mono text-3xl font-bold tabular-nums">
+                  {formatDate(nextMaintenance.date)}
+                </p>
                 <p className="font-mono text-xs tabular-nums text-[var(--paper-100)]/50 dark:text-white/40">
                   Veículo {nextMaintenance.vehicle_plate}
                 </p>
               </div>
             ) : (
-              <p className="text-sm text-[var(--paper-100)]/50 dark:text-white/40">Nenhuma manutenção agendada.</p>
+              <p className="text-sm text-[var(--paper-100)]/50 dark:text-white/40">
+                Nenhuma manutenção agendada.
+              </p>
             )}
             <Link
               href="/maintenance"
@@ -1841,7 +2189,9 @@ export default function DesignSystemV2FullPage(): ReactNode {
           </section>
 
           <section className="rounded-xl border border-[var(--paper-90)]/8 bg-white p-5 dark:border-white/8 dark:bg-[var(--dark-card)]">
-            <h3 className="mb-4 text-sm font-bold uppercase tracking-wide text-[var(--paper-100)]/70 dark:text-white/70">Custo por km</h3>
+            <h3 className="mb-4 text-sm font-bold uppercase tracking-wide text-[var(--paper-100)]/70 dark:text-white/70">
+              Custo por km
+            </h3>
             <div className="flex items-center justify-center rounded-lg border border-[var(--paper-90)]/8 bg-[var(--paper-20)] py-6 dark:border-white/8 dark:bg-black/40">
               <span className="font-mono text-4xl font-bold tracking-tight tabular-nums text-[var(--paper-100)] dark:text-white">
                 {costPerKm ? currency(costPerKm.value) : "—"}
@@ -1850,7 +2200,8 @@ export default function DesignSystemV2FullPage(): ReactNode {
             <div className="mt-3 flex justify-between font-mono text-xs tabular-nums text-[var(--paper-100)]/50 dark:text-white/40">
               <span>Mês atual</span>
               <span>
-                {costPerKm?.delta_pct !== null && costPerKm?.delta_pct !== undefined
+                {costPerKm?.delta_pct !== null &&
+                costPerKm?.delta_pct !== undefined
                   ? `${costPerKm.delta_pct > 0 ? "+" : ""}${costPerKm.delta_pct}%`
                   : "—"}
               </span>
@@ -1861,39 +2212,51 @@ export default function DesignSystemV2FullPage(): ReactNode {
         {/* Galeria de padrões de UI — formulário, overlay, skeleton, animação, profundidade, tooltip */}
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           <section className="rounded-xl border border-[var(--paper-90)]/8 bg-white p-5 dark:border-white/8 dark:bg-[var(--dark-card)]">
-            <h3 className="mb-4 text-sm font-bold uppercase tracking-wide text-[var(--paper-100)]/70 dark:text-white/70">Formulário</h3>
+            <h3 className="mb-4 text-sm font-bold uppercase tracking-wide text-[var(--paper-100)]/70 dark:text-white/70">
+              Formulário
+            </h3>
             <FormExample />
           </section>
 
           <section className="rounded-xl border border-[var(--paper-90)]/8 bg-white p-5 dark:border-white/8 dark:bg-[var(--dark-card)]">
-            <h3 className="mb-4 text-sm font-bold uppercase tracking-wide text-[var(--paper-100)]/70 dark:text-white/70">Overlay</h3>
+            <h3 className="mb-4 text-sm font-bold uppercase tracking-wide text-[var(--paper-100)]/70 dark:text-white/70">
+              Overlay
+            </h3>
             <OverlayExample />
           </section>
 
           <section className="rounded-xl border border-[var(--paper-90)]/8 bg-white p-5 dark:border-white/8 dark:bg-[var(--dark-card)]">
-            <h3 className="mb-4 text-sm font-bold uppercase tracking-wide text-[var(--paper-100)]/70 dark:text-white/70">Skeleton</h3>
+            <h3 className="mb-4 text-sm font-bold uppercase tracking-wide text-[var(--paper-100)]/70 dark:text-white/70">
+              Skeleton
+            </h3>
             <SkeletonExample />
           </section>
 
           <section className="rounded-xl border border-[var(--paper-90)]/8 bg-white p-5 dark:border-white/8 dark:bg-[var(--dark-card)]">
-            <h3 className="mb-4 text-sm font-bold uppercase tracking-wide text-[var(--paper-100)]/70 dark:text-white/70">Animação</h3>
+            <h3 className="mb-4 text-sm font-bold uppercase tracking-wide text-[var(--paper-100)]/70 dark:text-white/70">
+              Animação
+            </h3>
             <AnimationExample />
           </section>
 
           <section className="rounded-xl border border-[var(--paper-90)]/8 bg-white p-5 dark:border-white/8 dark:bg-[var(--dark-card)]">
-            <h3 className="mb-4 text-sm font-bold uppercase tracking-wide text-[var(--paper-100)]/70 dark:text-white/70">Profundidade</h3>
+            <h3 className="mb-4 text-sm font-bold uppercase tracking-wide text-[var(--paper-100)]/70 dark:text-white/70">
+              Profundidade
+            </h3>
             <DepthExample />
           </section>
 
           <section className="rounded-xl border border-[var(--paper-90)]/8 bg-white p-5 dark:border-white/8 dark:bg-[var(--dark-card)]">
-            <h3 className="mb-4 text-sm font-bold uppercase tracking-wide text-[var(--paper-100)]/70 dark:text-white/70">Balão informativo</h3>
+            <h3 className="mb-4 text-sm font-bold uppercase tracking-wide text-[var(--paper-100)]/70 dark:text-white/70">
+              Balão informativo
+            </h3>
             <TooltipExample />
           </section>
         </div>
 
         {/* Galeria de padrões (v11) — navegação e estrutura */}
         <h2 className="mt-2 text-xs font-bold uppercase tracking-widest text-[var(--paper-100)]/45 dark:text-white/40">
-          Navegação e estrutura
+          navegação e estrutura
         </h2>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           <section className="rounded-xl border border-[var(--paper-90)]/8 bg-white p-5 dark:border-white/8 dark:bg-[var(--dark-card)]">
@@ -2005,12 +2368,16 @@ export default function DesignSystemV2FullPage(): ReactNode {
         </h2>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           <section className="rounded-xl border border-[var(--paper-90)]/8 bg-white p-5 dark:border-white/8 dark:bg-[var(--dark-card)]">
-            <h3 className={PATTERN_SECTION_TITLE}>Tabela com ordenação/filtro</h3>
+            <h3 className={PATTERN_SECTION_TITLE}>
+              Tabela com ordenação/filtro
+            </h3>
             <SortableTableExample />
           </section>
 
           <section className="rounded-xl border border-[var(--paper-90)]/8 bg-white p-5 dark:border-white/8 dark:bg-[var(--dark-card)]">
-            <h3 className={PATTERN_SECTION_TITLE}>Card de estatística compacto</h3>
+            <h3 className={PATTERN_SECTION_TITLE}>
+              Card de estatística compacto
+            </h3>
             <KpiTileCompactExample />
           </section>
 
@@ -2051,7 +2418,9 @@ export default function DesignSystemV2FullPage(): ReactNode {
           </section>
 
           <section className="rounded-xl border border-[var(--paper-90)]/8 bg-white p-5 dark:border-white/8 dark:bg-[var(--dark-card)]">
-            <h3 className={PATTERN_SECTION_TITLE}>Drag and drop para reordenar</h3>
+            <h3 className={PATTERN_SECTION_TITLE}>
+              Drag and drop para reordenar
+            </h3>
             <DragReorderExample />
           </section>
 

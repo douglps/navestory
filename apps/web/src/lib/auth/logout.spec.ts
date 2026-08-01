@@ -15,7 +15,13 @@ describe("logout", () => {
   it("RF-19: chama /auth/logout e limpa todo o contexto do store", async () => {
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockResolvedValue({ ok: true, status: 204, json: () => Promise.resolve({}) }),
+      vi
+        .fn()
+        .mockResolvedValue({
+          ok: true,
+          status: 204,
+          json: () => Promise.resolve({}),
+        }),
     );
 
     await logout();
@@ -25,7 +31,10 @@ describe("logout", () => {
   });
 
   it("RF-19: limpa o contexto mesmo se a chamada de logout falhar", async () => {
-    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("network error")));
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockRejectedValue(new Error("network error")),
+    );
 
     await logout();
 
@@ -33,29 +42,44 @@ describe("logout", () => {
   });
 
   it("SPEC-20260603-001 RF-23: remove explicitamente a chave de contexto do sessionStorage", async () => {
-    sessionStorage.setItem("nave-dashboard-context", JSON.stringify({ state: {}, version: 0 }));
+    sessionStorage.setItem(
+      "navestory-dashboard-context",
+      JSON.stringify({ state: {}, version: 0 }),
+    );
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockResolvedValue({ ok: true, status: 204, json: () => Promise.resolve({}) }),
+      vi
+        .fn()
+        .mockResolvedValue({
+          ok: true,
+          status: 204,
+          json: () => Promise.resolve({}),
+        }),
     );
 
     await logout();
 
-    expect(sessionStorage.getItem("nave-dashboard-context")).toBeNull();
+    expect(sessionStorage.getItem("navestory-dashboard-context")).toBeNull();
   });
 
-  it("SPEC-20260730-002 RF-07: remove a chave nave-ui-state do sessionStorage", async () => {
+  it("SPEC-20260730-002 RF-07: remove a chave navestory-ui-state do sessionStorage", async () => {
     sessionStorage.setItem(
-      "nave-ui-state",
+      "navestory-ui-state",
       JSON.stringify({ state: { isSidebarCollapsed: true }, version: 0 }),
     );
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockResolvedValue({ ok: true, status: 204, json: () => Promise.resolve({}) }),
+      vi
+        .fn()
+        .mockResolvedValue({
+          ok: true,
+          status: 204,
+          json: () => Promise.resolve({}),
+        }),
     );
 
     await logout();
 
-    expect(sessionStorage.getItem("nave-ui-state")).toBeNull();
+    expect(sessionStorage.getItem("navestory-ui-state")).toBeNull();
   });
 });

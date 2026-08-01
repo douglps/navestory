@@ -4,7 +4,29 @@ title: "Tela /fines — Frontend do Módulo de Multas"
 status: approved
 date: 2026-07-22
 author: Douglas Lopes (lps.doug@protonmail.com)
-rules: [R5, S1, S2, R-CTX-01, R-CTX-06, R-TZ-01, R-FORM-01, R-FORM-02, R-FORM-03, R-FORM-04, R-FORM-05, R-FORM-06, R-FORM-07, R-SAN-01, R-SAN-02, R-SAN-04, R-DS-03, R-DS-04, R-SUB-03, R-SUB-04]
+rules:
+  [
+    R5,
+    S1,
+    S2,
+    R-CTX-01,
+    R-CTX-06,
+    R-TZ-01,
+    R-FORM-01,
+    R-FORM-02,
+    R-FORM-03,
+    R-FORM-04,
+    R-FORM-05,
+    R-FORM-06,
+    R-FORM-07,
+    R-SAN-01,
+    R-SAN-02,
+    R-SAN-04,
+    R-DS-03,
+    R-DS-04,
+    R-SUB-03,
+    R-SUB-04,
+  ]
 security: [S1, S2]
 camadas: [frontend]
 ---
@@ -25,8 +47,8 @@ Esta spec cobre as três rotas novas: `/fines` (listagem + KPIs), `/fines/new` (
 
 ## Referências de Implementação
 
-- **Padrão de estrutura de página:** `apps/web/src/app/(app)/expenses/page.tsx` — KpiCard + Tabs (`@nave/ui`), `useVehicleContext`, `usePreferences`/`formatDateInTz`.
-- **Padrão de formulário de criação:** `apps/web/src/app/(app)/expenses/new/page.tsx` — validação client-side com schemas Zod de `@nave/validators`, `CurrencyInput`, `useMutation` + `apiClient`.
+- **Padrão de estrutura de página:** `apps/web/src/app/(app)/expenses/page.tsx` — KpiCard + Tabs (`@navestory/ui`), `useVehicleContext`, `usePreferences`/`formatDateInTz`.
+- **Padrão de formulário de criação:** `apps/web/src/app/(app)/expenses/new/page.tsx` — validação client-side com schemas Zod de `@navestory/validators`, `CurrencyInput`, `useMutation` + `apiClient`.
 - **Padrão de detalhe/edição:** `apps/web/src/app/(app)/expenses/[id]/page.tsx` — carregamento individual por ID, edição de campos, retorno via `revalidate()` sem redirect.
 - **API disponível:** endpoints `GET /fines`, `GET /fines/:id`, `POST /fines`, `PATCH /fines/:id`, `DELETE /fines/:id` em `apps/api/src/modules/fines/fines.controller.ts`.
 - **Schemas:** `createFineInputSchema`, `updateFineInputSchema`, `FINE_STATUS_TRANSITIONS`, `FineStatus` em `packages/validators/src/fine.schemas.ts`.
@@ -47,11 +69,11 @@ Esta spec cobre as três rotas novas: `/fines` (listagem + KPIs), `/fines/new` (
 
 A rota `/fines` exibe três KpiCards no topo:
 
-| KPI | Fonte | Regra |
-|-----|-------|-------|
-| **Total pendente** | Soma de `amount_with_discount ?? amount` de multas com `status IN ('pending', 'appealing')` | R-SUB-03 |
-| **Multas vencidas** | Contagem de multas com `status = 'pending'` AND `due_date < hoje` (fuso do usuário — R-TZ-01, R-SUB-04) | R-SUB-04 |
-| **Total pago no ano** | Soma de `amount_with_discount ?? amount` de multas com `status = 'paid'` e `paid_at` no ano corrente do fuso do usuário | — |
+| KPI                   | Fonte                                                                                                                   | Regra    |
+| --------------------- | ----------------------------------------------------------------------------------------------------------------------- | -------- |
+| **Total pendente**    | Soma de `amount_with_discount ?? amount` de multas com `status IN ('pending', 'appealing')`                             | R-SUB-03 |
+| **Multas vencidas**   | Contagem de multas com `status = 'pending'` AND `due_date < hoje` (fuso do usuário — R-TZ-01, R-SUB-04)                 | R-SUB-04 |
+| **Total pago no ano** | Soma de `amount_with_discount ?? amount` de multas com `status = 'paid'` e `paid_at` no ano corrente do fuso do usuário | —        |
 
 Os valores são calculados no cliente a partir do array retornado por `GET /fines` (sem endpoint de KPIs dedicado nesta fase — volume por usuário não justifica). Multas em recurso (`appealing`) com `due_date` vencida **não entram no contador de vencidas** (R-SUB-04).
 
@@ -61,7 +83,7 @@ Quando `useVehicleContext` retornar `selectionMode === 'single'` e `activeVehicl
 
 ### RF-03 — Tabs da listagem
 
-A página `/fines` apresenta duas tabs (componente `Tabs` de `@nave/ui`, variante `underline`):
+A página `/fines` apresenta duas tabs (componente `Tabs` de `@navestory/ui`, variante `underline`):
 
 - **Lista** (default): listagem de todas as multas ordenadas por `occurred_at DESC`.
 - **Em aberto**: apenas multas com `status IN ('pending', 'appealing')`, com badge de urgência baseado em `due_date` (mesma escala de cores de `urgencyBadge` já usada em `/expenses`).
@@ -70,12 +92,12 @@ A página `/fines` apresenta duas tabs (componente `Tabs` de `@nave/ui`, variant
 
 Cada item da listagem expõe as transições válidas a partir do `status` atual conforme `FINE_STATUS_TRANSITIONS`:
 
-| Status atual | Ações disponíveis |
-|---|---|
-| `pending` | Pagar, Recorrer, Cancelar |
-| `appealing` | Pagar, Cancelar |
-| `paid` | — (nenhuma ação) |
-| `cancelled` | — (nenhuma ação) |
+| Status atual | Ações disponíveis         |
+| ------------ | ------------------------- |
+| `pending`    | Pagar, Recorrer, Cancelar |
+| `appealing`  | Pagar, Cancelar           |
+| `paid`       | — (nenhuma ação)          |
+| `cancelled`  | — (nenhuma ação)          |
 
 A ação dispara `PATCH /fines/:id` com `{ status }`. Transições para `paid` não exigem `paid_at` explícito — o service preenche automaticamente (SPEC-20260607-001 RF-04). As ações são renderizadas como botões compactos (ou menu de ações por linha) respeitando R-DS-04 (`rounded-md`, não `rounded-full`). Estados terminais (`paid`, `cancelled`) não exibem controles de ação — apenas rótulo de status.
 
@@ -88,12 +110,14 @@ Quando não houver multas (array vazio após filtro de veículo), exibir mensage
 Formulário de página própria (não modal), seguindo o padrão de `expenses/new/page.tsx`:
 
 **Campos obrigatórios:**
+
 - `vehicle_id` — select de veículos do usuário; pré-preenchido via `useVehicleContextField` quando contexto `single` ativo (R-CTX-06)
 - `description` — texto livre (mín 3, máx 500, R-SAN-01, R-SAN-02)
 - `amount` — monetário via `CurrencyInput` (R-FORM-03)
 - `occurred_at` — data da infração (formato `YYYY-MM-DD`)
 
 **Campos opcionais (exibidos em seção colapsável "Detalhes da infração"):**
+
 - `auto_number` — número do auto de infração
 - `infraction_code` — código da infração (ex: 55170)
 - `amount_with_discount` — via `CurrencyInput`; validado client-side: deve ser ≤ `amount`
@@ -104,7 +128,7 @@ Formulário de página própria (não modal), seguindo o padrão de `expenses/ne
 - `driver_name` — nome do condutor (máx 255)
 - `notes` — observações (máx 500)
 
-Validação usa `createFineInputSchema` de `@nave/validators` (R-FORM-01, R-FORM-02). Em sucesso, redireciona para `/fines` (R-FORM-04). Dirty check ao cancelar (R-FORM-05). Erro de API exibido em banner `role="alert"` (R-FORM-06).
+Validação usa `createFineInputSchema` de `@navestory/validators` (R-FORM-01, R-FORM-02). Em sucesso, redireciona para `/fines` (R-FORM-04). Dirty check ao cancelar (R-FORM-05). Erro de API exibido em banner `role="alert"` (R-FORM-06).
 
 ### RF-07 — Rota /fines/[id] (detalhe e edição)
 
@@ -115,6 +139,7 @@ Permite edição dos campos editáveis (exceto `vehicle_id` — não editável p
 Exibe as mesmas ações de mudança de status da listagem (RF-04), caso o usuário queira rever após agir diretamente na lista. Estados terminais não exibem ações.
 
 Exibe rótulo do status atual com cor semântica (R-DS-03):
+
 - `pending` → `warning`
 - `appealing` → `info`
 - `paid` → `success`
@@ -150,7 +175,7 @@ item.source_type === "expense"
 
 ### RNF-01 — Consistência visual
 
-Seguir integralmente o padrão atual de `/expenses/page.tsx`: `KpiCard` + `Tabs` de `@nave/ui`, `max-w-2xl`, `gap-4`, `p-8`. Não usar padrão de lista simples de `/maintenance/page.tsx`.
+Seguir integralmente o padrão atual de `/expenses/page.tsx`: `KpiCard` + `Tabs` de `@navestory/ui`, `max-w-2xl`, `gap-4`, `p-8`. Não usar padrão de lista simples de `/maintenance/page.tsx`.
 
 ### RNF-02 — Timezone
 
@@ -173,21 +198,25 @@ O filtro por `activeVehicleId` é aplicado client-side sobre o array já carrega
 **Critérios de Aceitação (BDD):**
 
 **CA-01**
+
 - Dado que o usuário acessa `/fines`
 - Quando há multas cadastradas
 - Então a página exibe três KpiCards: "Total pendente", "Multas vencidas" e "Total pago no ano"
 
 **CA-02**
+
 - Dado que o usuário está com contexto `single` ativo para o Veículo A
 - Quando acessa `/fines`
 - Então somente multas do Veículo A são exibidas na listagem e computadas nos KpiCards
 
 **CA-03**
+
 - Dado que não há multas cadastradas (ou nenhuma no veículo em foco)
 - Quando o usuário acessa `/fines`
 - Então a página exibe empty state com CTA "Registrar multa" apontando para `/fines/new`
 
 **CA-04**
+
 - Dado que o usuário está na tab "Em aberto"
 - Quando existem multas `paid` e `cancelled`
 - Então essas multas não aparecem na tab — somente `pending` e `appealing` são exibidas
@@ -199,16 +228,19 @@ O filtro por `activeVehicleId` é aplicado client-side sobre o array já carrega
 **Critérios de Aceitação (BDD):**
 
 **CA-05**
+
 - Dado que uma multa com `status = 'pending'` aparece na listagem
 - Quando o usuário clica na ação "Pagar"
 - Então `PATCH /fines/:id` é chamado com `{ status: 'paid' }`, a linha atualiza para `paid` e nenhum redirect ocorre
 
 **CA-06**
+
 - Dado que uma multa com `status = 'paid'` aparece na listagem
 - Quando o usuário visualiza a linha
 - Então nenhuma ação de transição é exibida — apenas o rótulo "Paga"
 
 **CA-07**
+
 - Dado que uma multa com `status = 'appealing'` aparece na listagem
 - Quando o usuário vê as ações disponíveis
 - Então somente "Pagar" e "Cancelar" são exibidas (não "Recorrer")
@@ -220,16 +252,19 @@ O filtro por `activeVehicleId` é aplicado client-side sobre o array já carrega
 **Critérios de Aceitação (BDD):**
 
 **CA-08**
+
 - Dado que o usuário preenche veículo, descrição, valor e data de ocorrência
 - Quando submete o formulário
 - Então `POST /fines` é chamado, a multa é criada com `status = 'pending'` e o usuário é redirecionado para `/fines`
 
 **CA-09**
+
 - Dado que o usuário informa `amount_with_discount` maior que `amount`
 - Quando tenta submeter
 - Então a validação client-side exibe erro no campo `amount_with_discount` e o envio é bloqueado
 
 **CA-10**
+
 - Dado que o usuário preenche o formulário com dados válidos e clica em "Cancelar"
 - Quando `isDirty === true`
 - Então exibe `AlertDialog` "Descartar alterações?" antes de sair (R-FORM-05)
@@ -241,32 +276,37 @@ O filtro por `activeVehicleId` é aplicado client-side sobre o array já carrega
 **Critérios de Aceitação (BDD):**
 
 **CA-11**
+
 - Dado que o usuário acessa `/fines/:id`
 - Quando a multa existe e pertence ao usuário
 - Então todos os campos são exibidos: `description`, `amount`, `occurred_at`, `auto_number`, `infraction_code`, `amount_with_discount`, `due_date`, `paid_at`, `appeal_deadline`, `location`, `odometer_km`, `driver_name`, `status`, `notes`
 
 **CA-12**
+
 - Dado que o usuário edita o campo `notes` e salva
 - Quando `PATCH /fines/:id` retorna sucesso
 - Então os dados são revalidados sem redirect e a edição é refletida na tela (R-FORM-04)
 
 **CA-13**
+
 - Dado que a multa tem `status = 'pending'`
 - Quando o usuário acessa `/fines/:id`
 - Então o status é exibido com cor semântica `warning` e as ações "Pagar", "Recorrer" e "Cancelar" estão disponíveis
 
-### US-05 — Navegar para multa pela tab "Próximas" de /expenses
+### US-05 — navegar para multa pela tab "Próximas" de /expenses
 
 **Como** gestor, **quero** clicar em "Ver" numa multa listada na tab "Próximas" de `/expenses`, **para** ir diretamente ao detalhe da multa sem precisar navegar manualmente.
 
 **Critérios de Aceitação (BDD):**
 
 **CA-14**
+
 - Dado que a tab "Próximas" de `/expenses` exibe um item com `source_type = 'fine'`
 - Quando o botão "Ver" é exibido
 - Então o botão é um link ativo apontando para `/fines/:source_id` (não um botão desabilitado)
 
 **CA-15**
+
 - Dado que o link "Multas" no subheader financeiro é clicado
 - Quando a rota `/fines` existe
 - Então o usuário chega à página de listagem de multas sem 404
@@ -278,6 +318,7 @@ O filtro por `activeVehicleId` é aplicado client-side sobre o array já carrega
 **Critérios de Aceitação (BDD):**
 
 **CA-16**
+
 - Dado que o usuário não tem veículos cadastrados
 - Quando acessa `/fines/new`
 - Então o formulário não é exibido; aparece empty state com CTA para cadastrar veículo (R-FORM-07)
@@ -295,18 +336,18 @@ O filtro por `activeVehicleId` é aplicado client-side sobre o array já carrega
 
 ## Dependências
 
-| Dependência | Estado | Bloqueante? |
-|---|---|---|
-| `GET /fines`, `POST /fines`, `PATCH /fines/:id` (SPEC-20260607-001) | ✅ Implementado | Sim |
-| `@nave/validators` — `createFineInputSchema`, `updateFineInputSchema`, `FINE_STATUS_TRANSITIONS` | ✅ Implementado | Sim |
-| `@nave/ui` — `KpiCard`, `Tabs`, `CurrencyInput` | ✅ Implementado | Sim |
-| `useVehicleContext`, `usePreferences`, `formatDateInTz` | ✅ Implementado | Sim |
-| RPC `get_fines_status_summary()` (migration `20260722120000`) | ✅ Implementado | Não — KPIs calculados client-side nesta fase |
+| Dependência                                                                                           | Estado          | Bloqueante?                                  |
+| ----------------------------------------------------------------------------------------------------- | --------------- | -------------------------------------------- |
+| `GET /fines`, `POST /fines`, `PATCH /fines/:id` (SPEC-20260607-001)                                   | ✅ Implementado | Sim                                          |
+| `@navestory/validators` — `createFineInputSchema`, `updateFineInputSchema`, `FINE_STATUS_TRANSITIONS` | ✅ Implementado | Sim                                          |
+| `@navestory/ui` — `KpiCard`, `Tabs`, `CurrencyInput`                                                  | ✅ Implementado | Sim                                          |
+| `useVehicleContext`, `usePreferences`, `formatDateInTz`                                               | ✅ Implementado | Sim                                          |
+| RPC `get_fines_status_summary()` (migration `20260722120000`)                                         | ✅ Implementado | Não — KPIs calculados client-side nesta fase |
 
 ---
 
 ## Histórico de Revisões
 
-| Versão | Data | Autor | Descrição |
-|--------|------|-------|-----------|
-| 1.0 | 2026-07-22 | douglps | Criação inicial |
+| Versão | Data       | Autor   | Descrição       |
+| ------ | ---------- | ------- | --------------- |
+| 1.0    | 2026-07-22 | douglps | Criação inicial |

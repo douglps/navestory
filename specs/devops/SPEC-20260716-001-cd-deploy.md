@@ -13,7 +13,7 @@ camadas: [devops, infra]
 
 ## Contexto
 
-O projeto Nave possui um pipeline de CI funcional (`.github/workflows/ci.yml`) cobrindo lint,
+O projeto navestory possui um pipeline de CI funcional (`.github/workflows/ci.yml`) cobrindo lint,
 type-check, testes, integração com Supabase local, build, secret scanning e dependency scanning.
 No entanto, **não existe nenhum pipeline de entrega contínua (CD)**: após o CI verde, o código
 não é enviado a nenhum ambiente automaticamente. Deployments são manuais e não documentados,
@@ -31,30 +31,30 @@ exceto a aprovação explícita para produção da API. Documentar o procediment
 
 ## Requisitos Funcionais
 
-| ID | Requisito | Prioridade |
-|----|-----------|------------|
-| RF-01 | Cada PR aberto ou atualizado dispara deploy de preview automático de `apps/web` no Vercel; a URL de preview é postada como comentário no PR pelo bot do Vercel | Alta |
-| RF-02 | Merge em `master` com todos os jobs de qualidade do CI passando dispara deploy de produção de `apps/web` no Vercel automaticamente, sem aprovação adicional | Alta |
-| RF-03 | Merge em `master` dispara deploy de `apps/api` em ambiente de **staging** automaticamente, após os jobs de qualidade passarem | Alta |
-| RF-04 | Deploy de `apps/api` em **produção** exige aprovação manual no GitHub Actions (environment `production` com `required_reviewers`); o gate humano só aparece após o deploy de staging estar saudável | Alta |
-| RF-05 | Os jobs de deploy (`deploy-web-preview`, `deploy-api-staging`, `deploy-api-prod`) dependem explicitamente dos jobs de qualidade existentes (`lint`, `type-check`, `test`, `build`) — nenhum deploy inicia se qualquer job de qualidade falhar | Alta |
-| RF-06 | Migrations do Supabase são aplicadas via job dedicado (`migrate-db`) no pipeline de deploy de produção, após o gate humano e antes de qualquer restart da API, nunca manualmente em produção sem registro no pipeline | Alta |
-| RF-07 | Rollback de `apps/web`: revertido via painel Vercel ("Instant Rollback") ou via CLI `vercel rollback <deployment-url>`; o último deploy bem-sucedido de produção é preservado e pode ser promovido em menos de 2 minutos | Alta |
-| RF-08 | Rollback de `apps/api`: revertido via re-dispatch do job de deploy de produção apontando para a tag Git anterior; o processo é o mesmo do deploy normal (gate humano + migrate-db idempotente) | Alta |
-| RF-09 | Todos os segredos de produção e staging (`SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `VERCEL_TOKEN`, etc.) são armazenados como GitHub Secrets scoped ao environment correspondente (`staging`, `production`); nenhum segredo é hardcoded em arquivos de workflow | Alta |
-| RF-10 | Variáveis de ambiente de staging são completamente segregadas das de produção — cada environment GitHub tem seu próprio conjunto de secrets; `SUPABASE_SERVICE_ROLE_KEY` de produção não é acessível por jobs de staging (aplica S3) | Alta |
-| RF-11 | O job `migrate-db` usa a Supabase CLI (`supabase db push`) com a variável `SUPABASE_DB_PASSWORD` restrita ao environment de produção; falha de migration aborta o deploy antes do restart | Alta |
-| RF-12 | O status do deploy (URL de preview, ambiente de destino, resultado) é reportado como check no PR via GitHub Deployments API | Média |
+| ID    | Requisito                                                                                                                                                                                                                                                                               | Prioridade |
+| ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- |
+| RF-01 | Cada PR aberto ou atualizado dispara deploy de preview automático de `apps/web` no Vercel; a URL de preview é postada como comentário no PR pelo bot do Vercel                                                                                                                          | Alta       |
+| RF-02 | Merge em `master` com todos os jobs de qualidade do CI passando dispara deploy de produção de `apps/web` no Vercel automaticamente, sem aprovação adicional                                                                                                                             | Alta       |
+| RF-03 | Merge em `master` dispara deploy de `apps/api` em ambiente de **staging** automaticamente, após os jobs de qualidade passarem                                                                                                                                                           | Alta       |
+| RF-04 | Deploy de `apps/api` em **produção** exige aprovação manual no GitHub Actions (environment `production` com `required_reviewers`); o gate humano só aparece após o deploy de staging estar saudável                                                                                     | Alta       |
+| RF-05 | Os jobs de deploy (`deploy-web-preview`, `deploy-api-staging`, `deploy-api-prod`) dependem explicitamente dos jobs de qualidade existentes (`lint`, `type-check`, `test`, `build`) — nenhum deploy inicia se qualquer job de qualidade falhar                                           | Alta       |
+| RF-06 | Migrations do Supabase são aplicadas via job dedicado (`migrate-db`) no pipeline de deploy de produção, após o gate humano e antes de qualquer restart da API, nunca manualmente em produção sem registro no pipeline                                                                   | Alta       |
+| RF-07 | Rollback de `apps/web`: revertido via painel Vercel ("Instant Rollback") ou via CLI `vercel rollback <deployment-url>`; o último deploy bem-sucedido de produção é preservado e pode ser promovido em menos de 2 minutos                                                                | Alta       |
+| RF-08 | Rollback de `apps/api`: revertido via re-dispatch do job de deploy de produção apontando para a tag Git anterior; o processo é o mesmo do deploy normal (gate humano + migrate-db idempotente)                                                                                          | Alta       |
+| RF-09 | Todos os segredos de produção e staging (`SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `VERCEL_TOKEN`, etc.) são armazenados como GitHub Secrets scoped ao environment correspondente (`staging`, `production`); nenhum segredo é hardcoded em arquivos de workflow | Alta       |
+| RF-10 | Variáveis de ambiente de staging são completamente segregadas das de produção — cada environment GitHub tem seu próprio conjunto de secrets; `SUPABASE_SERVICE_ROLE_KEY` de produção não é acessível por jobs de staging (aplica S3)                                                    | Alta       |
+| RF-11 | O job `migrate-db` usa a Supabase CLI (`supabase db push`) com a variável `SUPABASE_DB_PASSWORD` restrita ao environment de produção; falha de migration aborta o deploy antes do restart                                                                                               | Alta       |
+| RF-12 | O status do deploy (URL de preview, ambiente de destino, resultado) é reportado como check no PR via GitHub Deployments API                                                                                                                                                             | Média      |
 
 ## Requisitos Não-Funcionais
 
-| ID | Requisito | Métrica de Aceite |
-|----|-----------|------------------|
-| RNF-01 | Tempo total do pipeline de CD (após CI verde) | Deploy web: ≤ 3 min; deploy API staging: ≤ 5 min |
-| RNF-02 | Tempo de rollback de `apps/web` em produção | ≤ 2 minutos via Vercel Instant Rollback |
-| RNF-03 | Rastreabilidade de deploys | Cada deploy associado a um commit SHA e ao PR/merge que o originou |
-| RNF-04 | Isolamento de segredos por environment | Segredos de produção inacessíveis a jobs de staging (GitHub Environment Protection Rules) |
-| RNF-05 | Idempotência de migrations | `supabase db push` deve ser idempotente; reexecutar em caso de rollback não corrompe o banco |
+| ID     | Requisito                                     | Métrica de Aceite                                                                            |
+| ------ | --------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| RNF-01 | Tempo total do pipeline de CD (após CI verde) | Deploy web: ≤ 3 min; deploy API staging: ≤ 5 min                                             |
+| RNF-02 | Tempo de rollback de `apps/web` em produção   | ≤ 2 minutos via Vercel Instant Rollback                                                      |
+| RNF-03 | Rastreabilidade de deploys                    | Cada deploy associado a um commit SHA e ao PR/merge que o originou                           |
+| RNF-04 | Isolamento de segredos por environment        | Segredos de produção inacessíveis a jobs de staging (GitHub Environment Protection Rules)    |
+| RNF-05 | Idempotência de migrations                    | `supabase db push` deve ser idempotente; reexecutar em caso de rollback não corrompe o banco |
 
 ## Critérios de Aceite
 
@@ -72,20 +72,20 @@ exceto a aprovação explícita para produção da API. Documentar o procediment
 
 - Não inclui: canary release, blue/green deploy ou feature flags de infraestrutura (escopo futuro)
 - Não inclui: deploy de Edge Functions do Supabase (sem spec aprovada para Edge Functions)
-- Não inclui: provisionamento do projeto Supabase (já existe — `Nave`)
+- Não inclui: provisionamento do projeto Supabase (já existe — `navestory`)
 - Não inclui: estratégia de disaster recovery (coberta em `docs/operations/disaster-recovery.md`, T0.8)
 - Não inclui: rollback de migrations (Supabase não suporta rollback automático; estratégia é "migration forward-only" com compensações explícitas)
 - Não inclui: alertas de email para falhas de pipeline (T4.1 adiado para Fase 9)
 
 ## Dependências
 
-| Tipo | Referência | Descrição |
-|------|-----------|-----------|
-| Arquivo existente | `.github/workflows/ci.yml` | Pipeline de CI base; jobs de CD dependem de seus jobs de qualidade |
-| Serviço externo | Vercel | Hospedagem e deploy de `apps/web`; requer `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID` como GitHub Secrets |
-| Serviço externo | Supabase CLI | `supabase db push` para aplicar migrations em produção |
-| Regra | S3 | `SUPABASE_SERVICE_ROLE_KEY` somente no backend; nenhum segredo de produção exposto a jobs de staging |
-| Infra | GitHub Environments | `staging` e `production` com Protection Rules e segredos separados |
+| Tipo              | Referência                 | Descrição                                                                                                          |
+| ----------------- | -------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| Arquivo existente | `.github/workflows/ci.yml` | Pipeline de CI base; jobs de CD dependem de seus jobs de qualidade                                                 |
+| Serviço externo   | Vercel                     | Hospedagem e deploy de `apps/web`; requer `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID` como GitHub Secrets |
+| Serviço externo   | Supabase CLI               | `supabase db push` para aplicar migrations em produção                                                             |
+| Regra             | S3                         | `SUPABASE_SERVICE_ROLE_KEY` somente no backend; nenhum segredo de produção exposto a jobs de staging               |
+| Infra             | GitHub Environments        | `staging` e `production` com Protection Rules e segredos separados                                                 |
 
 ## Notas Técnicas
 
@@ -98,14 +98,14 @@ O arquivo `.github/workflows/cd.yml` (a criar) deve definir:
 on:
   push:
     branches: [master]
-  pull_request:  # apenas para deploy de preview web
+  pull_request: # apenas para deploy de preview web
 
 jobs:
-  deploy-web-preview:    # PR apenas → Vercel preview
-  deploy-web-prod:       # merge em master → Vercel produção (needs: build do ci.yml)
-  deploy-api-staging:    # merge em master → staging (needs: build do ci.yml)
-  migrate-db:            # merge em master → Supabase CLI (needs: deploy-api-staging)
-  deploy-api-prod:       # merge em master → produção (needs: migrate-db, environment: production)
+  deploy-web-preview: # PR apenas → Vercel preview
+  deploy-web-prod: # merge em master → Vercel produção (needs: build do ci.yml)
+  deploy-api-staging: # merge em master → staging (needs: build do ci.yml)
+  migrate-db: # merge em master → Supabase CLI (needs: deploy-api-staging)
+  deploy-api-prod: # merge em master → produção (needs: migrate-db, environment: production)
 ```
 
 ### Gate humano
@@ -133,7 +133,7 @@ implementada aqui como gate humano via GitHub Environments, não como processo i
 
 ## Histórico de Revisões
 
-| Data | Versão | Mudança | Autor |
-|------|--------|---------|-------|
-| 2026-07-16 | 1.0 | Criação inicial | Douglas Lopes (lps.doug@protonmail.com) |
-| 2026-07-16 | 1.1 | Promovida a `approved` e implementada (`.github/workflows/cd.yml`). Decisões tomadas com o usuário durante a implementação, não previstas pela v1.0: (1) **plataforma da API** — a spec não nomeava onde `apps/api` roda; decidido usar **Railway** (menor fricção, sem exigir Dockerfile, environments nativos de staging/produção); (2) **gate humano em `migrate-db`, não em `deploy-api-prod`** — RF-04 pede `environment: production` no deploy, RF-06 pede o gate *antes* da migration; para não exigir duas aprovações manuais na mesma run, o `environment: production` foi colocado apenas em `migrate-db` (primeiro job a tocar produção), e `deploy-api-prod` herda a aprovação via `needs`; (3) **estrutura do workflow** — em vez de disparar `cd.yml` diretamente por `push`/`pull_request` duplicando os jobs de qualidade do CI (RF-05), a cadeia de produção usa `workflow_run` após o workflow "CI" concluir com sucesso, evitando duplicar lint/type-check/test/build; a preview de PR (RF-01) dispara direto em `pull_request`, independente do resultado do CI (mesmo padrão da integração nativa Vercel↔GitHub — um preview serve para revisão visual mesmo com CI vermelho); (4) **`workflow_dispatch` adicionado** para satisfazer RF-08 (rollback via redisparo manual para SHA/tag anterior), não estava no esboço conceitual da v1.0. Documentação: `docs/reference/environment-variables.md` (seção "GitHub Secrets — CD", nova) e `docs/operations/runbooks.md` (novo arquivo, RF-07/RF-08). **Nenhuma conta/token real foi provisionada nesta rodada** (Vercel, Railway, GitHub Environments com required reviewers) — decisão explícita do usuário de implementar só o workflow agora; CA-01 a CA-09 permanecem não verificáveis em produção real até essa configuração externa acontecer. |
+| Data       | Versão | Mudança                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | Autor                                   |
+| ---------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------- |
+| 2026-07-16 | 1.0    | Criação inicial                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           | Douglas Lopes (lps.doug@protonmail.com) |
+| 2026-07-16 | 1.1    | Promovida a `approved` e implementada (`.github/workflows/cd.yml`). Decisões tomadas com o usuário durante a implementação, não previstas pela v1.0: (1) **plataforma da API** — a spec não nomeava onde `apps/api` roda; decidido usar **Railway** (menor fricção, sem exigir Dockerfile, environments nativos de staging/produção); (2) **gate humano em `migrate-db`, não em `deploy-api-prod`** — RF-04 pede `environment: production` no deploy, RF-06 pede o gate _antes_ da migration; para não exigir duas aprovações manuais na mesma run, o `environment: production` foi colocado apenas em `migrate-db` (primeiro job a tocar produção), e `deploy-api-prod` herda a aprovação via `needs`; (3) **estrutura do workflow** — em vez de disparar `cd.yml` diretamente por `push`/`pull_request` duplicando os jobs de qualidade do CI (RF-05), a cadeia de produção usa `workflow_run` após o workflow "CI" concluir com sucesso, evitando duplicar lint/type-check/test/build; a preview de PR (RF-01) dispara direto em `pull_request`, independente do resultado do CI (mesmo padrão da integração nativa Vercel↔GitHub — um preview serve para revisão visual mesmo com CI vermelho); (4) **`workflow_dispatch` adicionado** para satisfazer RF-08 (rollback via redisparo manual para SHA/tag anterior), não estava no esboço conceitual da v1.0. Documentação: `docs/reference/environment-variables.md` (seção "GitHub Secrets — CD", nova) e `docs/operations/runbooks.md` (novo arquivo, RF-07/RF-08). **Nenhuma conta/token real foi provisionada nesta rodada** (Vercel, Railway, GitHub Environments com required reviewers) — decisão explícita do usuário de implementar só o workflow agora; CA-01 a CA-09 permanecem não verificáveis em produção real até essa configuração externa acontecer. |

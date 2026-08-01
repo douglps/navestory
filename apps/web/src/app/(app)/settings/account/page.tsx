@@ -1,6 +1,6 @@
 "use client";
 
-import { Alert, Card, Container } from "@nave/ui";
+import { Alert, Card, Container } from "@navestory/ui";
 import { useQuery } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { apiClient } from "@/lib/http/api-client";
@@ -20,7 +20,11 @@ interface AccountProfileResponse {
  * `/restore-account`, então esta página nunca renderiza para uma conta pendente de exclusão.
  */
 export default function AccountSettingsPage(): ReactNode {
-  const { data: profile, isLoading, isError } = useQuery({
+  const {
+    data: profile,
+    isLoading,
+    isError,
+  } = useQuery({
     queryKey: ["users", "me"],
     queryFn: () => apiClient<AccountProfileResponse>("/users/me"),
     retry: false,
@@ -30,7 +34,10 @@ export default function AccountSettingsPage(): ReactNode {
   if (isError || !profile) {
     return (
       <main className="p-8">
-        <Alert variant="error" description="Não foi possível carregar as informações da conta." />
+        <Alert
+          variant="error"
+          description="Não foi possível carregar as informações da conta."
+        />
       </main>
     );
   }
@@ -49,8 +56,9 @@ export default function AccountSettingsPage(): ReactNode {
       <Card className="flex flex-col gap-3 border-danger/40 p-6">
         <h2 className="text-lg font-medium text-danger">Zona de perigo</h2>
         <p className="text-sm text-muted-foreground">
-          Excluir sua conta é uma ação séria. Você terá 30 dias para se arrepender e cancelar
-          a exclusão fazendo login novamente antes que ela se torne definitiva.
+          Excluir sua conta é uma ação séria. Você terá 30 dias para se
+          arrepender e cancelar a exclusão fazendo login novamente antes que ela
+          se torne definitiva.
         </p>
         <div>
           <DeleteAccountDialog />

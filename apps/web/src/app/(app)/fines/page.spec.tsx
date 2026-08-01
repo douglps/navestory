@@ -1,7 +1,8 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { QueryProvider } from "@/lib/query/providers";
+import { useDashboardStore } from "@/lib/stores/use-dashboard-store";
 import FinesPage from "./page";
 
 const pushMock = vi.fn();
@@ -58,6 +59,10 @@ function makeFine(overrides: Record<string, unknown> = {}) {
 }
 
 describe("FinesPage", () => {
+  beforeEach(() => {
+    useDashboardStore.getState().clearAllSelection();
+  });
+
   afterEach(() => {
     vi.clearAllMocks();
   });
@@ -162,5 +167,22 @@ describe("FinesPage", () => {
     await screen.findByText(/Excesso de velocidade/);
     expect(screen.queryByRole("button", { name: "Pagar" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Cancelar" })).not.toBeInTheDocument();
+  });
+
+  it("tab 'Em aberto' vazia exibe mensagem específica (branch linha 241)", async () => {
+    // Apenas multas pagas → nenhuma "em aberto"
+    mockApi({ fines: [makeFine({ status: "paid", description: "Multa encerrada" })] });
+    renderPage();
+
+    // Aguarda a lista carregar (texto formatado como "data — descrição")
+    await screen.findByText(/Multa encerrada/);
+    await userEvent.click(screen.getByText("Em aberto"));
+
+    await waitFor(() =>
+      expect(screen.getByText("Nenhuma multa registrada")).toBeInTheDocument(),
+    );
+    expect(
+      screen.getByText("Não há multas pendentes ou em recurso."),
+    ).toBeInTheDocument();
   });
 });

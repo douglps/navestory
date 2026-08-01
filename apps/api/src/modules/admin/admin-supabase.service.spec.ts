@@ -1,7 +1,9 @@
 import { AdminSupabaseService } from "./admin-supabase.service";
 
 describe("AdminSupabaseService", () => {
-  function createProfilesQuery(profiles: Array<{ id: string; name: string; deleted_at: string | null }>) {
+  function createProfilesQuery(
+    profiles: Array<{ id: string; name: string; deleted_at: string | null }>,
+  ) {
     const query: Record<string, unknown> = {};
     query.select = jest.fn().mockReturnValue(query);
     query.in = jest.fn().mockResolvedValue({ data: profiles });
@@ -11,15 +13,22 @@ describe("AdminSupabaseService", () => {
   it("listUsers enriquece com name/deleted_at de profiles (RF-10)", async () => {
     const gotrueUser = {
       id: "u1",
-      email: "u1@nave.app",
+      email: "u1@navestory.app",
       app_metadata: { role: "admin" },
       created_at: "2026-01-01T00:00:00.000Z",
     };
-    const profilesQuery = createProfilesQuery([{ id: "u1", name: "Fulano", deleted_at: null }]);
+    const profilesQuery = createProfilesQuery([
+      { id: "u1", name: "Fulano", deleted_at: null },
+    ]);
     const client = {
       auth: {
         admin: {
-          listUsers: jest.fn().mockResolvedValue({ data: { users: [gotrueUser], total: 1 }, error: null }),
+          listUsers: jest
+            .fn()
+            .mockResolvedValue({
+              data: { users: [gotrueUser], total: 1 },
+              error: null,
+            }),
         },
       },
       from: jest.fn().mockReturnValue(profilesQuery),
@@ -34,7 +43,7 @@ describe("AdminSupabaseService", () => {
       users: [
         {
           id: "u1",
-          email: "u1@nave.app",
+          email: "u1@navestory.app",
           name: "Fulano",
           role: "admin",
           deleted_at: null,
@@ -47,12 +56,26 @@ describe("AdminSupabaseService", () => {
 
   it("listUsers usa users.length como total quando a API não retorna total", async () => {
     const users = [
-      { id: "u1", email: "u1@nave.app", created_at: "2026-01-01T00:00:00.000Z" },
-      { id: "u2", email: "u2@nave.app", created_at: "2026-01-01T00:00:00.000Z" },
+      {
+        id: "u1",
+        email: "u1@navestory.app",
+        created_at: "2026-01-01T00:00:00.000Z",
+      },
+      {
+        id: "u2",
+        email: "u2@navestory.app",
+        created_at: "2026-01-01T00:00:00.000Z",
+      },
     ];
     const profilesQuery = createProfilesQuery([]);
     const client = {
-      auth: { admin: { listUsers: jest.fn().mockResolvedValue({ data: { users }, error: null }) } },
+      auth: {
+        admin: {
+          listUsers: jest
+            .fn()
+            .mockResolvedValue({ data: { users }, error: null }),
+        },
+      },
       from: jest.fn().mockReturnValue(profilesQuery),
     };
     const service = new AdminSupabaseService(client as never);
@@ -64,7 +87,13 @@ describe("AdminSupabaseService", () => {
 
   it("listUsers propaga erro quando a chamada falha", async () => {
     const client = {
-      auth: { admin: { listUsers: jest.fn().mockResolvedValue({ data: null, error: new Error("falhou") }) } },
+      auth: {
+        admin: {
+          listUsers: jest
+            .fn()
+            .mockResolvedValue({ data: null, error: new Error("falhou") }),
+        },
+      },
     };
     const service = new AdminSupabaseService(client as never);
 
@@ -73,7 +102,13 @@ describe("AdminSupabaseService", () => {
 
   it("listUsers não consulta profiles quando não há usuários", async () => {
     const client = {
-      auth: { admin: { listUsers: jest.fn().mockResolvedValue({ data: { users: [], total: 0 }, error: null }) } },
+      auth: {
+        admin: {
+          listUsers: jest
+            .fn()
+            .mockResolvedValue({ data: { users: [], total: 0 }, error: null }),
+        },
+      },
       from: jest.fn(),
     };
     const service = new AdminSupabaseService(client as never);
@@ -91,7 +126,9 @@ describe("AdminSupabaseService", () => {
     query.eq = jest.fn().mockReturnValue(query);
     query.gte = jest.fn().mockReturnValue(query);
     query.lte = jest.fn().mockReturnValue(query);
-    query.range = jest.fn().mockResolvedValue({ data: [{ id: "log-1" }], error: null, count: 1 });
+    query.range = jest
+      .fn()
+      .mockResolvedValue({ data: [{ id: "log-1" }], error: null, count: 1 });
     const client = { from: jest.fn().mockReturnValue(query) };
     const service = new AdminSupabaseService(client as never);
 
@@ -116,7 +153,9 @@ describe("AdminSupabaseService", () => {
     query.eq = jest.fn().mockReturnValue(query);
     query.gte = jest.fn().mockReturnValue(query);
     query.lte = jest.fn().mockReturnValue(query);
-    query.range = jest.fn().mockResolvedValue({ data: [], error: null, count: 0 });
+    query.range = jest
+      .fn()
+      .mockResolvedValue({ data: [], error: null, count: 0 });
     const client = { from: jest.fn().mockReturnValue(query) };
     const service = new AdminSupabaseService(client as never);
 
@@ -131,13 +170,19 @@ describe("AdminSupabaseService", () => {
     const query: Record<string, unknown> = {};
     query.select = jest.fn().mockReturnValue(query);
     query.order = jest.fn().mockReturnValue(query);
-    query.range = jest.fn().mockResolvedValue({ data: null, error: new Error("falhou"), count: null });
+    query.range = jest
+      .fn()
+      .mockResolvedValue({
+        data: null,
+        error: new Error("falhou"),
+        count: null,
+      });
     const client = { from: jest.fn().mockReturnValue(query) };
     const service = new AdminSupabaseService(client as never);
 
-    await expect(
-      service.listAuditLogs({ page: 1, limit: 20 }),
-    ).rejects.toThrow("falhou");
+    await expect(service.listAuditLogs({ page: 1, limit: 20 })).rejects.toThrow(
+      "falhou",
+    );
   });
 
   it("deleteUser exclui via admin API (RF-08)", async () => {
@@ -152,7 +197,13 @@ describe("AdminSupabaseService", () => {
 
   it("deleteUser propaga erro quando a exclusão falha", async () => {
     const client = {
-      auth: { admin: { deleteUser: jest.fn().mockResolvedValue({ error: new Error("falhou") }) } },
+      auth: {
+        admin: {
+          deleteUser: jest
+            .fn()
+            .mockResolvedValue({ error: new Error("falhou") }),
+        },
+      },
     };
     const service = new AdminSupabaseService(client as never);
 
@@ -162,7 +213,10 @@ describe("AdminSupabaseService", () => {
   it("getUserById retorna o usuário quando encontrado (RF-03)", async () => {
     const getUserById = jest
       .fn()
-      .mockResolvedValue({ data: { user: { id: "u1", app_metadata: { role: "admin" } } }, error: null });
+      .mockResolvedValue({
+        data: { user: { id: "u1", app_metadata: { role: "admin" } } },
+        error: null,
+      });
     const client = { auth: { admin: { getUserById } } };
     const service = new AdminSupabaseService(client as never);
 
@@ -193,30 +247,42 @@ describe("AdminSupabaseService", () => {
   });
 
   it("updateUserRole grava role em app_metadata (RF-03, S12)", async () => {
-    const updateUserById = jest.fn().mockResolvedValue({ data: { user: {} }, error: null });
+    const updateUserById = jest
+      .fn()
+      .mockResolvedValue({ data: { user: {} }, error: null });
     const client = { auth: { admin: { updateUserById } } };
     const service = new AdminSupabaseService(client as never);
 
     await service.updateUserRole("u1", "admin");
 
-    expect(updateUserById).toHaveBeenCalledWith("u1", { app_metadata: { role: "admin" } });
+    expect(updateUserById).toHaveBeenCalledWith("u1", {
+      app_metadata: { role: "admin" },
+    });
   });
 
   it("updateUserRole com role null envia undefined (remove a chave sem sobrescrever app_metadata)", async () => {
-    const updateUserById = jest.fn().mockResolvedValue({ data: { user: {} }, error: null });
+    const updateUserById = jest
+      .fn()
+      .mockResolvedValue({ data: { user: {} }, error: null });
     const client = { auth: { admin: { updateUserById } } };
     const service = new AdminSupabaseService(client as never);
 
     await service.updateUserRole("u1", null);
 
-    expect(updateUserById).toHaveBeenCalledWith("u1", { app_metadata: { role: undefined } });
+    expect(updateUserById).toHaveBeenCalledWith("u1", {
+      app_metadata: { role: undefined },
+    });
   });
 
   it("updateUserRole propaga erro quando a chamada falha", async () => {
-    const updateUserById = jest.fn().mockResolvedValue({ data: null, error: new Error("falhou") });
+    const updateUserById = jest
+      .fn()
+      .mockResolvedValue({ data: null, error: new Error("falhou") });
     const client = { auth: { admin: { updateUserById } } };
     const service = new AdminSupabaseService(client as never);
 
-    await expect(service.updateUserRole("u1", "admin")).rejects.toThrow("falhou");
+    await expect(service.updateUserRole("u1", "admin")).rejects.toThrow(
+      "falhou",
+    );
   });
 });

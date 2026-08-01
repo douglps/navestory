@@ -45,20 +45,36 @@ export const useDashboardStore = create<DashboardContextState>()(
       dockOpen: false,
       // R-CTX-01: ativar um modo zera os campos dos demais modos.
       setActiveVehicle: (vehicleId) =>
-        set({ ...EMPTY_SELECTION, selectionMode: "single", activeVehicleId: vehicleId }),
+        set({
+          ...EMPTY_SELECTION,
+          selectionMode: "single",
+          activeVehicleId: vehicleId,
+        }),
       setActiveGroup: (groupId) =>
-        set({ ...EMPTY_SELECTION, selectionMode: "group", activeGroupId: groupId }),
+        set({
+          ...EMPTY_SELECTION,
+          selectionMode: "group",
+          activeGroupId: groupId,
+        }),
       setMultiSelected: (vehicleIds) =>
-        set({ ...EMPTY_SELECTION, selectionMode: "multi", multiSelectedIds: vehicleIds }),
+        set({
+          ...EMPTY_SELECTION,
+          selectionMode: "multi",
+          multiSelectedIds: vehicleIds,
+        }),
       setAttributeFilter: (filter) =>
-        set({ ...EMPTY_SELECTION, selectionMode: "attribute", attributeFilter: filter }),
+        set({
+          ...EMPTY_SELECTION,
+          selectionMode: "attribute",
+          attributeFilter: filter,
+        }),
       clearAllSelection: () => set({ ...EMPTY_SELECTION }),
       markHydrated: () => set({ hasHydrated: true }),
       // @spec SPEC-20260531-001 RF-ST-01
       setDockOpen: (open) => set({ dockOpen: open }),
     }),
     {
-      name: "nave-dashboard-context",
+      name: "navestory-dashboard-context",
       // @spec SPEC-20260603-001 RF-21 — sessionStorage isola o contexto por aba
       // (corrige a decisão original de localStorage da SPEC-20260602-001).
       storage: createJSONStorage(() => sessionStorage),

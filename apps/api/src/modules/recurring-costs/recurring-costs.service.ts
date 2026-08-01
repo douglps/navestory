@@ -1,10 +1,15 @@
-import { ConflictException, Inject, Injectable, NotFoundException } from "@nestjs/common";
+import {
+  ConflictException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import {
   RECURRING_COST_TYPE_LABEL,
   RECURRING_COST_TYPE_TO_CATEGORY,
   type RecurringCost,
-} from "@nave/validators";
+} from "@navestory/validators";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { AuditService } from "../../shared/audit/audit.service";
 import { createUserScopedClient } from "../../shared/supabase/create-user-scoped-client";
@@ -23,7 +28,8 @@ const RECURRING_COST_COLUMNS = `id, user_id, vehicle_id, cost_type, year, amount
 @Injectable()
 export class RecurringCostsService {
   constructor(
-    @Inject(SUPABASE_ADMIN_CLIENT) private readonly supabaseAdmin: SupabaseClient,
+    @Inject(SUPABASE_ADMIN_CLIENT)
+    private readonly supabaseAdmin: SupabaseClient,
     private readonly configService: ConfigService,
     private readonly auditService: AuditService,
     private readonly expensesService: ExpensesService,
@@ -75,7 +81,9 @@ export class RecurringCostsService {
       .maybeSingle();
 
     if (data) {
-      throw new ConflictException("Já existe um registro ativo para este veículo, tipo e ano.");
+      throw new ConflictException(
+        "Já existe um registro ativo para este veículo, tipo e ano.",
+      );
     }
   }
 
@@ -87,15 +95,19 @@ export class RecurringCostsService {
     userId: string,
     recurringCost: RecurringCost,
   ): Promise<RecurringCost> {
-    const expense = await this.expensesService.createFromSource(accessToken, userId, {
-      source_type: "recurring_cost",
-      source_id: recurringCost.id,
-      vehicle_id: recurringCost.vehicle_id,
-      category: RECURRING_COST_TYPE_TO_CATEGORY[recurringCost.cost_type],
-      amount: recurringCost.amount,
-      date: recurringCost.paid_at as string,
-      description: `${RECURRING_COST_TYPE_LABEL[recurringCost.cost_type]} ${recurringCost.year}`,
-    });
+    const expense = await this.expensesService.createFromSource(
+      accessToken,
+      userId,
+      {
+        source_type: "recurring_cost",
+        source_id: recurringCost.id,
+        vehicle_id: recurringCost.vehicle_id,
+        category: RECURRING_COST_TYPE_TO_CATEGORY[recurringCost.cost_type],
+        amount: recurringCost.amount,
+        date: recurringCost.paid_at as string,
+        description: `${RECURRING_COST_TYPE_LABEL[recurringCost.cost_type]} ${recurringCost.year}`,
+      },
+    );
 
     const { data, error } = await this.clientForUser(accessToken)
       .from("vehicle_recurring_costs")
@@ -140,10 +152,14 @@ export class RecurringCostsService {
       builder = builder.is("paid_at", null);
     }
 
-    const { data, error } = await builder.order("due_date", { ascending: true });
+    const { data, error } = await builder.order("due_date", {
+      ascending: true,
+    });
 
     if (error) {
-      throw new NotFoundException("Não foi possível listar os custos recorrentes");
+      throw new NotFoundException(
+        "Não foi possível listar os custos recorrentes",
+      );
     }
     return (data ?? []) as RecurringCost[];
   }
@@ -151,7 +167,11 @@ export class RecurringCostsService {
   /**
    * @spec SPEC-20260609-001 RF-05
    */
-  async findOne(accessToken: string, userId: string, id: string): Promise<RecurringCost> {
+  async findOne(
+    accessToken: string,
+    userId: string,
+    id: string,
+  ): Promise<RecurringCost> {
     const { data, error } = await this.clientForUser(accessToken)
       .from("vehicle_recurring_costs")
       .select(RECURRING_COST_COLUMNS)
@@ -176,7 +196,12 @@ export class RecurringCostsService {
   ): Promise<RecurringCost> {
     const client = this.clientForUser(accessToken);
     await this.assertVehicleOwnership(client, dto.vehicle_id, userId);
-    await this.assertNoDuplicate(client, dto.vehicle_id, dto.cost_type, dto.year);
+    await this.assertNoDuplicate(
+      client,
+      dto.vehicle_id,
+      dto.cost_type,
+      dto.year,
+    );
 
     const { data, error } = await client
       .from("vehicle_recurring_costs")
@@ -257,7 +282,9 @@ export class RecurringCostsService {
       .is("deleted_at", null);
 
     if (error) {
-      throw new NotFoundException("Não foi possível remover o custo recorrente");
+      throw new NotFoundException(
+        "Não foi possível remover o custo recorrente",
+      );
     }
 
     void this.auditService.log({
@@ -267,6 +294,11 @@ export class RecurringCostsService {
       recordId: id,
     });
 
-    await this.expensesService.softDeleteBySource(accessToken, userId, "recurring_cost", id);
+    await this.expensesService.softDeleteBySource(
+      accessToken,
+      userId,
+      "recurring_cost",
+      id,
+    );
   }
 }

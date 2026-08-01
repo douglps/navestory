@@ -1,4 +1,4 @@
-import { categorySummaryQuerySchema } from "@nave/validators";
+import { categorySummaryQuerySchema } from "@navestory/validators";
 import type { z } from "zod";
 
 export const categorySummaryDtoSchema = categorySummaryQuerySchema;

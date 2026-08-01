@@ -8,7 +8,10 @@ vi.mock("./src/lib/auth/decode-jwt-exp", () => ({
 import { decodeJwtExp } from "./src/lib/auth/decode-jwt-exp";
 import { config, middleware } from "./middleware";
 
-function createRequest(path: string, cookies: Record<string, string> = {}): NextRequest {
+function createRequest(
+  path: string,
+  cookies: Record<string, string> = {},
+): NextRequest {
   const cookieHeader = Object.entries(cookies)
     .map(([key, value]) => `${key}=${value}`)
     .join("; ");
@@ -36,7 +39,9 @@ describe("middleware", () => {
 
   it("permite acesso quando o access token é válido", async () => {
     vi.mocked(decodeJwtExp).mockReturnValue(Date.now() + 60_000);
-    const request = createRequest("/dashboard", { nave_access_token: "valid-token" });
+    const request = createRequest("/dashboard", {
+      navestory_access_token: "valid-token",
+    });
 
     const response = await middleware(request);
 
@@ -45,12 +50,16 @@ describe("middleware", () => {
 
   it("redireciona /login → /dashboard quando já autenticado (STORY-01 cenário 4)", async () => {
     vi.mocked(decodeJwtExp).mockReturnValue(Date.now() + 60_000);
-    const request = createRequest("/login", { nave_access_token: "valid-token" });
+    const request = createRequest("/login", {
+      navestory_access_token: "valid-token",
+    });
 
     const response = await middleware(request);
 
     expect(response.status).toBe(307);
-    expect(response.headers.get("location")).toBe("http://localhost:3000/dashboard");
+    expect(response.headers.get("location")).toBe(
+      "http://localhost:3000/dashboard",
+    );
   });
 
   it("permite acesso a rota pública sem token", async () => {
@@ -92,7 +101,9 @@ describe("middleware", () => {
     "SPEC-20260720-001 RF-04: permite acesso a '%s' mesmo autenticado, sem redirecionar",
     async (path) => {
       vi.mocked(decodeJwtExp).mockReturnValue(Date.now() + 60_000);
-      const request = createRequest(path, { nave_access_token: "valid-token" });
+      const request = createRequest(path, {
+        navestory_access_token: "valid-token",
+      });
 
       const response = await middleware(request);
 
@@ -102,12 +113,16 @@ describe("middleware", () => {
 
   it("redireciona '/' → /dashboard quando já autenticado", async () => {
     vi.mocked(decodeJwtExp).mockReturnValue(Date.now() + 60_000);
-    const request = createRequest("/", { nave_access_token: "valid-token" });
+    const request = createRequest("/", {
+      navestory_access_token: "valid-token",
+    });
 
     const response = await middleware(request);
 
     expect(response.status).toBe(307);
-    expect(response.headers.get("location")).toBe("http://localhost:3000/dashboard");
+    expect(response.headers.get("location")).toBe(
+      "http://localhost:3000/dashboard",
+    );
   });
 
   it("renova a sessão via /auth/refresh quando o access token expirou mas há refresh token", async () => {
@@ -116,26 +131,30 @@ describe("middleware", () => {
       "fetch",
       vi.fn().mockResolvedValue({
         ok: true,
-        headers: { getSetCookie: () => ["nave_access_token=novo; HttpOnly"] },
+        headers: {
+          getSetCookie: () => ["navestory_access_token=novo; HttpOnly"],
+        },
       }),
     );
     const request = createRequest("/dashboard", {
-      nave_access_token: "expired-token",
-      nave_refresh_token: "refresh-token",
+      navestory_access_token: "expired-token",
+      navestory_refresh_token: "refresh-token",
     });
 
     const response = await middleware(request);
 
     expect(response.status).toBe(200);
-    expect(response.headers.get("set-cookie")).toContain("nave_access_token=novo");
+    expect(response.headers.get("set-cookie")).toContain(
+      "navestory_access_token=novo",
+    );
   });
 
   it("redireciona para /login quando o refresh também falha", async () => {
     vi.mocked(decodeJwtExp).mockReturnValue(Date.now() - 1000);
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false }));
     const request = createRequest("/dashboard", {
-      nave_access_token: "expired-token",
-      nave_refresh_token: "refresh-token",
+      navestory_access_token: "expired-token",
+      navestory_refresh_token: "refresh-token",
     });
 
     const response = await middleware(request);
@@ -148,8 +167,8 @@ describe("middleware", () => {
     vi.mocked(decodeJwtExp).mockReturnValue(Date.now() - 1000);
     vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("network")));
     const request = createRequest("/dashboard", {
-      nave_access_token: "expired-token",
-      nave_refresh_token: "refresh-token",
+      navestory_access_token: "expired-token",
+      navestory_refresh_token: "refresh-token",
     });
 
     const response = await middleware(request);

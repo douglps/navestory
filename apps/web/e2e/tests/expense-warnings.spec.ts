@@ -40,48 +40,47 @@ test.describe("Avisos de negócio no formulário de despesa", () => {
    * @spec SPEC-20260716-003 RF-E2E-04
    * @spec SPEC-20260601-001 R1
    */
-  test(
-    "EC-E2E-01: aviso de odômetro exibido ao tentar registrar km abaixo do último (R-ODO-01)",
-    async ({ page }) => {
-      if (!TEST_VEHICLE_PLATE) {
-        // RF-DATA-02: sem veículo de teste configurado, marcar como skip com aviso
-        test.skip(
-          true,
-          "E2E_TEST_VEHICLE_PLATE não configurado — configure um veículo com odômetro registrado.",
-        );
-        return;
-      }
+  test("EC-E2E-01: aviso de odômetro exibido ao tentar registrar km abaixo do último (R-ODO-01)", async ({
+    page,
+  }) => {
+    if (!TEST_VEHICLE_PLATE) {
+      // RF-DATA-02: sem veículo de teste configurado, marcar como skip com aviso
+      test.skip(
+        true,
+        "E2E_TEST_VEHICLE_PLATE não configurado — configure um veículo com odômetro registrado.",
+      );
+      return;
+    }
 
-      const expenseForm = new ExpenseFormPage(page);
+    const expenseForm = new ExpenseFormPage(page);
 
-      await expenseForm.goto();
+    await expenseForm.goto();
 
-      // Seleciona o veículo de teste pela placa (label visível no select)
-      await expenseForm.selectVehicle(TEST_VEHICLE_PLATE);
+    // Seleciona o veículo de teste pela placa (label visível no select)
+    await expenseForm.selectVehicle(TEST_VEHICLE_PLATE);
 
-      // Seleciona categoria "fuel" (exibe campo odometer_km)
-      await expenseForm.selectCategory("fuel");
+    // Seleciona categoria "fuel" (exibe campo odometer_km)
+    await expenseForm.selectCategory("fuel");
 
-      // Preenche valor — R$ 100,00 (10000 centavos)
-      await expenseForm.fillAmount("10000");
+    // Preenche valor — R$ 100,00 (10000 centavos)
+    await expenseForm.fillAmount("10000");
 
-      // Preenche odômetro COM VALOR BAIXO para acionar o hard block:
-      // 1 km — garante que será menor que qualquer odômetro já registrado
-      await expenseForm.fillOdometer("1");
+    // Preenche odômetro COM VALOR BAIXO para acionar o hard block:
+    // 1 km — garante que será menor que qualquer odômetro já registrado
+    await expenseForm.fillOdometer("1");
 
-      await expenseForm.submit();
+    await expenseForm.submit();
 
-      // Aguarda o alerta de erro do odômetro aparecer na tela
-      const alertText = await expenseForm.waitForAlert();
+    // Aguarda o alerta de erro do odômetro aparecer na tela
+    const alertText = await expenseForm.waitForAlert();
 
-      // Verifica que a mensagem de erro menciona odômetro inválido
-      // (mensagem exata do backend: "Odômetro inválido: o último valor registrado...")
-      expect(alertText).toMatch(/odômetro inválido/i);
+    // Verifica que a mensagem de erro menciona odômetro inválido
+    // (mensagem exata do backend: "Odômetro inválido: o último valor registrado...")
+    expect(alertText).toMatch(/odômetro inválido/i);
 
-      // Verifica que ainda está na página de criação (salvamento foi bloqueado)
-      await expect(page).toHaveURL(/\/expenses\/new/);
-    },
-  );
+    // Verifica que ainda está na página de criação (salvamento foi bloqueado)
+    await expect(page).toHaveURL(/\/expenses\/new/);
+  });
 
   /**
    * RF-E2E-05 / EC-E2E-02: aviso de despesa duplicada exibido na tela.
@@ -104,7 +103,9 @@ test.describe("Avisos de negócio no formulário de despesa", () => {
 
     test.afterEach(async ({ page }) => {
       for (const id of createdExpenseIds.splice(0)) {
-        await page.request.delete(`/api/backend/expenses/${id}`).catch(() => undefined);
+        await page.request
+          .delete(`/api/backend/expenses/${id}`)
+          .catch(() => undefined);
       }
     });
 
@@ -127,16 +128,25 @@ test.describe("Avisos de negócio no formulário de despesa", () => {
       await expenseForm.selectCategory("toll");
       await expenseForm.fillAmount("5000");
       const [firstResponse] = await Promise.all([
-        page.waitForResponse((res) => res.url().includes("/api/backend/expenses") && res.request().method() === "POST"),
+        page.waitForResponse(
+          (res) =>
+            res.url().includes("/api/backend/expenses") &&
+            res.request().method() === "POST",
+        ),
         expenseForm.submit(),
       ]);
       // A API responde envelopada em `{ data: ... }` (ver ExpensesController.create) — não
       // `{ id }` na raiz.
-      const firstBody = (await firstResponse.json()) as { data?: { id?: string } };
+      const firstBody = (await firstResponse.json()) as {
+        data?: { id?: string };
+      };
       const firstExpenseId = firstBody.data?.id;
       if (firstExpenseId) createdExpenseIds.push(firstExpenseId);
       // domcontentloaded em vez do "load" padrão — ver nota em dashboard.page.ts
-      await page.waitForURL(/\/expenses(?!\/new)/, { timeout: 8_000, waitUntil: "domcontentloaded" });
+      await page.waitForURL(/\/expenses(?!\/new)/, {
+        timeout: 8_000,
+        waitUntil: "domcontentloaded",
+      });
 
       // Segunda criação — mesmos vehicle_id, category, amount e date (default: hoje)
       await expenseForm.goto();
@@ -144,26 +154,34 @@ test.describe("Avisos de negócio no formulário de despesa", () => {
       await expenseForm.selectCategory("toll");
       await expenseForm.fillAmount("5000");
       const [secondResponse] = await Promise.all([
-        page.waitForResponse((res) => res.url().includes("/api/backend/expenses") && res.request().method() === "POST"),
+        page.waitForResponse(
+          (res) =>
+            res.url().includes("/api/backend/expenses") &&
+            res.request().method() === "POST",
+        ),
         expenseForm.submit(),
       ]);
-      const secondBody = (await secondResponse.json()) as { data?: { id?: string } };
+      const secondBody = (await secondResponse.json()) as {
+        data?: { id?: string };
+      };
       const secondExpenseId = secondBody.data?.id;
       if (secondExpenseId) createdExpenseIds.push(secondExpenseId);
 
       const alertText = await expenseForm.waitForAlert();
       expect(alertText).toMatch(/já existe/i);
 
-      // Navegação adiada: ainda em /expenses/new até clicar em "Entendido"
+      // navegação adiada: ainda em /expenses/new até clicar em "Entendido"
       await expect(page).toHaveURL(/\/expenses\/new/);
 
-      await expect(page.getByRole("link", { name: /ver despesa duplicada/i })).toHaveAttribute(
-        "href",
-        `/expenses/${firstExpenseId}`,
-      );
+      await expect(
+        page.getByRole("link", { name: /ver despesa duplicada/i }),
+      ).toHaveAttribute("href", `/expenses/${firstExpenseId}`);
       await page.getByRole("button", { name: /entendido/i }).click();
       // domcontentloaded em vez do "load" padrão — ver nota em dashboard.page.ts
-      await page.waitForURL(/\/expenses(?!\/new)/, { timeout: 8_000, waitUntil: "domcontentloaded" });
+      await page.waitForURL(/\/expenses(?!\/new)/, {
+        timeout: 8_000,
+        waitUntil: "domcontentloaded",
+      });
     });
   });
 });

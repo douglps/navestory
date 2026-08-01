@@ -2,7 +2,7 @@
 /**
  * Doc-sync-gate: avisa (não bloqueia) quando um PR/push altera specs/RULES.md ou uma
  * spec de feature (specs/<feature>/SPEC-*.md) sem tocar nenhum arquivo em matrices/ no
- * mesmo diff — o padrão de gap encontrado em `docs/discussions/2026-07-31-analise-comparativa-nave-saas-legacy.md`
+ * mesmo diff — o padrão de gap encontrado em `docs/discussions/2026-07-31-analise-comparativa-navestory-saas-legacy.md`
  * (matrices/permissoes.md desatualizada em relação a specs/código já corrigidos).
  *
  * Deliberadamente só avisa (exit code 0) nesta primeira versão: nem toda spec que muda
@@ -46,16 +46,22 @@ function main() {
   }
 
   const changedFiles = gitDiffNameOnly(base);
-  const touchedSpecsOrRules = changedFiles.filter((f) => RULES_RE.test(f) || SPEC_RE.test(f));
+  const touchedSpecsOrRules = changedFiles.filter(
+    (f) => RULES_RE.test(f) || SPEC_RE.test(f),
+  );
   const touchedMatrices = changedFiles.some((f) => MATRIX_RE.test(f));
 
   if (touchedSpecsOrRules.length === 0) {
-    console.log("check-doc-sync: ok — nenhuma spec/RULES.md alterada neste diff.");
+    console.log(
+      "check-doc-sync: ok — nenhuma spec/RULES.md alterada neste diff.",
+    );
     return;
   }
 
   if (touchedMatrices) {
-    console.log("check-doc-sync: ok — spec/RULES.md alterada e matriz também tocada no mesmo diff.");
+    console.log(
+      "check-doc-sync: ok — spec/RULES.md alterada e matriz também tocada no mesmo diff.",
+    );
     return;
   }
 

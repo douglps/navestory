@@ -1,4 +1,4 @@
-# PRD — Nave SaaS
+# PRD — navestory SaaS
 
 > Documento completo: [`docs/PRD/PRD-v1.0.md`](../docs/PRD/PRD-v1.0.md)
 
@@ -12,11 +12,11 @@
 
 ## Personas Alvo
 
-| ID | Persona | Perfil | Prioridade |
-|----|---------|--------|-----------|
-| P-001 | Carlos, Motorista Autônomo | 35-50 anos, usa o veículo para trabalho, controla custo individual no celular | MVP |
-| P-002 | Ana, Gestora de Frota Pequena | 28-45 anos, gerencia 3-10 veículos, toma decisões com dados, usa desktop e mobile | MVP |
-| P-003 | Roberto, Gestor de Grande Frota | 40-55 anos, 50-500 veículos, precisa de dashboards consolidados | Fase 2 |
+| ID    | Persona                         | Perfil                                                                            | Prioridade |
+| ----- | ------------------------------- | --------------------------------------------------------------------------------- | ---------- |
+| P-001 | Carlos, Motorista Autônomo      | 35-50 anos, usa o veículo para trabalho, controla custo individual no celular     | MVP        |
+| P-002 | Ana, Gestora de Frota Pequena   | 28-45 anos, gerencia 3-10 veículos, toma decisões com dados, usa desktop e mobile | MVP        |
+| P-003 | Roberto, Gestor de Grande Frota | 40-55 anos, 50-500 veículos, precisa de dashboards consolidados                   | Fase 2     |
 
 ---
 
@@ -32,13 +32,13 @@
 
 ## Critérios de Sucesso (Métricas Observáveis)
 
-| Métrica | Alvo |
-|---------|------|
-| Tempo para criar uma despesa | < 30 segundos |
-| Duplicatas inseridas sem aviso | 0 (valida R2) |
-| Manutenções com alerta enviado a tempo | 100% das agendadas a 7 dias |
-| Health score calculado por veículo | Presente em cada abertura de ficha |
-| Lighthouse Mobile | > 90 |
+| Métrica                                | Alvo                               |
+| -------------------------------------- | ---------------------------------- |
+| Tempo para criar uma despesa           | < 30 segundos                      |
+| Duplicatas inseridas sem aviso         | 0 (valida R2)                      |
+| Manutenções com alerta enviado a tempo | 100% das agendadas a 7 dias        |
+| Health score calculado por veículo     | Presente em cada abertura de ficha |
+| Lighthouse Mobile                      | > 90                               |
 
 ---
 
@@ -56,9 +56,9 @@
 
 ## Riscos e Hipóteses Não Validadas
 
-| Risco | Hipótese | Mitigação |
-|-------|---------|-----------|
-| Fidelidade do odômetro | Usuários preenchem odômetro corretamente toda vez | Warning R1 + campo não-bloqueante |
-| Adoção mobile-first | 80%+ dos usuários acessam pelo celular | PWA + layout mobile-first |
-| Categorias inconsistentes | Usuários categorizam gastos de forma diferente | Categorias padrão + customizáveis (ADR-003) |
-| Engajamento com templates | Usuários repetirão despesas frequentes | Templates ordenados por uso recente (P2) |
+| Risco                     | Hipótese                                          | Mitigação                                   |
+| ------------------------- | ------------------------------------------------- | ------------------------------------------- |
+| Fidelidade do odômetro    | Usuários preenchem odômetro corretamente toda vez | Warning R1 + campo não-bloqueante           |
+| Adoção mobile-first       | 80%+ dos usuários acessam pelo celular            | PWA + layout mobile-first                   |
+| Categorias inconsistentes | Usuários categorizam gastos de forma diferente    | Categorias padrão + customizáveis (ADR-003) |
+| Engajamento com templates | Usuários repetirão despesas frequentes            | Templates ordenados por uso recente (P2)    |

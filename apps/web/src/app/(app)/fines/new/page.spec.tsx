@@ -146,4 +146,52 @@ describe("NewFinePage", () => {
     expect(confirmSpy).not.toHaveBeenCalled();
     expect(pushMock).toHaveBeenCalledWith("/fines");
   });
+
+  it("exibe erro da API quando o POST falha (onError)", async () => {
+    const { ApiError: RealApiError } = await import("@/lib/http/api-client");
+    vi.mocked(apiClient).mockImplementation((path: string) => {
+      if (path === "/vehicles") return Promise.resolve(vehicles) as never;
+      return Promise.reject(new RealApiError("Veículo já possui multa com este número de auto", 409)) as never;
+    });
+    renderPage();
+
+    await fillValidForm();
+    fireEvent.click(screen.getByRole("button", { name: "Registrar" }));
+
+    await waitFor(() =>
+      expect(screen.getByRole("alert")).toHaveTextContent(
+        "Veículo já possui multa com este número de auto",
+      ),
+    );
+  });
+
+  it("altera os campos opcionais dos detalhes da infração (onChange handlers)", async () => {
+    // Cobre: onChange de autoNumber, infractionCode, dueDate, appealDeadline,
+    // location, driverName, notes + branch setShowDetails
+    mockLookups();
+    renderPage();
+
+    await waitForVehiclesLoaded();
+    // Abre a seção de detalhes (cobre o onClick de setShowDetails)
+    fireEvent.click(screen.getByRole("button", { name: "Detalhes da infração (opcional)" }));
+
+    // Altera os campos opcionais
+    fireEvent.change(screen.getByLabelText("Número do auto de infração"), { target: { value: "AI-999" } });
+    fireEvent.change(screen.getByLabelText("Código da infração"), { target: { value: "55680" } });
+    fireEvent.change(screen.getByLabelText("Vencimento"), { target: { value: "2026-09-01" } });
+    fireEvent.change(screen.getByLabelText("Prazo para recurso"), { target: { value: "2026-08-15" } });
+    fireEvent.change(screen.getByLabelText("Local"), { target: { value: "Rua das Flores" } });
+    fireEvent.change(screen.getByLabelText("Condutor"), { target: { value: "Maria" } });
+    fireEvent.change(screen.getByLabelText("Observações"), { target: { value: "Nota extra" } });
+
+    expect(screen.getByLabelText("Número do auto de infração")).toHaveValue("AI-999");
+    expect(screen.getByLabelText("Código da infração")).toHaveValue("55680");
+    expect(screen.getByLabelText("Local")).toHaveValue("Rua das Flores");
+    expect(screen.getByLabelText("Condutor")).toHaveValue("Maria");
+    expect(screen.getByLabelText("Observações")).toHaveValue("Nota extra");
+
+    // Fecha a seção (cobre a inversão do estado showDetails)
+    fireEvent.click(screen.getByRole("button", { name: "Ocultar detalhes da infração" }));
+    expect(screen.queryByLabelText("Número do auto de infração")).not.toBeInTheDocument();
+  });
 });

@@ -27,11 +27,15 @@ function stubFetch(byPath: Record<string, FetchStub>): void {
 }
 
 function renderSubheader(): void {
-  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
   render(
-    <QueryClientProvider client={queryClient}>
-      <FinancialSubheader />
-    </QueryClientProvider> as ReactNode,
+    (
+      <QueryClientProvider client={queryClient}>
+        <FinancialSubheader />
+      </QueryClientProvider>
+    ) as ReactNode,
   );
 }
 
@@ -50,7 +54,12 @@ describe("FinancialSubheader", () => {
     stubFetch({
       "/dashboard/spending-highlights": {
         data: [
-          { category: "fuel", label: "Combustível", total_amount: 1500, count: 3 },
+          {
+            category: "fuel",
+            label: "Combustível",
+            total_amount: 1500,
+            count: 3,
+          },
           { category: "toll", label: "Pedágio", total_amount: 42, count: 1 },
         ],
       },
@@ -77,7 +86,9 @@ describe("FinancialSubheader", () => {
 
     renderSubheader();
 
-    await waitFor(() => expect(screen.getByText("Despesas")).toBeInTheDocument());
+    await waitFor(() =>
+      expect(screen.getByText("Despesas")).toBeInTheDocument(),
+    );
     expect(screen.queryByText("Combustível")).not.toBeInTheDocument();
   });
 
@@ -90,8 +101,14 @@ describe("FinancialSubheader", () => {
 
     renderSubheader();
 
-    expect(screen.getByText("Despesas").closest("a")).toHaveAttribute("href", "/expenses");
-    expect(screen.getByText("Manutenções").closest("a")).toHaveAttribute("href", "/maintenance");
+    expect(screen.getByText("Despesas").closest("a")).toHaveAttribute(
+      "href",
+      "/expenses",
+    );
+    expect(screen.getByText("Manutenções").closest("a")).toHaveAttribute(
+      "href",
+      "/maintenance",
+    );
   });
 
   // @spec SPEC-20260722-004 US-03, R-SUB-04
@@ -103,7 +120,11 @@ describe("FinancialSubheader", () => {
 
     renderSubheader();
 
-    await waitFor(() => expect(screen.getByText("Multas").closest("a")).toHaveClass("text-danger"));
+    await waitFor(() =>
+      expect(screen.getByText("Multas").closest("a")).toHaveClass(
+        "text-danger",
+      ),
+    );
     expect(screen.getByText("2")).toBeInTheDocument();
   });
 
@@ -125,7 +146,14 @@ describe("FinancialSubheader", () => {
     useDashboardStore.getState().setActiveVehicle("veh-1");
     stubFetch({
       "/dashboard/spending-highlights": {
-        data: [{ category: "fuel", label: "Combustível", total_amount: 100, count: 1 }],
+        data: [
+          {
+            category: "fuel",
+            label: "Combustível",
+            total_amount: 100,
+            count: 1,
+          },
+        ],
       },
       "/dashboard/fines-status": { data: { status: "none", count: 0 } },
     });
@@ -133,6 +161,45 @@ describe("FinancialSubheader", () => {
     renderSubheader();
 
     const link = await screen.findByText("Combustível");
-    expect(link.closest("a")).toHaveAttribute("href", "/expenses?category=fuel&vehicleId=veh-1");
+    expect(link.closest("a")).toHaveAttribute(
+      "href",
+      "/expenses?category=fuel&vehicleId=veh-1",
+    );
+  });
+
+  // @spec SPEC-20260722-004 R-SUB-02
+  it("RF-01: propaga groupIds do contexto group para os links (branch selectionMode=group)", async () => {
+    // Ativa o modo "group" com um grupo fictício
+    useDashboardStore.getState().setActiveGroup("grp-1");
+
+    stubFetch({
+      "/vehicle-groups": {
+        data: [
+          {
+            id: "grp-1",
+            vehicle_group_members: [
+              { vehicle_id: "v1" },
+              { vehicle_id: "v2" },
+            ],
+          },
+        ],
+      },
+      "/dashboard/spending-highlights": {
+        data: [
+          { category: "maintenance", label: "Manutenção", total_amount: 300, count: 2 },
+        ],
+      },
+      "/dashboard/fines-status": { data: { status: "none", count: 0 } },
+    });
+
+    renderSubheader();
+
+    // Aguarda o chip aparecer (indica que as queries carregaram)
+    const link = await screen.findByText("Manutenção");
+    // No modo group, o link do chip deve incluir groupIds
+    expect(link.closest("a")).toHaveAttribute(
+      "href",
+      "/expenses?category=maintenance&group=v1%2Cv2",
+    );
   });
 });

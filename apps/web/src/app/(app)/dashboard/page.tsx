@@ -4,13 +4,27 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { DEFAULT_DASHBOARD_KPI_IDS, type FleetKpiCatalog, type KpiCatalogId } from "@nave/validators";
-import { Alert, Button, Combobox, Container, EmptyState, Input } from "@nave/ui";
+import {
+  DEFAULT_DASHBOARD_KPI_IDS,
+  type FleetKpiCatalog,
+  type KpiCatalogId,
+} from "@navestory/validators";
+import {
+  Alert,
+  Button,
+  Combobox,
+  Container,
+  EmptyState,
+  Input,
+} from "@navestory/ui";
 import { apiClient } from "@/lib/http/api-client";
 import { ActionDock } from "@/components/layout/action-dock";
 import { SystemFooter } from "@/components/layout/system-footer";
 import { DashboardKpiGrid } from "@/components/dashboard/DashboardKpiGrid";
-import { FleetAlertBar, type FleetAlertItem } from "@/components/dashboard/FleetAlertBar";
+import {
+  FleetAlertBar,
+  type FleetAlertItem,
+} from "@/components/dashboard/FleetAlertBar";
 import { FleetChartsSection } from "@/components/dashboard/FleetCharts";
 import { KpiPicker } from "@/components/dashboard/KpiPicker";
 import { UpcomingCostsWidget } from "@/components/dashboard/UpcomingCostsWidget";
@@ -32,7 +46,10 @@ interface FleetHealthEntry {
 }
 
 function vehicleLabel(vehicle: VehicleCardData): string {
-  return vehicle.nickname ?? (`${vehicle.make ?? ""} ${vehicle.model ?? ""}`.trim() || vehicle.plate);
+  return (
+    vehicle.nickname ??
+    (`${vehicle.make ?? ""} ${vehicle.model ?? ""}`.trim() || vehicle.plate)
+  );
 }
 
 function currentPeriod(): string {
@@ -53,10 +70,14 @@ function capitalizeFirst(text: string): string {
 function DashboardDateHeader(): ReactNode {
   const now = new Date();
   const weekday = capitalizeFirst(
-    new Intl.DateTimeFormat("pt-BR", { weekday: "short" }).format(now).replace(/\.$/, ""),
+    new Intl.DateTimeFormat("pt-BR", { weekday: "short" })
+      .format(now)
+      .replace(/\.$/, ""),
   );
   const day = String(now.getDate()).padStart(2, "0");
-  const month = capitalizeFirst(new Intl.DateTimeFormat("pt-BR", { month: "short" }).format(now));
+  const month = capitalizeFirst(
+    new Intl.DateTimeFormat("pt-BR", { month: "short" }).format(now),
+  );
   const year = String(now.getFullYear()).slice(-2);
 
   return (
@@ -80,7 +101,11 @@ function DashboardDateHeader(): ReactNode {
  * do plano do usuário, que — assim como o nome em RF-07 — não está disponível client-side ainda.
  * Não implementado nesta rodada.
  */
-function ExportControls({ vehicles }: { vehicles: VehicleCardData[] | undefined }): ReactNode {
+function ExportControls({
+  vehicles,
+}: {
+  vehicles: VehicleCardData[] | undefined;
+}): ReactNode {
   const [period, setPeriod] = useState(currentPeriod());
   const [vehicleId, setVehicleId] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "error">("idle");
@@ -93,13 +118,14 @@ function ExportControls({ vehicles }: { vehicles: VehicleCardData[] | undefined 
 
     try {
       const response = await fetch(exportUrl);
-      if (!response.ok) throw new Error(`Falha na exportação: ${response.status}`);
+      if (!response.ok)
+        throw new Error(`Falha na exportação: ${response.status}`);
 
       const blob = await response.blob();
       const objectUrl = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = objectUrl;
-      link.download = `nave-despesas-${period}.csv`;
+      link.download = `navestory-despesas-${period}.csv`;
       link.click();
       URL.revokeObjectURL(objectUrl);
       setStatus("idle");
@@ -113,7 +139,11 @@ function ExportControls({ vehicles }: { vehicles: VehicleCardData[] | undefined 
       <div className="flex flex-wrap items-end gap-3">
         <label className="flex flex-col gap-1">
           <span>Mês</span>
-          <Input type="month" value={period} onChange={(event) => setPeriod(event.target.value)} />
+          <Input
+            type="month"
+            value={period}
+            onChange={(event) => setPeriod(event.target.value)}
+          />
         </label>
 
         <div className="flex flex-col gap-1">
@@ -122,7 +152,10 @@ function ExportControls({ vehicles }: { vehicles: VehicleCardData[] | undefined 
             aria-label="Veículo"
             options={[
               { value: "", label: "Todos os veículos" },
-              ...(vehicles ?? []).map((vehicle) => ({ value: vehicle.id, label: vehicleLabel(vehicle) })),
+              ...(vehicles ?? []).map((vehicle) => ({
+                value: vehicle.id,
+                label: vehicleLabel(vehicle),
+              })),
             ]}
             value={vehicleId}
             onValueChange={setVehicleId}
@@ -133,13 +166,21 @@ function ExportControls({ vehicles }: { vehicles: VehicleCardData[] | undefined 
           />
         </div>
 
-        <Button type="button" variant="outline" onClick={handleExport} disabled={status === "loading"}>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={handleExport}
+          disabled={status === "loading"}
+        >
           {status === "loading" ? "Exportando…" : "Exportar CSV"}
         </Button>
       </div>
 
       {status === "error" && (
-        <Alert variant="error" description="Não foi possível exportar. Tente novamente." />
+        <Alert
+          variant="error"
+          description="Não foi possível exportar. Tente novamente."
+        />
       )}
     </div>
   );
@@ -153,9 +194,12 @@ function NoVehiclesEmptyState(): ReactNode {
   return (
     <EmptyState
       icon="🚗"
-      title="Bem-vindo à Nave"
+      title="Bem-vindo à navestory"
       description="Cadastre seu primeiro veículo para começar a acompanhar despesas, manutenções e a saúde da sua frota."
-      action={{ label: "Cadastrar veículo", onClick: () => router.push("/vehicles/new") }}
+      action={{
+        label: "Cadastrar veículo",
+        onClick: () => router.push("/vehicles/new"),
+      }}
     />
   );
 }
@@ -184,11 +228,16 @@ function VehicleGrid({
     if (!needsPagination) return vehicles;
     // RF-DA-10: acima de 15 veículos, ordena por score ascendente (pior primeiro).
     return [...vehicles].sort(
-      (a, b) => (healthByVehicleId.get(a.id) ?? 100) - (healthByVehicleId.get(b.id) ?? 100),
+      (a, b) =>
+        (healthByVehicleId.get(a.id) ?? 100) -
+        (healthByVehicleId.get(b.id) ?? 100),
     );
   }, [vehicles, needsPagination, healthByVehicleId]);
 
-  const visible = needsPagination && !showAll ? ordered.slice(0, GRID_INITIAL_PAGE_SIZE) : ordered;
+  const visible =
+    needsPagination && !showAll
+      ? ordered.slice(0, GRID_INITIAL_PAGE_SIZE)
+      : ordered;
 
   return (
     <div className="flex flex-col gap-3">
@@ -206,7 +255,13 @@ function VehicleGrid({
         ))}
       </div>
       {needsPagination && !showAll && (
-        <Button type="button" variant="ghost" size="sm" onClick={() => setShowAll(true)} className="self-start">
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={() => setShowAll(true)}
+          className="self-start"
+        >
           ver mais ({ordered.length - GRID_INITIAL_PAGE_SIZE})
         </Button>
       )}
@@ -225,7 +280,9 @@ export default function DashboardPage(): ReactNode {
   const selectionMode = useDashboardStore((state) => state.selectionMode);
   const activeVehicleId = useDashboardStore((state) => state.activeVehicleId);
   const setActiveVehicle = useDashboardStore((state) => state.setActiveVehicle);
-  const clearAllSelection = useDashboardStore((state) => state.clearAllSelection);
+  const clearAllSelection = useDashboardStore(
+    (state) => state.clearAllSelection,
+  );
   const spotlightRef = useRef<HTMLDivElement>(null);
 
   const { data: vehicles } = useQuery({
@@ -258,10 +315,12 @@ export default function DashboardPage(): ReactNode {
   /** @spec SPEC-20260721-002 RF-01, R-KPI-01 */
   const { data: preferences } = useQuery({
     queryKey: ["preferences"],
-    queryFn: () => apiClient<{ dashboard_kpi_ids?: KpiCatalogId[] }>("/preferences"),
+    queryFn: () =>
+      apiClient<{ dashboard_kpi_ids?: KpiCatalogId[] }>("/preferences"),
     retry: false,
   });
-  const activeKpiIds = preferences?.dashboard_kpi_ids ?? DEFAULT_DASHBOARD_KPI_IDS;
+  const activeKpiIds =
+    preferences?.dashboard_kpi_ids ?? DEFAULT_DASHBOARD_KPI_IDS;
 
   // RF-DA-08: auto-seleciona quando a frota tem exatamente 1 veículo e nada está em foco ainda.
   useEffect(() => {
@@ -273,22 +332,29 @@ export default function DashboardPage(): ReactNode {
 
   const healthByVehicleId = useMemo(() => {
     const map = new Map<string, number>();
-    for (const entry of fleetHealth ?? []) map.set(entry.vehicle_id, entry.score);
+    for (const entry of fleetHealth ?? [])
+      map.set(entry.vehicle_id, entry.score);
     return map;
   }, [fleetHealth]);
 
   const flagsByVehicleId = useMemo(() => {
     const map = new Map<string, HealthFlag[]>();
-    for (const entry of fleetHealth ?? []) map.set(entry.vehicle_id, entry.flags);
+    for (const entry of fleetHealth ?? [])
+      map.set(entry.vehicle_id, entry.flags);
     return map;
   }, [fleetHealth]);
 
-  const activeVehicle = vehicles?.find((vehicle) => vehicle.id === activeVehicleId);
+  const activeVehicle = vehicles?.find(
+    (vehicle) => vehicle.id === activeVehicleId,
+  );
 
   /** @spec SPEC-20260531-001 RF-DA-05 */
   function handleSelectVehicle(vehicleId: string): void {
     setActiveVehicle(vehicleId);
-    spotlightRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    spotlightRef.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
   }
 
   const hasNoVehicles = vehicles?.length === 0;
@@ -302,7 +368,10 @@ export default function DashboardPage(): ReactNode {
           Fora do ActionDock por decisão de RF-DC-02.1/RF-DC-03 (dock fixo em 4 itens,
           ver action-dock.tsx) — link direto satisfaz o mesmo objetivo de acesso rápido.
         */}
-        <Link href="/atividades" className="flex items-center gap-1 text-sm text-muted-foreground underline">
+        <Link
+          href="/atividades"
+          className="flex items-center gap-1 text-sm text-muted-foreground underline"
+        >
           <span aria-hidden>🛡️</span>
           Histórico de Atividades
         </Link>
@@ -328,7 +397,10 @@ export default function DashboardPage(): ReactNode {
           )}
 
           <div ref={spotlightRef}>
-            <VehicleSpotlight vehicle={activeVehicle} onClear={clearAllSelection} />
+            <VehicleSpotlight
+              vehicle={activeVehicle}
+              onClear={clearAllSelection}
+            />
           </div>
 
           <UpcomingCostsWidget />

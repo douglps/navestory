@@ -25,7 +25,7 @@ async function bootstrap(): Promise<void> {
   const swaggerEnabled = configService.get<boolean>("SWAGGER_ENABLED");
   if (nodeEnv === "development" || swaggerEnabled) {
     const config = new DocumentBuilder()
-      .setTitle("Nave API")
+      .setTitle("navestory API")
       .setDescription("API de gestão de frota veicular")
       .setVersion("0.0.0")
       .addBearerAuth()

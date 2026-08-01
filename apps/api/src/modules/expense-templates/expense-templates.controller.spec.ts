@@ -19,35 +19,57 @@ describe("ExpenseTemplatesController", () => {
     };
   }
 
-  const req = { headers: { authorization: "Bearer token-123" }, cookies: {} } as Request;
+  const req = {
+    headers: { authorization: "Bearer token-123" },
+    cookies: {},
+  } as Request;
 
   it("findAll lista modelos do usuário", async () => {
     const { controller, expenseTemplatesService } = createController();
 
     const result = await controller.findAll(req, "u1");
 
-    expect(expenseTemplatesService.findAll).toHaveBeenCalledWith("token-123", "u1");
+    expect(expenseTemplatesService.findAll).toHaveBeenCalledWith(
+      "token-123",
+      "u1",
+    );
     expect(result.data).toEqual([]);
   });
 
   it("create cria o modelo", async () => {
     const { controller, expenseTemplatesService } = createController();
-    const dto = { name: "Modelo", vehicle_id: "v1", category: "fuel", amount: 100 };
+    const dto = {
+      name: "Modelo",
+      vehicle_id: "v1",
+      category: "fuel",
+      amount: 100,
+    };
 
     const result = await controller.create(req, "u1", dto);
 
-    expect(expenseTemplatesService.create).toHaveBeenCalledWith("token-123", "u1", dto);
+    expect(expenseTemplatesService.create).toHaveBeenCalledWith(
+      "token-123",
+      "u1",
+      dto,
+    );
     expect(result.data).toEqual({ id: "t1" });
   });
 
   it("update atualiza o modelo", async () => {
     const { controller, expenseTemplatesService } = createController();
 
-    const result = await controller.update(req, "u1", "t1", { name: "Novo nome" });
-
-    expect(expenseTemplatesService.update).toHaveBeenCalledWith("token-123", "u1", "t1", {
+    const result = await controller.update(req, "u1", "t1", {
       name: "Novo nome",
     });
+
+    expect(expenseTemplatesService.update).toHaveBeenCalledWith(
+      "token-123",
+      "u1",
+      "t1",
+      {
+        name: "Novo nome",
+      },
+    );
     expect(result.data).toEqual({ id: "t1" });
   });
 
@@ -56,7 +78,11 @@ describe("ExpenseTemplatesController", () => {
 
     await controller.touch(req, "u1", "t1");
 
-    expect(expenseTemplatesService.touch).toHaveBeenCalledWith("token-123", "u1", "t1");
+    expect(expenseTemplatesService.touch).toHaveBeenCalledWith(
+      "token-123",
+      "u1",
+      "t1",
+    );
   });
 
   it("remove remove o modelo", async () => {
@@ -64,7 +90,11 @@ describe("ExpenseTemplatesController", () => {
 
     await controller.remove(req, "u1", "t1");
 
-    expect(expenseTemplatesService.remove).toHaveBeenCalledWith("token-123", "u1", "t1");
+    expect(expenseTemplatesService.remove).toHaveBeenCalledWith(
+      "token-123",
+      "u1",
+      "t1",
+    );
   });
 
   it("lança 401 quando não há token disponível", async () => {
@@ -80,11 +110,14 @@ describe("ExpenseTemplatesController", () => {
     const { controller, expenseTemplatesService } = createController();
     const reqComCookie = {
       headers: {},
-      cookies: { nave_access_token: "cookie-token" },
+      cookies: { navestory_access_token: "cookie-token" },
     } as unknown as Request;
 
     await controller.findAll(reqComCookie, "u1");
 
-    expect(expenseTemplatesService.findAll).toHaveBeenCalledWith("cookie-token", "u1");
+    expect(expenseTemplatesService.findAll).toHaveBeenCalledWith(
+      "cookie-token",
+      "u1",
+    );
   });
 });

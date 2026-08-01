@@ -1,4 +1,4 @@
-# Changelog - Nave SaaS
+# Changelog - navestory SaaS
 
 Todas as alterações notáveis neste projeto serão documentadas neste arquivo.
 

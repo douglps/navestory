@@ -24,6 +24,7 @@ Pedido do usuário (2026-06-12), consolidando 5 ajustes incrementais no mesmo fo
 ## 3. RF-01 — Valor máximo da despesa: R$ 100.000.000,00
 
 **Estado atual:**
+
 - `packages/validators/src/expenses.schema.ts` (`amount`): `.max(999999.99, 'Valor muito alto.')`.
 - `packages/ui/src/components/masked-input.tsx`: `CURRENCY_MAX_DIGITS = 10` (permite digitar até R$ 99.999.999,99).
 
@@ -37,7 +38,7 @@ Pedido do usuário (2026-06-12), consolidando 5 ajustes incrementais no mesmo fo
 
 ## 4. RF-02 — Campo de Ano editável próximo à Data
 
-**Problema:** o `DatePicker` (`@nave/ui`) exige navegação mês a mês (ou abertura do seletor de ano do calendário) para alterar o ano de uma data distante (ex.: lançar uma despesa retroativa de anos anteriores).
+**Problema:** o `DatePicker` (`@navestory/ui`) exige navegação mês a mês (ou abertura do seletor de ano do calendário) para alterar o ano de uma data distante (ex.: lançar uma despesa retroativa de anos anteriores).
 
 **RF-02.1** — Adicionar, ao lado do `DatePicker` no campo "Data da Despesa", um `OdometerInput`-like (input numérico simples, 4 dígitos, sem máscara de milhar) rotulado "Ano", exibindo o ano da `date` atual do formulário.
 
@@ -52,6 +53,7 @@ Pedido do usuário (2026-06-12), consolidando 5 ajustes incrementais no mesmo fo
 ## 5. RF-03 — "Tipo de Abastecimento" → "Tanque cheio?" (tri-state, default nenhum)
 
 **Estado atual:**
+
 - Campo `full_tank` (`boolean | null`), label "Tipo de Abastecimento", toggle binário "Cheio" / "Parcial".
 - Default em criação: `full_tank: true` (`expense-form.tsx` linha 153) — e também restaurado para `true` ao sair da categoria combustível (linha 288).
 - `kmPerLiter` só é calculado quando `watchedFullTank === true` (R-FUEL-02, inalterado).
@@ -81,20 +83,22 @@ Pedido do usuário (2026-06-12), consolidando 5 ajustes incrementais no mesmo fo
 ## 7. RF-05 — Reorganização do layout: campos obrigatórios agrupados no início
 
 **Estado atual (ordem do formulário):**
-1. Veículo *
-2. Categoria * + Valor * (lado a lado)
-3. Data *
+
+1. Veículo \*
+2. Categoria _ + Valor _ (lado a lado)
+3. Data \*
 4. _(se combustível)_ Tipo de Combustível + Tipo de Abastecimento (full_tank)
-5. _(se combustível)_ Odômetro * + Litros + Valor por Litro
+5. _(se combustível)_ Odômetro \* + Litros + Valor por Litro
 6. _(se combustível)_ Fornecedor
 7. Descrição (opcional)
 
 **Problema:** o Odômetro — obrigatório quando `category = 'fuel'` — fica no meio da seção de combustível, distante dos demais campos obrigatórios (Veículo, Categoria, Valor, Data), dificultando a percepção do que é mandatório no formulário.
 
 **RF-05.1** — Nova ordem:
-1. Veículo *
-2. Categoria * + Valor * (lado a lado)
-3. Data * + Ano (lado a lado, RF-02)
+
+1. Veículo \*
+2. Categoria _ + Valor _ (lado a lado)
+3. Data \* + Ano (lado a lado, RF-02)
 4. _(se combustível)_ **Odômetro \*** — movido para imediatamente após Data/Ano, fora do agrupamento visual "Dados do Abastecimento"
 5. _(se combustível)_ Card "Dados do Abastecimento" (opcional): Tipo de Combustível, Tanque cheio? (RF-03), Litros, Valor por Litro, Fornecedor
 6. Descrição (opcional)
@@ -107,11 +111,11 @@ Pedido do usuário (2026-06-12), consolidando 5 ajustes incrementais no mesmo fo
 
 ## 8. Regras Novas/Atualizadas (specs/RULES.md)
 
-| ID | Regra | Mudança |
-|----|-------|---------|
-| **R-EXP-01** (novo) | `amount` de uma despesa deve estar entre `0,01` e `100.000.000,00` (inclusive) | Novo |
-| **R-ODO-02** (novo) | `odometer_km`, quando informado, não pode exceder `9.999.999` (7 dígitos) — validado no schema compartilhado (`expenseBaseSchema`), além do limite já existente na UI (`OdometerInput`) | Novo |
-| **R-FUEL-06** (novo) | `full_tank` é tri-state (`true` / `false` / `null`); default `null` ("Tanque cheio?" sem seleção). `R-FUEL-02` (cálculo de km/L exige `full_tank = true`) permanece válida sem alterações | Novo |
+| ID                   | Regra                                                                                                                                                                                     | Mudança |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
+| **R-EXP-01** (novo)  | `amount` de uma despesa deve estar entre `0,01` e `100.000.000,00` (inclusive)                                                                                                            | Novo    |
+| **R-ODO-02** (novo)  | `odometer_km`, quando informado, não pode exceder `9.999.999` (7 dígitos) — validado no schema compartilhado (`expenseBaseSchema`), além do limite já existente na UI (`OdometerInput`)   | Novo    |
+| **R-FUEL-06** (novo) | `full_tank` é tri-state (`true` / `false` / `null`); default `null` ("Tanque cheio?" sem seleção). `R-FUEL-02` (cálculo de km/L exige `full_tank = true`) permanece válida sem alterações | Novo    |
 
 ---
 
@@ -126,8 +130,9 @@ Pedido do usuário (2026-06-12), consolidando 5 ajustes incrementais no mesmo fo
 ---
 
 ## Histórico de Revisões
-| Versão | Data | Autor | Mudanças |
-|--------|------|-------|---------|
-| 1.0 | 2026-06-12 | douglps | Criação inicial |
-| 1.1 | 2026-06-12 | douglps | Implementação via TDD (RF-01..RF-05). Status: aprovada. |
-| 1.2 | 2026-07-14 | douglps | Implementação real (T3.9) — a v1.1 registrava "implementado" mas o código não existia (matriz de rastreabilidade estava com todos os itens ⏳; corrigido nesta rodada). RF-01/RF-04 (`amount`/`odometer_km` max) já estavam corretos em `expenseBaseSchema` desde T3.0, coincidentemente. RF-02, RF-03 e RF-05 implementados em `apps/web/src/app/expenses/{new/page.tsx,[id]/page.tsx}` sobre a stack real do projeto (`useState`, sem react-hook-form) — ver changelog de SPEC-20260612-001 para o racional completo do desvio de arquitetura. |
+
+| Versão | Data       | Autor   | Mudanças                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| ------ | ---------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1.0    | 2026-06-12 | douglps | Criação inicial                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| 1.1    | 2026-06-12 | douglps | Implementação via TDD (RF-01..RF-05). Status: aprovada.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| 1.2    | 2026-07-14 | douglps | Implementação real (T3.9) — a v1.1 registrava "implementado" mas o código não existia (matriz de rastreabilidade estava com todos os itens ⏳; corrigido nesta rodada). RF-01/RF-04 (`amount`/`odometer_km` max) já estavam corretos em `expenseBaseSchema` desde T3.0, coincidentemente. RF-02, RF-03 e RF-05 implementados em `apps/web/src/app/expenses/{new/page.tsx,[id]/page.tsx}` sobre a stack real do projeto (`useState`, sem react-hook-form) — ver changelog de SPEC-20260612-001 para o racional completo do desvio de arquitetura. |

@@ -27,11 +27,14 @@ export function SystemFooter(): ReactNode {
         className="grid grid-cols-1 gap-6 rounded-lg border border-border bg-card p-6 text-card-foreground md:grid-cols-2 md:p-8"
       >
         <div className="space-y-2">
-          <span className="text-sm font-semibold">Nave</span>
+          <span className="text-sm font-semibold">navestory</span>
           <p className="max-w-sm text-xs leading-relaxed text-muted-foreground">
-            Gestão de frota e veículos: despesas, manutenções e documentos em um só lugar.
+            Gestão de frota e veículos: despesas, manutenções e documentos em um
+            só lugar.
           </p>
-          <p className="text-[11px] text-muted-foreground">© {new Date().getFullYear()} Nave</p>
+          <p className="text-[11px] text-muted-foreground">
+            © {new Date().getFullYear()} navestory
+          </p>
         </div>
 
         <div className="grid grid-cols-2 gap-6 md:justify-items-end">

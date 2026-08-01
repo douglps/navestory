@@ -23,8 +23,14 @@ vi.mock("@/lib/http/api-client", async () => {
 import { apiClient } from "@/lib/http/api-client";
 
 const okKpiCatalog = {
-  expenses_month: { ok: true, value: { value: 100, delta_pct: null, history_6mo: null } },
-  cost_per_km: { ok: true, value: { value: 0, delta_pct: null, history_6mo: null } },
+  expenses_month: {
+    ok: true,
+    value: { value: 100, delta_pct: null, history_6mo: null },
+  },
+  cost_per_km: {
+    ok: true,
+    value: { value: 0, delta_pct: null, history_6mo: null },
+  },
   fleet_health: { ok: true, value: null },
   urgent_maintenance: { ok: true, value: 0 },
   total_vehicles: { ok: true, value: 1 },
@@ -34,7 +40,12 @@ const okKpiCatalog = {
 };
 
 const defaultPreferences = {
-  dashboard_kpi_ids: ["expenses_month", "urgent_maintenance", "cost_per_km", "next_maintenance"],
+  dashboard_kpi_ids: [
+    "expenses_month",
+    "urgent_maintenance",
+    "cost_per_km",
+    "next_maintenance",
+  ],
 };
 
 function vehicleCard(overrides: Record<string, unknown>) {
@@ -53,15 +64,22 @@ function vehicleCard(overrides: Record<string, unknown>) {
 
 function mockDashboardData(vehicles: unknown[]) {
   vi.mocked(apiClient).mockImplementation((path: string) => {
-    if (path === "/dashboard/vehicle-cards") return Promise.resolve(vehicles) as never;
+    if (path === "/dashboard/vehicle-cards")
+      return Promise.resolve(vehicles) as never;
     if (path === "/dashboard/fleet-health") return Promise.resolve([]) as never;
     if (path === "/dashboard/alerts") return Promise.resolve([]) as never;
-    if (path.startsWith("/dashboard/kpi-catalog")) return Promise.resolve(okKpiCatalog) as never;
-    if (path === "/preferences") return Promise.resolve(defaultPreferences) as never;
-    if (path.startsWith("/analytics/tco/")) return Promise.resolve({ total: 0 }) as never;
-    if (path.startsWith("/analytics/fuel-trend/")) return Promise.resolve([]) as never;
-    if (path.startsWith("/recurring-costs")) return Promise.resolve([]) as never;
-    if (path.startsWith("/dashboard/vehicle-history")) return Promise.resolve([]) as never;
+    if (path.startsWith("/dashboard/kpi-catalog"))
+      return Promise.resolve(okKpiCatalog) as never;
+    if (path === "/preferences")
+      return Promise.resolve(defaultPreferences) as never;
+    if (path.startsWith("/analytics/tco/"))
+      return Promise.resolve({ total: 0 }) as never;
+    if (path.startsWith("/analytics/fuel-trend/"))
+      return Promise.resolve([]) as never;
+    if (path.startsWith("/recurring-costs"))
+      return Promise.resolve([]) as never;
+    if (path.startsWith("/dashboard/vehicle-history"))
+      return Promise.resolve([]) as never;
     return Promise.reject(new Error(`unmocked path: ${path}`));
   });
 }
@@ -89,18 +107,24 @@ describe("DashboardPage", () => {
     mockDashboardData([]);
     renderPage();
 
-    await waitFor(() => expect(screen.getByText(/Bem-vindo à Nave/)).toBeInTheDocument());
+    await waitFor(() =>
+      expect(screen.getByText(/Bem-vindo à navestory/)).toBeInTheDocument(),
+    );
     screen.getByRole("button", { name: "Cadastrar veículo" }).click();
     expect(pushMock).toHaveBeenCalledWith("/vehicles/new");
     expect(screen.queryByText("Gastos do mês")).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Exportar CSV" })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Exportar CSV" }),
+    ).not.toBeInTheDocument();
   });
 
   it("RF-DA-08: auto-seleciona o único veículo da frota quando nada está em foco", async () => {
     mockDashboardData([vehicleCard({ id: "v1", plate: "ABC1234" })]);
     renderPage();
 
-    await waitFor(() => expect(useDashboardStore.getState().activeVehicleId).toBe("v1"));
+    await waitFor(() =>
+      expect(useDashboardStore.getState().activeVehicleId).toBe("v1"),
+    );
     expect(useDashboardStore.getState().selectionMode).toBe("single");
   });
 
@@ -111,7 +135,9 @@ describe("DashboardPage", () => {
     ]);
     renderPage();
 
-    await waitFor(() => expect(screen.getByText("ABC1234")).toBeInTheDocument());
+    await waitFor(() =>
+      expect(screen.getByText("ABC1234")).toBeInTheDocument(),
+    );
     expect(useDashboardStore.getState().selectionMode).toBe("none");
   });
 
@@ -119,19 +145,27 @@ describe("DashboardPage", () => {
     mockDashboardData([vehicleCard({ id: "v1", plate: "ABC1234" })]);
     renderPage();
 
-    expect(await screen.findByRole("button", { name: "Exportar CSV" })).toBeInTheDocument();
+    expect(
+      await screen.findByRole("button", { name: "Exportar CSV" }),
+    ).toBeInTheDocument();
   });
 
   it("RF-05: exibe estado de loading e depois erro quando a exportação falha", async () => {
     mockDashboardData([vehicleCard({ id: "v1", plate: "ABC1234" })]);
-    const fetchMock = vi.spyOn(global, "fetch").mockResolvedValue({ ok: false, status: 500 } as Response);
+    const fetchMock = vi
+      .spyOn(global, "fetch")
+      .mockResolvedValue({ ok: false, status: 500 } as Response);
     renderPage();
 
     const button = await screen.findByRole("button", { name: "Exportar CSV" });
     button.click();
 
-    expect(await screen.findByRole("alert")).toHaveTextContent(/Não foi possível exportar/);
-    expect(await screen.findByRole("button", { name: "Exportar CSV" })).toBeInTheDocument();
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      /Não foi possível exportar/,
+    );
+    expect(
+      await screen.findByRole("button", { name: "Exportar CSV" }),
+    ).toBeInTheDocument();
 
     fetchMock.mockRestore();
   });
@@ -140,7 +174,9 @@ describe("DashboardPage", () => {
     mockDashboardData([vehicleCard({ id: "v1", plate: "ABC1234" })]);
     renderPage();
 
-    await waitFor(() => expect(screen.getByText("Gastos do mês")).toBeInTheDocument());
+    await waitFor(() =>
+      expect(screen.getByText("Gastos do mês")).toBeInTheDocument(),
+    );
     expect(screen.getByText("Manutenções urgentes")).toBeInTheDocument();
     expect(screen.getByText("Custo/km")).toBeInTheDocument();
     expect(screen.getByText("Próxima manutenção")).toBeInTheDocument();
@@ -154,21 +190,34 @@ describe("DashboardPage", () => {
     renderPage();
 
     await waitFor(() =>
-      expect(screen.getByText("Selecione um veículo acima para ver a análise detalhada")).toBeInTheDocument(),
+      expect(
+        screen.getByText(
+          "Selecione um veículo acima para ver a análise detalhada",
+        ),
+      ).toBeInTheDocument(),
     );
   });
 
   it("RF-DA-05: clicar num card ativa o veículo e exibe o chip Em Foco da Zona B", async () => {
     mockDashboardData([
       vehicleCard({ id: "v1", plate: "ABC1234" }),
-      vehicleCard({ id: "v2", plate: "DEF5678", make: "Toyota", model: "Corolla" }),
+      vehicleCard({
+        id: "v2",
+        plate: "DEF5678",
+        make: "Toyota",
+        model: "Corolla",
+      }),
     ]);
     renderPage();
 
-    const card = await screen.findByRole("button", { name: /Ver análise de Honda Civic/ });
+    const card = await screen.findByRole("button", {
+      name: /Ver análise de Honda Civic/,
+    });
     card.click();
 
-    await waitFor(() => expect(screen.getByText(/Em Foco: Honda Civic/)).toBeInTheDocument());
+    await waitFor(() =>
+      expect(screen.getByText(/Em Foco: Honda Civic/)).toBeInTheDocument(),
+    );
     expect(useDashboardStore.getState().activeVehicleId).toBe("v1");
   });
 });

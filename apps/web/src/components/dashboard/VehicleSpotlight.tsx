@@ -3,8 +3,13 @@
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { useState, type ReactNode } from "react";
-import type { FuelTrendPoint, RecurringCost, VehicleHistoryItem, VehicleTco } from "@nave/validators";
-import { Alert, ChartWrapper, EmptyState, Tabs } from "@nave/ui";
+import type {
+  FuelTrendPoint,
+  RecurringCost,
+  VehicleHistoryItem,
+  VehicleTco,
+} from "@navestory/validators";
+import { Alert, ChartWrapper, EmptyState, Tabs } from "@navestory/ui";
 import { apiClient } from "@/lib/http/api-client";
 import { useMediaQuery } from "@/lib/hooks/use-media-query";
 import { TcoBreakdownChart } from "@/components/charts/tco-breakdown-chart";
@@ -37,11 +42,18 @@ export interface SpotlightVehicle {
   make: string | null;
   model: string | null;
   nickname: string | null;
-  documents: { ipva: DocumentStatus; insurance: DocumentStatus; crlv: DocumentStatus };
+  documents: {
+    ipva: DocumentStatus;
+    insurance: DocumentStatus;
+    crlv: DocumentStatus;
+  };
 }
 
 function spotlightLabel(vehicle: SpotlightVehicle): string {
-  return vehicle.nickname ?? (`${vehicle.make ?? ""} ${vehicle.model ?? ""}`.trim() || vehicle.plate);
+  return (
+    vehicle.nickname ??
+    (`${vehicle.make ?? ""} ${vehicle.model ?? ""}`.trim() || vehicle.plate)
+  );
 }
 
 /**
@@ -49,7 +61,13 @@ function spotlightLabel(vehicle: SpotlightVehicle): string {
  * Chip complementar ao slot "Em Foco" do Sidebar (SPEC-20260602-001 RF-01) — mesmo dado, posição
  * diferente. "×" chama a mesma ação de limpar contexto (clearAllSelection), nunca uma ação própria.
  */
-function StickyFocusChip({ label, onClear }: { label: string; onClear: () => void }): ReactNode {
+function StickyFocusChip({
+  label,
+  onClear,
+}: {
+  label: string;
+  onClear: () => void;
+}): ReactNode {
   return (
     <div
       role="status"
@@ -72,7 +90,12 @@ function StickyFocusChip({ label, onClear }: { label: string; onClear: () => voi
  * @spec SPEC-20260531-001 RF-DB-08
  */
 function NoActiveVehicleEmptyState(): ReactNode {
-  return <EmptyState icon="↑" title="Selecione um veículo acima para ver a análise detalhada" />;
+  return (
+    <EmptyState
+      icon="↑"
+      title="Selecione um veículo acima para ver a análise detalhada"
+    />
+  );
 }
 
 /**
@@ -90,7 +113,10 @@ function ExpensesSection({ vehicleId }: { vehicleId: string }): ReactNode {
 
   if (isError) {
     return (
-      <Alert variant="error" description="Não foi possível carregar as despesas deste veículo. Tente novamente." />
+      <Alert
+        variant="error"
+        description="Não foi possível carregar as despesas deste veículo. Tente novamente."
+      />
     );
   }
 
@@ -114,13 +140,19 @@ function ExpensesSection({ vehicleId }: { vehicleId: string }): ReactNode {
 function FuelSection({ vehicleId }: { vehicleId: string }): ReactNode {
   const { data, isLoading, isError } = useQuery({
     queryKey: ["analytics", "fuel-trend", vehicleId],
-    queryFn: () => apiClient<FuelTrendPoint[]>(`/analytics/fuel-trend/${vehicleId}?limit=20`),
+    queryFn: () =>
+      apiClient<FuelTrendPoint[]>(
+        `/analytics/fuel-trend/${vehicleId}?limit=20`,
+      ),
     retry: false,
   });
 
   if (isError) {
     return (
-      <Alert variant="error" description="Não foi possível carregar o consumo deste veículo. Tente novamente." />
+      <Alert
+        variant="error"
+        description="Não foi possível carregar o consumo deste veículo. Tente novamente."
+      />
     );
   }
 
@@ -142,12 +174,24 @@ const DOC_LABEL: Record<"ipva" | "insurance" | "crlv", string> = {
   crlv: "CRLV",
 };
 
-const STATUS_BADGE: Record<"ok" | "attention" | "overdue" | "unknown" | "paid", { label: string; className: string } | null> = {
+const STATUS_BADGE: Record<
+  "ok" | "attention" | "overdue" | "unknown" | "paid",
+  { label: string; className: string } | null
+> = {
   ok: null,
   unknown: null,
-  attention: { label: "Atenção", className: "border-warning bg-warning-pastel text-foreground" },
-  overdue: { label: "Vencido", className: "border-danger bg-danger-pastel text-foreground" },
-  paid: { label: "Pago", className: "border-success bg-success-pastel text-foreground" },
+  attention: {
+    label: "Atenção",
+    className: "border-warning bg-warning-pastel text-foreground",
+  },
+  overdue: {
+    label: "Vencido",
+    className: "border-danger bg-danger-pastel text-foreground",
+  },
+  paid: {
+    label: "Pago",
+    className: "border-success bg-success-pastel text-foreground",
+  },
 };
 
 /**
@@ -160,25 +204,38 @@ function DocsSection({
   documents,
 }: {
   vehicleId: string;
-  documents: { ipva: DocumentStatus; insurance: DocumentStatus; crlv: DocumentStatus };
+  documents: {
+    ipva: DocumentStatus;
+    insurance: DocumentStatus;
+    crlv: DocumentStatus;
+  };
 }): ReactNode {
   const { data: recurringCosts, isError } = useQuery({
     queryKey: ["recurring-costs", vehicleId, CURRENT_YEAR],
     queryFn: () =>
-      apiClient<RecurringCost[]>(`/recurring-costs?vehicle_id=${vehicleId}&year=${CURRENT_YEAR}`),
+      apiClient<RecurringCost[]>(
+        `/recurring-costs?vehicle_id=${vehicleId}&year=${CURRENT_YEAR}`,
+      ),
     retry: false,
   });
 
   const paidCostTypes = new Set(
-    (recurringCosts ?? []).filter((cost) => cost.paid_at != null).map((cost) => cost.cost_type),
+    (recurringCosts ?? [])
+      .filter((cost) => cost.paid_at != null)
+      .map((cost) => cost.cost_type),
   );
 
-  type DocRow = { key: "ipva" | "insurance" | "crlv"; status: DocumentStatus | "paid" };
-  const rows: DocRow[] = (["ipva", "insurance", "crlv"] as const).map((key) => ({
-    key,
-    // eslint-disable-next-line security/detect-object-injection -- key é keyof fixo, união de 3 literais
-    status: paidCostTypes.has(key) ? "paid" : documents[key],
-  }));
+  type DocRow = {
+    key: "ipva" | "insurance" | "crlv";
+    status: DocumentStatus | "paid";
+  };
+  const rows: DocRow[] = (["ipva", "insurance", "crlv"] as const).map(
+    (key) => ({
+      key,
+      // eslint-disable-next-line security/detect-object-injection -- key é keyof fixo, união de 3 literais
+      status: paidCostTypes.has(key) ? "paid" : documents[key],
+    }),
+  );
 
   return (
     <div className="flex flex-col gap-2">
@@ -192,11 +249,16 @@ function DocsSection({
         // eslint-disable-next-line security/detect-object-injection -- status é DocumentStatus | "paid", união fixa
         const badge = STATUS_BADGE[status];
         return (
-          <div key={key} className="flex items-center justify-between rounded border px-3 py-2 text-sm">
+          <div
+            key={key}
+            className="flex items-center justify-between rounded border px-3 py-2 text-sm"
+          >
             {/* eslint-disable-next-line security/detect-object-injection -- key é keyof fixo, união de 3 literais */}
             <span>{DOC_LABEL[key]}</span>
             {badge ? (
-              <span className={`rounded border px-1.5 py-0.5 text-xs font-medium ${badge.className}`}>
+              <span
+                className={`rounded border px-1.5 py-0.5 text-xs font-medium ${badge.className}`}
+              >
                 {badge.label}
               </span>
             ) : (
@@ -216,18 +278,28 @@ function HistorySection({ vehicleId }: { vehicleId: string }): ReactNode {
   const { data, isLoading, isError } = useQuery({
     queryKey: ["dashboard", "vehicle-history", vehicleId],
     queryFn: () =>
-      apiClient<VehicleHistoryItem[]>(`/dashboard/vehicle-history?vehicle_id=${vehicleId}`),
+      apiClient<VehicleHistoryItem[]>(
+        `/dashboard/vehicle-history?vehicle_id=${vehicleId}`,
+      ),
     retry: false,
   });
 
-  if (isLoading) return <p className="text-sm text-muted-foreground">Carregando histórico…</p>;
+  if (isLoading)
+    return (
+      <p className="text-sm text-muted-foreground">Carregando histórico…</p>
+    );
   if (isError) {
     return (
-      <Alert variant="error" description="Não foi possível carregar o histórico deste veículo. Tente novamente." />
+      <Alert
+        variant="error"
+        description="Não foi possível carregar o histórico deste veículo. Tente novamente."
+      />
     );
   }
   if (!data || data.length === 0) {
-    return <EmptyState size="sm" title="Nenhum registro ainda para este veículo." />;
+    return (
+      <EmptyState size="sm" title="Nenhum registro ainda para este veículo." />
+    );
   }
 
   return (
@@ -240,9 +312,13 @@ function HistorySection({ vehicleId }: { vehicleId: string }): ReactNode {
           >
             <span className="flex flex-col">
               <span>{item.description}</span>
-              <span className="text-xs text-muted-foreground">{formatDate(item.date)}</span>
+              <span className="text-xs text-muted-foreground">
+                {formatDate(item.date)}
+              </span>
             </span>
-            <span className="shrink-0 font-medium">{item.amount != null ? currency(item.amount) : "—"}</span>
+            <span className="shrink-0 font-medium">
+              {item.amount != null ? currency(item.amount) : "—"}
+            </span>
           </li>
         ))}
       </ul>
@@ -250,7 +326,10 @@ function HistorySection({ vehicleId }: { vehicleId: string }): ReactNode {
         <Link href={`/expenses?vehicleId=${vehicleId}`} className="underline">
           ver todas as despesas
         </Link>
-        <Link href={`/maintenance?vehicleId=${vehicleId}`} className="underline">
+        <Link
+          href={`/maintenance?vehicleId=${vehicleId}`}
+          className="underline"
+        >
           ver todas as manutenções
         </Link>
       </div>
@@ -283,13 +362,19 @@ export function VehicleSpotlight({
   };
 
   return (
-    <section aria-label="Análise do veículo em foco" className="flex flex-col gap-3">
+    <section
+      aria-label="Análise do veículo em foco"
+      className="flex flex-col gap-3"
+    >
       <StickyFocusChip label={spotlightLabel(vehicle)} onClear={onClear} />
 
       {isDesktop ? (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           {TABS.map((tab) => (
-            <div key={tab.id} className="flex flex-col gap-2 rounded border p-3">
+            <div
+              key={tab.id}
+              className="flex flex-col gap-2 rounded border p-3"
+            >
               <h3 className="font-semibold">{tab.label}</h3>
               {sections[tab.id]}
             </div>

@@ -1,5 +1,16 @@
-import { Controller, Get, Req, UnauthorizedException, UseGuards } from "@nestjs/common";
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
+import {
+  Controller,
+  Get,
+  Req,
+  UnauthorizedException,
+  UseGuards,
+} from "@nestjs/common";
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from "@nestjs/swagger";
 import type { Request } from "express";
 import { UserId } from "../../common/decorators/user-id.decorator";
 import { SupabaseAuthGuard } from "../../common/guards/supabase-auth.guard";
@@ -16,7 +27,9 @@ export class AuditLogsController {
   constructor(private readonly auditLogsService: AuditLogsService) {}
 
   @Get()
-  @ApiOperation({ summary: "Listar as últimas 100 entradas do audit log do próprio usuário" })
+  @ApiOperation({
+    summary: "Listar as últimas 100 entradas do audit log do próprio usuário",
+  })
   @ApiResponse({ status: 200, description: "Lista de entradas de audit log" })
   async findRecent(@Req() req: Request, @UserId() userId: string) {
     const accessToken = this.extractAccessToken(req);
@@ -29,7 +42,9 @@ export class AuditLogsController {
     if (header?.startsWith("Bearer ")) {
       return header.slice("Bearer ".length);
     }
-    const cookieToken = req.cookies?.nave_access_token as string | undefined;
+    const cookieToken = req.cookies?.navestory_access_token as
+      | string
+      | undefined;
     if (cookieToken) {
       return cookieToken;
     }

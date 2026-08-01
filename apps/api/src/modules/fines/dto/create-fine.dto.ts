@@ -1,4 +1,4 @@
-import { createFineInputSchema } from "@nave/validators";
+import { createFineInputSchema } from "@navestory/validators";
 import type { z } from "zod";
 
 export const createFineDtoSchema = createFineInputSchema;

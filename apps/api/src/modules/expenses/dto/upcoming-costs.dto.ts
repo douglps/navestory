@@ -1,4 +1,4 @@
-import { upcomingCostsQuerySchema } from "@nave/validators";
+import { upcomingCostsQuerySchema } from "@navestory/validators";
 import type { z } from "zod";
 
 export const upcomingCostsDtoSchema = upcomingCostsQuerySchema;

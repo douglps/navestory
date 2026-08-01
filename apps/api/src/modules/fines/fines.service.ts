@@ -1,6 +1,15 @@
-import { ConflictException, Inject, Injectable, NotFoundException } from "@nestjs/common";
+import {
+  ConflictException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
-import { FINE_STATUS_TRANSITIONS, type Fine, type FineStatus } from "@nave/validators";
+import {
+  FINE_STATUS_TRANSITIONS,
+  type Fine,
+  type FineStatus,
+} from "@navestory/validators";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { AuditService } from "../../shared/audit/audit.service";
 import { createUserScopedClient } from "../../shared/supabase/create-user-scoped-client";
@@ -19,7 +28,8 @@ const FINE_COLUMNS = `id, user_id, vehicle_id, description, amount, occurred_at,
 @Injectable()
 export class FinesService {
   constructor(
-    @Inject(SUPABASE_ADMIN_CLIENT) private readonly supabaseAdmin: SupabaseClient,
+    @Inject(SUPABASE_ADMIN_CLIENT)
+    private readonly supabaseAdmin: SupabaseClient,
     private readonly configService: ConfigService,
     private readonly auditService: AuditService,
     private readonly expensesService: ExpensesService,
@@ -55,12 +65,21 @@ export class FinesService {
    * @spec SPEC-20260607-001 RF-01
    * @spec EPIC-FIN-001 R-LED-02
    */
-  async create(accessToken: string, userId: string, dto: CreateFineDto): Promise<Fine> {
+  async create(
+    accessToken: string,
+    userId: string,
+    dto: CreateFineDto,
+  ): Promise<Fine> {
     const client = this.clientForUser(accessToken);
     await this.assertVehicleOwnership(client, dto.vehicle_id, userId);
 
-    if (dto.amount_with_discount != null && dto.amount_with_discount > dto.amount) {
-      throw new ConflictException("Valor com desconto não pode ser maior que o valor original");
+    if (
+      dto.amount_with_discount != null &&
+      dto.amount_with_discount > dto.amount
+    ) {
+      throw new ConflictException(
+        "Valor com desconto não pode ser maior que o valor original",
+      );
     }
 
     const { data, error } = await client
@@ -97,7 +116,11 @@ export class FinesService {
   /**
    * @spec SPEC-20260607-001 RF-02
    */
-  async findAll(accessToken: string, userId: string, status?: FineStatus): Promise<Fine[]> {
+  async findAll(
+    accessToken: string,
+    userId: string,
+    status?: FineStatus,
+  ): Promise<Fine[]> {
     let builder = this.clientForUser(accessToken)
       .from("fines")
       .select(FINE_COLUMNS)
@@ -108,7 +131,9 @@ export class FinesService {
       builder = builder.eq("status", status);
     }
 
-    const { data, error } = await builder.order("occurred_at", { ascending: false });
+    const { data, error } = await builder.order("occurred_at", {
+      ascending: false,
+    });
 
     if (error) {
       throw new NotFoundException("Não foi possível listar as multas");
@@ -119,7 +144,11 @@ export class FinesService {
   /**
    * @spec SPEC-20260607-001 RF-02
    */
-  async findByVehicle(accessToken: string, userId: string, vehicleId: string): Promise<Fine[]> {
+  async findByVehicle(
+    accessToken: string,
+    userId: string,
+    vehicleId: string,
+  ): Promise<Fine[]> {
     const client = this.clientForUser(accessToken);
     await this.assertVehicleOwnership(client, vehicleId, userId);
 
@@ -132,7 +161,9 @@ export class FinesService {
       .order("occurred_at", { ascending: false });
 
     if (error) {
-      throw new NotFoundException("Não foi possível listar as multas do veículo");
+      throw new NotFoundException(
+        "Não foi possível listar as multas do veículo",
+      );
     }
     return (data ?? []) as Fine[];
   }
@@ -140,7 +171,11 @@ export class FinesService {
   /**
    * @spec SPEC-20260607-001 RF-03
    */
-  async findOne(accessToken: string, userId: string, fineId: string): Promise<Fine> {
+  async findOne(
+    accessToken: string,
+    userId: string,
+    fineId: string,
+  ): Promise<Fine> {
     const { data, error } = await this.clientForUser(accessToken)
       .from("fines")
       .select(FINE_COLUMNS)
@@ -175,10 +210,13 @@ export class FinesService {
       }
     }
 
-    const amountWithDiscount = dto.amount_with_discount ?? existing.amount_with_discount;
+    const amountWithDiscount =
+      dto.amount_with_discount ?? existing.amount_with_discount;
     const amount = dto.amount ?? existing.amount;
     if (amountWithDiscount != null && amountWithDiscount > amount) {
-      throw new ConflictException("Valor com desconto não pode ser maior que o valor original");
+      throw new ConflictException(
+        "Valor com desconto não pode ser maior que o valor original",
+      );
     }
 
     const changes: Record<string, unknown> = { ...dto };
@@ -210,7 +248,12 @@ export class FinesService {
 
     const updated = data as Fine;
     if (updated.status === "cancelled") {
-      await this.expensesService.softDeleteBySource(accessToken, userId, "fine", fineId);
+      await this.expensesService.softDeleteBySource(
+        accessToken,
+        userId,
+        "fine",
+        fineId,
+      );
     }
 
     return updated;
@@ -220,7 +263,11 @@ export class FinesService {
    * @spec SPEC-20260607-001 RF-06, R5
    * @spec EPIC-FIN-001 R-HUB-01
    */
-  async remove(accessToken: string, userId: string, fineId: string): Promise<void> {
+  async remove(
+    accessToken: string,
+    userId: string,
+    fineId: string,
+  ): Promise<void> {
     await this.findOne(accessToken, userId, fineId);
 
     const { error } = await this.clientForUser(accessToken)
@@ -241,13 +288,22 @@ export class FinesService {
       recordId: fineId,
     });
 
-    await this.expensesService.softDeleteBySource(accessToken, userId, "fine", fineId);
+    await this.expensesService.softDeleteBySource(
+      accessToken,
+      userId,
+      "fine",
+      fineId,
+    );
   }
 
   /**
    * @spec SPEC-20260607-001 RF-07
    */
-  async countPending(accessToken: string, userId: string, vehicleId?: string): Promise<number> {
+  async countPending(
+    accessToken: string,
+    userId: string,
+    vehicleId?: string,
+  ): Promise<number> {
     let builder = this.clientForUser(accessToken)
       .from("fines")
       .select("id", { count: "exact", head: true })
@@ -261,7 +317,9 @@ export class FinesService {
 
     const { count, error } = await builder;
     if (error) {
-      throw new NotFoundException("Não foi possível contar as multas pendentes");
+      throw new NotFoundException(
+        "Não foi possível contar as multas pendentes",
+      );
     }
     return count ?? 0;
   }

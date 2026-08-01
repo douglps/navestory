@@ -1,7 +1,7 @@
 "use client";
 
-import { registerInputSchema } from "@nave/validators";
-import { Alert, Button, Checkbox, Container, Input } from "@nave/ui";
+import { registerInputSchema } from "@navestory/validators";
+import { Alert, Button, Checkbox, Container, Input } from "@navestory/ui";
 import { useMutation } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -29,7 +29,10 @@ export default function RegisterPage(): ReactNode {
 
   const mutation = useMutation({
     mutationFn: (input: { name: string; email: string; password: string }) =>
-      apiClient<RegisterResponse>("/auth/register", { method: "POST", body: input }),
+      apiClient<RegisterResponse>("/auth/register", {
+        method: "POST",
+        body: input,
+      }),
     onSuccess: () => router.push("/login"),
   });
 
@@ -91,13 +94,20 @@ export default function RegisterPage(): ReactNode {
           {fieldError && <Alert variant="error" description={fieldError} />}
 
           {emailAlreadyExists && (
-            <div role="alert" aria-live="polite" className="rounded-md bg-warning-pastel p-3 text-sm text-foreground">
+            <div
+              role="alert"
+              aria-live="polite"
+              className="rounded-md bg-warning-pastel p-3 text-sm text-foreground"
+            >
               <p>Este e-mail já está cadastrado.</p>
               <div className="mt-2 flex gap-2">
                 <Link href="/login" className="underline">
                   Entrar com este e-mail
                 </Link>
-                <Link href={`/recover-password?email=${encodeURIComponent(email)}`} className="underline">
+                <Link
+                  href={`/recover-password?email=${encodeURIComponent(email)}`}
+                  className="underline"
+                >
                   Recuperar senha
                 </Link>
               </div>
@@ -105,7 +115,10 @@ export default function RegisterPage(): ReactNode {
           )}
 
           {mutation.isError && !emailAlreadyExists && (
-            <Alert variant="error" description="Não foi possível criar a conta. Tente novamente." />
+            <Alert
+              variant="error"
+              description="Não foi possível criar a conta. Tente novamente."
+            />
           )}
 
           {/* @spec SPEC-20260720-001 RF-06, US-03 */}

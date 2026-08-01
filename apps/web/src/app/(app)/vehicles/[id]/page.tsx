@@ -1,12 +1,24 @@
 "use client";
 
-import { updateVehicleInputSchema, type UpdateVehicleInput } from "@nave/validators";
+import {
+  updateVehicleInputSchema,
+  type UpdateVehicleInput,
+} from "@navestory/validators";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
-import { Alert, Button, Container, Input, VehicleHealthScore } from "@nave/ui";
-import { FLAG_LABEL, type HealthFlag } from "@/components/dashboard/VehicleHealthCard";
+import {
+  Alert,
+  Button,
+  Container,
+  Input,
+  VehicleHealthScore,
+} from "@navestory/ui";
+import {
+  FLAG_LABEL,
+  type HealthFlag,
+} from "@/components/dashboard/VehicleHealthCard";
 import { apiClient } from "@/lib/http/api-client";
 
 interface Vehicle {
@@ -60,7 +72,11 @@ export default function VehicleDetailPage({
     void params.then((resolved) => setId(resolved.id));
   }, [params]);
 
-  const { data: vehicle, isLoading, isError } = useQuery({
+  const {
+    data: vehicle,
+    isLoading,
+    isError,
+  } = useQuery({
     queryKey: ["vehicles", id],
     queryFn: () => apiClient<Vehicle>(`/vehicles/${id}`),
     enabled: id !== null,
@@ -119,12 +135,17 @@ export default function VehicleDetailPage({
   }
 
   function handleDelete(): void {
-    if (window.confirm("Remover este veículo? O histórico de despesas e manutenções também será ocultado.")) {
+    if (
+      window.confirm(
+        "Remover este veículo? O histórico de despesas e manutenções também será ocultado.",
+      )
+    ) {
       deleteMutation.mutate();
     }
   }
 
-  if (id === null || isLoading) return <main className="p-8">Carregando...</main>;
+  if (id === null || isLoading)
+    return <main className="p-8">Carregando...</main>;
   if (isError || !vehicle)
     return (
       <main className="p-8">
@@ -138,14 +159,19 @@ export default function VehicleDetailPage({
         {vehicle.make} {vehicle.model} — {vehicle.plate}
       </h1>
 
-      <section aria-label="Saúde do Veículo" className="flex flex-col gap-2 rounded-md border border-border p-3">
+      <section
+        aria-label="Saúde do Veículo"
+        className="flex flex-col gap-2 rounded-md border border-border p-3"
+      >
         <div className="flex items-center gap-2">
           <VehicleHealthScore score={health?.score} size={40} />
           <h2 className="text-sm font-medium">Saúde do Veículo</h2>
         </div>
 
         {health && health.flags.length === 0 && (
-          <p className="text-sm text-muted-foreground">Nenhum problema identificado.</p>
+          <p className="text-sm text-muted-foreground">
+            Nenhum problema identificado.
+          </p>
         )}
 
         {health && health.flags.length > 0 && (
@@ -179,11 +205,18 @@ export default function VehicleDetailPage({
         />
 
         <label htmlFor="color">Cor</label>
-        <Input id="color" value={color} onChange={(event) => setColor(event.target.value)} />
+        <Input
+          id="color"
+          value={color}
+          onChange={(event) => setColor(event.target.value)}
+        />
 
         {fieldError && <Alert variant="error" description={fieldError} />}
         {updateMutation.isError && (
-          <Alert variant="error" description="Não foi possível atualizar o veículo." />
+          <Alert
+            variant="error"
+            description="Não foi possível atualizar o veículo."
+          />
         )}
         {updateMutation.isSuccess && <p>Veículo atualizado.</p>}
 
@@ -192,11 +225,19 @@ export default function VehicleDetailPage({
         </Button>
       </form>
 
-      <Button type="button" variant="destructive" onClick={handleDelete} disabled={deleteMutation.isPending}>
+      <Button
+        type="button"
+        variant="destructive"
+        onClick={handleDelete}
+        disabled={deleteMutation.isPending}
+      >
         {deleteMutation.isPending ? "Removendo..." : "Remover veículo"}
       </Button>
       {deleteMutation.isError && (
-        <Alert variant="error" description="Não foi possível remover o veículo." />
+        <Alert
+          variant="error"
+          description="Não foi possível remover o veículo."
+        />
       )}
     </Container>
   );

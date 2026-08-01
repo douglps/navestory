@@ -15,7 +15,10 @@ describe("AuditLogsController", () => {
     };
   }
 
-  const req = { headers: { authorization: "Bearer token-123" }, cookies: {} } as Request;
+  const req = {
+    headers: { authorization: "Bearer token-123" },
+    cookies: {},
+  } as Request;
 
   it("findRecent extrai o token e retorna o histórico do usuário", async () => {
     const { controller, auditLogsService } = createController();
@@ -30,20 +33,23 @@ describe("AuditLogsController", () => {
     const { controller } = createController();
     const reqSemToken = { headers: {}, cookies: {} } as unknown as Request;
 
-    await expect(controller.findRecent(reqSemToken, "u1")).rejects.toBeInstanceOf(
-      UnauthorizedException,
-    );
+    await expect(
+      controller.findRecent(reqSemToken, "u1"),
+    ).rejects.toBeInstanceOf(UnauthorizedException);
   });
 
   it("usa o cookie de sessão quando não há header Authorization", async () => {
     const { controller, auditLogsService } = createController();
     const reqComCookie = {
       headers: {},
-      cookies: { nave_access_token: "cookie-token" },
+      cookies: { navestory_access_token: "cookie-token" },
     } as unknown as Request;
 
     await controller.findRecent(reqComCookie, "u1");
 
-    expect(auditLogsService.findRecent).toHaveBeenCalledWith("cookie-token", "u1");
+    expect(auditLogsService.findRecent).toHaveBeenCalledWith(
+      "cookie-token",
+      "u1",
+    );
   });
 });

@@ -1,4 +1,10 @@
-import { CanActivate, type ExecutionContext, Inject, Injectable, UnauthorizedException } from "@nestjs/common";
+import {
+  CanActivate,
+  type ExecutionContext,
+  Inject,
+  Injectable,
+  UnauthorizedException,
+} from "@nestjs/common";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Request } from "express";
 import { SUPABASE_ADMIN_CLIENT } from "../../shared/supabase/supabase.constants";
@@ -12,10 +18,15 @@ import type { JwtPayload } from "../../modules/auth/jwt.strategy";
  */
 @Injectable()
 export class SoftDeletedUserGuard implements CanActivate {
-  constructor(@Inject(SUPABASE_ADMIN_CLIENT) private readonly supabaseAdmin: SupabaseClient) {}
+  constructor(
+    @Inject(SUPABASE_ADMIN_CLIENT)
+    private readonly supabaseAdmin: SupabaseClient,
+  ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const request = context.switchToHttp().getRequest<Request & { user?: JwtPayload }>();
+    const request = context
+      .switchToHttp()
+      .getRequest<Request & { user?: JwtPayload }>();
     const token = this.extractToken(request);
     if (!token) {
       throw new UnauthorizedException("Token de acesso ausente");
@@ -55,7 +66,8 @@ export class SoftDeletedUserGuard implements CanActivate {
     if (header?.startsWith("Bearer ")) {
       return header.slice("Bearer ".length);
     }
-    const cookieToken = (request.cookies as Record<string, string> | undefined)?.nave_access_token;
+    const cookieToken = (request.cookies as Record<string, string> | undefined)
+      ?.navestory_access_token;
     return cookieToken ?? null;
   }
 }

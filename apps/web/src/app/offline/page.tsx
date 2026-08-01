@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { Button } from "@nave/ui";
+import { Button } from "@navestory/ui";
 import { LegalFooter } from "@/components/legal-footer";
 import { PublicHeader } from "@/components/public-header";
 
@@ -21,12 +21,19 @@ export default function OfflinePage(): ReactNode {
         <span className="text-4xl" aria-hidden="true">
           📴
         </span>
-        <h1 className="text-lg font-semibold text-foreground">Você está sem conexão</h1>
+        <h1 className="text-lg font-semibold text-foreground">
+          Você está sem conexão
+        </h1>
         <p className="max-w-sm text-sm text-muted-foreground">
-          Algumas informações podem não estar disponíveis. Esta página ainda não foi visitada com
-          internet, por isso não há uma cópia salva para exibir agora.
+          Algumas informações podem não estar disponíveis. Esta página ainda não
+          foi visitada com internet, por isso não há uma cópia salva para exibir
+          agora.
         </p>
-        <Button type="button" variant="outline" onClick={() => window.location.reload()}>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => window.location.reload()}
+        >
           Tentar novamente
         </Button>
       </main>

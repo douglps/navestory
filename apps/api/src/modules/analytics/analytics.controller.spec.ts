@@ -16,10 +16,16 @@ describe("AnalyticsController", () => {
       exportCsv: jest.fn().mockResolvedValue("csv-content"),
       ...overrides,
     } as unknown as AnalyticsService;
-    return { controller: new AnalyticsController(analyticsService), analyticsService };
+    return {
+      controller: new AnalyticsController(analyticsService),
+      analyticsService,
+    };
   }
 
-  const req = { headers: { authorization: "Bearer token-123" }, cookies: {} } as Request;
+  const req = {
+    headers: { authorization: "Bearer token-123" },
+    cookies: {},
+  } as Request;
 
   describe("getTco (RF-01, RF-07)", () => {
     it("extrai o token e delega para o service", async () => {
@@ -38,7 +44,9 @@ describe("AnalyticsController", () => {
       const { controller } = createController();
       const reqSemToken = { headers: {}, cookies: {} } as Request;
 
-      await expect(controller.getTco(reqSemToken, "v1")).rejects.toThrow(UnauthorizedException);
+      await expect(controller.getTco(reqSemToken, "v1")).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
   });
 
@@ -51,7 +59,11 @@ describe("AnalyticsController", () => {
 
       const result = await controller.getFuelTrend(req, "v1", { limit: 20 });
 
-      expect(analyticsService.getFuelTrend).toHaveBeenCalledWith("token-123", "v1", 20);
+      expect(analyticsService.getFuelTrend).toHaveBeenCalledWith(
+        "token-123",
+        "v1",
+        20,
+      );
       expect(result).toEqual({ data: points });
     });
   });
@@ -63,9 +75,16 @@ describe("AnalyticsController", () => {
         getAnomalies: jest.fn().mockResolvedValue(anomalies),
       });
 
-      const result = await controller.getAnomalies(req, { threshold: 2.5, vehicle_id: "v1" });
+      const result = await controller.getAnomalies(req, {
+        threshold: 2.5,
+        vehicle_id: "v1",
+      });
 
-      expect(analyticsService.getAnomalies).toHaveBeenCalledWith("token-123", 2.5, "v1");
+      expect(analyticsService.getAnomalies).toHaveBeenCalledWith(
+        "token-123",
+        2.5,
+        "v1",
+      );
       expect(result).toEqual({ data: anomalies });
     });
 
@@ -100,9 +119,16 @@ describe("AnalyticsController", () => {
         getForecast: jest.fn().mockResolvedValue(points),
       });
 
-      const result = await controller.getForecast(req, { vehicle_id: "v1", months: 6 });
+      const result = await controller.getForecast(req, {
+        vehicle_id: "v1",
+        months: 6,
+      });
 
-      expect(analyticsService.getForecast).toHaveBeenCalledWith("token-123", "v1", 6);
+      expect(analyticsService.getForecast).toHaveBeenCalledWith(
+        "token-123",
+        "v1",
+        6,
+      );
       expect(result).toEqual({ data: points });
     });
   });
@@ -116,21 +142,32 @@ describe("AnalyticsController", () => {
 
       const result = await controller.getSeasonal(req, { vehicle_id: "v1" });
 
-      expect(analyticsService.getSeasonal).toHaveBeenCalledWith("token-123", "v1");
+      expect(analyticsService.getSeasonal).toHaveBeenCalledWith(
+        "token-123",
+        "v1",
+      );
       expect(result).toEqual({ data: cells });
     });
   });
 
   describe("getInsights (RF-14)", () => {
     it("extrai o token, o userId e repassa vehicle_id do query param", async () => {
-      const insights = [{ type: "efficiency", vehicle_id: "v1", message: "..." }];
+      const insights = [
+        { type: "efficiency", vehicle_id: "v1", message: "..." },
+      ];
       const { controller, analyticsService } = createController({
         getInsights: jest.fn().mockResolvedValue(insights),
       });
 
-      const result = await controller.getInsights(req, "user-1", { vehicle_id: "v1" });
+      const result = await controller.getInsights(req, "user-1", {
+        vehicle_id: "v1",
+      });
 
-      expect(analyticsService.getInsights).toHaveBeenCalledWith("token-123", "user-1", "v1");
+      expect(analyticsService.getInsights).toHaveBeenCalledWith(
+        "token-123",
+        "user-1",
+        "v1",
+      );
       expect(result).toEqual({ data: insights });
     });
   });
@@ -139,7 +176,7 @@ describe("AnalyticsController", () => {
     const { controller, analyticsService } = createController();
     const reqComCookie = {
       headers: {},
-      cookies: { nave_access_token: "cookie-token" },
+      cookies: { navestory_access_token: "cookie-token" },
     } as unknown as Request;
 
     await controller.getTco(reqComCookie, "v1");
@@ -157,13 +194,21 @@ describe("AnalyticsController", () => {
 
       await controller.exportCsv(req, { vehicle_id: "v1", format: "csv" }, res);
 
-      expect(analyticsService.exportCsv).toHaveBeenCalledWith("token-123", "v1");
-      expect(res.setHeader).toHaveBeenCalledWith("Content-Type", "text/csv; charset=utf-8");
+      expect(analyticsService.exportCsv).toHaveBeenCalledWith(
+        "token-123",
+        "v1",
+      );
+      expect(res.setHeader).toHaveBeenCalledWith(
+        "Content-Type",
+        "text/csv; charset=utf-8",
+      );
       expect(res.setHeader).toHaveBeenCalledWith(
         "Content-Disposition",
-        expect.stringContaining("attachment; filename=\"analytics-"),
+        expect.stringContaining('attachment; filename="analytics-'),
       );
-      expect(res.send).toHaveBeenCalledWith(expect.stringContaining("csv-content"));
+      expect(res.send).toHaveBeenCalledWith(
+        expect.stringContaining("csv-content"),
+      );
     });
   });
 });

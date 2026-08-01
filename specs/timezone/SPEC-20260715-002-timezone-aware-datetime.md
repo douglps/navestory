@@ -39,6 +39,7 @@ vencimento e classificações de documentos.
 ### 1.2 Schema sem componente de hora
 
 O schema atual não captura hora em nenhum lançamento transacional:
+
 - `expenses.date` → `DATE` (sem hora, sem timezone) — ver
   `supabase/migrations/20260712171830_core_tables.sql`
 - `maintenances.scheduled_date` e `maintenances.completion_date` → `DATE`
@@ -62,7 +63,7 @@ impossibilita saber em qual fuso o usuário estava ao lançar o registro.
 
 ## 2. Objetivo
 
-Tornar o Nave consciente do fuso horário do usuário em três frentes:
+Tornar o navestory consciente do fuso horário do usuário em três frentes:
 
 1. **Cálculo de "hoje"**: alertas, KPIs e classificação de documentos no `DashboardService`
    passam a usar o fuso do usuário autenticado.
@@ -76,13 +77,13 @@ Tornar o Nave consciente do fuso horário do usuário em três frentes:
 
 ## 3. Requisitos Funcionais — Camada Database
 
-| ID | Requisito | Prioridade |
-|----|-----------|------------|
-| RF-BD-01 | Migration: adicionar coluna `timezone TEXT` em `public.user_preferences`; coluna nullable (ausência = fuso ainda não detectado); constraint `CHECK (timezone IS NULL OR length(timezone) BETWEEN 1 AND 64)` como guarda mínima de integridade (validação IANA completa fica no backend/frontend) | Alta |
-| RF-BD-02 | Migration: converter `public.expenses.date` de `DATE` para `TIMESTAMPTZ` **e renomear a coluna para `occurred_at`** (decisão fechada com o usuário em 2026-07-15 — ver Nota N-01). Migration única (`ALTER TABLE ... RENAME COLUMN date TO occurred_at`, seguido de `ALTER COLUMN occurred_at TYPE timestamptz USING ...`) | Alta |
-| RF-BD-03 | Migration: converter `public.maintenances.scheduled_date` de `DATE` para `TIMESTAMPTZ`; converter `public.maintenances.completion_date` de `DATE` para `TIMESTAMPTZ`. Nomes de coluna mantidos (só `expenses.date` é renomeado, por já ter semântica ambígua com o novo tipo — `scheduled_date`/`completion_date` continuam claros) | Alta |
-| RF-BD-04 | Estratégia de migração de dados existentes (decisão fechada com o usuário em 2026-07-15): linhas com valor `DATE` existente recebem hora `00:00:00` no fuso `user_preferences.timezone` do usuário dono do registro, via `JOIN` com `user_preferences` por `user_id`; quando `timezone IS NULL` para aquele usuário, usar `'UTC'` como fallback | Alta |
-| RF-BD-05 | RLS e índices existentes em `expenses.date`/`occurred_at` e `maintenances.scheduled_date` devem ser avaliados pelo implementador para reindexação após a alteração de tipo; nenhum índice novo é prescrito por esta spec (responsabilidade do `dba` agent na fase de revisão) | Média |
+| ID       | Requisito                                                                                                                                                                                                                                                                                                                                       | Prioridade |
+| -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- |
+| RF-BD-01 | Migration: adicionar coluna `timezone TEXT` em `public.user_preferences`; coluna nullable (ausência = fuso ainda não detectado); constraint `CHECK (timezone IS NULL OR length(timezone) BETWEEN 1 AND 64)` como guarda mínima de integridade (validação IANA completa fica no backend/frontend)                                                | Alta       |
+| RF-BD-02 | Migration: converter `public.expenses.date` de `DATE` para `TIMESTAMPTZ` **e renomear a coluna para `occurred_at`** (decisão fechada com o usuário em 2026-07-15 — ver Nota N-01). Migration única (`ALTER TABLE ... RENAME COLUMN date TO occurred_at`, seguido de `ALTER COLUMN occurred_at TYPE timestamptz USING ...`)                      | Alta       |
+| RF-BD-03 | Migration: converter `public.maintenances.scheduled_date` de `DATE` para `TIMESTAMPTZ`; converter `public.maintenances.completion_date` de `DATE` para `TIMESTAMPTZ`. Nomes de coluna mantidos (só `expenses.date` é renomeado, por já ter semântica ambígua com o novo tipo — `scheduled_date`/`completion_date` continuam claros)             | Alta       |
+| RF-BD-04 | Estratégia de migração de dados existentes (decisão fechada com o usuário em 2026-07-15): linhas com valor `DATE` existente recebem hora `00:00:00` no fuso `user_preferences.timezone` do usuário dono do registro, via `JOIN` com `user_preferences` por `user_id`; quando `timezone IS NULL` para aquele usuário, usar `'UTC'` como fallback | Alta       |
+| RF-BD-05 | RLS e índices existentes em `expenses.date`/`occurred_at` e `maintenances.scheduled_date` devem ser avaliados pelo implementador para reindexação após a alteração de tipo; nenhum índice novo é prescrito por esta spec (responsabilidade do `dba` agent na fase de revisão)                                                                   | Média      |
 
 ### Nota N-01 — Nome da coluna `expenses.date` (decisão fechada)
 
@@ -101,42 +102,42 @@ mudança de tipo, para manter o PR revisável.
 
 ## 4. Requisitos Funcionais — Camada Backend
 
-| ID | Requisito | Prioridade |
-|----|-----------|------------|
-| RF-BK-01 | `PreferencesService.findOne()` passa a incluir `timezone` na query (`PREFERENCES_COLUMNS`) e retornar o campo no tipo de resposta; fallback: quando `null`, retornar `null` sem substituir por `'UTC'` — o fallback para `'UTC'` é aplicado pelos consumidores (R-TZ-01, R-PREF-01) | Alta |
-| RF-BK-02 | `PreferencesService.upsert()` aceita `timezone` no payload; `UpdatePreferencesDto` e o schema Zod correspondente em `packages/validators/src/preferences.schemas.ts` recebem campo `timezone?: string \| null` com validação: quando presente e não-nulo, deve ser string não-vazia com pattern `^[A-Za-z_/]+$` (IANA básico); validação completa via `Intl.supportedValuesOf('timeZone')` pode ser adicionada no frontend, não é obrigatória no backend nesta fase (R-TZ-02) | Alta |
-| RF-BK-03 | `DashboardService.getAlerts()`, `countUrgentMaintenances()`, `getKpis()` e `getVehicleCards()` — toda chamada a `new Date()` que determina "hoje" passa a receber o `timezone` IANA do usuário autenticado (obtido por `PreferencesService.findOne()` no início de cada operação de dashboard); a nova assinatura de `daysUntil(dateStr, today, tz)` e `classifyDocument(dateStr, today, tz)` calcula "hoje" no fuso recebido, não em UTC (R-TZ-01) | Alta |
-| RF-BK-04 | Implementação de utilitário `toCalendarDay(date: Date, tz: string): string` — retorna `YYYY-MM-DD` no fuso `tz` usando `Intl.DateTimeFormat` com opções `{ timeZone: tz, year:'numeric', month:'2-digit', day:'2-digit' }`; substitui `toDateString(date)` (que usa UTC) onde "dia do usuário" é o contexto correto. O utilitário fica em módulo compartilhado (`apps/api/src/shared/utils/date.utils.ts` ou equivalente) | Alta |
-| RF-BK-05 | Quando `user_preferences.timezone` é `null` ou a leitura de preferências falha, o fallback documentado é `'UTC'` — nunca o fuso do processo (`process.env.TZ`, fuso do SO). Esse fallback deve aparecer como constante nomeada (`FALLBACK_TIMEZONE = 'UTC'`) no código (R-TZ-01) | Alta |
-| RF-BK-06 | `ExpensesService` — o campo `occurred_at` (renomeado de `date`, RF-BD-02) dos DTOs de create/update passa a aceitar string ISO 8601 com offset (ex: `"2026-07-15T21:30:00-03:00"`) **ou** string de data simples `"YYYY-MM-DD"` (compatibilidade retroativa); quando recebe `YYYY-MM-DD`, o service interpreta como `00:00:00` no fuso do usuário autenticado (obtido de `user_preferences.timezone`, com fallback `'UTC'`) antes de persistir como `timestamptz` (R-TZ-03) | Alta |
-| RF-BK-07 | `MaintenancesService` — mesmo padrão de RF-BK-06 para `scheduled_date` e `completion_date` (R-TZ-03) | Alta |
-| RF-BK-08 | Detecção de duplicata (R2) — a comparação de "mesma data" em `ExpensesService` passa a comparar o **dia calendário no fuso do usuário**, não igualdade direta de `timestamptz`; query deve usar `AT TIME ZONE user_tz` ou equivalente que extraia `DATE` no fuso correto antes de comparar | Alta |
-| RF-BK-09 | `ExpensesService.create()` — quando `occurred_at` está no futuro (dia calendário do usuário), a resposta é enriquecida com `future_date_warning: true`; a operação nunca é bloqueada (decisão fechada com o usuário em 2026-07-15 — R-TZ-04) | Média |
-| RF-BK-10 | `MaintenancesService.update()` — quando `completion_date` excede "agora" em mais de 24h (dia/hora calendário do usuário), a operação é rejeitada com `422 Unprocessable Entity` (decisão fechada com o usuário em 2026-07-15 — R-TZ-04) | Média |
+| ID       | Requisito                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | Prioridade |
+| -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- |
+| RF-BK-01 | `PreferencesService.findOne()` passa a incluir `timezone` na query (`PREFERENCES_COLUMNS`) e retornar o campo no tipo de resposta; fallback: quando `null`, retornar `null` sem substituir por `'UTC'` — o fallback para `'UTC'` é aplicado pelos consumidores (R-TZ-01, R-PREF-01)                                                                                                                                                                                           | Alta       |
+| RF-BK-02 | `PreferencesService.upsert()` aceita `timezone` no payload; `UpdatePreferencesDto` e o schema Zod correspondente em `packages/validators/src/preferences.schemas.ts` recebem campo `timezone?: string \| null` com validação: quando presente e não-nulo, deve ser string não-vazia com pattern `^[A-Za-z_/]+$` (IANA básico); validação completa via `Intl.supportedValuesOf('timeZone')` pode ser adicionada no frontend, não é obrigatória no backend nesta fase (R-TZ-02) | Alta       |
+| RF-BK-03 | `DashboardService.getAlerts()`, `countUrgentMaintenances()`, `getKpis()` e `getVehicleCards()` — toda chamada a `new Date()` que determina "hoje" passa a receber o `timezone` IANA do usuário autenticado (obtido por `PreferencesService.findOne()` no início de cada operação de dashboard); a nova assinatura de `daysUntil(dateStr, today, tz)` e `classifyDocument(dateStr, today, tz)` calcula "hoje" no fuso recebido, não em UTC (R-TZ-01)                           | Alta       |
+| RF-BK-04 | Implementação de utilitário `toCalendarDay(date: Date, tz: string): string` — retorna `YYYY-MM-DD` no fuso `tz` usando `Intl.DateTimeFormat` com opções `{ timeZone: tz, year:'numeric', month:'2-digit', day:'2-digit' }`; substitui `toDateString(date)` (que usa UTC) onde "dia do usuário" é o contexto correto. O utilitário fica em módulo compartilhado (`apps/api/src/shared/utils/date.utils.ts` ou equivalente)                                                     | Alta       |
+| RF-BK-05 | Quando `user_preferences.timezone` é `null` ou a leitura de preferências falha, o fallback documentado é `'UTC'` — nunca o fuso do processo (`process.env.TZ`, fuso do SO). Esse fallback deve aparecer como constante nomeada (`FALLBACK_TIMEZONE = 'UTC'`) no código (R-TZ-01)                                                                                                                                                                                              | Alta       |
+| RF-BK-06 | `ExpensesService` — o campo `occurred_at` (renomeado de `date`, RF-BD-02) dos DTOs de create/update passa a aceitar string ISO 8601 com offset (ex: `"2026-07-15T21:30:00-03:00"`) **ou** string de data simples `"YYYY-MM-DD"` (compatibilidade retroativa); quando recebe `YYYY-MM-DD`, o service interpreta como `00:00:00` no fuso do usuário autenticado (obtido de `user_preferences.timezone`, com fallback `'UTC'`) antes de persistir como `timestamptz` (R-TZ-03)   | Alta       |
+| RF-BK-07 | `MaintenancesService` — mesmo padrão de RF-BK-06 para `scheduled_date` e `completion_date` (R-TZ-03)                                                                                                                                                                                                                                                                                                                                                                          | Alta       |
+| RF-BK-08 | Detecção de duplicata (R2) — a comparação de "mesma data" em `ExpensesService` passa a comparar o **dia calendário no fuso do usuário**, não igualdade direta de `timestamptz`; query deve usar `AT TIME ZONE user_tz` ou equivalente que extraia `DATE` no fuso correto antes de comparar                                                                                                                                                                                    | Alta       |
+| RF-BK-09 | `ExpensesService.create()` — quando `occurred_at` está no futuro (dia calendário do usuário), a resposta é enriquecida com `future_date_warning: true`; a operação nunca é bloqueada (decisão fechada com o usuário em 2026-07-15 — R-TZ-04)                                                                                                                                                                                                                                  | Média      |
+| RF-BK-10 | `MaintenancesService.update()` — quando `completion_date` excede "agora" em mais de 24h (dia/hora calendário do usuário), a operação é rejeitada com `422 Unprocessable Entity` (decisão fechada com o usuário em 2026-07-15 — R-TZ-04)                                                                                                                                                                                                                                       | Média      |
 
 ---
 
 ## 5. Requisitos Funcionais — Camada Frontend
 
-| ID | Requisito | Prioridade |
-|----|-----------|------------|
-| RF-FE-01 | No carregamento da sessão autenticada (ex: layout `(app)`), verificar se `user_preferences.timezone` é `null`; quando `null`, detectar via `Intl.DateTimeFormat().resolvedOptions().timeZone` (API nativa do browser, lê configuração do SO do usuário, retorna nome IANA) e persistir via `PATCH /preferences { timezone: "<iana_name>" }` — silencioso, sem modal (R-TZ-02, R-PREF-01) | Alta |
-| RF-FE-02 | Tela `/settings/preferences` (já existente) — adicionar seção "Fuso horário" com: valor atual exibido, seletor de fuso (input text com datalist ou select com lista de fusos IANA mais comuns do Brasil + opção "Outro..."), botão "Salvar"; ao salvar, chama `PATCH /preferences { timezone }` e exibe toast de confirmação (R-TZ-02) | Alta |
-| RF-FE-03 | Formulário de despesa (`/expenses/new` e `/expenses/[id]`) — campo de data é substituído por `datetime-local` (data + hora); no mount do formulário, preencher automaticamente com a data e hora atuais no fuso do usuário (obtido de `user_preferences.timezone` via React Query/contexto de preferências já disponível); campo editável pelo usuário; valor enviado ao backend como ISO 8601 com offset (R-TZ-03) | Alta |
-| RF-FE-04 | Formulário de manutenção (`/maintenance/new` e `/maintenance/[id]`) — mesmo padrão de RF-FE-03 para `scheduled_date`; campo `completion_date` também com `datetime-local`, sem preenchimento automático (usuário define manualmente quando foi concluída) (R-TZ-03) | Alta |
-| RF-FE-05 | Ao exibir datas de lançamento (listagens de despesas, manutenções), formatar sempre no fuso do usuário usando `Intl.DateTimeFormat` com `timeZone: user_preferences.timezone ?? 'UTC'`; nunca usar `toLocaleDateString()` sem opção `timeZone` explícita (evita dependência do fuso do browser no momento da renderização) | Média |
-| RF-FE-06 | Seletor de fuso horário de RF-FE-02 deve incluir ao menos os fusos IANA válidos do Brasil: `America/Sao_Paulo`, `America/Manaus`, `America/Belem`, `America/Fortaleza`, `America/Recife`, `America/Porto_Velho`, `America/Boa_Vista`, `America/Rio_Branco`, `America/Noronha`; lista pode ser estendida, mas esses são obrigatórios | Baixa |
+| ID       | Requisito                                                                                                                                                                                                                                                                                                                                                                                                           | Prioridade |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- |
+| RF-FE-01 | No carregamento da sessão autenticada (ex: layout `(app)`), verificar se `user_preferences.timezone` é `null`; quando `null`, detectar via `Intl.DateTimeFormat().resolvedOptions().timeZone` (API nativa do browser, lê configuração do SO do usuário, retorna nome IANA) e persistir via `PATCH /preferences { timezone: "<iana_name>" }` — silencioso, sem modal (R-TZ-02, R-PREF-01)                            | Alta       |
+| RF-FE-02 | Tela `/settings/preferences` (já existente) — adicionar seção "Fuso horário" com: valor atual exibido, seletor de fuso (input text com datalist ou select com lista de fusos IANA mais comuns do Brasil + opção "Outro..."), botão "Salvar"; ao salvar, chama `PATCH /preferences { timezone }` e exibe toast de confirmação (R-TZ-02)                                                                              | Alta       |
+| RF-FE-03 | Formulário de despesa (`/expenses/new` e `/expenses/[id]`) — campo de data é substituído por `datetime-local` (data + hora); no mount do formulário, preencher automaticamente com a data e hora atuais no fuso do usuário (obtido de `user_preferences.timezone` via React Query/contexto de preferências já disponível); campo editável pelo usuário; valor enviado ao backend como ISO 8601 com offset (R-TZ-03) | Alta       |
+| RF-FE-04 | Formulário de manutenção (`/maintenance/new` e `/maintenance/[id]`) — mesmo padrão de RF-FE-03 para `scheduled_date`; campo `completion_date` também com `datetime-local`, sem preenchimento automático (usuário define manualmente quando foi concluída) (R-TZ-03)                                                                                                                                                 | Alta       |
+| RF-FE-05 | Ao exibir datas de lançamento (listagens de despesas, manutenções), formatar sempre no fuso do usuário usando `Intl.DateTimeFormat` com `timeZone: user_preferences.timezone ?? 'UTC'`; nunca usar `toLocaleDateString()` sem opção `timeZone` explícita (evita dependência do fuso do browser no momento da renderização)                                                                                          | Média      |
+| RF-FE-06 | Seletor de fuso horário de RF-FE-02 deve incluir ao menos os fusos IANA válidos do Brasil: `America/Sao_Paulo`, `America/Manaus`, `America/Belem`, `America/Fortaleza`, `America/Recife`, `America/Porto_Velho`, `America/Boa_Vista`, `America/Rio_Branco`, `America/Noronha`; lista pode ser estendida, mas esses são obrigatórios                                                                                 | Baixa      |
 
 ---
 
 ## 6. Requisitos Não-Funcionais
 
-| ID | Requisito | Métrica de Aceite |
-|----|-----------|--------------------|
-| RNF-01 | Performance — overhead de `PreferencesService.findOne()` em `DashboardService` não deve adicionar mais de 50 ms no p95 de `GET /dashboard/kpis` (uma query adicional, mas query simples por PK) | Alta |
-| RNF-02 | Segurança — `timezone` em `UpdatePreferencesDto` não pode ser usado para injeção; validação Zod + RLS de `user_preferences` garantem que o campo só afeta o próprio usuário (S1, S2) | Alta |
-| RNF-03 | Compatibilidade retroativa — a migration de `DATE → TIMESTAMPTZ` não pode corromper ou perder registros existentes; deve ser executada dentro de uma transação com rollback em caso de erro | Alta |
-| RNF-04 | Degradação graciosa — quando `Intl.DateTimeFormat().resolvedOptions().timeZone` retornar um valor não-IANA (edge case em browsers antigos), o frontend deve silenciosamente omitir o PATCH e manter `timezone = null` (o fallback `'UTC'` no backend entra em ação) | Média |
+| ID     | Requisito                                                                                                                                                                                                                                                           | Métrica de Aceite |
+| ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------- |
+| RNF-01 | Performance — overhead de `PreferencesService.findOne()` em `DashboardService` não deve adicionar mais de 50 ms no p95 de `GET /dashboard/kpis` (uma query adicional, mas query simples por PK)                                                                     | Alta              |
+| RNF-02 | Segurança — `timezone` em `UpdatePreferencesDto` não pode ser usado para injeção; validação Zod + RLS de `user_preferences` garantem que o campo só afeta o próprio usuário (S1, S2)                                                                                | Alta              |
+| RNF-03 | Compatibilidade retroativa — a migration de `DATE → TIMESTAMPTZ` não pode corromper ou perder registros existentes; deve ser executada dentro de uma transação com rollback em caso de erro                                                                         | Alta              |
+| RNF-04 | Degradação graciosa — quando `Intl.DateTimeFormat().resolvedOptions().timeZone` retornar um valor não-IANA (edge case em browsers antigos), o frontend deve silenciosamente omitir o PATCH e manter `timezone = null` (o fallback `'UTC'` no backend entra em ação) | Média             |
 
 ---
 
@@ -183,12 +184,12 @@ a mudança é apenas na implementação da comparação). Specs que citam R2 nã
 Todas as decisões abaixo foram levadas ao usuário e confirmadas antes do início da implementação
 — nenhuma permanece em aberto.
 
-| # | Decisão | Resolução |
-|---|---------|-----------|
-| D-01 | Nome da coluna `expenses.date` pós-migração | **Renomear para `occurred_at`** (RF-BD-02, Nota N-01) |
-| D-02 | Estratégia de migração de dados existentes | **JOIN com `user_preferences`** para usar o fuso do dono; fallback `'UTC'` quando `timezone IS NULL` (RF-BD-04) |
-| D-03 | Despesa com `occurred_at` futuro | **Aviso não-bloqueante** — `future_date_warning: true` na resposta, operação nunca bloqueada (RF-BK-09, R-TZ-04) |
-| D-04 | `completion_date` de manutenção no futuro | **Bloqueado (422)** quando excede "agora" em mais de 24h (RF-BK-10, R-TZ-04) |
+| #    | Decisão                                     | Resolução                                                                                                        |
+| ---- | ------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| D-01 | Nome da coluna `expenses.date` pós-migração | **Renomear para `occurred_at`** (RF-BD-02, Nota N-01)                                                            |
+| D-02 | Estratégia de migração de dados existentes  | **JOIN com `user_preferences`** para usar o fuso do dono; fallback `'UTC'` quando `timezone IS NULL` (RF-BD-04)  |
+| D-03 | Despesa com `occurred_at` futuro            | **Aviso não-bloqueante** — `future_date_warning: true` na resposta, operação nunca bloqueada (RF-BK-09, R-TZ-04) |
+| D-04 | `completion_date` de manutenção no futuro   | **Bloqueado (422)** quando excede "agora" em mais de 24h (RF-BK-10, R-TZ-04)                                     |
 
 ---
 
@@ -208,17 +209,17 @@ Todas as decisões abaixo foram levadas ao usuário e confirmadas antes do iníc
 
 ## 11. Dependências
 
-| Tipo | Referência | Descrição |
-|------|-----------|-----------|
-| Spec (aprovada) | SPEC-20260603-004 | `user_preferences` — tabela que recebe a coluna `timezone` (RF-BD-01) |
-| Spec (aprovada) | SPEC-20260603-003 | `PreferencesModule` REST já existente (`GET|PATCH /preferences`) — estendido por RF-BK-01, RF-BK-02 |
-| Spec (aprovada) | SPEC-20260531-001 | `DashboardService` — principal arquivo corrigido (RF-BK-03, RF-BK-04); referencia IMPACTO-033 |
-| Spec (aprovada) | SPEC-20260601-002 | Detecção de duplicatas (R2) — impactada por RF-BK-08 |
-| Spec (aprovada) | SPEC-20260714-001 | `ExpensesService` — DTOs e service de despesas (RF-BK-06, RF-BK-09) |
-| Spec (aprovada) | SPEC-20260715-001 | `MaintenancesService` — DTOs e service de manutenções (RF-BK-07) |
-| Referência externa | IMPACTO-033 | Registro do bug e do contexto de correção parcial no T5.1 |
-| Migration | `20260712171830_core_tables.sql` | Define os tipos `DATE` atuais que esta spec converte |
-| Migration | `20260712171846_grouping_templates_preferences.sql` | Define `user_preferences` sem `timezone` |
+| Tipo               | Referência                                          | Descrição                                                                                     |
+| ------------------ | --------------------------------------------------- | --------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
+| Spec (aprovada)    | SPEC-20260603-004                                   | `user_preferences` — tabela que recebe a coluna `timezone` (RF-BD-01)                         |
+| Spec (aprovada)    | SPEC-20260603-003                                   | `PreferencesModule` REST já existente (`GET                                                   | PATCH /preferences`) — estendido por RF-BK-01, RF-BK-02 |
+| Spec (aprovada)    | SPEC-20260531-001                                   | `DashboardService` — principal arquivo corrigido (RF-BK-03, RF-BK-04); referencia IMPACTO-033 |
+| Spec (aprovada)    | SPEC-20260601-002                                   | Detecção de duplicatas (R2) — impactada por RF-BK-08                                          |
+| Spec (aprovada)    | SPEC-20260714-001                                   | `ExpensesService` — DTOs e service de despesas (RF-BK-06, RF-BK-09)                           |
+| Spec (aprovada)    | SPEC-20260715-001                                   | `MaintenancesService` — DTOs e service de manutenções (RF-BK-07)                              |
+| Referência externa | IMPACTO-033                                         | Registro do bug e do contexto de correção parcial no T5.1                                     |
+| Migration          | `20260712171830_core_tables.sql`                    | Define os tipos `DATE` atuais que esta spec converte                                          |
+| Migration          | `20260712171846_grouping_templates_preferences.sql` | Define `user_preferences` sem `timezone`                                                      |
 
 ---
 
@@ -232,11 +233,11 @@ trabalhar com fusos IANA:
 ```typescript
 // apps/api/src/shared/utils/date.utils.ts
 export function toCalendarDay(date: Date, tz: string): string {
-  const formatter = new Intl.DateTimeFormat('en-CA', {
+  const formatter = new Intl.DateTimeFormat("en-CA", {
     timeZone: tz,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
   });
   // 'en-CA' produz ISO 8601 (YYYY-MM-DD) sem separadores extras
   return formatter.format(date);
@@ -255,7 +256,7 @@ Para obter a hora atual no fuso do usuário como valor de `<input type="datetime
 // valor no formato esperado pelo input: "YYYY-MM-DDTHH:mm"
 function nowInUserTz(tz: string): string {
   return new Date()
-    .toLocaleString('sv', { timeZone: tz }) // 'sv' (sueco) produz ISO 8601
+    .toLocaleString("sv", { timeZone: tz }) // 'sv' (sueco) produz ISO 8601
     .slice(0, 16);
 }
 ```
@@ -286,23 +287,23 @@ via custom claim (evolução futura). Para esta spec, a abordagem simples (servi
 
 > Ver `specs/RULES.md` para definição completa.
 
-| ID | Resumo |
-|----|--------|
-| R2 | Duplicata de despesa por mesma data/valor/categoria/veículo — "data" passa a ser dia calendário no fuso do usuário |
-| R-TZ-01 | "Hoje" calculado no fuso do usuário, nunca em UTC do servidor |
-| R-TZ-02 | Fuso armazenado como nome IANA; nunca offset fixo |
-| R-TZ-03 | Persistência como `timestamptz`; hora preenchida automaticamente no fuso do usuário |
-| R-TZ-04 | Despesa futura: aviso não-bloqueante; `completion_date` de manutenção futura: bloqueado acima de 24h (422) |
-| R-PREF-01 | Toda preferência tem default seguro; ausência nunca causa erro |
-| S1 | Toda rota privada exige `SupabaseAuthGuard` |
-| S2 | RLS ativo em todas as tabelas |
+| ID        | Resumo                                                                                                             |
+| --------- | ------------------------------------------------------------------------------------------------------------------ |
+| R2        | Duplicata de despesa por mesma data/valor/categoria/veículo — "data" passa a ser dia calendário no fuso do usuário |
+| R-TZ-01   | "Hoje" calculado no fuso do usuário, nunca em UTC do servidor                                                      |
+| R-TZ-02   | Fuso armazenado como nome IANA; nunca offset fixo                                                                  |
+| R-TZ-03   | Persistência como `timestamptz`; hora preenchida automaticamente no fuso do usuário                                |
+| R-TZ-04   | Despesa futura: aviso não-bloqueante; `completion_date` de manutenção futura: bloqueado acima de 24h (422)         |
+| R-PREF-01 | Toda preferência tem default seguro; ausência nunca causa erro                                                     |
+| S1        | Toda rota privada exige `SupabaseAuthGuard`                                                                        |
+| S2        | RLS ativo em todas as tabelas                                                                                      |
 
 ---
 
 ## Histórico de Revisões
 
-| Data | Versão | Mudança | Autor |
-|------|--------|---------|-------|
-| 2026-07-15 | 1.0 | Criação inicial — corrige limitação residual do bug T5.1 (IMPACTO-033); formaliza suporte multi-fuso, migração de `DATE → TIMESTAMPTZ` e captura de hora em lançamentos | Douglas Lopes (lps.doug@protonmail.com) |
-| 2026-07-15 | 1.1 | 4 decisões em aberto (D-01 a D-04) fechadas com o usuário: `expenses.date` renomeada para `occurred_at` (RF-BD-02, Nota N-01); migração de dados existentes via JOIN com `user_preferences` (RF-BD-04); despesa futura gera aviso não-bloqueante (RF-BK-09); `completion_date` de manutenção futura acima de 24h é bloqueado com 422 (RF-BK-10 novo). CA-12 e CA-13 adicionados; CA-06 a CA-09 atualizados para `occurred_at`. R-TZ-04 em `specs/RULES.md` atualizada para refletir as duas decisões, sem marcação de pendência | Douglas Lopes (lps.doug@protonmail.com) |
-| 2026-07-22 | 1.2 | Implementação completa: migration `20260722060748_timezone_aware_datetime.sql` (rename+retype, funções SQL dependentes ajustadas), `date.utils.ts` compartilhado, `PreferencesService`/`ExpensesService`/`MaintenancesService`/`DashboardService` com fuso do usuário, formulários web com `datetime-local`, detecção automática (`TimezoneDetector`) e seção de fuso em `/settings/preferences`. Status `draft` → `approved`. Débito registrado: specs de teste existentes (`.spec.ts`) não foram atualizadas para o novo shape `occurred_at` — ver `matrices/rastreabilidade.md` | Douglas Lopes (lps.doug@protonmail.com) |
+| Data       | Versão | Mudança                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | Autor                                   |
+| ---------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------- |
+| 2026-07-15 | 1.0    | Criação inicial — corrige limitação residual do bug T5.1 (IMPACTO-033); formaliza suporte multi-fuso, migração de `DATE → TIMESTAMPTZ` e captura de hora em lançamentos                                                                                                                                                                                                                                                                                                                                                                                                            | Douglas Lopes (lps.doug@protonmail.com) |
+| 2026-07-15 | 1.1    | 4 decisões em aberto (D-01 a D-04) fechadas com o usuário: `expenses.date` renomeada para `occurred_at` (RF-BD-02, Nota N-01); migração de dados existentes via JOIN com `user_preferences` (RF-BD-04); despesa futura gera aviso não-bloqueante (RF-BK-09); `completion_date` de manutenção futura acima de 24h é bloqueado com 422 (RF-BK-10 novo). CA-12 e CA-13 adicionados; CA-06 a CA-09 atualizados para `occurred_at`. R-TZ-04 em `specs/RULES.md` atualizada para refletir as duas decisões, sem marcação de pendência                                                    | Douglas Lopes (lps.doug@protonmail.com) |
+| 2026-07-22 | 1.2    | Implementação completa: migration `20260722060748_timezone_aware_datetime.sql` (rename+retype, funções SQL dependentes ajustadas), `date.utils.ts` compartilhado, `PreferencesService`/`ExpensesService`/`MaintenancesService`/`DashboardService` com fuso do usuário, formulários web com `datetime-local`, detecção automática (`TimezoneDetector`) e seção de fuso em `/settings/preferences`. Status `draft` → `approved`. Débito registrado: specs de teste existentes (`.spec.ts`) não foram atualizadas para o novo shape `occurred_at` — ver `matrices/rastreabilidade.md` | Douglas Lopes (lps.doug@protonmail.com) |

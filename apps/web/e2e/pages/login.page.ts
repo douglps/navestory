@@ -26,7 +26,7 @@ export class LoginPage {
     this.errorAlert = page.getByRole("alert");
   }
 
-  /** Navega para a tela de login. */
+  /** navega para a tela de login. */
   async goto(): Promise<void> {
     // domcontentloaded em vez do "load" padrão — ver nota em dashboard.page.ts
     await this.page.goto("/login", { waitUntil: "domcontentloaded" });

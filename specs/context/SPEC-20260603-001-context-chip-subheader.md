@@ -4,7 +4,18 @@ title: "Chip de Contexto de Veículo no Subheader + Dialog/Sheet de Seleção"
 status: approved
 date: 2026-06-03
 author: Douglas Lopes (lps.doug@protonmail.com)
-rules: [R5, R-CTX-01, R-CTX-02, R-CTX-03, R-CTX-04, R-CTX-05, R-CTX-06, R-CTX-07, R-GRP-03]
+rules:
+  [
+    R5,
+    R-CTX-01,
+    R-CTX-02,
+    R-CTX-03,
+    R-CTX-04,
+    R-CTX-05,
+    R-CTX-06,
+    R-CTX-07,
+    R-GRP-03,
+  ]
 security: [S1, S2]
 camadas: [frontend, backend]
 ---
@@ -45,19 +56,19 @@ Esta spec **não revoga** as regras R-CTX-01 a R-CTX-06 definidas na SPEC-202606
 
 ### Estado atual dos componentes relevantes
 
-| Componente | Arquivo | Situação |
-|------------|---------|----------|
-| `FocusSlot` | `apps/web/src/components/layout/focus-slot.tsx` | Implementado; removido do sidebar e do repositório nesta tarefa (lógica extraída para `use-vehicle-context.ts`) |
-| `FluidFleetHeader` | `apps/web/components/layout/fleet-subheader.tsx` | **Nunca existiu no código real** — ver atualização abaixo |
-| `Sidebar` | `apps/web/src/components/layout/sidebar.tsx` | Importava e renderizava `FocusSlot`; import removido, substituído por dot passivo (RF-16) |
-| `VehicleSwitcherContent` | `apps/web/src/components/layout/vehicle-switcher-content.tsx` | **Não existia** — criado nesta tarefa a partir da lógica de `focus-slot.tsx` |
+| Componente               | Arquivo                                                       | Situação                                                                                                        |
+| ------------------------ | ------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `FocusSlot`              | `apps/web/src/components/layout/focus-slot.tsx`               | Implementado; removido do sidebar e do repositório nesta tarefa (lógica extraída para `use-vehicle-context.ts`) |
+| `FluidFleetHeader`       | `apps/web/components/layout/fleet-subheader.tsx`              | **Nunca existiu no código real** — ver atualização abaixo                                                       |
+| `Sidebar`                | `apps/web/src/components/layout/sidebar.tsx`                  | Importava e renderizava `FocusSlot`; import removido, substituído por dot passivo (RF-16)                       |
+| `VehicleSwitcherContent` | `apps/web/src/components/layout/vehicle-switcher-content.tsx` | **Não existia** — criado nesta tarefa a partir da lógica de `focus-slot.tsx`                                    |
 
 > **Atualização 2026-07-16:** o levantamento de código pré-implementação encontrou que **nenhum
 > componente de Header/subheader existia no projeto** (`FluidFleetHeader`/`fleet-subheader.tsx`
 > citados pela v0.1/v0.2 nunca foram implementados — o app shell tinha apenas `Sidebar` + conteúdo,
 > ver `apps/web/src/app/(app)/layout.tsx`). Criado um `Header` novo e mínimo
 > (`apps/web/src/components/layout/header.tsx`), renderizado acima do conteúdo no layout `(app)`,
-> com o `VehicleContextChip` à direita do logo "Nave". Decisão tomada com o usuário: sem
+> com o `VehicleContextChip` à direita do logo "navestory". Decisão tomada com o usuário: sem
 > hambúrguer/menu mobile (fora de escopo — o sidebar não é drawer hoje, é sempre visível).
 > `VehicleSwitcherContent` também não existia; a lógica equivalente (fetch de veículos/grupos,
 > resolução de label/ícone, hidratação) estava em `focus-slot.tsx` e foi extraída para o hook
@@ -93,13 +104,13 @@ O header superior (`Header`, `header.tsx`) deve exibir um `VehicleContextChip` �
 
 O chip deve refletir o modo de contexto ativo com visual diferenciado, mantendo a convenção de sólido = permanente e tracejado = temporário estabelecida na SPEC-20260602-001:
 
-| Modo | Fundo | Borda | Estilo borda | Ícone | Texto |
-|------|-------|-------|--------------|-------|-------|
-| `none` | transparente | `border-border/40` | tracejada | — | "+ Selecionar veículo" (muted) |
-| `single` | `amber-50 / amber-900/20` | `amber-300 / amber-700` | sólida | `Car` âmbar | placa · make model |
-| `group` | `blue-50 / blue-900/20` | `blue-300 / blue-700` | sólida | `Boxes` azul | nome do grupo + count |
-| `multi` | `amber-100 / amber-800/20` | `amber-400 / amber-600` | tracejada | `Car` | count de veículos |
-| `attribute` | `violet-50 / violet-900/20` | `violet-300 / violet-700` | tracejada | `SlidersHorizontal` | label do filtro ativo |
+| Modo        | Fundo                       | Borda                     | Estilo borda | Ícone               | Texto                          |
+| ----------- | --------------------------- | ------------------------- | ------------ | ------------------- | ------------------------------ |
+| `none`      | transparente                | `border-border/40`        | tracejada    | —                   | "+ Selecionar veículo" (muted) |
+| `single`    | `amber-50 / amber-900/20`   | `amber-300 / amber-700`   | sólida       | `Car` âmbar         | placa · make model             |
+| `group`     | `blue-50 / blue-900/20`     | `blue-300 / blue-700`     | sólida       | `Boxes` azul        | nome do grupo + count          |
+| `multi`     | `amber-100 / amber-800/20`  | `amber-400 / amber-600`   | tracejada    | `Car`               | count de veículos              |
+| `attribute` | `violet-50 / violet-900/20` | `violet-300 / violet-700` | tracejada    | `SlidersHorizontal` | label do filtro ativo          |
 
 **Prioridade:** Must
 
@@ -108,6 +119,7 @@ O chip deve refletir o modo de contexto ativo com visual diferenciado, mantendo 
 ### RF-03 — Dimensões e área de toque do chip
 
 O chip deve:
+
 - Ocupar altura total do subheader: `h-11` (44px) para garantir área de toque WCAG 2.5.5 (mínimo 44×44px).
 - Ter `max-width: 140px` com `text-overflow: ellipsis` para textos longos (placas, nomes de grupos).
 - Não causar layout shift ao navegar entre páginas (vide RNF-03).
@@ -119,6 +131,7 @@ O chip deve:
 ### RF-04 — Botão X para limpar contexto
 
 O chip deve conter um botão "×" visível **somente quando `mode !== 'none'`**. O botão deve:
+
 - Chamar `clearAllSelection()` do `useDashboardStore` ao ser clicado.
 - Ter área de toque ampliada via `padding` invisível (mínimo 20×20px de padding além do ícone `X` de 12px).
 - Ter `aria-label="Ver toda a frota"` (usando o termo canônico da SPEC-20260602-001).
@@ -145,6 +158,7 @@ O chip inteiro (excluindo o botão X, que tem `aria-label` próprio) deve ter `a
 ### RF-06 — Estado hover e focus-visible do chip
 
 O chip deve ter estado visual de hover e focus-visible claramente distinguível:
+
 - `hover:ring-1 hover:ring-border/60`
 - `focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary`
 
@@ -155,6 +169,7 @@ O chip deve ter estado visual de hover e focus-visible claramente distinguível:
 ### RF-07 — Dialog de seleção no desktop (≥ 768px)
 
 Clicar na área do chip (excluindo o botão X) em viewport ≥ 768px deve abrir um `Dialog` do Radix UI com:
+
 - Posicionamento centralizado na tela com backdrop blur (`backdrop-blur-sm bg-black/20`).
 - Largura `w-[calc(100%-2rem)] max-w-[380px]`.
 - Conteúdo: `VehicleSwitcherContent` existente (sem modificação de props ou lógica interna).
@@ -191,6 +206,7 @@ O Dialog deve fechar com animação de saída de 150ms (`animate-out fade-out du
 ### RF-11 — Sheet de seleção no mobile (< 768px)
 
 Clicar na área do chip em viewport < 768px deve abrir um `Sheet` implementado com `vaul` que:
+
 - Desliza de baixo para cima cobrindo aproximadamente 70% da altura da tela (`snap-points: [0.7]`).
 - Exibe um `handle` de drag visível no topo do Sheet (barra cinza 32×4px, `rounded-full`).
 - Contém o `VehicleSwitcherContent` existente.
@@ -230,6 +246,7 @@ O Sheet deve exibir a lista cacheada (`staleTime: 60000ms`) com um banner "Sem c
 ### RF-15 — Remoção do FocusSlot do sidebar
 
 O componente `FocusSlot` deve ser removido completamente do `sidebar.tsx`:
+
 - Remover o `import { FocusSlot }` e a renderização `<FocusSlot ... />` (linha ~421 do arquivo atual).
 - Remover o callback `onManageGroups` passado ao `FocusSlot` (que chamava `toggleAside()`).
 - O sidebar passa a exibir apenas: logo/cabeçalho, navegação (section1), ajustes (section2) e botão de logout.
@@ -243,13 +260,13 @@ O componente `FocusSlot` deve ser removido completamente do `sidebar.tsx`:
 
 No sidebar colapsado (`w-16`), adicionar na área do logo (abaixo do botão toggle desktop) um dot circular passivo (sem interação, sem cursor pointer, `aria-hidden="true"`) que indica visualmente o modo de contexto ativo por cor:
 
-| Modo | Cor do dot |
-|------|-----------|
-| `none` | `bg-muted-foreground/30` |
-| `single` | `bg-amber-400` |
-| `group` | `bg-blue-400` |
-| `multi` | `bg-amber-500` |
-| `attribute` | `bg-violet-400` |
+| Modo        | Cor do dot               |
+| ----------- | ------------------------ |
+| `none`      | `bg-muted-foreground/30` |
+| `single`    | `bg-amber-400`           |
+| `group`     | `bg-blue-400`            |
+| `multi`     | `bg-amber-500`           |
+| `attribute` | `bg-violet-400`          |
 
 O dot é `w-2 h-2 rounded-full` e não deve receber cliques nem foco — R-CTX-07 proíbe este componente de abrir o switcher.
 
@@ -349,6 +366,7 @@ A mudança de `localStorage` para `sessionStorage` isola o contexto por aba do n
 ### RF-22 — Limpeza automática de contexto em resposta a 404
 
 Quando qualquer request autenticado retorna HTTP 404 e o `vehicleId` da resposta (ou do contexto ativo) corresponde ao `activeVehicleId` no store, o frontend deve:
+
 1. Chamar `clearAllSelection()`.
 2. Exibir toast: `"O veículo selecionado não está mais disponível"` (duração 4s, descartável).
 
@@ -383,13 +401,13 @@ O skeleton deve ter a mesma largura mínima do chip (`min-w-[80px]`) para evitar
 
 ## Requisitos Não-Funcionais
 
-| ID | Requisito | Métrica de Aceite |
-|----|-----------|------------------|
-| RNF-01 | Touch target do chip ≥ 44×44px (WCAG 2.5.5) em qualquer viewport | Auditoria Lighthouse Accessibility + teste manual em iOS Safari |
-| RNF-02 | Contraste dos estados âmbar/azul/violeta do chip ≥ 4.5:1 em light mode e dark mode (WCAG 1.4.3) | Verificado com ferramenta de contraste (ex.: `axe-core`) |
-| RNF-03 | O chip não causa layout shift ao navegar entre páginas | CLS = 0 medido via DevTools Performance tab |
-| RNF-04 | A lista de veículos no Dialog/Sheet usa cache do TanStack Query com `staleTime: 60000ms` (60s), não SWR (ver nota RF-14) — evita requests desnecessários em trocas rápidas de contexto | Network tab sem requests duplicados em menos de 60s |
-| RNF-05 | Busca client-side no Dialog/Sheet normaliza diacríticos via `String.prototype.normalize('NFD')` e remove hífens de placa antes de comparar com a query | Busca por "ABC1234" encontra "ABC-1234"; busca por "Hilux" encontra "Hilux" com acento |
+| ID     | Requisito                                                                                                                                                                              | Métrica de Aceite                                                                      |
+| ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| RNF-01 | Touch target do chip ≥ 44×44px (WCAG 2.5.5) em qualquer viewport                                                                                                                       | Auditoria Lighthouse Accessibility + teste manual em iOS Safari                        |
+| RNF-02 | Contraste dos estados âmbar/azul/violeta do chip ≥ 4.5:1 em light mode e dark mode (WCAG 1.4.3)                                                                                        | Verificado com ferramenta de contraste (ex.: `axe-core`)                               |
+| RNF-03 | O chip não causa layout shift ao navegar entre páginas                                                                                                                            | CLS = 0 medido via DevTools Performance tab                                            |
+| RNF-04 | A lista de veículos no Dialog/Sheet usa cache do TanStack Query com `staleTime: 60000ms` (60s), não SWR (ver nota RF-14) — evita requests desnecessários em trocas rápidas de contexto | Network tab sem requests duplicados em menos de 60s                                    |
+| RNF-05 | Busca client-side no Dialog/Sheet normaliza diacríticos via `String.prototype.normalize('NFD')` e remove hífens de placa antes de comparar com a query                                 | Busca por "ABC1234" encontra "ABC-1234"; busca por "Hilux" encontra "Hilux" com acento |
 
 ---
 
@@ -439,16 +457,16 @@ Esta spec não cobre:
 
 ## Dependências
 
-| ID | Tipo | Descrição |
-|----|------|-----------|
+| ID                                                                | Tipo             | Descrição                                                                                                                                                                           |
+| ----------------------------------------------------------------- | ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [SPEC-20260602-001](SPEC-20260602-001-em-foco-contexto-global.md) | Spec predecessor | Define R-CTX-01 a R-CTX-06, os 5 modos de contexto, a nomenclatura canônica e o `VehicleSwitcherContent`. Esta spec não altera essas definições — apenas move o ponto de interação. |
-| SPEC-20260602-003 | Spec relacionada | Grupos de veículos; `memberCount` correto depende do fix de RF-19 desta spec. |
-| [SPEC-20260525-001](../design-system/SPEC-20260525-001.md) | Design system | Tokens visuais de paleta (âmbar, azul, violeta, espresso) usados nos estados do chip. |
-| `apps/web/components/layout/vehicle-switcher-content.tsx` | Código | Reutilizado sem modificação como conteúdo interno do Dialog e do Sheet. |
-| `useDashboardStore` | Store | Store Zustand existente; esta spec adiciona a configuração `zustand/persist` com `sessionStorage` e garante limpeza no logout (RF-21, RF-23). |
-| `vaul` | Biblioteca | Primitivo de Sheet/Drawer para mobile. Verificar se já está no `package.json` de `apps/web`; adicionar se ausente. |
-| `@radix-ui/react-dialog` | Biblioteca | Primitivo de Dialog para desktop. Já presente via `@nave/ui`. |
-| SWR | Biblioteca | Cache de dados no Dialog/Sheet com `staleTime: 60000ms` (RNF-04). |
+| SPEC-20260602-003                                                 | Spec relacionada | Grupos de veículos; `memberCount` correto depende do fix de RF-19 desta spec.                                                                                                       |
+| [SPEC-20260525-001](../design-system/SPEC-20260525-001.md)        | Design system    | Tokens visuais de paleta (âmbar, azul, violeta, espresso) usados nos estados do chip.                                                                                               |
+| `apps/web/components/layout/vehicle-switcher-content.tsx`         | Código           | Reutilizado sem modificação como conteúdo interno do Dialog e do Sheet.                                                                                                             |
+| `useDashboardStore`                                               | Store            | Store Zustand existente; esta spec adiciona a configuração `zustand/persist` com `sessionStorage` e garante limpeza no logout (RF-21, RF-23).                                       |
+| `vaul`                                                            | Biblioteca       | Primitivo de Sheet/Drawer para mobile. Verificar se já está no `package.json` de `apps/web`; adicionar se ausente.                                                                  |
+| `@radix-ui/react-dialog`                                          | Biblioteca       | Primitivo de Dialog para desktop. Já presente via `@navestory/ui`.                                                                                                                  |
+| SWR                                                               | Biblioteca       | Cache de dados no Dialog/Sheet com `staleTime: 60000ms` (RNF-04).                                                                                                                   |
 
 ---
 
@@ -479,7 +497,7 @@ apps/web/src/lib/hooks/
 
 > **Atualização 2026-07-16:** como não existe `FluidFleetHeader`/subheader de categorias de
 > despesa no projeto real, a seção original ("chip antes dos chips de despesa de categoria,
-> separado por divisor") não se aplica. O `Header` novo é mínimo: logo "Nave" à esquerda,
+> separado por divisor") não se aplica. O `Header` novo é mínimo: logo "navestory" à esquerda,
 > `VehicleContextChip` imediatamente ao lado, `h-14` de altura total. O chip mantém `h-11` (RF-03).
 
 ### Ícones (atualização 2026-07-16)
@@ -492,10 +510,10 @@ em `apps/web/src/lib/context/context-labels.ts`) usa emojis. Mantido o mesmo pad
 
 ### Resolução de breakpoint
 
-Usar `useMediaQuery` (hook a ser criado ou importado de `@nave/ui`) para detectar o breakpoint de forma reativa. Não usar `window.innerWidth` diretamente em renders — causa hydration mismatch em SSR.
+Usar `useMediaQuery` (hook a ser criado ou importado de `@navestory/ui`) para detectar o breakpoint de forma reativa. Não usar `window.innerWidth` diretamente em renders — causa hydration mismatch em SSR.
 
 ```ts
-const isDesktop = useMediaQuery('(min-width: 768px)');
+const isDesktop = useMediaQuery("(min-width: 768px)");
 // isDesktop === true → Dialog; false → Sheet
 ```
 
@@ -528,8 +546,8 @@ Todos os arquivos que implementam requisitos desta spec devem anotar no topo ou 
 
 ## Histórico de Revisões
 
-| Versão | Data | Autor | Descrição |
-|--------|------|-------|-----------|
-| 0.1 | 2026-06-03 | douglps | Criação inicial — migração do FocusSlot do sidebar para chip no subheader; análise de gaps UX documentados em `docs/user-stories.md §19` |
-| 0.2 | 2026-06-03 | douglps | Adicionado RF-24: prevenção de flash de hidratação do store Zustand (G-CTX-09); critério de aceite correspondente |
-| 0.3 | 2026-07-16 | Douglas Lopes (lps.doug@protonmail.com) | Promovida de `draft` para `approved` (T5.4). Levantamento de código pré-implementação encontrou divergências grandes entre a spec e o código real (mesmo padrão de T3.9/T5.1/T3.6): `FluidFleetHeader`/`fleet-subheader.tsx`/`VehicleSwitcherContent` nunca existiram (criados do zero); RF-18 corrigido de "20→100" para "sem limite→100" em `VehiclesService.findAll`/`VehicleGroupsService.findAll` (não no client-side); RF-19 implementado no backend via contagem em memória sobre veículos ativos, não em `VehicleSwitcherContent`; RF-20 corrigido — não existe `GET /dashboard/stats?vehicleId=X`, reaproveitado o 404 já existente de `GET /vehicles/:id`; ícones do RF-02 trocados de `lucide-react` (nunca adicionado ao projeto) para emojis, seguindo o padrão de `VEHICLE_TYPE_ICONS`; RF-14/RNF-04 trocam SWR por TanStack Query (`staleTime`, mesma ideia, lib real do projeto); RF-17 confirmado já satisfeito pelo `onClick` simples de logout (sem gesto de hold, fora de escopo); "Impacto no sidebar — fixedElementsHeight" descartado (ResizeObserver não existe no código real). Ver `matrices/rastreabilidade.md` para os caminhos reais de código/teste. |
+| Versão | Data       | Autor                                   | Descrição                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| ------ | ---------- | --------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 0.1    | 2026-06-03 | douglps                                 | Criação inicial — migração do FocusSlot do sidebar para chip no subheader; análise de gaps UX documentados em `docs/user-stories.md §19`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| 0.2    | 2026-06-03 | douglps                                 | Adicionado RF-24: prevenção de flash de hidratação do store Zustand (G-CTX-09); critério de aceite correspondente                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| 0.3    | 2026-07-16 | Douglas Lopes (lps.doug@protonmail.com) | Promovida de `draft` para `approved` (T5.4). Levantamento de código pré-implementação encontrou divergências grandes entre a spec e o código real (mesmo padrão de T3.9/T5.1/T3.6): `FluidFleetHeader`/`fleet-subheader.tsx`/`VehicleSwitcherContent` nunca existiram (criados do zero); RF-18 corrigido de "20→100" para "sem limite→100" em `VehiclesService.findAll`/`VehicleGroupsService.findAll` (não no client-side); RF-19 implementado no backend via contagem em memória sobre veículos ativos, não em `VehicleSwitcherContent`; RF-20 corrigido — não existe `GET /dashboard/stats?vehicleId=X`, reaproveitado o 404 já existente de `GET /vehicles/:id`; ícones do RF-02 trocados de `lucide-react` (nunca adicionado ao projeto) para emojis, seguindo o padrão de `VEHICLE_TYPE_ICONS`; RF-14/RNF-04 trocam SWR por TanStack Query (`staleTime`, mesma ideia, lib real do projeto); RF-17 confirmado já satisfeito pelo `onClick` simples de logout (sem gesto de hold, fora de escopo); "Impacto no sidebar — fixedElementsHeight" descartado (ResizeObserver não existe no código real). Ver `matrices/rastreabilidade.md` para os caminhos reais de código/teste. |

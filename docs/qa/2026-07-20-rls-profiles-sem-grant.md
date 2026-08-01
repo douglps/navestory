@@ -5,8 +5,8 @@ legítimo negado), mas está numa área S2 (RLS ativo, `specs/RULES.md`) e nunca
 em CI de verdade.
 
 **Origem:** ao investigar a falha do job `Integration test (Supabase local — CT-006, CT-007)` no
-CI (run [29762251500](https://github.com/douglps/nave/actions/runs/29762251500)), depois de
-corrigir o bloqueio de Node 20/pnpm e o build faltante de `@nave/validators` (ver
+CI (run [29762251500](https://github.com/douglps/navestory/actions/runs/29762251500)), depois de
+corrigir o bloqueio de Node 20/pnpm e o build faltante de `@navestory/validators` (ver
 `docs/qa/2026-07-20-gap-real-cobertura-web.md`), sobrou uma falha real em
 `test/integration/rls.int-spec.ts`:
 
@@ -35,7 +35,7 @@ outro contexto de execução — não confirmado, precisa investigação com o b
 
 **Por que só apareceu agora:** o job `Integration test` nunca tinha rodado com sucesso até o fim —
 estava bloqueado desde o setup (Node 20 incompatível com `pnpm@11.1.3`, ver commit `aa92804`) e,
-depois disso, pelo build faltante de `@nave/validators` (commit `e4a7237`). É provável que esse bug
+depois disso, pelo build faltante de `@navestory/validators` (commit `e4a7237`). É provável que esse bug
 de RLS exista desde a criação da tabela, sem nunca ter sido pego pelo CI.
 
 **Não corrigido nesta sessão** — requer banco Supabase local rodando para testar o `GRANT` e
@@ -91,15 +91,15 @@ foi descartada: `handle_new_user` é `SECURITY DEFINER` e executa com privilégi
 
 A migração concede os privilégios mínimos por tabela, alinhados às RLS policies existentes:
 
-| Tabela | GRANT concedido | Justificativa |
-|--------|-----------------|---------------|
-| `profiles` | SELECT, INSERT, UPDATE | SELECT/UPDATE necessários; INSERT por consistência com `profiles_insert_own`; DELETE via cascade/admin (não authenticated) |
-| `vehicles`, `expenses`, `maintenances`, `fines`, `vehicle_recurring_costs` | SELECT, INSERT, UPDATE | Hard delete bloqueado por policy `USING (false)` — GRANT DELETE seria redundante e contrário ao princípio de menor privilégio |
-| `audit_logs` | SELECT, INSERT | Imutável — policies `audit_logs_no_update` e `audit_logs_no_delete` retornam `false` |
-| `vehicle_odometer_cycles` | SELECT, INSERT | Imutável por design (R-ODO-05/06) — sem UPDATE/DELETE policies |
-| `vehicle_groups`, `vehicle_group_members` | SELECT, INSERT, UPDATE, DELETE | CRUD completo — policy `FOR ALL` |
-| `expense_templates`, `user_categories`, `user_preferences` | SELECT, INSERT, UPDATE, DELETE | CRUD completo — policies individuais para cada operação |
-| `auth_login_attempts` | (nenhum) | Intencional — acesso restrito ao service role (S4) |
+| Tabela                                                                     | GRANT concedido                | Justificativa                                                                                                                 |
+| -------------------------------------------------------------------------- | ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------- |
+| `profiles`                                                                 | SELECT, INSERT, UPDATE         | SELECT/UPDATE necessários; INSERT por consistência com `profiles_insert_own`; DELETE via cascade/admin (não authenticated)    |
+| `vehicles`, `expenses`, `maintenances`, `fines`, `vehicle_recurring_costs` | SELECT, INSERT, UPDATE         | Hard delete bloqueado por policy `USING (false)` — GRANT DELETE seria redundante e contrário ao princípio de menor privilégio |
+| `audit_logs`                                                               | SELECT, INSERT                 | Imutável — policies `audit_logs_no_update` e `audit_logs_no_delete` retornam `false`                                          |
+| `vehicle_odometer_cycles`                                                  | SELECT, INSERT                 | Imutável por design (R-ODO-05/06) — sem UPDATE/DELETE policies                                                                |
+| `vehicle_groups`, `vehicle_group_members`                                  | SELECT, INSERT, UPDATE, DELETE | CRUD completo — policy `FOR ALL`                                                                                              |
+| `expense_templates`, `user_categories`, `user_preferences`                 | SELECT, INSERT, UPDATE, DELETE | CRUD completo — policies individuais para cada operação                                                                       |
+| `auth_login_attempts`                                                      | (nenhum)                       | Intencional — acesso restrito ao service role (S4)                                                                            |
 
 A migração também inclui:
 
@@ -150,7 +150,7 @@ pnpm test:integration
 ```
 
 **Observação operacional:** logo após o `db reset`, o gateway (Kong) e demais serviços (Auth, REST
-etc.) caíram — só `supabase_db_Nave` continuou de pé, e a suíte falhou com
+etc.) caíram — só `supabase_db_navestory` continuou de pé, e a suíte falhou com
 `ECONNREFUSED 127.0.0.1:54321`. Não é efeito da migration; é o `db reset` reiniciando containers
 que não voltaram sozinhos nesta versão do CLI. Resolvido com `supabase stop` seguido de
 `supabase start` limpo — depois disso todos os serviços (`db`, `kong`, `auth`, `rest`, `storage`,

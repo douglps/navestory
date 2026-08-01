@@ -39,7 +39,7 @@ export class ExpenseFormPage {
   };
 
   constructor(private readonly page: Page) {
-    // O formulário migrou de <select> nativo para o Combobox de `@nave/ui` (Radix Popover +
+    // O formulário migrou de <select> nativo para o Combobox de `@navestory/ui` (Radix Popover +
     // cmdk) — o trigger é um <button role="combobox"> identificado pelo aria-label, não mais
     // por id (`#vehicle_id`/`#category` não existem mais no DOM).
     this.vehicleSelect = page.getByRole("combobox", { name: "Veículo *" });
@@ -53,7 +53,7 @@ export class ExpenseFormPage {
     this.inheritedHint = page.getByText(/herdado do contexto/i);
   }
 
-  /** Navega para /expenses/new. */
+  /** navega para /expenses/new. */
   async goto(): Promise<void> {
     // domcontentloaded em vez do "load" padrão — ver nota em dashboard.page.ts
     await this.page.goto("/expenses/new", { waitUntil: "domcontentloaded" });
@@ -65,10 +65,15 @@ export class ExpenseFormPage {
    * Compartilhado por `selectVehicle`/`selectCategory` — ambos os campos usam o mesmo
    * componente `<Combobox>` (Radix Popover + cmdk, `role="option"` em cada item).
    */
-  private async selectFromCombobox(trigger: Locator, optionText: string): Promise<void> {
+  private async selectFromCombobox(
+    trigger: Locator,
+    optionText: string,
+  ): Promise<void> {
     await trigger.waitFor({ state: "visible", timeout: 10_000 });
     await trigger.click();
-    const option = this.page.getByRole("option").filter({ hasText: optionText });
+    const option = this.page
+      .getByRole("option")
+      .filter({ hasText: optionText });
     await option.first().waitFor({ state: "visible", timeout: 5_000 });
     await option.first().click();
   }
@@ -80,7 +85,8 @@ export class ExpenseFormPage {
 
   /** Seleciona a categoria pelo slug (ex: "fuel", "toll") — traduzido para o label exibido. */
   async selectCategory(categoryValue: string): Promise<void> {
-    const label = ExpenseFormPage.CATEGORY_LABELS[categoryValue] ?? categoryValue;
+    const label =
+      ExpenseFormPage.CATEGORY_LABELS[categoryValue] ?? categoryValue;
     await this.selectFromCombobox(this.categorySelect, label);
   }
 

@@ -17,8 +17,11 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import type { FleetChartsResponse, MonthlySeriesPoint } from "@nave/validators";
-import { ChartWrapper } from "@nave/ui";
+import type {
+  FleetChartsResponse,
+  MonthlySeriesPoint,
+} from "@navestory/validators";
+import { ChartWrapper } from "@navestory/ui";
 import { apiClient } from "@/lib/http/api-client";
 import { CHART_CATEGORY_COLORS } from "@/lib/chart-colors";
 
@@ -33,12 +36,21 @@ function monthLabel(month: string): string {
   );
 }
 
-function toChartData(series: MonthlySeriesPoint[]): Array<{ month: string; value: number }> {
-  return series.map((point) => ({ month: monthLabel(point.month), value: point.value }));
+function toChartData(
+  series: MonthlySeriesPoint[],
+): Array<{ month: string; value: number }> {
+  return series.map((point) => ({
+    month: monthLabel(point.month),
+    value: point.value,
+  }));
 }
 
 /** @spec SPEC-20260721-002 RF-08, US-08 */
-export function CostPerKmChart({ series }: { series: MonthlySeriesPoint[] | undefined }): ReactNode {
+export function CostPerKmChart({
+  series,
+}: {
+  series: MonthlySeriesPoint[] | undefined;
+}): ReactNode {
   const isEmpty = !series || series.every((point) => point.value === 0);
 
   return (
@@ -51,7 +63,10 @@ export function CostPerKmChart({ series }: { series: MonthlySeriesPoint[] | unde
       <div aria-hidden="true" className="h-56">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={series ? toChartData(series) : []}>
-            <CartesianGrid strokeDasharray="3 3" stroke="oklch(var(--chart-grid))" />
+            <CartesianGrid
+              strokeDasharray="3 3"
+              stroke="oklch(var(--chart-grid))"
+            />
             <XAxis dataKey="month" />
             <YAxis />
             <Tooltip formatter={(value) => currency(Number(value))} />
@@ -73,9 +88,13 @@ export function CostPerKmChart({ series }: { series: MonthlySeriesPoint[] | unde
 /**
  * @spec SPEC-20260721-002 RF-08, US-08
  * Volume de combustível (litros) por mês, não eficiência km/L — ver nota em `FleetChartsResponse`
- * (`@nave/validators`) sobre por que km/L não agrega de forma significativa numa frota mista.
+ * (`@navestory/validators`) sobre por que km/L não agrega de forma significativa numa frota mista.
  */
-export function FuelConsumptionChart({ series }: { series: MonthlySeriesPoint[] | undefined }): ReactNode {
+export function FuelConsumptionChart({
+  series,
+}: {
+  series: MonthlySeriesPoint[] | undefined;
+}): ReactNode {
   const isEmpty = !series || series.every((point) => point.value === 0);
 
   return (
@@ -88,11 +107,18 @@ export function FuelConsumptionChart({ series }: { series: MonthlySeriesPoint[] 
       <div aria-hidden="true" className="h-56">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={series ? toChartData(series) : []}>
-            <CartesianGrid strokeDasharray="3 3" stroke="oklch(var(--chart-grid))" />
+            <CartesianGrid
+              strokeDasharray="3 3"
+              stroke="oklch(var(--chart-grid))"
+            />
             <XAxis dataKey="month" />
             <YAxis />
             <Tooltip formatter={(value) => `${Number(value).toFixed(1)} L`} />
-            <Bar dataKey="value" name="Litros" fill={CHART_CATEGORY_COLORS[1]} />
+            <Bar
+              dataKey="value"
+              name="Litros"
+              fill={CHART_CATEGORY_COLORS[1]}
+            />
           </BarChart>
         </ResponsiveContainer>
       </div>
@@ -107,7 +133,11 @@ export function ExpenseCategoryPie({
   breakdown: FleetChartsResponse["category_breakdown"] | undefined;
 }): ReactNode {
   const isEmpty = !breakdown || breakdown.length === 0;
-  const data = breakdown?.map((item) => ({ name: item.label, value: item.total_amount })) ?? [];
+  const data =
+    breakdown?.map((item) => ({
+      name: item.label,
+      value: item.total_amount,
+    })) ?? [];
 
   return (
     <ChartWrapper
@@ -119,9 +149,20 @@ export function ExpenseCategoryPie({
       <div aria-hidden="true" className="h-56">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
-            <Pie data={data} dataKey="value" nameKey="name" outerRadius={80} label>
+            <Pie
+              data={data}
+              dataKey="value"
+              nameKey="name"
+              outerRadius={80}
+              label
+            >
               {data.map((entry, index) => (
-                <Cell key={entry.name} fill={CHART_CATEGORY_COLORS[index % CHART_CATEGORY_COLORS.length]} />
+                <Cell
+                  key={entry.name}
+                  fill={
+                    CHART_CATEGORY_COLORS[index % CHART_CATEGORY_COLORS.length]
+                  }
+                />
               ))}
             </Pie>
             <Tooltip formatter={(value) => currency(Number(value))} />
@@ -147,7 +188,10 @@ export function FleetChartsSection(): ReactNode {
   });
 
   return (
-    <section aria-label="Gráficos de frota" className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+    <section
+      aria-label="Gráficos de frota"
+      className="grid grid-cols-1 gap-4 lg:grid-cols-3"
+    >
       {isLoading ? (
         <>
           <ChartWrapper title="Custo por km" loading>

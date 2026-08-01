@@ -1,4 +1,5 @@
 # Histórias de Usuário — Dashboard v2
+
 > Épico vinculado a [SPEC-20260721-002](SPEC-20260721-002-dashboard-v2.md).
 > Mais de 5 histórias — documento separado conforme convenção do projeto.
 
@@ -7,7 +8,7 @@
 
 ---
 
-## US-01: KPI Cards com Sparkline e Navegação por Clique
+## US-01: KPI Cards com Sparkline e navegação por Clique
 
 **Como** gestor de frota, **quero** ver os KPIs principais (total de veículos, total de despesas do mês, custo médio/veículo) com a tendência percentual em relação ao mês anterior e um minigrafico de evolução, **para** entender rapidamente se os indicadores estão melhores ou piores sem precisar abrir relatórios.
 

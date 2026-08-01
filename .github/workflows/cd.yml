@@ -82,7 +82,7 @@ jobs:
         uses: bervProject/railway-deploy@v1.4.0
         with:
           railway_token: ${{ secrets.RAILWAY_STAGING_TOKEN }}
-          service: nave-api-staging
+          service: navestory-api-staging
 
   # RF-04, RF-06, RF-11: gate humano ANTES da migration (não no job de deploy em si) —
   # `environment: production` aqui já força aprovação manual de um reviewer autorizado
@@ -121,4 +121,4 @@ jobs:
         uses: bervProject/railway-deploy@v1.4.0
         with:
           railway_token: ${{ secrets.RAILWAY_PRODUCTION_TOKEN }}
-          service: nave-api-production
+          service: navestory-api-production

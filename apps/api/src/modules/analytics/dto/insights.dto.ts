@@ -1,4 +1,4 @@
-import { insightsQuerySchema } from "@nave/validators";
+import { insightsQuerySchema } from "@navestory/validators";
 import type { z } from "zod";
 
 export const insightsDtoSchema = insightsQuerySchema;

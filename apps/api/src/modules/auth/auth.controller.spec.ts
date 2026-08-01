@@ -38,12 +38,17 @@ describe("AuthController", () => {
     const res = createResponseMock();
 
     await controller.register(
-      { name: "Ana", email: "ana@example.com", password: "abc12!", profile_type: "autonomous" },
+      {
+        name: "Ana",
+        email: "ana@example.com",
+        password: "abc12!",
+        profile_type: "autonomous",
+      },
       res,
     );
 
     expect(res.cookie).toHaveBeenCalledWith(
-      "nave_access_token",
+      "navestory_access_token",
       "access-token",
       expect.objectContaining({ httpOnly: true }),
     );
@@ -65,12 +70,14 @@ describe("AuthController", () => {
   it("logout revoga a sessão e limpa os cookies", async () => {
     const { controller, authService } = createController();
     const res = createResponseMock();
-    const req = { cookies: { nave_access_token: "access-token" } };
+    const req = { cookies: { navestory_access_token: "access-token" } };
 
     await controller.logout(req as never, res);
 
     expect(authService.logout).toHaveBeenCalledWith("access-token");
-    expect(res.clearCookie).toHaveBeenCalledWith("nave_access_token", { path: "/" });
+    expect(res.clearCookie).toHaveBeenCalledWith("navestory_access_token", {
+      path: "/",
+    });
   });
 
   it("logout não chama o service quando não há cookie de sessão", async () => {
@@ -86,7 +93,12 @@ describe("AuthController", () => {
   it("refresh renova a sessão a partir do refresh token no cookie", async () => {
     const { controller, authService } = createController();
     const res = createResponseMock();
-    const req = { cookies: { nave_refresh_token: "refresh-token", nave_remember_me: "true" } };
+    const req = {
+      cookies: {
+        navestory_refresh_token: "refresh-token",
+        navestory_remember_me: "true",
+      },
+    };
 
     const result = await controller.refresh(req as never, res);
 
@@ -100,10 +112,13 @@ describe("AuthController", () => {
     });
     const res = createResponseMock();
 
-    await controller.login({ email: "ana@example.com", password: "abc12!", rememberMe: true }, res);
+    await controller.login(
+      { email: "ana@example.com", password: "abc12!", rememberMe: true },
+      res,
+    );
 
     expect(res.cookie).toHaveBeenCalledWith(
-      "nave_refresh_token",
+      "navestory_refresh_token",
       "refresh-token",
       expect.objectContaining({ maxAge: expect.any(Number) }),
     );
@@ -124,7 +139,9 @@ describe("AuthController", () => {
   it("recover-password sempre retorna mensagem genérica (anti-enumeração)", async () => {
     const { controller } = createController();
 
-    const result = await controller.recoverPassword({ email: "qualquer@example.com" });
+    const result = await controller.recoverPassword({
+      email: "qualquer@example.com",
+    });
 
     expect(result.data.message).toMatch(/instruções/);
   });
@@ -132,9 +149,15 @@ describe("AuthController", () => {
   it("reset-password redefine a senha com sucesso", async () => {
     const { controller, authService } = createController();
 
-    const result = await controller.resetPassword({ token: "tok", password: "abc12!" });
+    const result = await controller.resetPassword({
+      token: "tok",
+      password: "abc12!",
+    });
 
-    expect(authService.resetPassword).toHaveBeenCalledWith({ token: "tok", password: "abc12!" });
+    expect(authService.resetPassword).toHaveBeenCalledWith({
+      token: "tok",
+      password: "abc12!",
+    });
     expect(result.data.message).toBe("Senha redefinida com sucesso");
   });
 });

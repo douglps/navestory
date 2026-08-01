@@ -6,12 +6,27 @@ import {
   type CreateExpenseInput,
   type CreateExpenseTemplateInput,
   type ExpenseTemplate,
-} from "@nave/validators";
-import { Alert, Button, Combobox, Container, CurrencyInput, EmptyState, Input, OdometerInput } from "@nave/ui";
+} from "@navestory/validators";
+import {
+  Alert,
+  Button,
+  Combobox,
+  Container,
+  CurrencyInput,
+  EmptyState,
+  Input,
+  OdometerInput,
+} from "@navestory/ui";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useEffect, useState, type FormEvent, type ReactNode } from "react";
+import {
+  Suspense,
+  useEffect,
+  useState,
+  type FormEvent,
+  type ReactNode,
+} from "react";
 import { ApiError, apiClient } from "@/lib/http/api-client";
 import { changeDateYear } from "@/lib/date-year";
 import { datetimeLocalToIso, nowInUserTz } from "@/lib/datetime-tz";
@@ -45,7 +60,10 @@ interface ExpenseResponse {
 }
 
 function vehicleLabel(vehicle: Vehicle): string {
-  return vehicle.nickname ?? (`${vehicle.make ?? ""} ${vehicle.model ?? ""}`.trim() || vehicle.plate);
+  return (
+    vehicle.nickname ??
+    (`${vehicle.make ?? ""} ${vehicle.model ?? ""}`.trim() || vehicle.plate)
+  );
 }
 
 /**
@@ -74,7 +92,10 @@ function ExpenseTemplatesTray({
 
   const { data: templates } = useQuery({
     queryKey: ["expense-templates"],
-    queryFn: () => apiClient<{ data: ExpenseTemplate[] }>("/expense-templates").then((r) => r.data),
+    queryFn: () =>
+      apiClient<{ data: ExpenseTemplate[] }>("/expense-templates").then(
+        (r) => r.data,
+      ),
     retry: false,
   });
 
@@ -88,7 +109,10 @@ function ExpenseTemplatesTray({
 
   const createMutation = useMutation({
     mutationFn: (input: CreateExpenseTemplateInput) =>
-      apiClient<{ data: ExpenseTemplate }>("/expense-templates", { method: "POST", body: input }),
+      apiClient<{ data: ExpenseTemplate }>("/expense-templates", {
+        method: "POST",
+        body: input,
+      }),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["expense-templates"] });
       setCreating(false);
@@ -108,7 +132,9 @@ function ExpenseTemplatesTray({
   const atLimit = (templates?.length ?? 0) >= TEMPLATE_LIMIT;
 
   function handleApply(template: ExpenseTemplate): void {
-    const vehicleExists = (vehicles ?? []).some((v) => v.id === template.vehicle_id);
+    const vehicleExists = (vehicles ?? []).some(
+      (v) => v.id === template.vehicle_id,
+    );
     onApply(template, vehicleExists);
     touchMutation.mutate(template.id);
   }
@@ -124,7 +150,9 @@ function ExpenseTemplatesTray({
     setCreateError(null);
 
     if (atLimit) {
-      setCreateError("Você atingiu o limite de 20 modelos. Exclua um para criar outro.");
+      setCreateError(
+        "Você atingiu o limite de 20 modelos. Exclua um para criar outro.",
+      );
       return;
     }
 
@@ -138,7 +166,10 @@ function ExpenseTemplatesTray({
       supplier: currentFields.supplier || null,
     });
     if (!result.success) {
-      setCreateError(result.error.issues[0]?.message ?? "Dados inválidos para criar o modelo");
+      setCreateError(
+        result.error.issues[0]?.message ??
+          "Dados inválidos para criar o modelo",
+      );
       return;
     }
 
@@ -152,7 +183,10 @@ function ExpenseTemplatesTray({
           <p>Nenhum modelo ainda. Toque em + para criar.</p>
         )}
         {templates?.map((template) => (
-          <div key={template.id} className="flex items-center gap-1 whitespace-nowrap">
+          <div
+            key={template.id}
+            className="flex items-center gap-1 whitespace-nowrap"
+          >
             <Button
               type="button"
               variant="outline"
@@ -194,7 +228,10 @@ function ExpenseTemplatesTray({
             onChange={(event) => setTemplateName(event.target.value)}
             required
           />
-          <p>Usa os campos veículo, categoria, valor e descrição preenchidos no formulário.</p>
+          <p>
+            Usa os campos veículo, categoria, valor e descrição preenchidos no
+            formulário.
+          </p>
           {createError && <Alert variant="error" description={createError} />}
           <Button type="submit" disabled={createMutation.isPending}>
             {createMutation.isPending ? "Salvando..." : "Salvar modelo"}
@@ -279,7 +316,8 @@ function NewExpensePageContent(): ReactNode {
    */
   const { data: suppliers } = useQuery({
     queryKey: ["expense-suppliers"],
-    queryFn: () => apiClient<{ data: string[] }>("/expenses/suppliers").then((r) => r.data),
+    queryFn: () =>
+      apiClient<{ data: string[] }>("/expenses/suppliers").then((r) => r.data),
     enabled: isFuel,
     retry: false,
   });
@@ -289,7 +327,10 @@ function NewExpensePageContent(): ReactNode {
    */
   const mutation = useMutation({
     mutationFn: (input: CreateExpenseInput) =>
-      apiClient<ExpenseResponse>("/expenses?strict=true", { method: "POST", body: input }),
+      apiClient<ExpenseResponse>("/expenses?strict=true", {
+        method: "POST",
+        body: input,
+      }),
     onSuccess: (data) => {
       if (data.duplicate_warning && data.duplicate_id) {
         setDuplicateId(data.duplicate_id);
@@ -305,13 +346,19 @@ function NewExpensePageContent(): ReactNode {
     },
   });
 
-  const allCategories = [...(categories?.default ?? []), ...(categories?.custom ?? [])];
+  const allCategories = [
+    ...(categories?.default ?? []),
+    ...(categories?.custom ?? []),
+  ];
 
   /**
    * @spec SPEC-20260601-003 RF-03, RF-04, EC-01
    * @spec SPEC-20260606-001 R-FUEL-05
    */
-  function handleApplyTemplate(template: ExpenseTemplate, vehicleExists: boolean): void {
+  function handleApplyTemplate(
+    template: ExpenseTemplate,
+    vehicleExists: boolean,
+  ): void {
     setVehicleId(vehicleExists ? template.vehicle_id : "");
     setCategory(template.category);
     fuelCalc.reset({ amount: template.amount });
@@ -386,7 +433,10 @@ function NewExpensePageContent(): ReactNode {
         <EmptyState
           title="Nenhum veículo cadastrado"
           description="Cadastre um veículo para registrar despesas."
-          action={{ label: "Cadastrar veículo", onClick: () => router.push("/vehicles/new") }}
+          action={{
+            label: "Cadastrar veículo",
+            onClick: () => router.push("/vehicles/new"),
+          }}
         />
       </Container>
     );
@@ -397,7 +447,8 @@ function NewExpensePageContent(): ReactNode {
     fuelCalc.amount != null &&
     fuelCalc.liters != null &&
     fuelCalc.pricePerLiter != null &&
-    Math.abs(fuelCalc.liters * fuelCalc.pricePerLiter - fuelCalc.amount) <= 0.01;
+    Math.abs(fuelCalc.liters * fuelCalc.pricePerLiter - fuelCalc.amount) <=
+      0.01;
 
   return (
     <Container size="sm">
@@ -415,14 +466,24 @@ function NewExpensePageContent(): ReactNode {
           supplier,
         }}
       />
-      {templateNotice && <Alert variant="warning" description={templateNotice} />}
+      {templateNotice && (
+        <Alert variant="warning" description={templateNotice} />
+      )}
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-3">
         {contextChangeNotice && (
-          <div role="status" className="flex items-center justify-between gap-2 rounded-md border border-border bg-card p-2 text-sm">
+          <div
+            role="status"
+            className="flex items-center justify-between gap-2 rounded-md border border-border bg-card p-2 text-sm"
+          >
             <span>{contextChangeNotice}</span>
             <div className="flex shrink-0 gap-2">
-              <Button type="button" variant="ghost" size="sm" onClick={applyContextChange}>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={applyContextChange}
+              >
                 Atualizar campo
               </Button>
               <Button
@@ -460,12 +521,18 @@ function NewExpensePageContent(): ReactNode {
           }
         />
         {isVehicleInherited && (
-          <span className="text-xs text-foreground">↩ Herdado do contexto em foco</span>
+          <span className="text-xs text-foreground">
+            ↩ Herdado do contexto em foco
+          </span>
         )}
         {!isVehicleInherited && vehicleId && (
-          <span className="text-xs text-muted-foreground">✓ Selecionado manualmente</span>
+          <span className="text-xs text-muted-foreground">
+            ✓ Selecionado manualmente
+          </span>
         )}
-        {vehicleContextHint && <p className="text-xs text-muted-foreground">{vehicleContextHint}</p>}
+        {vehicleContextHint && (
+          <p className="text-xs text-muted-foreground">{vehicleContextHint}</p>
+        )}
         {vehicleQuickPicks.length > 0 && (
           <div className="flex flex-wrap gap-1">
             {vehicleQuickPicks.map((vehicle) => (
@@ -485,7 +552,10 @@ function NewExpensePageContent(): ReactNode {
         <span className="text-sm font-medium">Categoria *</span>
         <Combobox
           aria-label="Categoria *"
-          options={allCategories.map((cat) => ({ value: cat.value, label: cat.label }))}
+          options={allCategories.map((cat) => ({
+            value: cat.value,
+            label: cat.label,
+          }))}
           value={category}
           onValueChange={setCategory}
           placeholder="Selecione uma categoria"
@@ -494,7 +564,12 @@ function NewExpensePageContent(): ReactNode {
         />
 
         <label htmlFor="amount">Valor (R$) *</label>
-        <CurrencyInput id="amount" value={fuelCalc.amount} onChange={fuelCalc.setAmount} required />
+        <CurrencyInput
+          id="amount"
+          value={fuelCalc.amount}
+          onChange={fuelCalc.setAmount}
+          required
+        />
 
         <div className="flex gap-3">
           <div className="flex flex-1 flex-col gap-1">
@@ -516,7 +591,9 @@ function NewExpensePageContent(): ReactNode {
               maxLength={4}
               value={year ?? ""}
               onChange={(event) => {
-                const digits = event.target.value.replace(/\D/g, "").slice(0, 4);
+                const digits = event.target.value
+                  .replace(/\D/g, "")
+                  .slice(0, 4);
                 handleYearChange(digits ? Number(digits) : undefined);
               }}
               className="w-20"
@@ -527,7 +604,12 @@ function NewExpensePageContent(): ReactNode {
         {isFuel && (
           <>
             <label htmlFor="odometer_km">Odômetro (km) *</label>
-            <OdometerInput id="odometer_km" value={odometerKm} onChange={setOdometerKm} required />
+            <OdometerInput
+              id="odometer_km"
+              value={odometerKm}
+              onChange={setOdometerKm}
+              required
+            />
           </>
         )}
 
@@ -539,7 +621,10 @@ function NewExpensePageContent(): ReactNode {
         />
 
         {isFuel && (
-          <section aria-label="Dados do abastecimento" className="flex flex-col gap-3 rounded border p-3">
+          <section
+            aria-label="Dados do abastecimento"
+            className="flex flex-col gap-3 rounded border p-3"
+          >
             <span className="text-sm font-medium">Tipo de combustível</span>
             <Combobox
               aria-label="Tipo de combustível"
@@ -555,13 +640,19 @@ function NewExpensePageContent(): ReactNode {
             />
 
             <span id="full_tank_label">Tanque cheio?</span>
-            <div role="group" aria-labelledby="full_tank_label" className="flex gap-2">
+            <div
+              role="group"
+              aria-labelledby="full_tank_label"
+              className="flex gap-2"
+            >
               <Button
                 type="button"
                 variant={fullTank === true ? "default" : "outline"}
                 size="sm"
                 aria-pressed={fullTank === true}
-                onClick={() => setFullTank((current) => (current === true ? null : true))}
+                onClick={() =>
+                  setFullTank((current) => (current === true ? null : true))
+                }
               >
                 Sim
               </Button>
@@ -570,7 +661,9 @@ function NewExpensePageContent(): ReactNode {
                 variant={fullTank === false ? "default" : "outline"}
                 size="sm"
                 aria-pressed={fullTank === false}
-                onClick={() => setFullTank((current) => (current === false ? null : false))}
+                onClick={() =>
+                  setFullTank((current) => (current === false ? null : false))
+                }
               >
                 Não
               </Button>
@@ -593,7 +686,8 @@ function NewExpensePageContent(): ReactNode {
 
             {summaryConsistent && (
               <p className="text-sm text-muted-foreground">
-                {fuelCalc.liters} L × R$ {fuelCalc.pricePerLiter}/L = R$ {fuelCalc.amount}
+                {fuelCalc.liters} L × R$ {fuelCalc.pricePerLiter}/L = R${" "}
+                {fuelCalc.amount}
               </p>
             )}
 
@@ -605,7 +699,9 @@ function NewExpensePageContent(): ReactNode {
               onChange={(event) => setSupplier(event.target.value)}
             />
             <datalist id="supplier-suggestions">
-              {suppliers?.map((name) => <option key={name} value={name} />)}
+              {suppliers?.map((name) => (
+                <option key={name} value={name} />
+              ))}
             </datalist>
           </section>
         )}
@@ -614,13 +710,24 @@ function NewExpensePageContent(): ReactNode {
           /**
            * @spec SPEC-20260720-002 RF-03 RF-04 RF-06
            */
-          <div role="alert" className="flex flex-col gap-2 rounded-md border border-warning bg-warning-pastel p-3 text-sm">
-            <p>Uma despesa com os mesmos dados já existe. Verifique se este não é um lançamento duplicado.</p>
+          <div
+            role="alert"
+            className="flex flex-col gap-2 rounded-md border border-warning bg-warning-pastel p-3 text-sm"
+          >
+            <p>
+              Uma despesa com os mesmos dados já existe. Verifique se este não é
+              um lançamento duplicado.
+            </p>
             <div className="flex gap-3">
               <Link href={`/expenses/${duplicateId}`} className="underline">
                 Ver despesa duplicada
               </Link>
-              <Button type="button" variant="ghost" size="sm" onClick={() => router.push("/expenses")}>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => router.push("/expenses")}
+              >
                 Entendido
               </Button>
             </div>
@@ -629,13 +736,19 @@ function NewExpensePageContent(): ReactNode {
           <>
             {fieldError && <Alert variant="error" description={fieldError} />}
             {mutation.isError && !fieldError && (
-              <Alert variant="error" description="Não foi possível registrar a despesa." />
+              <Alert
+                variant="error"
+                description="Não foi possível registrar a despesa."
+              />
             )}
           </>
         )}
 
         <div className="flex gap-2">
-          <Button type="submit" disabled={mutation.isPending || duplicateId !== null}>
+          <Button
+            type="submit"
+            disabled={mutation.isPending || duplicateId !== null}
+          >
             {mutation.isPending ? "Salvando..." : "Registrar"}
           </Button>
           <Button type="button" variant="outline" onClick={handleCancel}>

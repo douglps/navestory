@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { useUIStore } from "./ui-store";
 
 function getPersisted(): { state: { isSidebarCollapsed?: boolean } } | null {
-  const raw = sessionStorage.getItem("nave-ui-state");
+  const raw = sessionStorage.getItem("navestory-ui-state");
   return raw ? JSON.parse(raw) : null;
 }
 
@@ -20,7 +20,7 @@ describe("useUIStore — persistência de isSidebarCollapsed (SPEC-20260730-002 
     useUIStore.setState({ isSidebarCollapsed: false, isMobileNavOpen: false });
   });
 
-  it("R-NAV-06: persiste isSidebarCollapsed em sessionStorage sob a chave nave-ui-state", () => {
+  it("R-NAV-06: persiste isSidebarCollapsed em sessionStorage sob a chave navestory-ui-state", () => {
     useUIStore.getState().toggleSidebarCollapsed();
 
     expect(getPersisted()?.state.isSidebarCollapsed).toBe(true);

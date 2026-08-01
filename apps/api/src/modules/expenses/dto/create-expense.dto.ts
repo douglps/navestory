@@ -1,4 +1,4 @@
-import { createExpenseInputSchema } from "@nave/validators";
+import { createExpenseInputSchema } from "@navestory/validators";
 import type { z } from "zod";
 
 export const createExpenseDtoSchema = createExpenseInputSchema;

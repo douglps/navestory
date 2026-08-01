@@ -16,4 +16,4 @@ Nos comprometemos a promover um ambiente aberto, acolhedor e inclusivo para todo
 
 ## Reportar
 
-contato@nave.saas
+contato@navestory.saas

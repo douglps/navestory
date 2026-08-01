@@ -9,7 +9,7 @@
 // de novo cria mais histórico, não substitui o que já existe.
 //
 // Uso:
-//   pnpm --filter @nave/api seed:random
+//   pnpm --filter @navestory/api seed:random
 //   (ou: node apps/api/scripts/seed-random-data.mjs)
 //
 // Requer SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY em apps/api/.env — aponte SEMPRE
@@ -100,7 +100,16 @@ const MAKES_MODELS = {
 };
 
 const FUEL_TYPES = ["gasoline", "ethanol"];
-const GROUP_COLORS = ["#6366f1", "#ef4444", "#f97316", "#eab308", "#22c55e", "#14b8a6", "#3b82f6", "#ec4899"];
+const GROUP_COLORS = [
+  "#6366f1",
+  "#ef4444",
+  "#f97316",
+  "#eab308",
+  "#22c55e",
+  "#14b8a6",
+  "#3b82f6",
+  "#ec4899",
+];
 
 async function findUserByEmail(email) {
   const { data, error } = await supabase.auth.admin.listUsers();
@@ -127,7 +136,11 @@ async function ensureUser() {
 
 async function waitForProfile(userId) {
   for (let attempt = 0; attempt < 10; attempt += 1) {
-    const { data } = await supabase.from("profiles").select("id").eq("id", userId).maybeSingle();
+    const { data } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("id", userId)
+      .maybeSingle();
     if (data) return;
     await sleep(300);
   }
@@ -178,8 +191,13 @@ async function ensureGroupWithVehicles(userId, vehicles) {
     .single();
   if (error) throw error;
 
-  const members = vehicles.map((v) => ({ group_id: group.id, vehicle_id: v.id }));
-  const { error: membersError } = await supabase.from("vehicle_group_members").insert(members);
+  const members = vehicles.map((v) => ({
+    group_id: group.id,
+    vehicle_id: v.id,
+  }));
+  const { error: membersError } = await supabase
+    .from("vehicle_group_members")
+    .insert(members);
   if (membersError) throw membersError;
   console.log(`  Grupo de veículos criado com ${vehicles.length} membro(s).`);
 }
@@ -209,20 +227,78 @@ async function seedExpenses(userId, vehicle) {
       liters,
       fuel_type: vehicle.fuel_type ?? "gasoline",
       full_tank: true,
-      supplier: randPick(["Posto Ipiranga", "Posto Shell", "Posto BR", "Posto Raízen"]),
+      supplier: randPick([
+        "Posto Ipiranga",
+        "Posto Shell",
+        "Posto BR",
+        "Posto Raízen",
+      ]),
       description: "Abastecimento",
     });
   }
 
   const scattered = [
-    { category: "maintenance", count: 6, min: 120, max: 1800, desc: ["Troca de óleo", "Revisão preventiva", "Troca de pastilhas de freio", "Alinhamento e balanceamento"] },
-    { category: "washing", count: 6, min: 35, max: 90, desc: ["Lavagem completa", "Lavagem simples", "Lavagem a seco"] },
-    { category: "toll", count: 10, min: 5, max: 28, desc: ["Pedágio rodovia", "Pedágio ponte"] },
-    { category: "parking", count: 10, min: 8, max: 60, desc: ["Estacionamento shopping", "Estacionamento centro", "Zona azul"] },
-    { category: "tax", count: 2, min: 300, max: 1800, desc: ["IPVA parcela", "Taxa de licenciamento"] },
-    { category: "fine", count: 3, min: 88, max: 350, desc: ["Multa de trânsito"] },
-    { category: "insurance", count: 4, min: 150, max: 400, desc: ["Parcela do seguro"] },
-    { category: "other", count: 4, min: 50, max: 300, desc: ["Despesa diversa", "Acessório", "Documentação"] },
+    {
+      category: "maintenance",
+      count: 6,
+      min: 120,
+      max: 1800,
+      desc: [
+        "Troca de óleo",
+        "Revisão preventiva",
+        "Troca de pastilhas de freio",
+        "Alinhamento e balanceamento",
+      ],
+    },
+    {
+      category: "washing",
+      count: 6,
+      min: 35,
+      max: 90,
+      desc: ["Lavagem completa", "Lavagem simples", "Lavagem a seco"],
+    },
+    {
+      category: "toll",
+      count: 10,
+      min: 5,
+      max: 28,
+      desc: ["Pedágio rodovia", "Pedágio ponte"],
+    },
+    {
+      category: "parking",
+      count: 10,
+      min: 8,
+      max: 60,
+      desc: ["Estacionamento shopping", "Estacionamento centro", "Zona azul"],
+    },
+    {
+      category: "tax",
+      count: 2,
+      min: 300,
+      max: 1800,
+      desc: ["IPVA parcela", "Taxa de licenciamento"],
+    },
+    {
+      category: "fine",
+      count: 3,
+      min: 88,
+      max: 350,
+      desc: ["Multa de trânsito"],
+    },
+    {
+      category: "insurance",
+      count: 4,
+      min: 150,
+      max: 400,
+      desc: ["Parcela do seguro"],
+    },
+    {
+      category: "other",
+      count: 4,
+      min: 50,
+      max: 300,
+      desc: ["Despesa diversa", "Acessório", "Documentação"],
+    },
   ];
 
   for (const group of scattered) {
@@ -268,7 +344,10 @@ async function seedMaintenances(userId, vehicle) {
       scheduled_date: scheduled.toISOString(),
       completion_date: completion.toISOString(),
       cost: randFloat(120, 1800),
-      odometer_km: randInt(Math.max(0, vehicle.odometer - 20000), vehicle.odometer),
+      odometer_km: randInt(
+        Math.max(0, vehicle.odometer - 20000),
+        vehicle.odometer,
+      ),
     });
   }
 
@@ -368,9 +447,23 @@ async function seedExpenseTemplates(userId, vehicle) {
   }
 
   const rows = [
-    { name: "Abastecimento padrão", category: "fuel", amount: randFloat(180, 300), liters: randFloat(35, 45), fuel_type: vehicle.fuel_type ?? "gasoline" },
-    { name: "Troca de óleo", category: "maintenance", amount: randFloat(200, 450) },
-    { name: "Lavagem completa", category: "washing", amount: randFloat(40, 80) },
+    {
+      name: "Abastecimento padrão",
+      category: "fuel",
+      amount: randFloat(180, 300),
+      liters: randFloat(35, 45),
+      fuel_type: vehicle.fuel_type ?? "gasoline",
+    },
+    {
+      name: "Troca de óleo",
+      category: "maintenance",
+      amount: randFloat(200, 450),
+    },
+    {
+      name: "Lavagem completa",
+      category: "washing",
+      amount: randFloat(40, 80),
+    },
   ].map((t) => ({ user_id: userId, vehicle_id: vehicle.id, ...t }));
 
   const { error } = await supabase.from("expense_templates").insert(rows);
@@ -445,6 +538,9 @@ async function main() {
 }
 
 main().catch((error) => {
-  console.error("\nFalha ao rodar o seed de dados aleatórios:", error.message ?? error);
+  console.error(
+    "\nFalha ao rodar o seed de dados aleatórios:",
+    error.message ?? error,
+  );
   process.exit(1);
 });

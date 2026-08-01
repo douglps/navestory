@@ -35,7 +35,10 @@ const ACCOUNT_PENDING_DELETION_CODE = "ACCOUNT_PENDING_DELETION";
  * restore, não só o login feito pelo formulário.
  */
 /** Exportado só para teste unitário puro — evita depender de `window.location` real em jsdom. */
-export function getRestoreAccountRedirectUrl(pathname: string, deletedAt?: string): string | null {
+export function getRestoreAccountRedirectUrl(
+  pathname: string,
+  deletedAt?: string,
+): string | null {
   if (pathname === "/restore-account") {
     return null;
   }
@@ -118,7 +121,10 @@ interface RequestOptions {
  * Todas as chamadas que dependem de sessão (cookie httpOnly) passam pelo rewrite
  * `/api/backend/*` (mesma origem do Next) — ver next.config.ts.
  */
-export async function apiClient<T>(path: string, options: RequestOptions = {}): Promise<T> {
+export async function apiClient<T>(
+  path: string,
+  options: RequestOptions = {},
+): Promise<T> {
   const method = options.method ?? "GET";
   const isMutation = MUTATING_METHODS.has(method);
 
@@ -127,7 +133,13 @@ export async function apiClient<T>(path: string, options: RequestOptions = {}): 
   // bloqueado aqui: precisa chegar ao fetch() para o Service Worker poder responder com o
   // cache (RF-08) mesmo sem conexão — bloquear GET cedo quebraria a leitura offline inteira.
   if (isMutation && !useConnectivityStore.getState().isOnline) {
-    useUIStore.getState().pushToast({ variant: "warning", title: OFFLINE_WRITE_MESSAGE, duration: 5000 });
+    useUIStore
+      .getState()
+      .pushToast({
+        variant: "warning",
+        title: OFFLINE_WRITE_MESSAGE,
+        duration: 5000,
+      });
     throw new OfflineWriteBlockedError();
   }
 
@@ -145,7 +157,9 @@ export async function apiClient<T>(path: string, options: RequestOptions = {}): 
     });
   } catch (error) {
     if ((error as Error).name === "AbortError") {
-      throw new ApiUnavailableError("A requisição demorou demais para responder.");
+      throw new ApiUnavailableError(
+        "A requisição demorou demais para responder.",
+      );
     }
     // @spec SPEC-20260712-001 RF-11.1, EC-08 — valida R-PWA-08
     // Falha de rede real (TypeError/"Failed to fetch", não uma resposta HTTP de erro) numa
@@ -154,7 +168,13 @@ export async function apiClient<T>(path: string, options: RequestOptions = {}): 
     // conectividade (RF-13) e mostra a mesma mensagem de RF-11, nunca um erro genérico.
     if (isMutation) {
       useConnectivityStore.getState().markOffline();
-      useUIStore.getState().pushToast({ variant: "warning", title: OFFLINE_WRITE_MESSAGE, duration: 5000 });
+      useUIStore
+        .getState()
+        .pushToast({
+          variant: "warning",
+          title: OFFLINE_WRITE_MESSAGE,
+          duration: 5000,
+        });
       throw new OfflineWriteBlockedError();
     }
     throw new ApiUnavailableError();
@@ -177,13 +197,20 @@ export async function apiClient<T>(path: string, options: RequestOptions = {}): 
     if (response.status === 404) {
       handleNotFound(path);
     }
-    if (response.status === 403 && body.code === ACCOUNT_PENDING_DELETION_CODE) {
+    if (
+      response.status === 403 &&
+      body.code === ACCOUNT_PENDING_DELETION_CODE
+    ) {
       redirectToRestoreAccount(body.deleted_at);
     }
     if (response.status === 401 && !isAuthEndpoint(path)) {
       redirectToLogin();
     }
-    throw new ApiError(body.message ?? "Erro inesperado", response.status, body.code);
+    throw new ApiError(
+      body.message ?? "Erro inesperado",
+      response.status,
+      body.code,
+    );
   }
 
   return body.data as T;

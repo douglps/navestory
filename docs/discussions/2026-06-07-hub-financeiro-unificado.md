@@ -2,7 +2,7 @@
 
 **Data:** 2026-06-07
 **Status:** Aprovado para execução — aguarda resolução de gaps bloqueadores (Sprint 0)
-**Gerado por:** Debate multi-agente (nave-architect + data-integrity + gestor-frota + nave-ui-pwa + story-generator)
+**Gerado por:** Debate multi-agente (navestory-architect + data-integrity + gestor-frota + navestory-ui-pwa + story-generator)
 **Referências:** ADR-001, ADR-002, SPEC-20260521-003, specs/RULES.md, specs/expenses/README.md
 
 ---
@@ -11,17 +11,18 @@
 
 O sistema tem hoje três tabelas independentes com valores financeiros que não se comunicam:
 
-| Módulo | Tabela | Campo | Aparece em /expenses? |
-|---|---|---|---|
-| Despesas | `expenses` | `amount` | Sim |
-| Manutenção | `maintenances` | `cost` | **Não** |
-| Multas | `fines` | `amount` | **Não** |
+| Módulo     | Tabela         | Campo    | Aparece em /expenses? |
+| ---------- | -------------- | -------- | --------------------- |
+| Despesas   | `expenses`     | `amount` | Sim                   |
+| Manutenção | `maintenances` | `cost`   | **Não**               |
+| Multas     | `fines`        | `amount` | **Não**               |
 
 Além disso, custos futuros programados (IPVA, CRLV, seguro, manutenções agendadas, multas com prazo) não têm visibilidade centralizada. O gestor precisa navegar em múltiplas telas para ter visão financeira completa da frota.
 
 **Score atual de /expenses como central financeira: 2,5/10** (avaliação pela skill gestor-frota)
 
 Lacunas críticas identificadas:
+
 - Zero visão prospectiva (não mostra o que vai custar)
 - Manutenções e multas ausentes do total financeiro real
 - Botões de ação com 28px de altura — abaixo dos 44px mínimos do design system
@@ -50,7 +51,7 @@ Lacunas críticas identificadas:
 - Sem recorrência automática via pg_cron — UX exibe banner quando vencimento ≤ 60 dias sem registro correspondente
 - `vehicle_recurring_costs`: um registro por `(vehicle_id, cost_type, year)`
 
-### 2.3 Navegação de Origem
+### 2.3 navegação de Origem
 
 **Sheet lateral** (`side="bottom"` mobile, `side="right"` desktop) — não modal, não navegação direta.
 
@@ -207,17 +208,17 @@ $$;
 
 ## 4. Regras de Domínio — Adicionar ao RULES.md
 
-| ID | Regra | Categoria |
-|---|---|---|
-| R-LED-01 | Expenses com `source_type IS NOT NULL` são `is_readonly = true`; PATCH/DELETE retornam 403 | Domínio |
-| R-LED-02 | Manutenção `→ completed` com `cost IS NOT NULL` cria ou atualiza a expense vinculada via `ExpensesService` | Domínio |
-| R-LED-03 | Manutenção ou multa `→ cancelled` soft-deleta (`deleted_at = NOW()`) a expense vinculada | Domínio |
-| R-LED-04 | `source_type` e `source_id` são sempre definidos juntos — estado parcial é inválido (constraint no banco) | Domínio |
-| R-LED-05 | `vehicle_recurring_costs` com `paid_at` preenchido cria expense vinculada com `source_type = 'recurring_cost'` | Domínio |
-| R-HUB-01 | Soft-delete individual de manutenção (`deleted_at` preenchido fora de cancelamento) também soft-deleta a expense vinculada | Domínio |
-| R-HUB-02 | Criação de expense vinculada é idempotente — `uq_expenses_source` garante no máximo uma expense ativa por `(source_type, source_id)` | Domínio |
-| R-REC-01 | `vehicle_recurring_costs` aceita no máximo um registro por `(vehicle_id, cost_type, year)` | Domínio |
-| R-REC-02 | Recorrência anual é manual; UX exibe banner quando vencimento de documento em `vehicles` está ≤ 60 dias sem `vehicle_recurring_costs` correspondente | UX |
+| ID       | Regra                                                                                                                                                | Categoria |
+| -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | --------- |
+| R-LED-01 | Expenses com `source_type IS NOT NULL` são `is_readonly = true`; PATCH/DELETE retornam 403                                                           | Domínio   |
+| R-LED-02 | Manutenção `→ completed` com `cost IS NOT NULL` cria ou atualiza a expense vinculada via `ExpensesService`                                           | Domínio   |
+| R-LED-03 | Manutenção ou multa `→ cancelled` soft-deleta (`deleted_at = NOW()`) a expense vinculada                                                             | Domínio   |
+| R-LED-04 | `source_type` e `source_id` são sempre definidos juntos — estado parcial é inválido (constraint no banco)                                            | Domínio   |
+| R-LED-05 | `vehicle_recurring_costs` com `paid_at` preenchido cria expense vinculada com `source_type = 'recurring_cost'`                                       | Domínio   |
+| R-HUB-01 | Soft-delete individual de manutenção (`deleted_at` preenchido fora de cancelamento) também soft-deleta a expense vinculada                           | Domínio   |
+| R-HUB-02 | Criação de expense vinculada é idempotente — `uq_expenses_source` garante no máximo uma expense ativa por `(source_type, source_id)`                 | Domínio   |
+| R-REC-01 | `vehicle_recurring_costs` aceita no máximo um registro por `(vehicle_id, cost_type, year)`                                                           | Domínio   |
+| R-REC-02 | Recorrência anual é manual; UX exibe banner quando vencimento de documento em `vehicles` está ≤ 60 dias sem `vehicle_recurring_costs` correspondente | UX        |
 
 ---
 
@@ -229,13 +230,13 @@ $$;
 [Todas] [Próximas ①] [Em atraso] [Por veículo] [Calendário]
 ```
 
-| Tab | Fonte de dados |
-|---|---|
-| **Todas** | `expenses` (manual + vinculadas) |
-| **Próximas** | `get_upcoming_costs()` — agrupado por urgência |
-| **Em atraso** | `fines` vencidas + `maintenances` com `scheduled_date` passada sem conclusão |
-| **Por veículo** | `expenses` GROUP BY vehicle_id — accordion com subtotal |
-| **Calendário** | Todas as fontes em grid mensal |
+| Tab             | Fonte de dados                                                               |
+| --------------- | ---------------------------------------------------------------------------- |
+| **Todas**       | `expenses` (manual + vinculadas)                                             |
+| **Próximas**    | `get_upcoming_costs()` — agrupado por urgência                               |
+| **Em atraso**   | `fines` vencidas + `maintenances` com `scheduled_date` passada sem conclusão |
+| **Por veículo** | `expenses` GROUP BY vehicle_id — accordion com subtotal                      |
+| **Calendário**  | Todas as fontes em grid mensal                                               |
 
 ### 5.2 KPIs no topo (zona crítica sem scroll)
 
@@ -246,18 +247,19 @@ $$;
 
 ### 5.3 Sistema de badges de urgência (tab Próximas)
 
-| Prazo | Cor | Ícone lucide |
-|---|---|---|
-| Vencido | `bg-danger/10` + `border-danger` | `AlertOctagon` |
-| 0–7 dias | `bg-danger/5` + `border-danger` | `AlertTriangle` |
-| 8–14 dias | `bg-warning/10` + `border-warning` | `Clock` |
-| 15–30 dias | `bg-warning/5` | `Calendar` |
-| 31–60 dias | `bg-info/5` | `CalendarDays` |
-| +60 dias | `text-muted-foreground` | `CalendarCheck2` |
+| Prazo      | Cor                                | Ícone lucide     |
+| ---------- | ---------------------------------- | ---------------- |
+| Vencido    | `bg-danger/10` + `border-danger`   | `AlertOctagon`   |
+| 0–7 dias   | `bg-danger/5` + `border-danger`    | `AlertTriangle`  |
+| 8–14 dias  | `bg-warning/10` + `border-warning` | `Clock`          |
+| 15–30 dias | `bg-warning/5`                     | `Calendar`       |
+| 31–60 dias | `bg-info/5`                        | `CalendarDays`   |
+| +60 dias   | `text-muted-foreground`            | `CalendarCheck2` |
 
 ### 5.4 Sheet de origem
 
 Componente `LinkedExpenseDrawer` (`Sheet side="bottom"` no mobile):
+
 - Cabeçalho: "Origem: [Manutenção | Multa]"
 - Dados do registro de origem (descrição, status, data, custo, veículo)
 - Callout informativo: "Para alterar, edite no módulo de origem"
@@ -279,29 +281,29 @@ Componente `LinkedExpenseDrawer` (`Sheet side="bottom"` no mobile):
 
 ### Grupo A — Ledger Unificado
 
-| ID | Título | Pts |
-|---|---|---|
-| US-FIN-A01 | Manutenção concluída gera despesa vinculada automaticamente | 8 |
-| US-FIN-A02 | Multa lançada aparece como despesa vinculada em /expenses | 8 |
-| US-FIN-A03 | Despesa vinculada é readonly em /expenses | 3 |
-| US-FIN-A04 | Drawer de navegação da despesa para o módulo de origem | 5 |
+| ID         | Título                                                      | Pts |
+| ---------- | ----------------------------------------------------------- | --- |
+| US-FIN-A01 | Manutenção concluída gera despesa vinculada automaticamente | 8   |
+| US-FIN-A02 | Multa lançada aparece como despesa vinculada em /expenses   | 8   |
+| US-FIN-A03 | Despesa vinculada é readonly em /expenses                   | 3   |
+| US-FIN-A04 | Drawer de navegação da despesa para o módulo de origem | 5   |
 
 ### Grupo B — Despesas Futuras
 
-| ID | Título | Pts |
-|---|---|---|
-| US-FIN-B01 | Calendário financeiro dos próximos 30/90 dias | 8 |
-| US-FIN-B02 | Alertas de vencimento IPVA / CRLV / Seguro | 3 |
-| US-FIN-B03 | Manutenção agendada com custo estimado visível em Próximas | 3 |
-| US-FIN-B04 | Multa com due_date próxima visível em Próximas | 3 |
+| ID         | Título                                                     | Pts |
+| ---------- | ---------------------------------------------------------- | --- |
+| US-FIN-B01 | Calendário financeiro dos próximos 30/90 dias              | 8   |
+| US-FIN-B02 | Alertas de vencimento IPVA / CRLV / Seguro                 | 3   |
+| US-FIN-B03 | Manutenção agendada com custo estimado visível em Próximas | 3   |
+| US-FIN-B04 | Multa com due_date próxima visível em Próximas             | 3   |
 
 ### Grupo C — Melhorias em /expenses
 
-| ID | Título | Pts |
-|---|---|---|
-| US-FIN-C01 | KPIs no topo do ledger | 5 |
-| US-FIN-C02 | Filtro por origem da despesa | 3 |
-| US-FIN-C03 | Exportação CSV consolidada de todas as origens | 3 |
+| ID         | Título                                         | Pts |
+| ---------- | ---------------------------------------------- | --- |
+| US-FIN-C01 | KPIs no topo do ledger                         | 5   |
+| US-FIN-C02 | Filtro por origem da despesa                   | 3   |
+| US-FIN-C03 | Exportação CSV consolidada de todas as origens | 3   |
 
 ---
 
@@ -309,27 +311,27 @@ Componente `LinkedExpenseDrawer` (`Sheet side="bottom"` no mobile):
 
 ### Urgência Alta — bloqueadores de implementação
 
-| Gap | Problema | Ação |
-|---|---|---|
-| **G-10** | `Maintenance.entity.ts` usa `'scheduled'` mas banco usa `'pending'` — discrepância de tipo ativa | Fix técnico imediato (não requer spec) |
-| **G-02** | Schema Zod de `expenses` não conhece `source_type`, `source_id`, `is_readonly` | Atualizar `@nave/validators` antes de qualquer código de feature |
-| **G-01** | `FinesModule` (controller/service/repository) não existe no NestJS | Spec nova obrigatória antes de US-FIN-A02 |
-| **G-05** | Sem regra definida para soft-delete de expense vinculada ao deletar manutenção individualmente | Registrar R-HUB-01 em `specs/RULES.md` |
-| **G-06** | Sem constraint de unicidade para `(source_id) WHERE source IS NOT NULL` — double-submit pode duplicar | Unique index + R-HUB-02 em `specs/RULES.md` |
+| Gap      | Problema                                                                                              | Ação                                                                  |
+| -------- | ----------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| **G-10** | `Maintenance.entity.ts` usa `'scheduled'` mas banco usa `'pending'` — discrepância de tipo ativa      | Fix técnico imediato (não requer spec)                                |
+| **G-02** | Schema Zod de `expenses` não conhece `source_type`, `source_id`, `is_readonly`                        | Atualizar `@navestory/validators` antes de qualquer código de feature |
+| **G-01** | `FinesModule` (controller/service/repository) não existe no NestJS                                    | Spec nova obrigatória antes de US-FIN-A02                             |
+| **G-05** | Sem regra definida para soft-delete de expense vinculada ao deletar manutenção individualmente        | Registrar R-HUB-01 em `specs/RULES.md`                                |
+| **G-06** | Sem constraint de unicidade para `(source_id) WHERE source IS NOT NULL` — double-submit pode duplicar | Unique index + R-HUB-02 em `specs/RULES.md`                           |
 
 ### Urgência Média — resolvidos antes do Sprint 3
 
-| Gap | Problema | Ação |
-|---|---|---|
-| **G-03** | Spec do contrato de `GET /expenses/upcoming` ausente | Nova spec `SPEC-YYYYMMDD-NNN` em `specs/expenses/` |
-| **G-04** | Spec do contrato de `GET /expenses/kpis` ausente | Nova spec `SPEC-YYYYMMDD-NNN` em `specs/expenses/` |
-| **G-07** | Tela `/fines` no frontend não existe (US-FIN-A04 navega para 404) | Spec de UI para módulo de multas |
-| **G-08** | Pagamento de IPVA/CRLV/Seguro: módulo próprio ou manual em /expenses? | **Decisão de produto pendente** (ver Seção 9) |
+| Gap      | Problema                                                               | Ação                                               |
+| -------- | ---------------------------------------------------------------------- | -------------------------------------------------- |
+| **G-03** | Spec do contrato de `GET /expenses/upcoming` ausente                   | Nova spec `SPEC-YYYYMMDD-NNN` em `specs/expenses/` |
+| **G-04** | Spec do contrato de `GET /expenses/kpis` ausente                       | Nova spec `SPEC-YYYYMMDD-NNN` em `specs/expenses/` |
+| **G-07** | Tela `/fines` no frontend não existe (US-FIN-A04 navega para 404) | Spec de UI para módulo de multas                   |
+| **G-08** | Pagamento de IPVA/CRLV/Seguro: módulo próprio ou manual em /expenses?  | **Decisão de produto pendente** (ver Seção 9)      |
 
 ### Urgência Baixa — backlog
 
-| Gap | Problema |
-|---|---|
+| Gap      | Problema                                                                                                 |
+| -------- | -------------------------------------------------------------------------------------------------------- |
 | **G-09** | Canal de notificação para alertas de IPVA/CRLV/Seguro não definido (email? in-app badge? nenhum no MVP?) |
 
 ---
@@ -339,7 +341,7 @@ Componente `LinkedExpenseDrawer` (`Sheet side="bottom"` no mobile):
 ```
 Sprint 0 — Gaps bloqueadores (pré-requisito de tudo)
   [ ] G-10: corrigir status 'scheduled' → 'pending' em Maintenance.entity.ts
-  [ ] G-02: atualizar @nave/validators — source_type, source_id, is_readonly em ExpenseRow
+  [ ] G-02: atualizar @navestory/validators — source_type, source_id, is_readonly em ExpenseRow
   [ ] G-05 + G-06: registrar R-HUB-01 e R-HUB-02 em specs/RULES.md
   [ ] G-01: criar spec do FinesModule (controller + service + repository)
   [ ] Migration 20260608000000_unified_ledger.sql (campos em expenses + vehicle_recurring_costs)
@@ -396,13 +398,13 @@ Para gestores que não abrem o app diariamente, os alertas de IPVA/CRLV/Seguro p
 
 ## 10. Arquivos de Referência
 
-| Arquivo | Relevância |
-|---|---|
-| `apps/api/src/modules/expenses/expenses.service.ts` | Adicionar `createFromSource()`, `softDeleteBySource()`, guard de `is_readonly` |
-| `apps/api/src/modules/maintenance/maintenance.service.ts` | Chamar `createFromSource` na transição `→ completed` |
-| `apps/web/app/(dashboard)/expenses/page.tsx` | Reestruturar tabs, KPIs, filtro de origem |
-| `apps/web/components/expenses/expense-row-actions.tsx` | Adicionar `LinkedExpenseDrawer`, lock visual, touch targets |
-| `apps/web/components/expenses/expense-filters.tsx` | Adicionar filtro `source` (origem) |
-| `packages/validators/src/expenses.schema.ts` | Adicionar `source_type`, `source_id`, `is_readonly` ao schema Zod |
-| `specs/RULES.md` | Registrar R-LED-01 a R-LED-05, R-HUB-01, R-HUB-02, R-REC-01, R-REC-02 |
-| `docs/architecture/decisions/ADR-006-unified-financial-ledger.md` | Criar ADR formal (recomendado) |
+| Arquivo                                                           | Relevância                                                                     |
+| ----------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| `apps/api/src/modules/expenses/expenses.service.ts`               | Adicionar `createFromSource()`, `softDeleteBySource()`, guard de `is_readonly` |
+| `apps/api/src/modules/maintenance/maintenance.service.ts`         | Chamar `createFromSource` na transição `→ completed`                           |
+| `apps/web/app/(dashboard)/expenses/page.tsx`                      | Reestruturar tabs, KPIs, filtro de origem                                      |
+| `apps/web/components/expenses/expense-row-actions.tsx`            | Adicionar `LinkedExpenseDrawer`, lock visual, touch targets                    |
+| `apps/web/components/expenses/expense-filters.tsx`                | Adicionar filtro `source` (origem)                                             |
+| `packages/validators/src/expenses.schema.ts`                      | Adicionar `source_type`, `source_id`, `is_readonly` ao schema Zod              |
+| `specs/RULES.md`                                                  | Registrar R-LED-01 a R-LED-05, R-HUB-01, R-HUB-02, R-REC-01, R-REC-02          |
+| `docs/architecture/decisions/ADR-006-unified-financial-ledger.md` | Criar ADR formal (recomendado)                                                 |

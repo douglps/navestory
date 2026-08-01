@@ -6,7 +6,7 @@ Accepted
 
 ## Contexto
 
-O módulo `expenses` é o núcleo operacional do Nave SaaS: registra cada abastecimento, manutenção avulsa e despesa de frota por veículo e usuário. Com o crescimento do volume de lançamentos — especialmente via importação em lote ou uso offline com sincronização posterior — dois problemas de qualidade de dados emergiram:
+O módulo `expenses` é o núcleo operacional do navestory SaaS: registra cada abastecimento, manutenção avulsa e despesa de frota por veículo e usuário. Com o crescimento do volume de lançamentos — especialmente via importação em lote ou uso offline com sincronização posterior — dois problemas de qualidade de dados emergiram:
 
 **1. Duplicatas acidentais**
 Lançamentos idênticos (mesmo `vehicle_id`, `category`, `amount` e `date`) podem ser inseridos mais de uma vez por clique duplo, retry de rede ou importação CSV com sobreposição de período. Atualmente não há nenhuma salvaguarda no Service ou no banco.
@@ -34,6 +34,7 @@ O padrão **Repository Port & Adapter** já está em uso: `ExpenseRepositoryPort
 **Decisão:** ao criar uma despesa, o Service verifica se já existe um registro ativo (`deleted_at IS NULL`) com os mesmos `vehicle_id`, `category`, `amount` e `date` para o mesmo `user_id`. Se existir, a despesa é **criada normalmente**, mas a resposta inclui a flag `duplicate_warning: true` e o `id` do possível duplicado.
 
 **Justificativa:**
+
 - Preserva lançamentos legítimos com valores iguais em dias iguais (ex: dois abastecimentos no mesmo dia com mesmo valor).
 - Não bloqueia importações em lote em andamento.
 - Devolve informação acionável ao frontend sem gerar erros HTTP que quebrem fluxos automatizados.
@@ -41,10 +42,10 @@ O padrão **Repository Port & Adapter** já está em uso: `ExpenseRepositoryPort
 
 **Estratégias descartadas:**
 
-| Estratégia | Descrição | Por que descartada |
-|---|---|---|
+| Estratégia | Descrição                   | Por que descartada                                                             |
+| ---------- | --------------------------- | ------------------------------------------------------------------------------ |
 | A — Rígida | Rejeitar com `409 Conflict` | Falsos positivos em lançamentos legítimos idênticos; quebra importação em lote |
-| C — Livre | Não implementar | Acumula silenciosamente dados duplicados, distorce relatórios e KPIs |
+| C — Livre  | Não implementar             | Acumula silenciosamente dados duplicados, distorce relatórios e KPIs           |
 
 **Implementação esperada:**
 
@@ -75,6 +76,7 @@ O campo `duplicate_warning` **não é persistido no banco** — é calculado em 
 **Decisão:** quando `odometer_km` for informado, o Service busca o maior valor de `odometer_km` registrado para aquele `vehicle_id` até a `date` informada. Se o novo valor for menor que o máximo histórico, a despesa é **criada normalmente**, mas a resposta inclui `odometer_warning: true` e `last_odometer_km` para referência.
 
 **Justificativa:**
+
 - Lançamentos retroativos são casos de uso reais e legítimos (ex: usuario que lança despesas semanalmente com datas retroativas).
 - Troca de veículo, reset de hodômetro ou erro de digitação são cenários que uma regra rígida não consegue distinguir automaticamente.
 - Soft warning permite que o frontend exiba um alerta visual sem bloquear o fluxo de entrada.
@@ -82,10 +84,10 @@ O campo `duplicate_warning` **não é persistido no banco** — é calculado em 
 
 **Estratégias descartadas:**
 
-| Estratégia | Descrição | Por que descartada |
-|---|---|---|
-| A — Rígida | Rejeitar com `422 Unprocessable Entity` | Bloqueia lançamentos retroativos legítimos; aumenta fricção sem benefício claro |
-| C — Livre | Não validar | Dados de odômetro incoerentes distorcem cálculos de km/L, custo/km e previsões de manutenção |
+| Estratégia | Descrição                               | Por que descartada                                                                           |
+| ---------- | --------------------------------------- | -------------------------------------------------------------------------------------------- |
+| A — Rígida | Rejeitar com `422 Unprocessable Entity` | Bloqueia lançamentos retroativos legítimos; aumenta fricção sem benefício claro              |
+| C — Livre  | Não validar                             | Dados de odômetro incoerentes distorcem cálculos de km/L, custo/km e previsões de manutenção |
 
 **Implementação esperada:**
 

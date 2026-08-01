@@ -1,5 +1,5 @@
 {
-  "name": "@nave/web",
+  "name": "@navestory/web",
   "private": true,
   "version": "0.0.0",
   "scripts": {
@@ -14,8 +14,8 @@
     "e2e:ui": "playwright test --ui"
   },
   "dependencies": {
-    "@nave/ui": "workspace:*",
-    "@nave/validators": "workspace:*",
+    "@navestory/ui": "workspace:*",
+    "@navestory/validators": "workspace:*",
     "@radix-ui/react-dialog": "^1.1.19",
     "@sentry/nextjs": "^10.65.0",
     "@tanstack/react-query": "^5.62.0",

@@ -1,4 +1,4 @@
-import { fuelTrendQuerySchema } from "@nave/validators";
+import { fuelTrendQuerySchema } from "@navestory/validators";
 import type { z } from "zod";
 
 export const fuelTrendDtoSchema = fuelTrendQuerySchema;

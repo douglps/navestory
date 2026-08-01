@@ -4,17 +4,29 @@ title: "Melhorias de UX do Shell — Hold-to-Confirm Logout, Avatar Dropdown, Si
 status: approved
 date: 2026-07-30
 author: Douglas Lopes (lps.doug@protonmail.com)
-rules: [R-NAV-01, R-NAV-02, R-NAV-04, R-NAV-05, R-NAV-06, R-NAV-07, R-NAV-08, R-NAV-09, R-NAV-10, R-NAV-11]
+rules:
+  [
+    R-NAV-01,
+    R-NAV-02,
+    R-NAV-04,
+    R-NAV-05,
+    R-NAV-06,
+    R-NAV-07,
+    R-NAV-08,
+    R-NAV-09,
+    R-NAV-10,
+    R-NAV-11,
+  ]
 security: [S1]
 camadas: [frontend]
 ---
 
 ## Contexto
 
-O shell de navegação do Nave (sidebar, header e layout raiz) passou pela migração mobile-first em SPEC-20260722-003 e está funcional. Porém, três lacunas de UX permanecem:
+O shell de navegação do navestory (sidebar, header e layout raiz) passou pela migração mobile-first em SPEC-20260722-003 e está funcional. Porém, três lacunas de UX permanecem:
 
 **1. Logout sem proteção contra clique acidental**
-O botão "Sair" na sidebar executa `logout()` imediatamente num clique simples (`onClick={() => void logout()}`). Em fluxos mobile — onde o botão ocupa `min-h-[44px]` e é fácil de atingir inadvertidamente — isso representa risco de interrupção da sessão sem intenção. A função `logout()` em `apps/web/src/lib/auth/logout.ts` já é robusta (limpa `useDashboardStore`, remove `"nave-dashboard-context"` do `sessionStorage`, chama `clearApiCache()` e redireciona para `/login`); o problema é a ausência de confirmação antes de disparar essa sequência.
+O botão "Sair" na sidebar executa `logout()` imediatamente num clique simples (`onClick={() => void logout()}`). Em fluxos mobile — onde o botão ocupa `min-h-[44px]` e é fácil de atingir inadvertidamente — isso representa risco de interrupção da sessão sem intenção. A função `logout()` em `apps/web/src/lib/auth/logout.ts` já é robusta (limpa `useDashboardStore`, remove `"navestory-dashboard-context"` do `sessionStorage`, chama `clearApiCache()` e redireciona para `/login`); o problema é a ausência de confirmação antes de disparar essa sequência.
 
 Adicionalmente, o header não oferece nenhum ponto de acesso à identidade do usuário nem ao logout — o único ponto é a sidebar, que em mobile fica oculta atrás do drawer.
 
@@ -35,21 +47,22 @@ flex min-h-screen
 
 O `Header` fica dentro da coluna de conteúdo. Em desktop, ele começa na borda direita da sidebar (com `pl-16`/`pl-64`), não na borda esquerda da viewport. Isso produz um header visualmente "partido" quando estado colapsado muda, e impede elementos de largura total (barra de busca global, breadcrumb, etc.) de aproveitarem 100% da tela.
 
-O projeto de referência (`C:\Dev\Antigravity\Nave-SaaS-main`) resolve os três pontos: hold-to-confirm no logout da sidebar, dropdown de avatar no header e shell com `flex-col` + sidebar in-flow em desktop.
+O projeto de referência (`C:\Dev\Antigravity\navestory-SaaS-main`) resolve os três pontos: hold-to-confirm no logout da sidebar, dropdown de avatar no header e shell com `flex-col` + sidebar in-flow em desktop.
 
 **4. Sidebar expandida sem ícone, sem destaque de rota ativa, com marca duplicada e largura arbitrária**
-Após a correção de consistência de iconografia (glifos Unicode → Lucide, ver changelog desta spec), a sidebar só exibe o ícone Lucide quando **colapsada**; no estado expandido volta a mostrar apenas o label em texto, perdendo o reforço visual do ícone. Além disso, nenhum item de navegação indica visualmente qual rota está ativa — `NAV_ITEMS` não compara `item.href` com `pathname`. O cabeçalho da sidebar ainda exibe o texto "Nave" (`<span>Nave</span>`), duplicando a identidade de marca que já está disponível no header via `AvatarDropdown`/logo. Por fim, a largura expandida é um valor Tailwind fixo (`md:w-64` = 256px) escolhido arbitrariamente, sem relação com a largura real necessária para caber o conteúdo (ícone + label mais largo).
+Após a correção de consistência de iconografia (glifos Unicode → Lucide, ver changelog desta spec), a sidebar só exibe o ícone Lucide quando **colapsada**; no estado expandido volta a mostrar apenas o label em texto, perdendo o reforço visual do ícone. Além disso, nenhum item de navegação indica visualmente qual rota está ativa — `NAV_ITEMS` não compara `item.href` com `pathname`. O cabeçalho da sidebar ainda exibe o texto "navestory" (`<span>navestory</span>`), duplicando a identidade de marca que já está disponível no header via `AvatarDropdown`/logo. Por fim, a largura expandida é um valor Tailwind fixo (`md:w-64` = 256px) escolhido arbitrariamente, sem relação com a largura real necessária para caber o conteúdo (ícone + label mais largo).
 
 ---
 
 ## Objetivo
 
 Ao final da implementação:
+
 1. O botão de logout na sidebar exige que o usuário mantenha pressionado por 1.000 ms, com barra de progresso visual, antes de chamar `logout()`.
 2. O header exibe um dropdown de avatar com nome/email do usuário, link para configurações e logout por clique simples.
 3. O colapso da sidebar sobrevive a reload e nova aba (persistência em `sessionStorage`).
 4. O `Header` ocupa 100% da largura da viewport em desktop, independente do estado colapsado/expandido da sidebar.
-5. A sidebar expandida exibe ícone Lucide junto ao label de cada item de navegação (não apenas o label), destaca visualmente a rota atualmente ativa, deixa de exibir o texto de marca "Nave" e tem sua largura calculada em runtime como a largura intrínseca do conteúdo + 20% (não mais um valor Tailwind fixo arbitrário).
+5. A sidebar expandida exibe ícone Lucide junto ao label de cada item de navegação (não apenas o label), destaca visualmente a rota atualmente ativa, deixa de exibir o texto de marca "navestory" e tem sua largura calculada em runtime como a largura intrínseca do conteúdo + 20% (não mais um valor Tailwind fixo arbitrário).
 
 ---
 
@@ -96,41 +109,41 @@ Ao final da implementação:
 - **Dado que** a sidebar está expandida (desktop, não colapsada), **quando** vejo a lista de navegação, **então** cada item exibe o ícone Lucide (24px, stroke 1.75) ao lado do label — não apenas o label como hoje.
 - **Dado que** estou na rota `/vehicles`, **quando** vejo o item "Veículos" na sidebar, **então** ele recebe destaque visual distinto dos demais itens (cor/peso de fonte/plano de fundo) e `aria-current="page"`.
 - **Dado que** estou em uma sub-rota de um item de navegação (ex: `/settings/account/security` quando o item é `/settings/account`), **quando** vejo a sidebar, **então** o item pai correspondente ainda é destacado como ativo (comparação por prefixo, não só igualdade exata).
-- **Dado que** vejo o topo da sidebar, **quando** ela está expandida ou colapsada, **então** o texto "Nave" não é mais exibido ali (a marca já está representada no header).
+- **Dado que** vejo o topo da sidebar, **quando** ela está expandida ou colapsada, **então** o texto "navestory" não é mais exibido ali (a marca já está representada no header).
 - **Dado que** a sidebar está expandida, **quando** meço sua largura, **então** ela corresponde à largura intrínseca do conteúdo de navegação (ícone + label mais largo, considerando padding interno) acrescida de 20% — não um valor fixo arbitrário independente do conteúdo real.
 
 ---
 
 ## Requisitos Funcionais
 
-| ID | Requisito | Prioridade | História |
-|----|-----------|------------|---------|
-| RF-01 | Substituir o `onClick` simples do botão "Sair" na sidebar por hold-to-confirm de 1.000 ms (R-NAV-05) | Alta | US-01 |
-| RF-02 | Exibir barra de progresso visual que avança linearmente durante o hold (animação CSS ou via estado React); a barra volta ao zero se o pressionamento for cancelado antes de completar | Alta | US-01 |
-| RF-03 | Implementar via eventos `onMouseDown`/`onTouchStart` (início do hold) e `onMouseUp`/`onMouseLeave`/`onTouchEnd`/`onTouchCancel` (cancelamento); o `logout()` é invocado no callback interno de "timer concluído", não nesses eventos | Alta | US-01 |
-| RF-04 | Criar componente `AvatarDropdown` no header com: avatar (iniciais do nome como fallback), nome completo, email (somente leitura), link para `/settings/account`, botão "Sair" com clique simples chamando `logout()` (R-NAV-08) | Alta | US-02 |
-| RF-05 | Os dados de nome/email do usuário logado no `AvatarDropdown` devem ser obtidos via store ou context já disponível no frontend (sem chamada de API exclusiva para esse componente) | Média | US-02 |
-| RF-06 | Adicionar `persist` do Zustand ao `useUIStore` com `storage: createJSONStorage(() => sessionStorage)`, `name: "nave-ui-state"`, e `partialize` serializando somente `isSidebarCollapsed` (excluindo `isMobileNavOpen` e `toasts`) (R-NAV-06) | Alta | US-03 |
-| RF-07 | A função `logout()` em `apps/web/src/lib/auth/logout.ts` deve remover a chave `"nave-ui-state"` do `sessionStorage` junto com `"nave-dashboard-context"` | Alta | US-03 |
-| RF-08 | Reestruturar `apps/web/src/app/(app)/layout.tsx` para wrapper `flex-col`: `Header` como irmão de uma row `flex` contendo sidebar e conteúdo (R-NAV-07); eliminar `md:pl-16`/`md:pl-64` da coluna de conteúdo | Alta | US-04 |
-| RF-09 | Na reestruturação do layout, a sidebar no desktop (≥ md) deixa de ser `fixed inset-y-0 left-0` e passa a ser in-flow (`md:static md:translate-x-0`); em mobile mantém `fixed inset-y-0 left-0` para o comportamento de drawer (R-NAV-01 preservada) | Alta | US-04 |
-| RF-10 | O `FinancialSubheader` não exige ajuste de largura/posicionamento — continua dentro do `flex-1` de conteúdo após a reestruturação | Baixa | US-04 |
-| RF-11 | Cada `NavItem` passa a renderizar seu ícone Lucide (já mapeado por item na correção de iconografia) simultaneamente ao label sempre que a sidebar não está colapsada (`!effectiveCollapsed`); no estado colapsado o comportamento atual (só ícone) é preservado (R-NAV-09) | Alta | US-05 |
-| RF-12 | O componente compara `pathname` (via `usePathname()`, já importado) com `item.href` de cada `NavItem`: rota ativa quando `pathname === item.href` ou `pathname.startsWith(item.href + "/")`; o item ativo recebe classe de destaque (cor de texto/plano de fundo distintos do hover) e `aria-current="page"` (R-NAV-09) | Alta | US-05 |
-| RF-13 | Remover o `<span>Nave</span>` e a estrutura `flex items-center justify-between` que o continha no topo da `<nav>`; o botão de colapsar/expandir permanece, agora sozinho nesse cabeçalho (R-NAV-11) | Média | US-05 |
-| RF-14 | A largura da sidebar expandida (`md:w-64` fixo hoje) é substituída por um valor calculado em runtime: medir a largura intrínseca (`scrollWidth`) do conteúdo de navegação via `ref` + `ResizeObserver`, multiplicar por 1.2, e aplicar como `style={{ width }}` inline sobre a `<nav>` quando não colapsada; usar `md:w-64` apenas como valor de fallback antes da primeira medição (evita layout de largura 0) (R-NAV-10) | Alta | US-05 |
+| ID    | Requisito                                                                                                                                                                                                                                                                                                                                                                                                                       | Prioridade | História |
+| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | -------- |
+| RF-01 | Substituir o `onClick` simples do botão "Sair" na sidebar por hold-to-confirm de 1.000 ms (R-NAV-05)                                                                                                                                                                                                                                                                                                                            | Alta       | US-01    |
+| RF-02 | Exibir barra de progresso visual que avança linearmente durante o hold (animação CSS ou via estado React); a barra volta ao zero se o pressionamento for cancelado antes de completar                                                                                                                                                                                                                                           | Alta       | US-01    |
+| RF-03 | Implementar via eventos `onMouseDown`/`onTouchStart` (início do hold) e `onMouseUp`/`onMouseLeave`/`onTouchEnd`/`onTouchCancel` (cancelamento); o `logout()` é invocado no callback interno de "timer concluído", não nesses eventos                                                                                                                                                                                            | Alta       | US-01    |
+| RF-04 | Criar componente `AvatarDropdown` no header com: avatar (iniciais do nome como fallback), nome completo, email (somente leitura), link para `/settings/account`, botão "Sair" com clique simples chamando `logout()` (R-NAV-08)                                                                                                                                                                                                 | Alta       | US-02    |
+| RF-05 | Os dados de nome/email do usuário logado no `AvatarDropdown` devem ser obtidos via store ou context já disponível no frontend (sem chamada de API exclusiva para esse componente)                                                                                                                                                                                                                                               | Média      | US-02    |
+| RF-06 | Adicionar `persist` do Zustand ao `useUIStore` com `storage: createJSONStorage(() => sessionStorage)`, `name: "navestory-ui-state"`, e `partialize` serializando somente `isSidebarCollapsed` (excluindo `isMobileNavOpen` e `toasts`) (R-NAV-06)                                                                                                                                                                               | Alta       | US-03    |
+| RF-07 | A função `logout()` em `apps/web/src/lib/auth/logout.ts` deve remover a chave `"navestory-ui-state"` do `sessionStorage` junto com `"navestory-dashboard-context"`                                                                                                                                                                                                                                                              | Alta       | US-03    |
+| RF-08 | Reestruturar `apps/web/src/app/(app)/layout.tsx` para wrapper `flex-col`: `Header` como irmão de uma row `flex` contendo sidebar e conteúdo (R-NAV-07); eliminar `md:pl-16`/`md:pl-64` da coluna de conteúdo                                                                                                                                                                                                                    | Alta       | US-04    |
+| RF-09 | Na reestruturação do layout, a sidebar no desktop (≥ md) deixa de ser `fixed inset-y-0 left-0` e passa a ser in-flow (`md:static md:translate-x-0`); em mobile mantém `fixed inset-y-0 left-0` para o comportamento de drawer (R-NAV-01 preservada)                                                                                                                                                                             | Alta       | US-04    |
+| RF-10 | O `FinancialSubheader` não exige ajuste de largura/posicionamento — continua dentro do `flex-1` de conteúdo após a reestruturação                                                                                                                                                                                                                                                                                               | Baixa      | US-04    |
+| RF-11 | Cada `NavItem` passa a renderizar seu ícone Lucide (já mapeado por item na correção de iconografia) simultaneamente ao label sempre que a sidebar não está colapsada (`!effectiveCollapsed`); no estado colapsado o comportamento atual (só ícone) é preservado (R-NAV-09)                                                                                                                                                      | Alta       | US-05    |
+| RF-12 | O componente compara `pathname` (via `usePathname()`, já importado) com `item.href` de cada `NavItem`: rota ativa quando `pathname === item.href` ou `pathname.startsWith(item.href + "/")`; o item ativo recebe classe de destaque (cor de texto/plano de fundo distintos do hover) e `aria-current="page"` (R-NAV-09)                                                                                                         | Alta       | US-05    |
+| RF-13 | Remover o `<span>navestory</span>` e a estrutura `flex items-center justify-between` que o continha no topo da `<nav>`; o botão de colapsar/expandir permanece, agora sozinho nesse cabeçalho (R-NAV-11)                                                                                                                                                                                                                        | Média      | US-05    |
+| RF-14 | A largura da sidebar expandida (`md:w-64` fixo hoje) é substituída por um valor calculado em runtime: medir a largura intrínseca (`scrollWidth`) do conteúdo de navegação via `ref` + `ResizeObserver`, multiplicar por 1.2, e aplicar como `style={{ width }}` inline sobre a `<nav>` quando não colapsada; usar `md:w-64` apenas como valor de fallback antes da primeira medição (evita layout de largura 0) (R-NAV-10) | Alta       | US-05    |
 
 ---
 
 ## Requisitos Não-Funcionais
 
-| ID | Requisito | Métrica de Aceite |
-|----|-----------|-----------------|
-| RNF-01 | A reestruturação do layout (RF-08/RF-09) não causa regressão visual em desktop — sidebar, header e conteúdo mantêm dimensões e posições corretas | Validação manual nos breakpoints md (768 px), lg (1024 px), xl (1280 px); sem reflow ao colapsar/expandir |
-| RNF-02 | O comportamento de drawer mobile (R-NAV-01, R-NAV-02, R-NAV-04) é completamente preservado | Sidebar continua como `fixed inset-y-0 left-0` em mobile; hamburger abre/fecha; Esc fecha; R-NAV-04 aplicada |
-| RNF-03 | O hold-to-confirm é acessível: `aria-label` descreve o comportamento ("Segure para sair"); `aria-busy` ou `aria-valuenow` comunicam o progresso em leitores de tela | Validação manual com VoiceOver/NVDA |
-| RNF-04 | O `AvatarDropdown` fecha ao pressionar `Esc` e ao clicar fora (padrão do componente de dropdown/popover usado) | Teste manual; coberto pelo primitivo `@radix-ui/react-popover` ou `DropdownMenu` |
-| RNF-05 | A persistência do `isSidebarCollapsed` não impacta a inicialização (SSR/hydration): `useUIStore` deve tratar `skipHydration: true` ou usar `onRehydrateStorage` para evitar hydration mismatch | Build sem erro de hydration; sem flash de layout |
+| ID     | Requisito                                                                                                                                                                                      | Métrica de Aceite                                                                                            |
+| ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| RNF-01 | A reestruturação do layout (RF-08/RF-09) não causa regressão visual em desktop — sidebar, header e conteúdo mantêm dimensões e posições corretas                                               | Validação manual nos breakpoints md (768 px), lg (1024 px), xl (1280 px); sem reflow ao colapsar/expandir    |
+| RNF-02 | O comportamento de drawer mobile (R-NAV-01, R-NAV-02, R-NAV-04) é completamente preservado                                                                                                     | Sidebar continua como `fixed inset-y-0 left-0` em mobile; hamburger abre/fecha; Esc fecha; R-NAV-04 aplicada |
+| RNF-03 | O hold-to-confirm é acessível: `aria-label` descreve o comportamento ("Segure para sair"); `aria-busy` ou `aria-valuenow` comunicam o progresso em leitores de tela                            | Validação manual com VoiceOver/NVDA                                                                          |
+| RNF-04 | O `AvatarDropdown` fecha ao pressionar `Esc` e ao clicar fora (padrão do componente de dropdown/popover usado)                                                                                 | Teste manual; coberto pelo primitivo `@radix-ui/react-popover` ou `DropdownMenu`                             |
+| RNF-05 | A persistência do `isSidebarCollapsed` não impacta a inicialização (SSR/hydration): `useUIStore` deve tratar `skipHydration: true` ou usar `onRehydrateStorage` para evitar hydration mismatch | Build sem erro de hydration; sem flash de layout                                                             |
 
 ---
 
@@ -143,18 +156,18 @@ Ao final da implementação:
 - Não inclui: persistência do estado da sidebar em `localStorage` (mantido em `sessionStorage` conforme convenção do projeto; tradeoff documentado em Notas Técnicas).
 - Não inclui: hold-to-confirm no logout do avatar dropdown do header (confirmação simples é suficiente para esse ponto de acesso mais explícito).
 - Não inclui: recálculo de largura em resposta a mudança de zoom/font-size do usuário além do que o `ResizeObserver` já cobre nativamente.
-- Não inclui: layout de marca alternativo no topo da sidebar (ex: logo/ícone no lugar do texto "Nave") — o requisito é apenas remover o texto, não substituí-lo por outro elemento de marca.
+- Não inclui: layout de marca alternativo no topo da sidebar (ex: logo/ícone no lugar do texto "navestory") — o requisito é apenas remover o texto, não substituí-lo por outro elemento de marca.
 
 ---
 
 ## Dependências
 
-| Tipo | Referência | Descrição |
-|------|-----------|-----------|
-| Spec | SPEC-20260722-003 | Define R-NAV-01..R-NAV-04 e a estrutura de drawer mobile que deve ser preservada |
-| Spec | SPEC-20260603-001 RF-17 | `logout()` já remove contexto de `sessionStorage`; esta spec estende com a remoção de `"nave-ui-state"` |
-| Biblioteca | `zustand/middleware` (`persist`, `createJSONStorage`) | Já usado em `use-dashboard-store.ts`; não adiciona dependência nova |
-| Componente | `@radix-ui/react-dropdown-menu` ou `@radix-ui/react-popover` | Para o `AvatarDropdown`; verificar se já transitivo em `packages/ui` antes de instalar |
+| Tipo       | Referência                                                   | Descrição                                                                                                    |
+| ---------- | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------ |
+| Spec       | SPEC-20260722-003                                            | Define R-NAV-01..R-NAV-04 e a estrutura de drawer mobile que deve ser preservada                             |
+| Spec       | SPEC-20260603-001 RF-17                                      | `logout()` já remove contexto de `sessionStorage`; esta spec estende com a remoção de `"navestory-ui-state"` |
+| Biblioteca | `zustand/middleware` (`persist`, `createJSONStorage`)        | Já usado em `use-dashboard-store.ts`; não adiciona dependência nova                                          |
+| Componente | `@radix-ui/react-dropdown-menu` ou `@radix-ui/react-popover` | Para o `AvatarDropdown`; verificar se já transitivo em `packages/ui` antes de instalar                       |
 
 ---
 
@@ -162,13 +175,13 @@ Ao final da implementação:
 
 ### Hold-to-Confirm
 
-O padrão de referência em `Nave-SaaS-main/apps/web/components/layout/sidebar.tsx` (linhas ~669–760) usa `useRef<NodeJS.Timeout>` para o timer e `useState` para o progresso (`0..100`). A animação da barra pode ser `transition-[width] duration-[1000ms] linear` em um `<div>` interno. O timer deve ser limpo em cleanup do `useEffect` para evitar chamada de `logout()` após desmonte do componente.
+O padrão de referência em `navestory-SaaS-main/apps/web/components/layout/sidebar.tsx` (linhas ~669–760) usa `useRef<NodeJS.Timeout>` para o timer e `useState` para o progresso (`0..100`). A animação da barra pode ser `transition-[width] duration-[1000ms] linear` em um `<div>` interno. O timer deve ser limpo em cleanup do `useEffect` para evitar chamada de `logout()` após desmonte do componente.
 
 A lógica de limpeza existente em `logout()` (`clearAllSelection()`, remoção do sessionStorage, `clearApiCache()`, redirect) deve ser mantida integralmente — é mais completa que o equivalente na referência.
 
 ### Persistência via sessionStorage vs localStorage
 
-`sessionStorage` isola o estado por aba (uma aba colapsada não afeta outra). `localStorage` compartilharia a preferência entre abas e sobreviveria ao fechamento do browser — semanticamente mais adequado para uma preferência de layout visual. Esta spec usa `sessionStorage` para seguir a convenção já estabelecida em `use-dashboard-store.ts` (`"nave-dashboard-context"`) e simplificar a limpeza no logout (uma única estratégia de storage). Se o produto decidir migrar para `localStorage` no futuro, a mudança é de uma linha (`sessionStorage` → `localStorage` no `createJSONStorage`).
+`sessionStorage` isola o estado por aba (uma aba colapsada não afeta outra). `localStorage` compartilharia a preferência entre abas e sobreviveria ao fechamento do browser — semanticamente mais adequado para uma preferência de layout visual. Esta spec usa `sessionStorage` para seguir a convenção já estabelecida em `use-dashboard-store.ts` (`"navestory-dashboard-context"`) e simplificar a limpeza no logout (uma única estratégia de storage). Se o produto decidir migrar para `localStorage` no futuro, a mudança é de uma linha (`sessionStorage` → `localStorage` no `createJSONStorage`).
 
 ### Reestruturação do Layout (RF-08/RF-09)
 
@@ -176,9 +189,9 @@ Estrutura alvo de `layout.tsx`:
 
 ```tsx
 <div className="flex min-h-screen flex-col">
-  <Header />                        {/* full-width, sticky top-0 */}
+  <Header /> {/* full-width, sticky top-0 */}
   <div className="flex flex-1">
-    <Sidebar />                     {/* md:static; mobile: fixed drawer via R-NAV-01 */}
+    <Sidebar /> {/* md:static; mobile: fixed drawer via R-NAV-01 */}
     <div className="flex-1 overflow-y-auto">
       <FinancialSubheader />
       {children}
@@ -218,6 +231,6 @@ O `scrollWidth` é medido sobre um elemento cujos itens **não** são forçados 
 
 ## Changelog (pós-aprovação)
 
-| Data | O que mudou | Por quê |
-|------|-------------|---------|
-| 2026-07-31 | Adicionada US-05 (RF-11..RF-14, R-NAV-09/10/11): ícone sempre visível na sidebar expandida, destaque de rota ativa, remoção do texto "Nave" e largura calculada em runtime (fit-content + 20%). Status alterado para `approved`. | Pedido direto de Douglas após revisão da iconografia da sidebar (correção prévia trocou glifos Unicode por Lucide, mas só no estado colapsado) — extensão da mesma spec de UX do shell por ser o mesmo componente/feature, ainda em `draft` no momento do pedido. |
+| Data       | O que mudou                                                                                                                                                                                                                           | Por quê                                                                                                                                                                                                                                                           |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-07-31 | Adicionada US-05 (RF-11..RF-14, R-NAV-09/10/11): ícone sempre visível na sidebar expandida, destaque de rota ativa, remoção do texto "navestory" e largura calculada em runtime (fit-content + 20%). Status alterado para `approved`. | Pedido direto de Douglas após revisão da iconografia da sidebar (correção prévia trocou glifos Unicode por Lucide, mas só no estado colapsado) — extensão da mesma spec de UX do shell por ser o mesmo componente/feature, ainda em `draft` no momento do pedido. |

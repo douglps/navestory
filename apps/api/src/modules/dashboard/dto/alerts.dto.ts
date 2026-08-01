@@ -1,4 +1,4 @@
-import { alertsQuerySchema } from "@nave/validators";
+import { alertsQuerySchema } from "@navestory/validators";
 import type { z } from "zod";
 
 export const alertsDtoSchema = alertsQuerySchema;

@@ -1,4 +1,4 @@
-# Prompts por Versão — Símbolo Nave
+# Prompts por Versão — Símbolo navestory
 
 **Propósito:** prompts separados, um por entregável, para gerar referência visual (Figma Make,
 Midjourney, ferramenta de geração vetorial ou briefing para ilustrador) de cada versão listada no
@@ -66,7 +66,7 @@ NÃO incluir: anéis, texturas, gradientes, sombras, contorno/stroke separado do
 ## 4. Wordmark Isolado
 
 ```
-Uma wordmark tipográfica minimalista: a palavra "nave" (todas as letras minúsculas, sem inicial maiúscula), em uma fonte sans-serif geométrica humanista de peso semi-bold (equivalente a Inter SemiBold 600) — moderna, legível, com leve condensação horizontal (letras ligeiramente mais próximas que o padrão).
+Uma wordmark tipográfica minimalista: a palavra "navestory" (todas as letras minúsculas, sem inicial maiúscula), em uma fonte sans-serif geométrica humanista de peso semi-bold (equivalente a Inter SemiBold 600) — moderna, legível, com leve condensação horizontal (letras ligeiramente mais próximas que o padrão).
 
 Cor: branco puro ou off-white sobre fundo escuro grafite (#13131A); OU, em versão alternativa, azul-índigo profundo (#3B30AF) sobre fundo branco/claro.
 
@@ -80,7 +80,7 @@ NÃO usar fonte serifada, script ou decorativa. NÃO capitalizar nenhuma letra.
 ## 5. Combination Mark (símbolo + wordmark) — versão dark
 
 ```
-Um logotipo combinado (combination mark) para um SaaS de gestão de frota de veículos: à esquerda, um símbolo geométrico — estrela de quatro pontas com anéis orbitais finos ao redor, em gradiente ouro (#B89A2A a #7B6420), com leve efeito de chanfro metálico; à direita, a palavra "nave" em minúsculas, fonte sans-serif geométrica humanista semi-bold (tipo Inter SemiBold), cor branca.
+Um logotipo combinado (combination mark) para um SaaS de gestão de frota de veículos: à esquerda, um símbolo geométrico — estrela de quatro pontas com anéis orbitais finos ao redor, em gradiente ouro (#B89A2A a #7B6420), com leve efeito de chanfro metálico; à direita, a palavra "navestory" em minúsculas, fonte sans-serif geométrica humanista semi-bold (tipo Inter SemiBold), cor branca.
 
 Alinhamento: símbolo e texto na mesma linha de base horizontal, altura do símbolo equivalente à altura das letras maiúsculas/ascendentes do texto (cap-height), espaçamento moderado entre símbolo e texto (nem colado, nem distante).
 
@@ -96,7 +96,7 @@ Formato: horizontal, proporção larga (ex.: 3:1 ou 4:1), símbolo à esquerda, 
 ## 6. Combination Mark — fundo claro
 
 ```
-Mesma composição do "Combination Mark" dark (símbolo de estrela de quatro pontas com anéis orbitais à esquerda + wordmark "nave" minúsculo à direita, mesma fonte e alinhamento) — mas em paleta para fundo claro:
+Mesma composição do "Combination Mark" dark (símbolo de estrela de quatro pontas com anéis orbitais à esquerda + wordmark "navestory" minúsculo à direita, mesma fonte e alinhamento) — mas em paleta para fundo claro:
 
 Símbolo: ouro-bronze estrutural (#7B6420), acabamento opaco, sem o brilho da versão dark.
 Wordmark: azul-índigo profundo (#3B30AF).
@@ -110,7 +110,7 @@ Mesmas restrições de estilo: sem elementos automotivos literais, sem clichê d
 ## 7. Monocromática Preta
 
 ```
-O mesmo combination mark (símbolo de estrela de quatro pontas com anéis orbitais + wordmark "nave" minúsculo, mesmo alinhamento e proporção das versões coloridas), mas inteiramente em preto sólido — símbolo e texto na mesma cor #000000, sem gradiente, sem variação tonal, sobre fundo transparente ou branco.
+O mesmo combination mark (símbolo de estrela de quatro pontas com anéis orbitais + wordmark "navestory" minúsculo, mesmo alinhamento e proporção das versões coloridas), mas inteiramente em preto sólido — símbolo e texto na mesma cor #000000, sem gradiente, sem variação tonal, sobre fundo transparente ou branco.
 
 Uso alvo: contratos, papelaria monocromática, gravação/bordado — precisa funcionar como silhueta única de uma só cor, sem depender de nuance tonal para ser legível.
 ```
@@ -120,7 +120,7 @@ Uso alvo: contratos, papelaria monocromática, gravação/bordado — precisa fu
 ## 8. Monocromática Branca
 
 ```
-O mesmo combination mark (símbolo de estrela de quatro pontas com anéis orbitais + wordmark "nave" minúsculo, mesmo alinhamento e proporção das versões coloridas), mas inteiramente em branco sólido #FFFFFF — símbolo e texto na mesma cor, sem gradiente, sobre fundo transparente ou uma foto escura de exemplo.
+O mesmo combination mark (símbolo de estrela de quatro pontas com anéis orbitais + wordmark "navestory" minúsculo, mesmo alinhamento e proporção das versões coloridas), mas inteiramente em branco sólido #FFFFFF — símbolo e texto na mesma cor, sem gradiente, sobre fundo transparente ou uma foto escura de exemplo.
 
 Uso alvo: sobreposição sobre fotografia escura, merchandising escuro — precisa manter legibilidade total como silhueta branca única.
 ```

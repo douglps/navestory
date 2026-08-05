@@ -4,6 +4,11 @@ import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState, type ReactNode } from "react";
+import type {
+  ExpenseKpis,
+  UpcomingCostItem,
+  VehicleResponse as Vehicle,
+} from "@navestory/validators";
 import {
   Alert,
   Button,
@@ -26,33 +31,6 @@ interface Expense {
   description: string | null;
 }
 
-interface Vehicle {
-  id: string;
-  plate: string;
-  make: string | null;
-  model: string | null;
-  nickname: string | null;
-}
-
-interface UpcomingCostItem {
-  source_type: "maintenance" | "fine" | "recurring_cost" | "expense";
-  source_id: string;
-  title: string;
-  amount: number | null;
-  due_date: string;
-  vehicle_id: string;
-  vehicle_plate: string | null;
-  is_estimated: boolean;
-}
-
-interface ExpenseKpis {
-  total_this_month: number;
-  total_prev_month: number;
-  delta_percent: number | null;
-  total_all_time: number;
-  upcoming_30_days_total: number;
-  upcoming_30_days_count: number;
-}
 
 function vehicleLabel(vehicle: Vehicle | undefined): string {
   if (!vehicle) return "—";

@@ -12,6 +12,7 @@ describe("AnalyticsController", () => {
       getBenchmark: jest.fn().mockResolvedValue([]),
       getForecast: jest.fn().mockResolvedValue([]),
       getSeasonal: jest.fn().mockResolvedValue([]),
+      getCategorySeries: jest.fn().mockResolvedValue([]),
       getInsights: jest.fn().mockResolvedValue([]),
       exportCsv: jest.fn().mockResolvedValue("csv-content"),
       ...overrides,
@@ -147,6 +148,25 @@ describe("AnalyticsController", () => {
         "v1",
       );
       expect(result).toEqual({ data: cells });
+    });
+  });
+
+  describe("getCategorySeries (SPEC-20260801-002 RF-03)", () => {
+    it("extrai o token e repassa vehicle_id do query param", async () => {
+      const series = [{ year_month: "2026-07-01", category: "fuel" }];
+      const { controller, analyticsService } = createController({
+        getCategorySeries: jest.fn().mockResolvedValue(series),
+      });
+
+      const result = await controller.getCategorySeries(req, {
+        vehicle_id: "v1",
+      });
+
+      expect(analyticsService.getCategorySeries).toHaveBeenCalledWith(
+        "token-123",
+        "v1",
+      );
+      expect(result).toEqual({ data: series });
     });
   });
 

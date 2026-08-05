@@ -1327,6 +1327,122 @@ repositório é `Dialog` (mesmo padrão de `DeleteAccountDialog`). Implementado 
 
 ---
 
+### IMPACTO-049 — Tipos de Resposta da API Duplicados Manualmente em `apps/web` (2026-08-03)
+
+| Campo           | Valor                                                                                                                                                                    |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Spec**        | [SPEC-20260803-001](../specs/api-contracts/SPEC-20260803-001-consolidacao-tipos-resposta-api.md) — aprovada e implementada em 2026-08-04                                |
+| **Status**      | **Implementado** — 2026-08-04. `vehicleResponseSchema` criado em `packages/validators/src/vehicle.schemas.ts`; 12 redeclarações locais de `interface Vehicle` removidas de `apps/web`; `ExpenseKpis`/`UpcomingCostItem` migrados para importação; shapes de dashboard centralizados. Migração para geração automática de tipos (opção 2) adiada para decisão futura. |
+| **Risco geral** | Médio (justificativa: não é falha de segurança nem indisponibilidade — é drift silencioso de contrato que só se manifesta como bug de UI, sem alerta em build ou CI)     |
+
+**Descrição:** o backend (`apps/api`) e o frontend (`apps/web`) não compartilham tipos para as
+**respostas** da API (o compartilhamento hoje via `@navestory/validators` cobre majoritariamente
+os *payloads de entrada*). O `apiClient<T>` genérico em `apps/web/src/lib/http/api-client.ts` faz
+`as T` sobre o `fetch`, sem validação Zod em runtime, e cada tela redeclara manualmente a
+`interface` do shape esperado.
+
+**Achado concreto (exemplo de drift já existente):** `Vehicle` nunca é exportado como tipo de
+resposta por `packages/validators`. `apps/api/src/modules/vehicles/vehicles.service.ts:11-31`
+retorna ~25 colunas (`odometer`, `status`, `fuel_type`, `renavam`, `chassi`, `ipva_due_date`
+etc.), mas cada `interface Vehicle {...}` local no frontend tipa só 4-6 campos — e as **próprias
+cópias já divergem entre si**: `apps/web/src/app/(app)/vehicles/page.tsx:14` inclui `year`, as
+outras 7 cópias (`analytics`, `expenses`, `fines`, `maintenance` e as respectivas páginas `/new`)
+não. `ExpenseKpis`/`UpcomingCostItem` já existem como tipo de saída em
+`packages/validators/src/expense.schemas.ts:114-140` e são usados pelo backend
+(`apps/api/.../expenses.service.ts:815`), mas o frontend também os redeclara à mão em
+`apps/web/src/app/(app)/expenses/page.tsx:37-55` em vez de importar.
+
+**Módulos afetados:** `apps/web` (8+ arquivos de tela com `interface` duplicada), `packages/validators`
+(candidato a receber os tipos de saída que faltam).
+
+**Duas opções de mitigação avaliadas (não decidido qual seguir):**
+
+1. **Consolidar tipos de resposta em `packages/validators` via `z.infer`** — frontend passa a
+   importar em vez de redeclarar. Impacto baixo/médio, não muda arquitetura nem CI, resolve o
+   drift concreto encontrado. Não impede alguém de esquecer de atualizar o schema quando a query
+   do banco mudar — sincronia continua manual, só que centralizada.
+2. **Geração automática de client/tipos** (`openapi-typescript`/`orval` a partir do Swagger do
+   NestJS, ou migrar para tRPC) — elimina a possibilidade estrutural de drift, mas exige
+   ferramenta nova, passo novo no build/CI, e — no caso de tRPC — mudança de padrão de comunicação
+   que exigiria ADR (`docs/architecture/decisions/`) pelo nível de governança deste projeto.
+
+**Risco de não tratar:** o gate de sincronia hoje existente (type-check + E2E) não captura esse
+tipo de drift, porque as interfaces locais compilam independentemente do shape real retornado
+pela API — o TypeScript só valida contra o que foi escrito à mão, não contra o backend real.
+
+---
+
+### IMPACTO-050 — Analytics Avançado: Easter Egg de Heatmap e Correlações/Simulações (2026-08-04)
+
+| Campo           | Valor                                                                 |
+| --------------- | --------------------------------------------------------------------- |
+| **Spec**        | [SPEC-20260801-001](../specs/analytics/SPEC-20260801-001-easter-egg-heatmap-combinatorio.md) e [SPEC-20260801-002](../specs/analytics/SPEC-20260801-002-analytics-avancado-correlacoes-simulacoes.md) |
+| **Status**      | **Implementado** — 2026-08-04. Código entregue, testes adicionados. Pendência: migration `20260804230000_expense_category_monthly_series.sql` (nova RPC `expense_category_monthly_series`, RF-03 de SPEC-20260801-002) ainda não aplicada no banco remoto — bloqueia a seção de correlação categoria×categoria em produção. |
+| **Risco geral** | Médio |
+
+| #   | Mudança                                                                                                                             | Módulos afetados                                                                                               | Risco  | Mitigação                                                                                                              |
+| --- | ----------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ------ | ---------------------------------------------------------------------------------------------------------------------- |
+| 1   | `EasterEggHeatmapWidget.tsx` no `FleetChartsSection`: widget latente, desbloqueio por presença mensal (R-ANA-08), drawer SVG      | `apps/web/src/components/dashboard/`, `apps/web/src/lib/analytics/easter-egg-heatmap.ts`                      | Baixo  | Feature não anunciada e sem impacto em fluxo crítico; `prefers-reduced-motion` implementado                            |
+| 2   | Nova RPC `expense_category_monthly_series` (migration pendente de aplicação no banco)                                               | `supabase/migrations/20260804230000_expense_category_monthly_series.sql`, `apps/api/src/modules/analytics/`   | Médio  | Section de correlação categoria×categoria exibe empty state enquanto migration não for aplicada; não bloqueia nada mais |
+| 3   | Cálculo de Pearson client-side (`correlation.ts`) e simulador (`simulation.ts`) — novos módulos de analytics frontend              | `apps/web/src/lib/analytics/`, `apps/web/src/app/(app)/analytics/page.tsx`                                     | Baixo  | Lógica puramente client-side, sem chamadas novas ao backend além da RPC acima                                          |
+| 4   | `use-debounced-value.ts` adicionado em `apps/web/src/lib/hooks/`                                                                    | `apps/web/src/lib/hooks/`                                                                                      | Baixo  | Utilitário genérico, sem efeito colateral                                                                              |
+
+---
+
+### IMPACTO-051 — Fundação de Workspace: modelo multi-tenant com RLS (2026-08-04)
+
+| Campo           | Valor                                                                                                                      |
+| --------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| **Spec**        | [SPEC-20260804-004](../specs/workspace/SPEC-20260804-004-workspace-foundation.md)                                         |
+| **Status**      | **Implementado e testado ponta a ponta** — 2026-08-04. Ciclo completo owner + member executado com segundo usuário real. 4 migrations aplicadas no banco remoto. Sem testes automatizados (TEST_DECISIONS: dispensado por ora). |
+| **Risco geral** | Alto — primeira camada multi-tenant do projeto; extende RLS de `vehicles` para visibilidade por `workspace_vehicle_assignments` |
+
+| #   | Mudança                                                                                                                                        | Módulos afetados                                                                                                                                        | Risco      | Mitigação                                                                                                               |
+| --- | ---------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ----------------------------------------------------------------------------------------------------------------------- |
+| 1   | Novas tabelas: `workspaces`, `workspace_members`, `workspace_invites`, `workspace_vehicle_assignments`, `workspace_member_profiles`            | DB (4 migrations), `apps/api/src/modules/workspaces/`                                                                                                  | Alto       | RLS multi-tenant testada ponta a ponta; recursão infinita entre `workspaces`/`workspace_members` encontrada e corrigida |
+| 2   | Extensão da policy RLS de `SELECT` em `vehicles`: membros passam a ver veículos atribuídos via `workspace_vehicle_assignments`                 | `supabase/migrations/20260804210100_workspace_vehicles_rls_extension.sql`, `apps/api/src/modules/vehicles/vehicles.service.ts#findAll/findOne`          | Alto       | Testado com usuário real: member vê apenas o veículo atribuído; bug de filtro `.eq("user_id")` que escondia veículos atribuídos foi corrigido |
+| 3   | `app_metadata.role` gravado/limpo via API administrativa (`workspace-admin-supabase.service.ts`) ao criar workspace, aceitar convite, remover membro | `apps/api/src/modules/workspaces/services/workspace-admin-supabase.service.ts`                                                                          | Alto       | Aplica S12 — `app_metadata` como única fonte de autorização; bug de `role ?? undefined` que impedia limpeza do role corrigido |
+| 4   | Frontend `/workspace/*` protegido por middleware + layout server-side por role                                                                  | `apps/web/middleware.ts`, `apps/web/src/app/workspace/`                                                                                                 | Médio      | Testado manualmente; rotas sem role `workspace_owner` ou `workspace_member` redirecionam corretamente                   |
+| 5   | `ProfileIncompleteBanner` montado em `(app)/layout.tsx` — visível para todos os membros com cadastro incompleto                                 | `apps/web/src/components/workspace/profile-incomplete-banner.tsx`, `apps/web/src/app/(app)/layout.tsx`                                                  | Baixo      | Componente condicional por role; não afeta usuários sem workspace                                                       |
+
+**Pendência de governança:** a criação de workspace está aberta a qualquer usuário autenticado no MVP sem gate de plano pago (R-WS-01). Quando o plano Frota receber cobrança real, esta entrada deve ser reaberta e o gate implementado.
+
+---
+
+### IMPACTO-052 — Fleet Settings: campos obrigatórios de motorista e conformidade (2026-08-04)
+
+| Campo           | Valor                                                                                                              |
+| --------------- | ------------------------------------------------------------------------------------------------------------------ |
+| **Spec**        | [SPEC-20260804-003](../specs/fleet-admin/SPEC-20260804-003-fleet-settings.md)                                     |
+| **Status**      | **Implementado e testado manualmente** — 2026-08-04. Migration aplicada. Telas verificadas no navegador com dados reais. Sem testes automatizados (TEST_DECISIONS: dispensado por ora). |
+| **Risco geral** | Médio |
+
+| #   | Mudança                                                                                                                           | Módulos afetados                                                                                                          | Risco  | Mitigação                                                                                      |
+| --- | --------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- | ------ | ---------------------------------------------------------------------------------------------- |
+| 1   | Nova tabela `workspace_driver_settings` (configuração de campos obrigatórios por workspace)                                       | `supabase/migrations/20260804210200_fleet_settings.sql`, `apps/api/src/modules/fleet-settings/`                          | Baixo  | Defaults seguros ativos sem configuração manual (R-FLEET-01); mudanças não retroativas (R-FLEET-02) |
+| 2   | Novo módulo `fleet-settings` no NestJS + schemas Zod em `packages/validators/src/fleet-settings.schemas.ts`                       | `apps/api/src/modules/fleet-settings/`, `packages/validators/src/fleet-settings.schemas.ts`                              | Baixo  | Endpoint isolado, sem alterar módulos existentes                                               |
+| 3   | Cálculo de conformidade: `computeCnhStatus` com limites 0–7d, 8–30d, >30d aplicando R-TZ-01 e escala R-DS-08                     | `apps/api/src/modules/fleet-settings/fleet-settings.service.ts`                                                          | Médio  | Usa `toCalendarDay`/`FALLBACK_TIMEZONE` do utilitário existente; testado manualmente           |
+| 4   | Frontend: `driver-settings-tab.tsx`, `compliance-tab.tsx`, `onboarding/page.tsx` em `/workspace/*`                                | `apps/web/src/app/workspace/`                                                                                             | Baixo  | Telas dependem de autenticação com role `workspace_owner`/`workspace_member` (IMPACTO-051)     |
+
+---
+
+### IMPACTO-053 — KPI de Janela Rolante e Preferência de Contexto Padrão (2026-08-04)
+
+| Campo           | Valor                                                          |
+| --------------- | -------------------------------------------------------------- |
+| **Spec**        | [SPEC-20260804-001](../specs/dashboard/SPEC-20260804-001-kpi-spending-window.md) e [SPEC-20260804-002](../specs/context/SPEC-20260804-002-contexto-padrao-e-rotulo-none.md) |
+| **Status**      | **Implementado** — 2026-08-04. Testes adicionados (ver TEST_DECISIONS aprovados em 2026-08-04). |
+| **Risco geral** | Baixo |
+
+| #   | Mudança                                                                                                                               | Módulos afetados                                                                                       | Risco  | Mitigação                                                                                  |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ | ------ | ------------------------------------------------------------------------------------------ |
+| 1   | Migration `spending_window_days SMALLINT NOT NULL DEFAULT 7 CHECK IN (7,14,30)` em `user_preferences`                                 | `supabase/migrations/20260804120000_add_spending_window_days.sql`, `preferences` (api + web)           | Baixo  | DEFAULT 7 garante retrocompatibilidade; PATCH /preferences valida domínio antes de persistir |
+| 2   | 9ª entrada `spending_window` no catálogo `KPI_CATALOG_IDS`; cômputo de janela rolante no `dashboard.service.ts`                       | `apps/api/src/modules/dashboard/dashboard.service.ts`, `packages/validators/src/dashboard.schemas.ts` | Baixo  | Catálogo é extensível por design; sem remoção de entradas existentes                       |
+| 3   | Migration `default_context_type`/`default_context_id` em `user_preferences` + constraint de coerência                                 | `supabase/migrations/20260804120100_add_default_context_preference.sql`, `preferences`, `vehicle-activator.tsx` | Baixo  | DEFAULT NULL = ausência de preferência equivale a "toda a frota" (R-PREF-01); constraint de coerência garante que `single`/`group` exijam `default_context_id` |
+| 4   | Rótulo do chip `VehicleContextChip` corrigido de `"+ selecionar veículo"` para `"Toda a frota"` quando `selectionMode === "none"`     | `apps/web/src/lib/context/use-vehicle-context.ts`                                                      | Baixo  | Uma linha de código; coberta por testes de componente (`vehicle-context-chip.spec.tsx`)    |
+
+---
+
 ## Legenda de Risco
 
 | Nível       | Critério                                                                  |

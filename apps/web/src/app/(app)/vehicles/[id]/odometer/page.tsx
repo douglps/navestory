@@ -3,21 +3,13 @@
 import {
   updateVehicleInputSchema,
   type UpdateVehicleInput,
+  type VehicleResponse as Vehicle,
 } from "@navestory/validators";
 import { Alert, Button, Container, OdometerInput } from "@navestory/ui";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { ApiError, apiClient } from "@/lib/http/api-client";
-
-interface Vehicle {
-  id: string;
-  plate: string;
-  make: string | null;
-  model: string | null;
-  nickname: string | null;
-  odometer: number | null;
-}
 
 function vehicleLabel(vehicle: Vehicle): string {
   return (

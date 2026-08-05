@@ -3,6 +3,10 @@
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import type { ReactNode } from "react";
+import type {
+  FleetHealthEntry,
+  VehicleResponse as Vehicle,
+} from "@navestory/validators";
 import {
   Alert,
   Container,
@@ -10,21 +14,6 @@ import {
   VehicleHealthScore,
 } from "@navestory/ui";
 import { apiClient } from "@/lib/http/api-client";
-
-interface Vehicle {
-  id: string;
-  plate: string;
-  make: string | null;
-  model: string | null;
-  year: number | null;
-  nickname: string | null;
-}
-
-interface FleetHealthEntry {
-  vehicle_id: string;
-  score: number;
-  flags: Array<{ type: string; [key: string]: unknown }>;
-}
 
 /**
  * @spec SPEC-20260730-001 RF-15

@@ -192,6 +192,9 @@ Ao subir a versão de uma regra (`vN → vN+1`): registrar a linha de histórico
 | `growth-marketer`   | Estratégia de marketing: análise de mercado, métricas de crescimento (CAC, LTV, ROI, conversão), pesquisa de concorrência, canais e precificação              |
 | `ad-creative`       | Publicidade: copywriting, storytelling, tom de voz, conceito de campanha e planejamento de mídia                                                              |
 | `brand-designer`    | Identidade visual de marca (logo, paleta, tipografia, brand guidelines) construída do zero — distinto do `design-system`, que cuida de componentes de produto |
+| `ux-researcher`      | Avaliar fit de cada tela com personas e Jobs to Be Done do PRD — o que cada perfil (Carlos, Ana, Roberto) precisa realizar ali, e se consegue interpretar corretamente os dados/métricas exibidos (data literacy) |
+| `ui-layout-reviewer` | Decidir onde botões, dados, métricas e CTAs devem ficar em cada tela — composição e hierarquia visual, distinto de `design-system` (tokens/identidade) |
+| `ux-auditor`         | Testar uma tela/fluxo como usuário real, comparar com concorrentes diretos e padrões de mercado, levantar o que existe vs. o que falta |
 
 > Ao criar uma spec nova, o `spec-writer` preenche automaticamente o frontmatter com `rules:` e `security:` conforme o `RULES.md` do projeto.
 

@@ -54,7 +54,7 @@ describe("Header", () => {
 
     expect(screen.getByText("navestory")).toBeInTheDocument();
     await waitFor(() =>
-      expect(screen.getByText(/Selecionar veículo/)).toBeInTheDocument(),
+      expect(screen.getByText(/Toda a frota/)).toBeInTheDocument(),
     );
   });
 

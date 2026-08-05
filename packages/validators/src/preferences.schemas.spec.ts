@@ -47,6 +47,17 @@ describe("updatePreferencesInputSchema", () => {
     const result = updatePreferencesInputSchema.safeParse({ dashboard_kpi_ids: ["nao_existe"] });
     expect(result.success).toBe(false);
   });
+
+  it("aceita apenas spending_window_days (SPEC-20260804-001 RF-02 — atualização parcial)", () => {
+    for (const days of [7, 14, 30]) {
+      expect(updatePreferencesInputSchema.safeParse({ spending_window_days: days }).success).toBe(true);
+    }
+  });
+
+  it("rejeita spending_window_days fora do conjunto fechado {7, 14, 30} (SPEC-20260804-001 RF-02, US-02)", () => {
+    const result = updatePreferencesInputSchema.safeParse({ spending_window_days: 10 });
+    expect(result.success).toBe(false);
+  });
 });
 
 describe("DEFAULT_CHIP_FIELDS", () => {

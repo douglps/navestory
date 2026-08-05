@@ -11,3 +11,5 @@ export * from "./preferences.schemas";
 export * from "./recurring-cost.schemas";
 export * from "./vehicle.schemas";
 export * from "./vehicle-group.schemas";
+export * from "./workspace.schemas";
+export * from "./fleet-settings.schemas";

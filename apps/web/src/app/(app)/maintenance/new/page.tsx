@@ -3,6 +3,7 @@
 import {
   createMaintenanceInputSchema,
   type CreateMaintenanceInput,
+  type VehicleResponse as Vehicle,
 } from "@navestory/validators";
 import {
   Alert,
@@ -21,14 +22,6 @@ import { ApiError, apiClient } from "@/lib/http/api-client";
 import { nowInUserTz, datetimeLocalToIso } from "@/lib/datetime-tz";
 import { usePreferences } from "@/lib/hooks/use-preferences";
 import { useVehicleContextField } from "@/lib/hooks/use-vehicle-context-field";
-
-interface Vehicle {
-  id: string;
-  plate: string;
-  make: string | null;
-  model: string | null;
-  nickname: string | null;
-}
 
 interface MaintenanceResponse {
   id: string;

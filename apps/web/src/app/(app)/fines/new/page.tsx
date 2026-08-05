@@ -3,6 +3,7 @@
 import {
   createFineInputSchema,
   type CreateFineInput,
+  type VehicleResponse as Vehicle,
 } from "@navestory/validators";
 import {
   Alert,
@@ -19,14 +20,6 @@ import { useRouter } from "next/navigation";
 import { useState, type FormEvent, type ReactNode } from "react";
 import { ApiError, apiClient } from "@/lib/http/api-client";
 import { useVehicleContextField } from "@/lib/hooks/use-vehicle-context-field";
-
-interface Vehicle {
-  id: string;
-  plate: string;
-  make: string | null;
-  model: string | null;
-  nickname: string | null;
-}
 
 function vehicleLabel(vehicle: Vehicle): string {
   return (

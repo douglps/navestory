@@ -22,11 +22,18 @@
 
 ## Jobs to Be Done
 
+### Usuário individual
+
 1. Registrar despesa logo após abastecimento (< 30 segundos, mobile)
 2. Verificar quais manutenções estão vencidas ou próximas do vencimento
 3. Controlar o gasto mensal total e por categoria de um veículo
 4. Exportar despesas do período para Excel/Google Sheets
 5. Saber o custo por km de cada veículo
+
+### Gestor de workspace (workspace_owner — plano Frota)
+
+6. Ter visão consolidada e atualizada da situação documental de cada motorista do workspace (CNH vigente, cadastro mínimo preenchido) sem depender de planilha ou cobrança manual fora do produto
+7. Configurar quais campos são obrigatórios e o que cada motorista convidado deve preencher antes do primeiro uso, garantindo padrão de dados em toda a equipe sem precisar cobrar individualmente
 
 ---
 

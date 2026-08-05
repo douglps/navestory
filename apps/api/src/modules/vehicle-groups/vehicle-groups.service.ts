@@ -15,6 +15,7 @@ export interface VehicleGroup {
   created_at: string;
   updated_at: string;
   member_count?: number;
+  vehicleIds?: string[];
   [key: string]: unknown;
 }
 
@@ -69,6 +70,8 @@ export class VehicleGroupsService {
    * exibido no switcher. Em vez de um join `!inner` aninhado (não suportado de forma
    * simples pelo client do Supabase para contagem), busca-se o conjunto de veículos
    * ativos do usuário e conta-se em memória — mesmo padrão já usado em `setMembers()`.
+   * @spec SPEC-20260804-005 RF-01 — inclui `vehicleIds` (apenas membros ativos, R-GRP-03)
+   * no response, para a tela de edição inicializar a seleção com a composição atual.
    */
   async findAll(accessToken: string, userId: string): Promise<VehicleGroup[]> {
     const client = this.clientForUser(accessToken);
@@ -98,12 +101,16 @@ export class VehicleGroupsService {
       (groupsResult.data ?? []) as Array<
         VehicleGroup & { vehicle_group_members?: Array<{ vehicle_id: string }> }
       >
-    ).map((group) => ({
-      ...group,
-      member_count: (group.vehicle_group_members ?? []).filter((member) =>
-        activeVehicleIds.has(member.vehicle_id),
-      ).length,
-    }));
+    ).map((group) => {
+      const activeMemberIds = (group.vehicle_group_members ?? [])
+        .filter((member) => activeVehicleIds.has(member.vehicle_id))
+        .map((member) => member.vehicle_id);
+      return {
+        ...group,
+        member_count: activeMemberIds.length,
+        vehicleIds: activeMemberIds,
+      };
+    });
   }
 
   /**

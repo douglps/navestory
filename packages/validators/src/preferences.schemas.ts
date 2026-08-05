@@ -1,5 +1,10 @@
 import { z } from "zod";
-import { dashboardKpiIdsSchema, type KpiCatalogId } from "./dashboard.schemas";
+import {
+  dashboardKpiIdsSchema,
+  spendingWindowDaysSchema,
+  type KpiCatalogId,
+  type SpendingWindowDays,
+} from "./dashboard.schemas";
 
 /**
  * @spec SPEC-20260612-003 RF-01.2
@@ -42,20 +47,60 @@ export const timezoneSchema = z
   .min(1)
   .max(64);
 
+/**
+ * @spec SPEC-20260804-002 RF-05
+ * `"all"` nunca tem `default_context_id`; `"single"`/`"group"` sempre têm — mesma coerência
+ * validada por CHECK constraint no banco (RF-04), replicada aqui para dar 422 com mensagem
+ * clara antes de bater no banco.
+ */
+export const contextTypeSchema = z.enum(["all", "single", "group"]);
+export type ContextType = z.infer<typeof contextTypeSchema>;
+
 export const updatePreferencesInputSchema = z
   .object({
     auto_draft_enabled: z.boolean().optional(),
     vehicle_chip_fields: chipFieldsSchema.optional(),
     dashboard_kpi_ids: dashboardKpiIdsSchema.optional(),
     timezone: timezoneSchema.nullable().optional(),
+    /** @spec SPEC-20260804-001 RF-02 */
+    spending_window_days: spendingWindowDaysSchema.optional(),
+    /** @spec SPEC-20260804-002 RF-05 */
+    default_context_type: contextTypeSchema.nullable().optional(),
+    /** @spec SPEC-20260804-002 RF-05, RNF-04 — nunca confiar em input de cliente sem validar UUID */
+    default_context_id: z.string().uuid().nullable().optional(),
   })
   .refine(
     (data) =>
       data.auto_draft_enabled !== undefined ||
       data.vehicle_chip_fields !== undefined ||
       data.dashboard_kpi_ids !== undefined ||
-      data.timezone !== undefined,
+      data.timezone !== undefined ||
+      data.spending_window_days !== undefined ||
+      data.default_context_type !== undefined ||
+      data.default_context_id !== undefined,
     { message: "Informe ao menos um campo para atualizar" },
+  )
+  .refine(
+    (data) =>
+      data.default_context_type !== "all" ||
+      data.default_context_id === undefined ||
+      data.default_context_id === null,
+    {
+      message: "Contexto padrão 'all' não deve ter default_context_id",
+      path: ["default_context_id"],
+    },
+  )
+  .refine(
+    (data) =>
+      data.default_context_type !== "single" &&
+      data.default_context_type !== "group"
+        ? true
+        : data.default_context_id !== undefined &&
+          data.default_context_id !== null,
+    {
+      message: "Contexto padrão 'single'/'group' exige default_context_id",
+      path: ["default_context_id"],
+    },
   );
 export type UpdatePreferencesInput = z.infer<typeof updatePreferencesInputSchema>;
 
@@ -65,5 +110,10 @@ export interface UserPreferences {
   vehicle_chip_fields: ChipField[];
   dashboard_kpi_ids: KpiCatalogId[];
   timezone: string | null;
+  /** @spec SPEC-20260804-001 RF-01 */
+  spending_window_days: SpendingWindowDays;
+  /** @spec SPEC-20260804-002 RF-04 — `null` equivale a 'all' (R-PREF-01) */
+  default_context_type: ContextType | null;
+  default_context_id: string | null;
   updated_at: string;
 }

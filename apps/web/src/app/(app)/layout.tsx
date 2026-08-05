@@ -9,6 +9,7 @@ import { TimezoneDetector } from "@/components/layout/timezone-detector";
 import { VehicleActivator } from "@/components/layout/vehicle-activator";
 import { InstallPromptBanner } from "@/components/pwa/install-prompt-banner";
 import { IosInstallBanner } from "@/components/pwa/ios-install-banner";
+import { ProfileIncompleteBanner } from "@/components/workspace/profile-incomplete-banner";
 
 // @spec SPEC-20260603-001 RF-01 — Header fixo acima do conteúdo, com chip de contexto sempre visível.
 // @spec SPEC-20260722-003 RF-12 — mobile-first: sem padding-left abaixo de `md`, já que a
@@ -34,6 +35,7 @@ export default function AppLayout({ children }: { children: ReactNode }): ReactN
       </div>
       <InstallPromptBanner />
       <IosInstallBanner />
+      <ProfileIncompleteBanner />
     </div>
   );
 }

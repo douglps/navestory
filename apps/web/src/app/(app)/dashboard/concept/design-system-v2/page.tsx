@@ -52,6 +52,7 @@ import {
 } from "lucide-react";
 import {
   type FleetKpiCatalog,
+  type FleetHealthEntry,
   type KpiCatalogId,
   type Maintenance,
 } from "@navestory/validators";
@@ -138,12 +139,6 @@ const TONE_CSS_VARS = {
  */
 const NOISE_TEXTURE =
   "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n' x='-20%25' y='-20%25' width='140%25' height='140%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.012' numOctaves='4' seed='7' stitchTiles='stitch'/%3E%3CfeGaussianBlur stdDeviation='6'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0, 0 0 0 0 0, 0 0 0 0 0, 0 0 0 3 -0.6'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E";
-
-interface FleetHealthEntry {
-  vehicle_id: string;
-  score: number;
-  flags: HealthFlag[];
-}
 
 interface TimelineEvent {
   id: string;

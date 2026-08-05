@@ -246,6 +246,44 @@ describe("AnalyticsService", () => {
     });
   });
 
+  describe("getCategorySeries (SPEC-20260801-002 RF-03)", () => {
+    it("retorna a série mensal por categoria calculada pela RPC", async () => {
+      const series = [
+        { year_month: "2026-07-01", category: "fuel", total: 500, vehicle_id: "v1" },
+      ];
+      const rpc = jest.fn().mockResolvedValue({ data: series, error: null });
+      (createUserScopedClient as jest.Mock).mockReturnValue({ rpc });
+      const service = createService();
+
+      const result = await service.getCategorySeries("token", "v1");
+
+      expect(rpc).toHaveBeenCalledWith("expense_category_monthly_series", {
+        p_vehicle_id: "v1",
+      });
+      expect(result).toEqual(series);
+    });
+
+    it("retorna array vazio quando a RPC não retorna dados", async () => {
+      const rpc = jest.fn().mockResolvedValue({ data: null, error: null });
+      (createUserScopedClient as jest.Mock).mockReturnValue({ rpc });
+      const service = createService();
+
+      const result = await service.getCategorySeries("token");
+
+      expect(result).toEqual([]);
+    });
+
+    it("lança NotFoundException quando a RPC falha", async () => {
+      const rpc = jest.fn().mockResolvedValue({ data: null, error: { message: "erro" } });
+      (createUserScopedClient as jest.Mock).mockReturnValue({ rpc });
+      const service = createService();
+
+      await expect(service.getCategorySeries("token")).rejects.toThrow(
+        "Não foi possível calcular a série mensal por categoria",
+      );
+    });
+  });
+
   describe("getInsights (RF-14)", () => {
     function createChainableBuilder(result: { data: unknown; error: unknown }) {
       const builder: Record<string, jest.Mock> & PromiseLike<{ data: unknown; error: unknown }> =

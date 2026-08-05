@@ -13,4 +13,6 @@ export const envValidationSchema = Joi.object({
   RESEND_API_KEY: Joi.string().allow("").optional(),
   // @spec SPEC-20260716-002 RF-01
   SENTRY_DSN: Joi.string().allow("").optional(),
+  // @spec specs/workspace/SPEC-20260804-004-workspace-foundation.md RF-03 — base para montar o link de convite
+  WEB_APP_URL: Joi.string().uri().default("http://localhost:3000"),
 });

@@ -100,6 +100,20 @@ export interface SeasonalHeatmapCell {
   occurrence_count: number;
 }
 
+/** @spec SPEC-20260801-002 RF-03 */
+export const categorySeriesQuerySchema = z.object({
+  vehicle_id: z.string().uuid().optional(),
+});
+export type CategorySeriesQuery = z.infer<typeof categorySeriesQuerySchema>;
+
+/** @spec SPEC-20260801-002 RF-03 */
+export interface ExpenseCategoryMonthlySeries {
+  year_month: string;
+  category: string;
+  total: number;
+  vehicle_id: string | null;
+}
+
 /** @spec SPEC-20260622-001 RF-14, R-ANA-05 */
 export const insightsQuerySchema = z.object({
   vehicle_id: z.string().uuid().optional(),

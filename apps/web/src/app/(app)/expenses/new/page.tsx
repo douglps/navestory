@@ -6,6 +6,7 @@ import {
   type CreateExpenseInput,
   type CreateExpenseTemplateInput,
   type ExpenseTemplate,
+  type VehicleResponse as Vehicle,
 } from "@navestory/validators";
 import {
   Alert,
@@ -36,14 +37,6 @@ import { usePreferences } from "@/lib/hooks/use-preferences";
 import { useVehicleContextField } from "@/lib/hooks/use-vehicle-context-field";
 
 const TEMPLATE_LIMIT = 20;
-
-interface Vehicle {
-  id: string;
-  plate: string;
-  make: string | null;
-  model: string | null;
-  nickname: string | null;
-}
 
 interface CategoriesResponse {
   default: { value: string; label: string }[];

@@ -2,6 +2,7 @@ import { KPI_CATALOG_IDS, type KpiCatalogId } from "@navestory/validators";
 import type { LucideIcon } from "lucide-react";
 import {
   CalendarClock,
+  CalendarRange,
   Car,
   Fuel,
   HeartPulse,
@@ -63,6 +64,13 @@ export const KPI_CATALOG_META: Record<KpiCatalogId, KpiCatalogMeta> = {
     title: "Anomalias de gasto",
     icon: TriangleAlert,
     href: "/analytics",
+    reverseTrend: true,
+  },
+  /** @spec SPEC-20260804-001 RF-06 — título fixo; a janela (7/14/30 dias) vai no `unit` do card, resolvido pelo backend (RF-03) */
+  spending_window: {
+    title: "Gastos recentes",
+    icon: CalendarRange,
+    href: "/expenses",
     reverseTrend: true,
   },
 };

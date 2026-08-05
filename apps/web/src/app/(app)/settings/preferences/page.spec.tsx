@@ -269,3 +269,72 @@ describe("PreferencesPage — exibição do veículo (SPEC-20260603-003)", () =>
     expect(await screen.findByRole("alert")).toHaveTextContent("Fuso horário deve ser um nome IANA");
   });
 });
+
+describe("PreferencesPage — janela do KPI de gastos recentes (SPEC-20260804-001)", () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  function renderPage() {
+    return render(
+      <QueryProvider>
+        <PreferencesPage />
+      </QueryProvider>,
+    );
+  }
+
+  it("marca 7 dias como padrão quando a preferência está ausente (US-02, R-PREF-01)", async () => {
+    vi.mocked(apiClient).mockResolvedValue({ auto_draft_enabled: false });
+    renderPage();
+
+    await screen.findByRole("checkbox", { name: /Rascunho automático/ });
+    expect(screen.getByRole("radio", { name: "7 dias" })).toHaveAttribute("aria-checked", "true");
+  });
+
+  it("marca a janela persistida como selecionada (US-02)", async () => {
+    vi.mocked(apiClient).mockResolvedValue({ auto_draft_enabled: false, spending_window_days: 30 });
+    renderPage();
+
+    await screen.findByRole("checkbox", { name: /Rascunho automático/ });
+    expect(screen.getByRole("radio", { name: "30 dias" })).toHaveAttribute("aria-checked", "true");
+    expect(screen.getByRole("radio", { name: "7 dias" })).toHaveAttribute("aria-checked", "false");
+  });
+
+  it("salva spending_window_days ao selecionar 14 dias e clicar em Salvar (RF-05, US-02)", async () => {
+    vi.mocked(apiClient).mockImplementation((path: string, options?: { method?: string }) => {
+      if (options?.method === "PATCH") {
+        return Promise.resolve({ auto_draft_enabled: false, spending_window_days: 14 });
+      }
+      return Promise.resolve({ auto_draft_enabled: false, spending_window_days: 7 });
+    });
+    renderPage();
+
+    await screen.findByRole("checkbox", { name: /Rascunho automático/ });
+    fireEvent.click(screen.getByRole("radio", { name: "14 dias" }));
+    const saveBtns = screen.getAllByRole("button", { name: "Salvar" });
+    fireEvent.click(saveBtns[3]!);
+
+    await waitFor(() =>
+      expect(apiClient).toHaveBeenCalledWith(
+        "/preferences",
+        expect.objectContaining({ method: "PATCH", body: { spending_window_days: 14 } }),
+      ),
+    );
+    expect(await screen.findByText("✓ Salvo")).toBeInTheDocument();
+  });
+
+  it("cancela alteração da janela sem salvar (handleCancelWindow)", async () => {
+    vi.mocked(apiClient).mockResolvedValue({ auto_draft_enabled: false, spending_window_days: 7 });
+    renderPage();
+
+    await screen.findByRole("checkbox", { name: /Rascunho automático/ });
+    fireEvent.click(screen.getByRole("radio", { name: "30 dias" }));
+    expect(screen.getByRole("radio", { name: "30 dias" })).toHaveAttribute("aria-checked", "true");
+
+    const cancelBtns = screen.getAllByRole("button", { name: "Cancelar" });
+    fireEvent.click(cancelBtns[3]!);
+
+    expect(screen.getByRole("radio", { name: "7 dias" })).toHaveAttribute("aria-checked", "true");
+    expect(screen.getByRole("radio", { name: "30 dias" })).toHaveAttribute("aria-checked", "false");
+  });
+});

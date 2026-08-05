@@ -1,10 +1,11 @@
 # Specs — Grupos de Veículos
 
-Regras: R-GRP-01, R-GRP-02, R-GRP-03, R-GRP-04, R-CTX-02
+Regras: R-GRP-01, R-GRP-02, R-GRP-03, R-GRP-04, R-GRP-05, R-CTX-02
 
 | Spec | Título | Status |
 |------|--------|--------|
 | [SPEC-20260602-003](SPEC-20260602-003.md) | Grupos de Veículos | Aprovada |
+| [SPEC-20260804-005](SPEC-20260804-005-bug-membros-nao-inicializados.md) | Correção de Bug: Membros de Grupo Não Inicializados na Tela de Edição | Draft |
 
 Implementação em:
 - Backend: `apps/api/src/modules/vehicle-groups/` (`VehicleGroupsController`, `VehicleGroupsService`, DTOs)

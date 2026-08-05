@@ -5,6 +5,8 @@ export interface CurrentUserProfile {
   id: string;
   name: string;
   email: string | null;
+  /** @spec SPEC-20260801-001 RF-02 — usado para o cálculo client-side da janela de 7 dias. */
+  created_at?: string;
 }
 
 /**

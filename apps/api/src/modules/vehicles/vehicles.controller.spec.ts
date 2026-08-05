@@ -41,9 +41,9 @@ describe("VehiclesController", () => {
   it("findAll lista os veículos do usuário", async () => {
     const { controller, vehiclesService } = createController();
 
-    const result = await controller.findAll(req, "u1");
+    const result = await controller.findAll(req);
 
-    expect(vehiclesService.findAll).toHaveBeenCalledWith("token-123", "u1");
+    expect(vehiclesService.findAll).toHaveBeenCalledWith("token-123");
     expect(result.data).toEqual([{ id: "v1" }]);
   });
 
@@ -103,7 +103,7 @@ describe("VehiclesController", () => {
     const { controller } = createController();
     const reqSemToken = { headers: {}, cookies: {} } as unknown as Request;
 
-    await expect(controller.findAll(reqSemToken, "u1")).rejects.toBeInstanceOf(
+    await expect(controller.findAll(reqSemToken)).rejects.toBeInstanceOf(
       UnauthorizedException,
     );
   });
@@ -115,8 +115,8 @@ describe("VehiclesController", () => {
       cookies: { navestory_access_token: "cookie-token" },
     } as unknown as Request;
 
-    await controller.findAll(reqComCookie, "u1");
+    await controller.findAll(reqComCookie);
 
-    expect(vehiclesService.findAll).toHaveBeenCalledWith("cookie-token", "u1");
+    expect(vehiclesService.findAll).toHaveBeenCalledWith("cookie-token");
   });
 });

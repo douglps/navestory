@@ -3,6 +3,7 @@
 import {
   MAINTENANCE_STATUS_TRANSITIONS,
   updateMaintenanceInputSchema,
+  type Maintenance,
   type MaintenanceStatus,
   type UpdateMaintenanceInput,
 } from "@navestory/validators";
@@ -21,17 +22,6 @@ import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { ApiError, apiClient } from "@/lib/http/api-client";
 import { datetimeLocalToIso, isoToDatetimeLocal } from "@/lib/datetime-tz";
 import { usePreferences } from "@/lib/hooks/use-preferences";
-
-interface Maintenance {
-  id: string;
-  vehicle_id: string;
-  description: string;
-  status: MaintenanceStatus;
-  scheduled_date: string;
-  completion_date: string | null;
-  cost: number | null;
-  odometer_km: number | null;
-}
 
 const STATUS_LABEL: Record<MaintenanceStatus, string> = {
   scheduled: "Agendada",

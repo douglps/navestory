@@ -79,12 +79,14 @@ export class VehiclesService {
    * @spec SPEC-20260602-002 RF-03, RF-16
    * @spec SPEC-20260603-001 RF-18 — listagem limitada a 100 registros (P1), a query
    * anterior não tinha nenhum `.limit()` (não era "20→100" como a spec original supunha).
+   * @spec SPEC-20260804-004 RF-10 — sem filtro `.eq("user_id", userId)`: a RLS de
+   * `vehicles_select_own` já cobre posse própria e atribuição via workspace; um filtro de
+   * aplicação adicional excluiria os veículos atribuídos a um workspace_member.
    */
-  async findAll(accessToken: string, userId: string): Promise<Vehicle[]> {
+  async findAll(accessToken: string): Promise<Vehicle[]> {
     const { data, error } = await this.clientForUser(accessToken)
       .from("vehicles")
       .select(VEHICLE_COLUMNS)
-      .eq("user_id", userId)
       .is("deleted_at", null)
       .order("created_at", { ascending: false })
       .limit(100);
@@ -97,13 +99,14 @@ export class VehiclesService {
 
   /**
    * @spec SPEC-20260602-002 RF-04, RF-15, RF-16
+   * @spec SPEC-20260804-004 RF-10 — mesmo raciocínio de `findAll`: a RLS decide visibilidade
+   * (dono ou workspace_member com atribuição ativa), não um filtro `user_id` na query.
    */
   async findOne(accessToken: string, userId: string, vehicleId: string): Promise<Vehicle> {
     const { data, error } = await this.clientForUser(accessToken)
       .from("vehicles")
       .select(VEHICLE_COLUMNS)
       .eq("id", vehicleId)
-      .eq("user_id", userId)
       .is("deleted_at", null)
       .maybeSingle();
 

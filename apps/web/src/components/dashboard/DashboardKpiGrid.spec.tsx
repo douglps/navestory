@@ -22,6 +22,11 @@ function catalogWith(overrides: Partial<FleetKpiCatalog>): FleetKpiCatalog {
     next_maintenance: { ok: true, value: null },
     upcoming_costs_7d: { ok: true, value: { total: 0, count: 0 } },
     expense_anomalies: { ok: true, value: 0 },
+    // @spec SPEC-20260804-001 RF-03
+    spending_window: {
+      ok: true,
+      value: { value: 0, window_days: 7, label: "Últ. 7 dias" },
+    },
     ...overrides,
   };
 }

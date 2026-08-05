@@ -64,9 +64,9 @@ export class VehiclesController {
   @Get()
   @ApiOperation({ summary: "Listar veículos ativos do usuário" })
   @ApiResponse({ status: 200, description: "Lista de veículos" })
-  async findAll(@Req() req: Request, @UserId() userId: string) {
+  async findAll(@Req() req: Request) {
     const accessToken = this.extractAccessToken(req);
-    const vehicles = await this.vehiclesService.findAll(accessToken, userId);
+    const vehicles = await this.vehiclesService.findAll(accessToken);
     return { data: vehicles };
   }
 

@@ -3,6 +3,7 @@ import { ConfigService } from "@nestjs/config";
 import type {
   AnalyticsInsight,
   ExpenseAnomaly,
+  ExpenseCategoryMonthlySeries,
   FleetBenchmarkEntry,
   FuelTrendPoint,
   MonthlyForecastPoint,
@@ -217,6 +218,28 @@ export class AnalyticsService {
       );
     }
     return (data ?? []) as SeasonalHeatmapCell[];
+  }
+
+  /**
+   * @spec SPEC-20260801-002 RF-03
+   */
+  async getCategorySeries(
+    accessToken: string,
+    vehicleId?: string,
+  ): Promise<ExpenseCategoryMonthlySeries[]> {
+    const { data, error } = await this.clientForUser(accessToken).rpc(
+      "expense_category_monthly_series",
+      {
+        p_vehicle_id: vehicleId ?? null,
+      },
+    );
+
+    if (error) {
+      throw new NotFoundException(
+        "Não foi possível calcular a série mensal por categoria",
+      );
+    }
+    return (data ?? []) as ExpenseCategoryMonthlySeries[];
   }
 
   /**

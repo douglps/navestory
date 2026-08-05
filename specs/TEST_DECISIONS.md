@@ -17,6 +17,66 @@
 
 ---
 
+### SPEC-20260804-005 — Correção de Bug: Membros de Grupo Não Inicializados na Tela de Edição
+
+**Status:** aprovado
+**Decisão:** requer testes
+**Justificativa:** Bug de perda silenciosa de dado em produção com regra de negócio nova (R-GRP-05): `selectedVehicleIds` nascia vazio e nunca era inicializado, então salvar sem alterar nada apagava toda a composição do grupo (replace-all, R-GRP-02). Critério de "requer testes" do `.claude/CLAUDE.md` do projeto ("Testes obrigatórios para funcionalidades novas com regra de negócio ou impacto em produção") se aplica diretamente. Testes já implementados e registrados na rastreabilidade: `vehicle-groups.service.spec.ts` (RF-01: vehicleIds no findAll) e `vehicle-groups/[id]/page.spec.tsx` (RF-02 a RF-06: inicialização, diff, confirmação de remoção total, cancelamento).
+**Escopo (se aprovado):** unit (service: vehicleIds no findAll); component (React Testing Library: inicialização dos checkboxes, confirmação de remoção total, cancelamento não dispara mutação)
+**Decidido em:** 2026-08-04
+
+---
+
+### SPEC-20260804-006 — Dashboard — Acessibilidade, Correções de Dado e Polimento Visual
+
+**Status:** pendente
+**Decisão:** requer testes (parcial)
+**Justificativa (proposta do spec-writer):** RF-05 introduz R-KPI-04, uma regra de negócio nova com branch crítico e diretamente verificável: dado amostra < `DELTA_SUPPRESSION_MIN_SAMPLE`, o card `expense_anomalies` deve exibir estado de supressão em vez de valor numérico. A lógica de supressão é função pura e determinística — candidata natural a unit test (mesmo padrão aprovado para R-KPI-02 / delta percentual). Já os demais RFs (Blocos 1, 3, 4 e 5) são correções de render/UX ou realocação de componentes: validados por revisão visual, sem teste dedicado proposto. Exceção possível dentro do Bloco 1: RF-15 (`VehicleSpotlight` aba inicial dinâmica) tem lógica de seleção baseada em flags que poderia ser unit-testada se Douglas decidir estender o escopo.
+**Escopo (se aprovado):** unit — lógica de supressão de RF-05 (R-KPI-04): dado mock de contagem < `DELTA_SUPPRESSION_MIN_SAMPLE`, verificar que o card retorna estado "indisponível" em vez de valor numérico; dado contagem ≥ limiar, verificar que o valor é exibido.
+**Decidido em:** pendente
+
+---
+
+### SPEC-20260804-002 — Rótulo do Modo `none` e Preferência de Contexto Padrão
+
+**Status:** aprovado
+**Decisão:** requer testes (parcial)
+**Justificativa:** Toca regras de negócio (R-CTX-01/02/07/08/09, R-PREF-01) e persiste preferência em produção (`user_preferences`), critério de "requer testes" da seção Testes do `.claude/CLAUDE.md` do projeto. Cobertura adicionada: `use-vehicle-context.ts`/`vehicle-context-chip.spec.tsx`/`header.spec.tsx` para o rótulo "Toda a frota" (RF-01, RF-02, RF-03); `vehicle-activator.spec.tsx` para aplicação/staleness/precedência do contexto padrão (RF-09, RF-10, RF-11); `preferences.schemas.spec.ts`, `preferences.service.spec.ts`, `preferences.controller.spec.ts` para validação e persistência (RF-04 a RF-06). RF-07/RF-08 (seção "Contexto padrão" em `/settings/preferences`) cobertos manualmente — sem novo teste de componente dedicado, já que a tela reaproveita `VehicleSwitcherContent` (RNF-05) já testado em outro lugar.
+**Escopo (se aprovado):** unit (schemas), integration (service/controller Nest), component (React Testing Library)
+**Decidido em:** 2026-08-04
+
+---
+
+### SPEC-20260804-003 — Configurações da Frota — Campos Obrigatórios, Checklist de Onboarding e Conformidade Documental
+
+**Status:** aprovado
+**Decisão:** não requer testes por ora
+**Justificativa:** Douglas decidiu implementar sem testes automatizados nesta fase, para priorizar velocidade de entrega do MVP de workspace + conformidade. Decisão pode ser reaberta se a feature evoluir ou ganhar risco (ex: quando alertas por e-mail forem implementados na Fase 9).
+**Escopo (se aprovado):** —
+**Decidido em:** 2026-08-04
+
+---
+
+### SPEC-20260804-004 — Fundação de Workspace (workspace_owner/workspace_member, convite, atribuição de veículo)
+
+**Status:** aprovado
+**Decisão:** não requer testes por ora
+**Justificativa:** Mesma decisão de Douglas aplicada à fundação de workspace que viabiliza a SPEC-20260804-002 — priorizar velocidade de entrega do MVP. Reabertura recomendada antes de expor a criação de workspace a usuários pagantes reais (quando o gate de plano Frota for implementado).
+**Escopo (se aprovado):** —
+**Decidido em:** 2026-08-04
+
+---
+
+### SPEC-20260803-001 — Consolidação de Tipos de Resposta da API em packages/validators
+
+**Status:** aprovado
+**Decisão:** requer testes (parcial)
+**Justificativa (proposta do spec-writer):** a migração em si (RF-01 a RF-03) é verificada pelo próprio type-check (`tsc --noEmit`) — que já é executado no pipeline. Testes adicionais de valor real: (1) um unit test em `packages/validators` que verifica que `vehicleResponseSchema.parse(mockRetorno)` não lança exceção dado o shape real retornado pelo service — trava regressão entre schema e service sem exigir banco. (2) Snap-test do tipo exportado (opcional, baixo custo). Testes de componente/E2E das telas migradas são dispensáveis — a migração não muda comportamento de runtime, só tipos de compilação. RF-04 (varredura de outras entidades) não tem lógica verificável além do type-check.
+**Escopo (se aprovado):** unit em `packages/validators` — `vehicleResponseSchema.parse()` contra fixture de shape real do backend (RF-01); verificação de que `ExpenseKpis`/`UpcomingCostItem` estão exportados corretamente (RF-03 — já coberto pelo test existente em `expense.schemas.spec.ts` se existir). Telas do frontend: dispensado (RF-02 e RF-04).
+**Decidido em:** 2026-08-04
+
+---
+
 ### SPEC-20260801-002 — Analytics Avançado — Correlações, Simulações e Personalização
 
 **Status:** pendente

@@ -9,6 +9,9 @@
 |----|--------|--------|
 | [SPEC-20260603-004](SPEC-20260603-004-user-preferences-migration.md) | Migration: Tabela Consolidada `user_preferences` | approved |
 | [SPEC-20260612-003](SPEC-20260612-003-auto-draft-preference.md) | Preferência de Rascunho Automático em Formulários | draft |
+| [SPEC-20260804-002](../context/SPEC-20260804-002-contexto-padrao-e-rotulo-none.md) | Rótulo do Modo `none` e Preferência de Contexto Padrão (spec vive em `context/`) | draft |
+
+> A SPEC-20260804-002 adiciona as colunas `default_context_type` e `default_context_id` à tabela `user_preferences` e estende o `PreferencesModule` NestJS. A spec canônica está em `specs/context/` por ser fundamentalmente uma feature do sistema Em Foco; esta entrada é referência cruzada.
 
 ## Regras aplicáveis
 

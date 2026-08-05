@@ -41,6 +41,8 @@ function mockApi(overrides: Record<string, unknown> = {}) {
       return Promise.resolve(overrides.benchmark ?? []) as never;
     if (path === "/analytics/forecast?vehicle_id=v1")
       return Promise.resolve(overrides.forecast ?? []) as never;
+    if (path === "/analytics/category-series?vehicle_id=v1")
+      return Promise.resolve(overrides.categorySeries ?? []) as never;
     if (path === "/analytics/seasonal?vehicle_id=v1")
       return Promise.resolve(overrides.seasonal ?? []) as never;
     if (path === "/analytics/insights?vehicle_id=v1")
@@ -222,6 +224,62 @@ describe("AnalyticsPage", () => {
 
     expect(
       await screen.findByText("Projeções requerem pelo menos 6 meses de dados."),
+    ).toBeInTheDocument();
+  });
+
+  it("exibe empty state de simulação com menos de 6 meses de histórico (SPEC-20260801-002 RF-06, R-ANA-03)", async () => {
+    mockApi();
+    renderPage();
+
+    expect(
+      await screen.findByText("Projeções e simulações requerem pelo menos 6 meses de dados."),
+    ).toBeInTheDocument();
+  });
+
+  it("exibe os controles de simulação com 6+ meses de histórico (SPEC-20260801-002 RF-04, RF-05)", async () => {
+    const historicalMonths = [
+      "2026-01-01",
+      "2026-02-01",
+      "2026-03-01",
+      "2026-04-01",
+      "2026-05-01",
+      "2026-06-01",
+    ];
+    mockApi({
+      forecast: [
+        ...historicalMonths.map((month) => ({
+          month,
+          projected_amount: 1000,
+          projected_low: 1000,
+          projected_high: 1000,
+          is_forecast: false,
+        })),
+        {
+          month: "2026-07-01",
+          projected_amount: 1000,
+          projected_low: 900,
+          projected_high: 1100,
+          is_forecast: true,
+        },
+      ],
+      categorySeries: historicalMonths.map((month) => ({
+        year_month: month,
+        category: "fuel",
+        total: 400,
+        vehicle_id: "v1",
+      })),
+    });
+    renderPage();
+
+    expect(
+      await screen.findByText("Simulação — projeção com ajuste de categoria"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByLabelText("Variação percentual de gasto"),
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText("Categoria alvo da simulação")).toBeInTheDocument();
+    expect(
+      screen.getByLabelText("Período de referência da simulação"),
     ).toBeInTheDocument();
   });
 

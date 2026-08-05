@@ -1,6 +1,7 @@
 import { apiClient } from "@/lib/http/api-client";
 import { useDashboardStore } from "@/lib/stores/use-dashboard-store";
 import { clearApiCache } from "@/lib/pwa/clear-api-cache";
+import { EASTER_EGG_SEEN_KEY } from "@/lib/analytics/easter-egg-heatmap";
 
 /**
  * Encerra a sessão no backend e limpa todo o contexto global do store,
@@ -26,6 +27,11 @@ export async function logout(): Promise<void> {
       sessionStorage.removeItem("navestory-dashboard-context");
       // @spec SPEC-20260730-002 RF-07 — colapso da sidebar não deve vazar entre sessões.
       sessionStorage.removeItem("navestory-ui-state");
+    }
+    // @spec SPEC-20260801-001 RF-06 — ponto pulsante do easter egg pode reaparecer em nova
+    // sessão no mesmo dispositivo (localStorage, não sessionStorage; comportamento aceito).
+    if (typeof localStorage !== "undefined") {
+      localStorage.removeItem(EASTER_EGG_SEEN_KEY);
     }
     await clearApiCache();
     window.location.href = "/login";

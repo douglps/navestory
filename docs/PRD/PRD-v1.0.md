@@ -22,7 +22,22 @@ Licença: Proprietária/Comercial
 | P-002 | Ana, Gestora Frota Pequena   | 28-45 anos, decisões com dados | High       |
 | P-003 | Roberto, Gestor Grande Frota | 40-55 anos, 50-500 veículos    | Phase 2    |
 
-## 4. Escopo MVP
+## 4. Jobs to Be Done
+
+### Usuário individual (P-001 Carlos / P-002 Ana / P-003 Roberto)
+
+1. Registrar despesa logo após abastecimento (< 30 segundos, mobile)
+2. Verificar quais manutenções estão vencidas ou próximas do vencimento
+3. Controlar o gasto mensal total e por categoria de um veículo
+4. Exportar despesas do período para Excel/Google Sheets
+5. Saber o custo por km de cada veículo
+
+### Gestor de workspace (P-002 Ana / P-003 Roberto no papel de workspace_owner — plano Frota)
+
+6. Ter visão consolidada e atualizada da situação documental de cada motorista do workspace (CNH vigente, cadastro mínimo preenchido) sem depender de planilha ou cobrança manual fora do produto
+7. Configurar quais campos são obrigatórios e o que cada motorista convidado deve preencher antes do primeiro uso, garantindo padrão de dados em toda a equipe sem precisar cobrar individualmente
+
+## 5. Escopo MVP
 
 ### IN:
 
@@ -40,7 +55,7 @@ Licença: Proprietária/Comercial
 
 - OAuth, MFA, App nativo (React Native/Flutter), API pública, Multi-usuário, Push notifications nativas, Offline avançado
 
-## 5. Estratégia Mobile-First e PWA
+## 6. Estratégia Mobile-First e PWA
 
 ### Abordagem
 
@@ -71,7 +86,7 @@ Licença: Proprietária/Comercial
 - Prompt "Adicionar à tela inicial" e ícone do app instalável exibidos corretamente após 2+ visitas.
 - Acesso offline exibe página customizada ou conteúdo do cache com mensagem de offline.
 
-## 6. Requisitos Funcionais
+## 7. Requisitos Funcionais
 
 | ID     | Título         | Critério de Aceite                                   |
 | ------ | -------------- | ---------------------------------------------------- |
@@ -83,7 +98,7 @@ Licença: Proprietária/Comercial
 | RF-006 | Manutenção     | Agendamento, status, alerta email 7 dias antes       |
 | RF-007 | Dashboard      | Total gasto/mês, próximas manutenções, export CSV    |
 
-## 7. Requisitos Não-Funcionais
+## 8. Requisitos Não-Funcionais
 
 **Segurança:**
 
@@ -105,7 +120,7 @@ Licença: Proprietária/Comercial
 - Audit log obrigatório
 - Dados criptografados em repouso
 
-## 8. KPIs de Sucesso
+## 9. KPIs de Sucesso
 
 ```yaml
 product_health:
@@ -123,7 +138,7 @@ business:
   support_tickets_out_of_scope: "< 5%"
 ```
 
-## 9. Roadmap (35 Dias)
+## 10. Roadmap (35 Dias)
 
 | Fase     | Duração | Entregas                      |
 | -------- | ------- | ----------------------------- |

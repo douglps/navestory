@@ -75,7 +75,7 @@ describe("VehiclesService", () => {
     mockClient({ data: [{ id: "v1" }, { id: "v2" }], error: null });
     const service = createService();
 
-    const vehicles = await service.findAll("token", "u1");
+    const vehicles = await service.findAll("token");
 
     expect(vehicles).toHaveLength(2);
   });
@@ -84,7 +84,7 @@ describe("VehiclesService", () => {
     const { builder } = mockClient({ data: [], error: null });
     const service = createService();
 
-    await service.findAll("token", "u1");
+    await service.findAll("token");
 
     expect(builder.limit).toHaveBeenCalledWith(100);
   });

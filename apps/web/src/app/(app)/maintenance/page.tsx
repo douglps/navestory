@@ -3,6 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import type { ReactNode } from "react";
+import type { Maintenance, VehicleResponse as Vehicle } from "@navestory/validators";
 import {
   Alert,
   Badge,
@@ -15,22 +16,6 @@ import { useVehicleContext } from "@/lib/context/use-vehicle-context";
 import { formatDateInTz } from "@/lib/datetime-tz";
 import { usePreferences } from "@/lib/hooks/use-preferences";
 
-interface Maintenance {
-  id: string;
-  vehicle_id: string;
-  description: string;
-  status: "scheduled" | "in_progress" | "completed" | "cancelled";
-  scheduled_date: string;
-  cost: number | null;
-}
-
-interface Vehicle {
-  id: string;
-  plate: string;
-  make: string | null;
-  model: string | null;
-  nickname: string | null;
-}
 
 function vehicleLabel(vehicle: Vehicle | undefined): string {
   if (!vehicle) return "—";

@@ -1,4 +1,6 @@
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen } from "@testing-library/react";
+import type { ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
 
 vi.mock("@/components/layout/header", () => ({
@@ -28,27 +30,38 @@ vi.mock("@/components/pwa/ios-install-banner", () => ({
 
 import AppLayout from "./layout";
 
+function renderLayout(children: ReactNode): ReturnType<typeof render> {
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  return render(
+    (
+      <QueryClientProvider client={queryClient}>
+        <AppLayout>{children}</AppLayout>
+      </QueryClientProvider>
+    ) as ReactNode,
+  );
+}
+
 describe("AppLayout", () => {
   it("renderiza o header fixo", () => {
-    render(<AppLayout><div>conteúdo</div></AppLayout>);
+    renderLayout(<div>conteúdo</div>);
 
     expect(screen.getByTestId("header")).toBeInTheDocument();
   });
 
   it("renderiza a sidebar", () => {
-    render(<AppLayout><div>conteúdo</div></AppLayout>);
+    renderLayout(<div>conteúdo</div>);
 
     expect(screen.getByTestId("sidebar")).toBeInTheDocument();
   });
 
   it("renderiza o conteúdo filho passado", () => {
-    render(<AppLayout><div data-testid="page-content">conteúdo</div></AppLayout>);
+    renderLayout(<div data-testid="page-content">conteúdo</div>);
 
     expect(screen.getByTestId("page-content")).toBeInTheDocument();
   });
 
   it("SPEC-20260722-004 RF-03: inclui o FinancialSubheader no layout", () => {
-    render(<AppLayout><div>página</div></AppLayout>);
+    renderLayout(<div>página</div>);
 
     expect(screen.getByTestId("financial-subheader")).toBeInTheDocument();
   });

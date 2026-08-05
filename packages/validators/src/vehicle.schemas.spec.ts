@@ -4,6 +4,7 @@ import {
   normalizePlate,
   plateSchema,
   updateVehicleInputSchema,
+  vehicleResponseSchema,
 } from "./vehicle.schemas";
 
 describe("normalizePlate", () => {
@@ -54,5 +55,70 @@ describe("updateVehicleInputSchema", () => {
 
   it("aceita objeto vazio (todos os campos opcionais)", () => {
     expect(updateVehicleInputSchema.safeParse({}).success).toBe(true);
+  });
+});
+
+/**
+ * @spec SPEC-20260803-001 RF-01
+ * Fixture espelha exatamente `VEHICLE_COLUMNS` de `apps/api/src/modules/vehicles/vehicles.service.ts`
+ * — trava regressão silenciosa entre o schema de saída e o shape real retornado pelo backend.
+ */
+describe("vehicleResponseSchema", () => {
+  const realBackendShape = {
+    id: "d290f1ee-6c54-4b01-90e6-d701748f0851",
+    user_id: "d290f1ee-6c54-4b01-90e6-d701748f0852",
+    plate: "ABC1234",
+    make: "Fiat",
+    model: "Uno",
+    year: 2020,
+    model_year: 2020,
+    nickname: "Carango",
+    color: "Azul",
+    photo_url: null,
+    photo_thumbnail_url: null,
+    photo_object_position: null,
+    photo_zoom: null,
+    odometer: 45000,
+    fuel_type: "gasoline",
+    fuel_efficiency: 12.5,
+    fuel_liters_capacity: 50,
+    vehicle_type: "carro",
+    status: "parking",
+    renavam: null,
+    chassi: null,
+    fipe_code: null,
+    fipe_updated_at: null,
+    ipva_due_date: null,
+    insurance_expires_at: null,
+    crlv_expires_at: null,
+    engine_displacement_cc: null,
+    engine_power_cv: null,
+    engine_torque_kgm: null,
+    engine_config: null,
+    is_turbo: null,
+    created_at: "2026-01-01T00:00:00.000Z",
+    updated_at: "2026-01-01T00:00:00.000Z",
+  };
+
+  it("aceita o shape real retornado por VehiclesService (RF-01)", () => {
+    const result = vehicleResponseSchema.safeParse(realBackendShape);
+    expect(result.success).toBe(true);
+  });
+
+  it("aceita campos nullable como null (RNF-04)", () => {
+    const withAllNullables = {
+      ...realBackendShape,
+      make: null,
+      model: null,
+      year: null,
+      nickname: null,
+      photo_url: null,
+    };
+    expect(vehicleResponseSchema.safeParse(withAllNullables).success).toBe(true);
+  });
+
+  it("rejeita quando falta um campo obrigatório (id)", () => {
+    const { id: _id, ...withoutId } = realBackendShape;
+    expect(vehicleResponseSchema.safeParse(withoutId).success).toBe(false);
   });
 });

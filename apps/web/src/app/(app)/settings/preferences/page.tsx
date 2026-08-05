@@ -3,23 +3,44 @@
 import {
   CHIP_FIELDS,
   DEFAULT_CHIP_FIELDS,
+  DEFAULT_SPENDING_WINDOW_DAYS,
+  SPENDING_WINDOW_DAYS_OPTIONS,
   chipFieldsSchema,
+  spendingWindowDaysSchema,
   timezoneSchema,
   updatePreferencesInputSchema,
   type ChipField,
+  type ContextType,
+  type SpendingWindowDays,
   type UpdatePreferencesInput,
 } from "@navestory/validators";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState, type ReactNode } from "react";
 import { Alert, Button, Checkbox, Container, Input } from "@navestory/ui";
 import { apiClient } from "@/lib/http/api-client";
+import type {
+  VehicleGroupSummary,
+  VehicleSummary,
+} from "@/lib/context/use-vehicle-context";
 import { formatChipPreview } from "@/lib/vehicle-chip";
 
 interface UserPreferencesResponse {
   auto_draft_enabled: boolean;
   vehicle_chip_fields?: ChipField[];
   timezone?: string | null;
+  /** @spec SPEC-20260804-001 RF-06 */
+  spending_window_days?: SpendingWindowDays;
+  /** @spec SPEC-20260804-002 RF-06 */
+  default_context_type?: ContextType | null;
+  default_context_id?: string | null;
 }
+
+/** @spec SPEC-20260804-002 RF-07 */
+const CONTEXT_TYPE_LABELS: Record<ContextType, string> = {
+  all: "Toda a frota",
+  single: "Veículo específico",
+  group: "Grupo específico",
+};
 
 /** @spec SPEC-20260715-002 RF-FE-06 — fusos IANA do Brasil obrigatórios no seletor */
 const BRAZIL_TIMEZONES = [
@@ -116,6 +137,23 @@ export default function PreferencesPage(): ReactNode {
   const [tzSaveState, setTzSaveState] = useState<"idle" | "saved">("idle");
   const [tzError, setTzError] = useState<string | null>(null);
 
+  /** @spec SPEC-20260804-001 RF-05 */
+  const [spendingWindowDays, setSpendingWindowDays] =
+    useState<SpendingWindowDays>(DEFAULT_SPENDING_WINDOW_DAYS);
+  const [isWindowDirty, setIsWindowDirty] = useState(false);
+  const [windowSaveState, setWindowSaveState] = useState<"idle" | "saved">(
+    "idle",
+  );
+
+  /** @spec SPEC-20260804-002 RF-07 */
+  const [contextType, setContextType] = useState<ContextType>("all");
+  const [contextEntityId, setContextEntityId] = useState<string>("");
+  const [isContextDirty, setIsContextDirty] = useState(false);
+  const [contextSaveState, setContextSaveState] = useState<"idle" | "saved">(
+    "idle",
+  );
+  const [contextError, setContextError] = useState<string | null>(null);
+
   useEffect(() => {
     if (preferences) {
       setAutoDraftEnabled(preferences.auto_draft_enabled);
@@ -124,8 +162,51 @@ export default function PreferencesPage(): ReactNode {
       setIsChipDirty(false);
       setTimezone(preferences.timezone ?? "");
       setIsTzDirty(false);
+      setSpendingWindowDays(
+        preferences.spending_window_days ?? DEFAULT_SPENDING_WINDOW_DAYS,
+      );
+      setIsWindowDirty(false);
+      setContextType(preferences.default_context_type ?? "all");
+      setContextEntityId(preferences.default_context_id ?? "");
+      setIsContextDirty(false);
     }
   }, [preferences]);
+
+  /**
+   * @spec SPEC-20260804-002 RF-07, RF-08 — listas para o seletor de entidade, buscadas quando o
+   * tipo em edição exige (RF-07) ou quando a preferência já salva aponta para esse tipo, para o
+   * aviso de entidade removida (RF-08) funcionar mesmo que o usuário esteja editando outro tipo.
+   */
+  const { data: vehicles } = useQuery({
+    queryKey: ["vehicles"],
+    queryFn: () => apiClient<VehicleSummary[]>("/vehicles"),
+    enabled:
+      contextType === "single" ||
+      preferences?.default_context_type === "single",
+    retry: false,
+    staleTime: 60_000,
+  });
+  const { data: groups } = useQuery({
+    queryKey: ["vehicle-groups"],
+    queryFn: () => apiClient<VehicleGroupSummary[]>("/vehicle-groups"),
+    enabled:
+      contextType === "group" ||
+      preferences?.default_context_type === "group",
+    retry: false,
+    staleTime: 60_000,
+  });
+
+  /** @spec SPEC-20260804-002 RF-08 — aviso quando a entidade salva como padrão foi removida */
+  const savedContextMissing =
+    !!preferences?.default_context_id &&
+    preferences.default_context_type === "single"
+      ? vehicles !== undefined &&
+        !vehicles.some((v) => v.id === preferences.default_context_id)
+      : !!preferences?.default_context_id &&
+          preferences.default_context_type === "group"
+        ? groups !== undefined &&
+          !groups.some((g) => g.id === preferences.default_context_id)
+        : false;
 
   const mutation = useMutation({
     mutationFn: (input: UpdatePreferencesInput) =>
@@ -239,6 +320,85 @@ export default function PreferencesPage(): ReactNode {
     setIsTzDirty(false);
     setTzSaveState("idle");
     setTzError(null);
+  }
+
+  /** @spec SPEC-20260804-001 RF-05 */
+  function handleChangeWindow(days: SpendingWindowDays): void {
+    setSpendingWindowDays(days);
+    setIsWindowDirty(true);
+    setWindowSaveState("idle");
+  }
+
+  function handleSaveWindow(): void {
+    const result = spendingWindowDaysSchema.safeParse(spendingWindowDays);
+    if (!result.success) return;
+    mutation.mutate(
+      { spending_window_days: result.data },
+      {
+        onSuccess: () => {
+          setIsWindowDirty(false);
+          setWindowSaveState("saved");
+        },
+      },
+    );
+  }
+
+  function handleCancelWindow(): void {
+    setSpendingWindowDays(
+      preferences?.spending_window_days ?? DEFAULT_SPENDING_WINDOW_DAYS,
+    );
+    setIsWindowDirty(false);
+    setWindowSaveState("idle");
+  }
+
+  /** @spec SPEC-20260804-002 RF-07 */
+  function handleChangeContextType(type: ContextType): void {
+    setContextType(type);
+    setContextEntityId("");
+    setIsContextDirty(true);
+    setContextSaveState("idle");
+    setContextError(null);
+  }
+
+  function handleChangeContextEntity(id: string): void {
+    setContextEntityId(id);
+    setIsContextDirty(true);
+    setContextSaveState("idle");
+    setContextError(null);
+  }
+
+  function handleSaveContext(): void {
+    if (contextType !== "all" && !contextEntityId) {
+      setContextError(
+        contextType === "single"
+          ? "Selecione um veículo"
+          : "Selecione um grupo",
+      );
+      return;
+    }
+    const result = updatePreferencesInputSchema.safeParse({
+      default_context_type: contextType,
+      default_context_id: contextType === "all" ? null : contextEntityId,
+    });
+    if (!result.success) {
+      setContextError(result.error.issues[0]?.message ?? "Seleção inválida");
+      return;
+    }
+    setContextError(null);
+    mutation.mutate(result.data, {
+      onSuccess: () => {
+        setIsContextDirty(false);
+        setContextSaveState("saved");
+      },
+    });
+  }
+
+  function handleCancelContext(): void {
+    setContextType(preferences?.default_context_type ?? "all");
+    setContextEntityId(preferences?.default_context_id ?? "");
+    setIsContextDirty(false);
+    setContextSaveState("idle");
+    setContextError(null);
   }
 
   if (isLoading) return <main className="p-8">Carregando...</main>;
@@ -428,6 +588,138 @@ export default function PreferencesPage(): ReactNode {
             Cancelar
           </Button>
           {tzSaveState === "saved" && !isTzDirty && <span>✓ Salvo</span>}
+        </div>
+      </section>
+
+      {/* @spec SPEC-20260804-001 RF-05 */}
+      <section className="flex flex-col gap-3">
+        <h2 className="text-lg font-medium">KPIs do Dashboard</h2>
+        <p className="text-sm text-muted-foreground">
+          Janela do KPI &quot;Gastos recentes&quot;: soma as despesas dos
+          últimos dias corridos, terminados hoje.
+        </p>
+
+        <div className="flex items-center gap-2" role="radiogroup" aria-label="Janela do KPI de gastos recentes">
+          {SPENDING_WINDOW_DAYS_OPTIONS.map((days) => (
+            <Button
+              key={days}
+              type="button"
+              variant={spendingWindowDays === days ? "default" : "outline"}
+              size="sm"
+              role="radio"
+              aria-checked={spendingWindowDays === days}
+              onClick={() => handleChangeWindow(days)}
+            >
+              {days} dias
+            </Button>
+          ))}
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Button
+            type="button"
+            onClick={handleSaveWindow}
+            disabled={!isWindowDirty || mutation.isPending}
+          >
+            {mutation.isPending ? "Salvando..." : "Salvar"}
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleCancelWindow}
+            disabled={!isWindowDirty}
+          >
+            Cancelar
+          </Button>
+          {windowSaveState === "saved" && !isWindowDirty && (
+            <span>✓ Salvo</span>
+          )}
+        </div>
+      </section>
+
+      {/* @spec SPEC-20260804-002 RF-07, RF-08 */}
+      <section className="flex flex-col gap-3">
+        <h2 className="text-lg font-medium">Contexto padrão</h2>
+        <p className="text-sm text-muted-foreground">
+          O que o chip do header mostra automaticamente ao iniciar uma nova
+          sessão (login ou aba nova). Não afeta abas já abertas.
+        </p>
+
+        {savedContextMissing && (
+          <Alert
+            variant="warning"
+            description={`O ${preferences?.default_context_type === "single" ? "veículo" : "grupo"} padrão foi removido. Selecione outro ou escolha "Toda a frota".`}
+          />
+        )}
+
+        <div className="flex flex-col gap-1">
+          {(["all", "single", "group"] as const).map((type) => (
+            <label key={type} className="flex items-center gap-2">
+              <input
+                type="radio"
+                name="default-context-type"
+                checked={contextType === type}
+                onChange={() => handleChangeContextType(type)}
+              />
+              {/* eslint-disable-next-line security/detect-object-injection -- type é ContextType, união fixa de 3 literais */}
+              {CONTEXT_TYPE_LABELS[type]}
+            </label>
+          ))}
+        </div>
+
+        {contextType === "single" && (
+          <select
+            aria-label="Selecionar veículo padrão"
+            value={contextEntityId}
+            onChange={(event) => handleChangeContextEntity(event.target.value)}
+            className="rounded-md border border-border px-3 py-2 text-sm"
+          >
+            <option value="">Selecione um veículo</option>
+            {(vehicles ?? []).map((vehicle) => (
+              <option key={vehicle.id} value={vehicle.id}>
+                {vehicle.plate} · {vehicle.model ?? vehicle.make ?? ""}
+              </option>
+            ))}
+          </select>
+        )}
+
+        {contextType === "group" && (
+          <select
+            aria-label="Selecionar grupo padrão"
+            value={contextEntityId}
+            onChange={(event) => handleChangeContextEntity(event.target.value)}
+            className="rounded-md border border-border px-3 py-2 text-sm"
+          >
+            <option value="">Selecione um grupo</option>
+            {(groups ?? []).map((group) => (
+              <option key={group.id} value={group.id}>
+                {group.name} · {group.member_count} membros
+              </option>
+            ))}
+          </select>
+        )}
+
+        {contextError && <Alert variant="error" description={contextError} />}
+
+        <div className="flex items-center gap-2">
+          <Button
+            type="button"
+            onClick={handleSaveContext}
+            disabled={!isContextDirty || mutation.isPending}
+          >
+            {mutation.isPending ? "Salvando..." : "Salvar"}
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleCancelContext}
+            disabled={!isContextDirty}
+          >
+            Cancelar
+          </Button>
+          {contextSaveState === "saved" && !isContextDirty && (
+            <span>✓ Salvo</span>
+          )}
         </div>
       </section>
     </Container>

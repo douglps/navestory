@@ -23,6 +23,10 @@ import { ZodValidationPipe } from "../../common/pipes/zod-validation.pipe";
 import { AnalyticsService } from "./analytics.service";
 import { anomaliesDtoSchema, type AnomaliesDto } from "./dto/anomalies.dto";
 import {
+  categorySeriesDtoSchema,
+  type CategorySeriesDto,
+} from "./dto/category-series.dto";
+import {
   exportAnalyticsDtoSchema,
   type ExportAnalyticsDto,
 } from "./dto/export-analytics.dto";
@@ -145,6 +149,29 @@ export class AnalyticsController {
   ) {
     const accessToken = this.extractAccessToken(req);
     const data = await this.analyticsService.getSeasonal(
+      accessToken,
+      query.vehicle_id,
+    );
+    return { data };
+  }
+
+  @Get("category-series")
+  @Header("Cache-Control", CACHE_HEADER)
+  @ApiOperation({
+    summary:
+      "Série mensal de gastos por categoria (base para correlações temporais)",
+  })
+  @ApiResponse({
+    status: 200,
+    description: "Lista de ExpenseCategoryMonthlySeries",
+  })
+  async getCategorySeries(
+    @Req() req: Request,
+    @Query(new ZodValidationPipe(categorySeriesDtoSchema))
+    query: CategorySeriesDto,
+  ) {
+    const accessToken = this.extractAccessToken(req);
+    const data = await this.analyticsService.getCategorySeries(
       accessToken,
       query.vehicle_id,
     );

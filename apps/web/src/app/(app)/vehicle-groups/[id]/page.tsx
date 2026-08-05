@@ -1,6 +1,9 @@
 "use client";
 
-import { updateGroupInputSchema } from "@navestory/validators";
+import {
+  updateGroupInputSchema,
+  type VehicleResponse as Vehicle,
+} from "@navestory/validators";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
@@ -11,17 +14,12 @@ interface VehicleGroup {
   id: string;
   name: string;
   color: string;
-}
-
-interface Vehicle {
-  id: string;
-  plate: string;
-  make: string | null;
-  model: string | null;
+  vehicleIds: string[];
 }
 
 /**
  * @spec SPEC-20260602-003 RF-03, RF-04, RF-05
+ * @spec SPEC-20260804-005 RF-02, RF-03, RF-04, RF-05, RF-06
  */
 export default function VehicleGroupDetailPage({
   params,
@@ -66,6 +64,7 @@ export default function VehicleGroupDetailPage({
     if (group) {
       setName(group.name);
       setColor(group.color);
+      setSelectedVehicleIds(group.vehicleIds ?? []);
     }
   }, [group]);
 
@@ -86,6 +85,9 @@ export default function VehicleGroupDetailPage({
         method: "PUT",
         body: { vehicleIds: selectedVehicleIds },
       }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["vehicle-groups"] });
+    },
   });
 
   const deleteMutation = useMutation({
@@ -103,6 +105,28 @@ export default function VehicleGroupDetailPage({
         ? current.filter((v) => v !== vehicleId)
         : [...current, vehicleId],
     );
+  }
+
+  function handleSaveMembers(): void {
+    if (!group) return;
+
+    const currentIds = group.vehicleIds ?? [];
+    const added = selectedVehicleIds.filter((v) => !currentIds.includes(v)).length;
+    const removed = currentIds.filter((v) => !selectedVehicleIds.includes(v)).length;
+
+    if (selectedVehicleIds.length === 0 && currentIds.length > 0) {
+      const confirmed = window.confirm(
+        `Isso removerá todos os ${currentIds.length} veículo(s) deste grupo. Confirmar?`,
+      );
+      if (!confirmed) return;
+    } else {
+      const confirmed = window.confirm(
+        `Adicionar ${added} veículo(s), remover ${removed} veículo(s). Confirmar?`,
+      );
+      if (!confirmed) return;
+    }
+
+    setMembersMutation.mutate();
   }
 
   function handleSubmit(event: FormEvent): void {
@@ -184,8 +208,8 @@ export default function VehicleGroupDetailPage({
         <Button
           type="button"
           variant="outline"
-          onClick={() => setMembersMutation.mutate()}
-          disabled={setMembersMutation.isPending}
+          onClick={handleSaveMembers}
+          disabled={setMembersMutation.isPending || isLoading || !group}
         >
           {setMembersMutation.isPending
             ? "Salvando membros..."

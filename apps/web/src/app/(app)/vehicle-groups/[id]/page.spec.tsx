@@ -22,15 +22,19 @@ describe("VehicleGroupDetailPage", () => {
     vi.clearAllMocks();
   });
 
-  const group = { id: "g1", name: "Motos", color: "#ef4444" };
+  const group = { id: "g1", name: "Motos", color: "#ef4444", vehicleIds: ["v1"] };
+  const vehicles = [
+    { id: "v1", make: "Honda", model: "CG 160", plate: "ABC1234" },
+    { id: "v2", make: "Yamaha", model: "Fazer", plate: "XYZ5678" },
+  ];
 
-  function mockApi() {
+  function mockApi(overrides?: { group?: typeof group; vehicles?: typeof vehicles }) {
     vi.mocked(apiClient).mockImplementation((path: string, options?: { method?: string }) => {
       if (path === "/vehicle-groups" && (!options || options.method === undefined)) {
-        return Promise.resolve([group]);
+        return Promise.resolve([overrides?.group ?? group]);
       }
       if (path === "/vehicles") {
-        return Promise.resolve([]);
+        return Promise.resolve(overrides?.vehicles ?? vehicles);
       }
       return Promise.resolve(undefined);
     });
@@ -75,5 +79,71 @@ describe("VehicleGroupDetailPage", () => {
 
     await waitFor(() => expect(pushMock).toHaveBeenCalledWith("/vehicle-groups"));
     expect(apiClient).toHaveBeenCalledWith("/vehicle-groups/g1", { method: "DELETE" });
+  });
+
+  it("inicializa os checkboxes com os membros atuais do grupo (SPEC-20260804-005 RF-02, CA-01)", async () => {
+    mockApi();
+    renderPage();
+
+    const honda = await screen.findByRole("checkbox", { name: /Honda CG 160/ });
+    const yamaha = screen.getByRole("checkbox", { name: /Yamaha Fazer/ });
+
+    expect(honda).toBeChecked();
+    expect(yamaha).not.toBeChecked();
+  });
+
+  it("sem alterar a seleção, exibe diff zerado e envia o payload atual (SPEC-20260804-005 RF-04, CA-03, CA-04)", async () => {
+    const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(true);
+    mockApi();
+    renderPage();
+
+    const honda = await screen.findByRole("checkbox", { name: /Honda CG 160/ });
+    await waitFor(() => expect(honda).toBeChecked());
+    fireEvent.click(screen.getByRole("button", { name: "Salvar membros" }));
+
+    expect(confirmSpy).toHaveBeenCalledWith(
+      "Adicionar 0 veículo(s), remover 0 veículo(s). Confirmar?",
+    );
+    await waitFor(() =>
+      expect(apiClient).toHaveBeenCalledWith(
+        "/vehicle-groups/g1/members",
+        expect.objectContaining({ method: "PUT", body: { vehicleIds: ["v1"] } }),
+      ),
+    );
+  });
+
+  it("desmarcar todos os membros de um grupo populado exige confirmação de remoção total (SPEC-20260804-005 RF-05, CA-05)", async () => {
+    const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(true);
+    mockApi();
+    renderPage();
+
+    const honda = await screen.findByRole("checkbox", { name: /Honda CG 160/ });
+    await waitFor(() => expect(honda).toBeChecked());
+    fireEvent.click(honda);
+    fireEvent.click(screen.getByRole("button", { name: "Salvar membros" }));
+
+    expect(confirmSpy).toHaveBeenCalledWith(
+      "Isso removerá todos os 1 veículo(s) deste grupo. Confirmar?",
+    );
+    await waitFor(() =>
+      expect(apiClient).toHaveBeenCalledWith(
+        "/vehicle-groups/g1/members",
+        expect.objectContaining({ method: "PUT", body: { vehicleIds: [] } }),
+      ),
+    );
+  });
+
+  it("cancelar a confirmação não dispara a requisição de salvar membros (SPEC-20260804-005 RF-06, CA-06)", async () => {
+    vi.spyOn(window, "confirm").mockReturnValue(false);
+    mockApi();
+    renderPage();
+
+    await screen.findByRole("checkbox", { name: /Honda CG 160/ });
+    fireEvent.click(screen.getByRole("button", { name: "Salvar membros" }));
+
+    await waitFor(() => expect(apiClient).not.toHaveBeenCalledWith(
+      "/vehicle-groups/g1/members",
+      expect.anything(),
+    ));
   });
 });

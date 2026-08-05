@@ -140,7 +140,9 @@ function getModeLabel(params: {
         ? `${CONTEXT_LABELS.fleetFilter}: ${attributeFilter.attribute} = ${attributeFilter.value}`
         : CONTEXT_LABELS.fleetFilter;
     default:
-      return `+ ${CONTEXT_LABELS.selectVehiclePrompt}`;
+      // @spec SPEC-20260804-002 RF-01 — "none" já funciona como "toda a frota" em todos os
+      // filtros de query; o rótulo agora reflete isso em vez de comunicar tarefa pendente.
+      return CONTEXT_LABELS.allFleet;
   }
 }
 
@@ -172,6 +174,7 @@ function getModeAriaLabel(params: {
         ? `Em foco: filtro de frota — ${attributeFilter.attribute} = ${attributeFilter.value}`
         : "Em foco: filtro de frota";
     default:
-      return "Sem contexto — clique para selecionar veículo";
+      // @spec SPEC-20260804-002 RF-02
+      return "Toda a frota — clique para selecionar um veículo ou grupo";
   }
 }

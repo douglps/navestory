@@ -3159,6 +3159,281 @@ RNF-04 (foco preso no drawer + retorno ao hamburger ao fechar) implementado em `
 
 ---
 
+## SPEC-20260803-001 — Consolidação de Tipos de Resposta da API em packages/validators (approved)
+
+> Origina-se do achado de auditoria [IMPACTO-049](impacto.md#impacto-049). Mitigação escolhida
+> (Opção A): exportar schemas Zod de saída em `packages/validators` e migrar `apps/web` para
+> importar em vez de redeclarar interfaces locais. Spec em `specs/api-contracts/SPEC-20260803-001-consolidacao-tipos-resposta-api.md`.
+
+| RF    | Requisito                                                                                                          | Código                                                                                                                                                 | Teste    | Status |
+|-------|--------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------|----------|--------|
+| RF-01 | Criar `vehicleResponseSchema` + exportar `VehicleResponse` em `packages/validators/src/vehicle.schemas.ts`, espelhando `VEHICLE_COLUMNS` real do backend | `packages/validators/src/vehicle.schemas.ts` ✅ implementado                                                                                          | ✅ `packages/validators/src/vehicle.schemas.spec.ts` — `vehicleResponseSchema` contra fixture espelhando `VEHICLE_COLUMNS` real (aprovado em `TEST_DECISIONS.md` 2026-08-04) | ✅ |
+| RF-02 | Remover as 12 declarações locais de `interface Vehicle` em `apps/web` e importar `VehicleResponse as Vehicle`     | `apps/web/src/app/(app)/{vehicles,vehicles/[id],vehicles/[id]/odometer,analytics,expenses,expenses/new,fines,fines/new,maintenance,maintenance/new,vehicle-groups/new,vehicle-groups/[id]}/page.tsx` ✅ implementado (12 arquivos, 4 a mais que a estimativa original de 8 da spec) | ✅ verificado — `pnpm --filter @navestory/web type-check` sem erros novos | ✅ |
+| RF-03 | Remover redeclaração de `ExpenseKpis`/`UpcomingCostItem` em `expenses/page.tsx:37–55` e importar de `@navestory/validators` | `apps/web/src/app/(app)/expenses/page.tsx` ✅ implementado                                                                                             | ✅ verificado — type-check                                                                | ✅ |
+| RF-04 | Varredura de outras entidades (`Fine`, `Maintenance`, KPIs de dashboard) pelo mesmo padrão de drift; criar schemas faltantes e migrar telas | `Maintenance` (já existia em `maintenance.schemas.ts`, mesmo drift de RF-03): migrado em `maintenance/page.tsx` e `maintenance/[id]/page.tsx` ✅. `Fine`: sem drift encontrado (frontend já importava do pacote). Cluster de dashboard (`FleetHealthEntry`/`VehicleCardData`/`HealthFlag`): concluído nesta rodada — os shapes já eram idênticos entre a versão local (`VehicleHealthCard.tsx`) e a genérica (`dashboard.schemas.ts`), então a decisão de design foi: `HealthFlag` e `VehicleCard` viram canônicos em `packages/validators/src/dashboard.schemas.ts` (`FleetHealthEntry.flags: HealthFlag[]`); `VehicleHealthCard.tsx` reexporta `VehicleCard as VehicleCardData` e `HealthFlag` do pacote em vez de redeclarar; as 4 redeclarações locais de `interface FleetHealthEntry` (`dashboard/page.tsx`, `vehicles/page.tsx`, `dashboard/concept/page.tsx`, `dashboard/concept/design-system-v2/page.tsx`) foram removidas em favor de `import type { FleetHealthEntry } from "@navestory/validators"`. | ✅ verificado — type-check | ✅ |
+
+**Verificação pós-migração executada:** `grep -rn "interface Vehicle\b\|type Vehicle\s*=" apps/web/src` retorna vazio. `pnpm --filter @navestory/validators build` (necessário para o `dist/` refletir os novos exports) seguido de `pnpm --filter @navestory/validators type-check` e `pnpm --filter @navestory/web type-check` não introduziram nenhum erro novo nos arquivos tocados por RF-01–04 (erros pré-existentes em arquivos `.spec.tsx` não relacionados — `admin-users-table.spec.tsx`, `vehicle-switcher-content.spec.tsx`, `layout.spec.tsx`, `fuel-trend-chart.spec.tsx`, `maintenance/page.spec.tsx` — permanecem, sem relação com esta spec).
+
+**2026-08-04 (fechamento RF-02, arquivo remanescente):** `apps/web/src/app/workspace/vehicles-tab.tsx` (feature de workspace, SPEC-20260804-004, criada no mesmo dia) redeclarava `interface Vehicle` localmente — não fazia parte da lista de 12 arquivos original porque a tela ainda não existia quando RF-02 foi fechado. Migrado para `import type { VehicleResponse } from "@navestory/validators"`. Verificação repetida (`grep` + type-check) confirma zero redeclarações remanescentes em `apps/web/src`.
+
+---
+
+## SPEC-20260804-001 — KPI Dashboard: Gastos nos Últimos X Dias (Janela Rolante Configurável) (approved)
+
+> Spec em `specs/dashboard/SPEC-20260804-001-kpi-spending-window.md`. Estende SPEC-20260721-002 (approved)
+> de forma aditiva: 9ª entrada no catálogo `KPI_CATALOG_IDS`, coluna `spending_window_days` em
+> `user_preferences` e controle de seleção em `/settings/preferences`.
+>
+> **Código implementado em 2026-08-04. Testes automatizados adicionados em 2026-08-04** — cobertura
+> unitária em `dashboard.schemas.spec.ts` (`spendingWindowDaysSchema`, `KPI_CATALOG_IDS`),
+> `preferences.schemas.spec.ts` (`updatePreferencesInputSchema` com `spending_window_days`),
+> `preferences.service.spec.ts` (`findOne`/`upsert` de `spending_window_days`, corrigindo 2 testes que
+> quebraram com a interface `UserPreferences` estendida) e `dashboard.service.spec.ts`
+> (`getFleetKpiCatalog` → `spending_window`: soma, label dinâmico por preferência, valor zero e
+> isolamento de falha), e `page.spec.tsx` da página de preferências (RF-05: default 7 dias, janela
+> persistida, salvar 14 dias via PATCH, cancelar sem salvar). `DashboardKpiGrid.spec.tsx` (RF-04) já
+> cobria o card sem sparkline/delta.
+> Todos os arquivos tocados por esta spec passam (`preferences.service.spec.ts` 8/8,
+> `dashboard.service.spec.ts` 76/76, `dashboard.schemas.spec.ts` 23/23, `preferences.schemas.spec.ts`
+> 19/19, `DashboardKpiGrid.spec.tsx` 22/22, `page.spec.tsx` 20/20). Falhas remanescentes nas suítes completas de
+> `@navestory/validators` (`expense.schemas.spec.ts`, `maintenance.schemas.spec.ts`) e `@navestory/web`
+> (`vehicle-context-chip.spec.tsx`, `vehicle-activator.spec.tsx`, `header.spec.tsx`, `layout.spec.tsx`)
+> são pré-existentes e pertencem a SPEC-20260804-002, não a esta spec.
+
+| RF    | Requisito                                                                                            | Código        | Teste        | Status    |
+|-------|------------------------------------------------------------------------------------------------------|---------------|--------------|-----------|
+| RF-01 | Migration `spending_window_days SMALLINT NOT NULL DEFAULT 7 CHECK IN (7,14,30)` em `user_preferences` | ✅ `supabase/migrations/20260804120000_add_spending_window_days.sql` | ✅ `preferences.service.spec.ts` (default e persistência) | ✅        |
+| RF-02 | Campo `spendingWindowDays` no schema Zod de preferências (`@navestory/validators`); PATCH /preferences aceita e valida o campo | ✅ `packages/validators/src/dashboard.schemas.ts` (`spendingWindowDaysSchema`), `preferences.schemas.ts` (`updatePreferencesInputSchema`) | ✅ `dashboard.schemas.spec.ts`, `preferences.schemas.spec.ts` | ✅ |
+| RF-03 | `GET /dashboard/kpi-catalog` inclui 9ª entrada `spending_window` com cômputo de janela rolante no fuso do usuário (R-TZ-01) | ✅ `apps/api/src/modules/dashboard/dashboard.service.ts` (`getSpendingWindowTotal`, `getFleetKpiCatalog`) | ✅ `dashboard.service.spec.ts` (describe `spending_window`) | ✅ |
+| RF-04 | `KpiCard` de `spending_window` sem sparkline nem delta (decisão de produto documentada na spec)      | ✅ `apps/web/src/components/dashboard/DashboardKpiGrid.tsx` (`specForId`, case `spending_window`) | ✅ `DashboardKpiGrid.spec.tsx` (fixture) | ✅ |
+| RF-05 | Controle de seleção de janela em `/settings/preferences`                                             | ✅ `apps/web/src/app/(app)/settings/preferences/page.tsx` (seção "KPIs do Dashboard") | ✅ `page.spec.tsx` (describe "janela do KPI de gastos recentes") | ✅        |
+| RF-06 | `KPI_CATALOG_IDS` atualizado de 8 para 9 entradas (adiciona `'spending_window'`)                     | ✅ `packages/validators/src/dashboard.schemas.ts`, `apps/web/src/components/dashboard/kpi-catalog.ts` (`KPI_CATALOG_META`) | ✅ `dashboard.schemas.spec.ts` | ✅        |
+
+---
+
+## SPEC-20260804-002 — Rótulo do Modo `none` e Preferência de Contexto Padrão (approved)
+
+> Spec em `specs/context/SPEC-20260804-002-contexto-padrao-e-rotulo-none.md`. Corrige o rótulo
+> exibido pelo `VehicleContextChip` quando `selectionMode === "none"` (de "+ selecionar veículo"
+> para "Toda a frota") e adiciona preferência por usuário para contextualizar automaticamente a
+> sessão ao login/abertura de nova aba.
+>
+> **Código implementado em 2026-08-04**, incluindo migration em `user_preferences` (2 colunas
+> novas + constraint de coerência) e extensão do `PreferencesModule` NestJS.
+>
+> **Testes automatizados adicionados em 2026-08-04** (ver decisão em `specs/TEST_DECISIONS.md`):
+> `vehicle-context-chip.spec.tsx` e `header.spec.tsx` atualizados para o rótulo "Toda a frota"
+> (RF-01/RF-02/RF-03); `vehicle-activator.spec.tsx` ganhou casos dedicados para RF-09/RF-10/RF-11
+> (aplicação de `single`/`group`, staleness silenciosa, precedência de deep link sobre a
+> preferência do banco) — exigiu envolver o componente em `QueryClientProvider` no teste, já que
+> `VehicleActivator` passou a usar `useQuery` para buscar `/preferences`. `preferences.schemas.spec.ts`
+> (19/19), `preferences.service.spec.ts` e `preferences.controller.spec.ts` (15/15) já cobriam
+> RF-04/RF-05/RF-06. RF-07/RF-08 verificados manualmente (tela reaproveita `VehicleSwitcherContent`,
+> RNF-05, sem novo componente). De quebra, `apps/web/src/app/(app)/layout.spec.tsx` (pré-existente,
+> quebrado por `ProfileIncompleteBanner` da SPEC-20260804-004 sem `QueryClientProvider`) foi corrigido
+> — não pertencia ao escopo desta spec, mas bloqueava a suíte completa (`pnpm --filter @navestory/web test`:
+> 90/90 arquivos, 618/618 testes, 100% verde). Suíte de `@navestory/api` (`preferences`): 15/15.
+> Falhas remanescentes em `@navestory/validators` (`expense.schemas.spec.ts`, `maintenance.schemas.spec.ts`)
+> e `type-check` de `@navestory/web` (`admin-users-table.spec.tsx`, `admin/layout.spec.tsx`,
+> `fuel-trend-chart.spec.tsx`, `vehicle-switcher-content.spec.tsx`) são pré-existentes e não tocam
+> nenhum arquivo desta spec.
+
+| RF    | Requisito                                                                                                                   | Código      | Teste       | Status |
+| ----- | --------------------------------------------------------------------------------------------------------------------------- | ----------- | ----------- | ------ |
+| RF-01 | `getModeLabel` retorna `"Toda a frota"` para `selectionMode === "none"` (`use-vehicle-context.ts`)                         | ✅ `apps/web/src/lib/context/use-vehicle-context.ts` (`getModeLabel`, branch `default`) | ✅ `vehicle-context-chip.spec.tsx`, `header.spec.tsx` | ✅     |
+| RF-02 | `getModeAriaLabel` retorna `"Toda a frota — clique para selecionar um veículo ou grupo"` para `"none"`                     | ✅ `use-vehicle-context.ts` (`getModeAriaLabel`, branch `default`) | ✅ `vehicle-context-chip.spec.tsx` (aria-label do chip via `getByRole("button", { name: /Toda a frota/ })`) | ✅     |
+| RF-03 | Botão × do chip ausente quando `selectionMode === "none"` (comportamento já existente, verificar consistência pós-RF-01)   | ✅ `vehicle-context-chip.tsx` (já satisfeito antes desta spec — `selectionMode !== "none"` já era a guarda; sem mudança de código necessária) | ✅ `vehicle-context-chip.spec.tsx` | ✅     |
+| RF-04 | Migration: `default_context_type TEXT CHECK IN ('all','single','group') DEFAULT NULL` + `default_context_id UUID DEFAULT NULL` + constraint de coerência em `user_preferences` | ✅ `supabase/migrations/20260804120100_add_default_context_preference.sql` | ✅ `preferences.service.spec.ts` (findOne/upsert dos campos novos) | ✅ |
+| RF-05 | Schema Zod de preferências estendido com `default_context_type` e `default_context_id`; `PATCH /preferences` os aceita e valida | ✅ `packages/validators/src/preferences.schemas.ts` (`contextTypeSchema`, `updatePreferencesInputSchema`) | ✅ `preferences.schemas.spec.ts` (coerência type/id, UUID) | ✅     |
+| RF-06 | `GET /preferences` retorna `default_context_type` e `default_context_id`                                                   | ✅ `apps/api/src/modules/preferences/preferences.service.ts` (`PREFERENCES_COLUMNS`, `findOne`) | ✅ `preferences.service.spec.ts`, `preferences.controller.spec.ts` | ✅     |
+| RF-07 | Seção "Contexto padrão" em `/settings/preferences` com seletor de tipo e entidade                                          | ✅ `apps/web/src/app/(app)/settings/preferences/page.tsx` (seção "Contexto padrão") | ⏳ verificado manualmente (sem componente novo, RNF-05) | ✅     |
+| RF-08 | Aviso passivo em `/settings/preferences` quando entidade padrão foi excluída                                               | ✅ `settings/preferences/page.tsx` (`savedContextMissing`) | ⏳ verificado manualmente (sem componente novo, RNF-05) | ✅     |
+| RF-09 | Mount de `(app)/layout.tsx` aplica preferência do banco quando `sessionStorage` está vazio após hidratação do store         | ✅ `apps/web/src/components/layout/vehicle-activator.tsx` (já montado em `layout.tsx`) | ✅ `vehicle-activator.spec.tsx` (aplica `single`/`group`) | ✅     |
+| RF-10 | Aplicação silenciosa quando `default_context_id` não existe na lista de entidades ativas (staleness)                       | ✅ `vehicle-activator.tsx` (valida contra `vehicles`/`groups` antes de ativar) | ✅ `vehicle-activator.spec.tsx` (`default_context_id` inexistente → permanece `"none"`) | ✅     |
+| RF-11 | `sessionStorage` tem precedência sobre a preferência do banco na mesma sessão de aba                                       | ✅ `vehicle-activator.tsx` (`hasAppliedDefaultContext` ref + `selectionMode === "none"` guard) | ✅ `vehicle-activator.spec.tsx` (deep link `?vehicleId=` vence preferência de grupo do banco) | ✅     |
+
+---
+
+## SPEC-20260804-004 — Fundação de Workspace — Owner, Membros, Convite e Atribuição de Veículo (approved)
+
+> Spec em `specs/workspace/SPEC-20260804-004-workspace-foundation.md`. Pré-requisito técnico de
+> SPEC-20260804-003 (Configurações da Frota). Implementa o subconjunto de `SPEC-20260620-001`
+> (BS-ACL-06/BS-ACL-07) necessário para workspace_owner/workspace_member existirem, sem billing.
+>
+> **Código implementado nesta revisão** (2026-08-04): migrations
+> `supabase/migrations/20260804210000_workspace_foundation.sql` (tabelas + RLS),
+> `20260804210100_workspace_vehicles_rls_extension.sql` (RF-10),
+> `20260804220000_workspace_rls_recursion_fix.sql` (corrige recursão infinita de RLS entre
+> `workspaces`/`workspace_members`, achada em teste manual — ver changelog da spec) e
+> `20260804230000_workspace_members_allow_rejoin.sql` (remove constraint redundante que impedia
+> reingresso de membro removido — ver changelog da spec); backend
+> `apps/api/src/modules/workspaces/` (`workspaces.module.ts`, `.controller.ts`, `.service.ts`,
+> `services/workspace-admin-supabase.service.ts`); schemas Zod em
+> `packages/validators/src/workspace.schemas.ts`; frontend `apps/web/src/app/workspace/*`
+> (`layout.tsx`, `page.tsx`, `create-workspace-form.tsx`, `members-tab.tsx`,
+> `invite-driver-dialog.tsx`, `remove-member-dialog.tsx`, `vehicles-tab.tsx`,
+> `workspace-owner-dashboard.tsx`, `workspace-member-dashboard.tsx`, `invite/[token]/page.tsx`);
+> `apps/web/middleware.ts` (comentário RF-12).
+>
+> **Ciclo completo owner + member testado ponta a ponta em 2026-08-04** (via chamadas diretas à
+> API local contra o projeto remoto `navestory`/sfkefpoanmoiagwxbwld, com um segundo usuário de
+> teste real criado e removido na sessão): criar workspace → convidar → aceitar → listar membro →
+> atribuir veículo → member vê só o veículo atribuído → desatribuir → remover membro → reconvidar
+> o mesmo e-mail. 3 bugs reais encontrados e corrigidos nesse ciclo (nenhum estava coberto por
+> teste automatizado, ver TEST_DECISIONS): RF-10 (filtro de aplicação sobrepondo a RLS em
+> `vehicles.service.ts`), RF-07 (`role ?? undefined` nunca limpava `app_metadata.role` no
+> Supabase) e a constraint de schema que quebrava reingresso — ver changelog da spec para o
+> detalhe de cada um.
+
+| RF    | Requisito                                                                                   | Código      | Teste       | Status |
+| ----- | --------------------------------------------------------------------------------------------- | ----------- | ----------- | ------ |
+| RF-01 | `POST /workspaces` cria workspace e define `app_metadata.role = workspace_owner`               | ✅ `workspaces.service.ts#createWorkspace` | ⏳ dispensado (TEST_DECISIONS 2026-08-04) | ✅ testado ponta a ponta |
+| RF-02 | `GET /workspaces/me` retorna workspace do usuário autenticado                                  | ✅ `workspaces.service.ts#getMyWorkspace` | ⏳ dispensado | ✅ testado ponta a ponta |
+| RF-03 | `POST /workspaces/:id/invites` gera convite com token, válido 7 dias                           | ✅ `workspaces.service.ts#createInvite` | ⏳ dispensado | ✅ testado ponta a ponta |
+| RF-04 | `GET /workspaces/invites/:token` retorna dados públicos do convite                             | ✅ `workspaces.service.ts#getInviteByToken` | ⏳ dispensado | ✅ testado ponta a ponta |
+| RF-05 | `POST /workspaces/invites/:token/accept` cria membership e define `app_metadata.role = workspace_member` | ✅ `workspaces.service.ts#acceptInvite` + `workspace-admin-supabase.service.ts#acceptInvite` | ⏳ dispensado | ✅ testado ponta a ponta com 2º usuário real |
+| RF-06 | `GET /workspaces/:id/members` lista membros ativos                                             | ✅ `workspaces.service.ts#listMembers` | ⏳ dispensado | ✅ testado ponta a ponta |
+| RF-07 | `DELETE /workspaces/:id/members/:memberId` remove membro, revoga role, preserva histórico       | ✅ `workspaces.service.ts#removeMember` + `workspace-admin-supabase.service.ts#setRole` (bug corrigido: `role ?? undefined` não limpava o role) | ⏳ dispensado | ✅ testado ponta a ponta |
+| RF-08 | `PUT /workspaces/:id/vehicles/:vehicleId/assign` atribui veículo próprio do owner a um membro  | ✅ `workspaces.service.ts#assignVehicle` | ⏳ dispensado | ✅ testado ponta a ponta |
+| RF-09 | `DELETE /workspaces/:id/vehicles/:vehicleId/assign` remove atribuição                           | ✅ `workspaces.service.ts#unassignVehicle` | ⏳ dispensado | ✅ testado ponta a ponta |
+| RF-10 | RLS de `vehicles` estendida para visibilidade via `workspace_vehicle_assignments`               | ✅ migrations de RLS + `vehicles.service.ts#findAll/findOne` (bug corrigido: filtro `.eq("user_id", userId)` sobrepunha a RLS e escondia veículos atribuídos) | ⏳ dispensado | ✅ testado ponta a ponta |
+| RF-11 | Auditoria (C2) em toda mutação de workspace                                                     | ✅ `AuditService.log` chamado em todos os métodos de `workspaces.service.ts` | ⏳ dispensado | ✅ código / ⏳ conteúdo dos logs não inspecionado linha a linha |
+| RF-12 | Frontend `/workspace` protegido por middleware + layout server-side por role                   | ✅ `apps/web/middleware.ts`, `apps/web/src/app/workspace/layout.tsx` | ⏳ dispensado | ✅ testado manualmente |
+
+---
+
+## SPEC-20260804-003 — Configurações da Frota — Campos Obrigatórios, Checklist de Onboarding e Conformidade Documental (approved)
+
+> Spec em `specs/fleet-admin/SPEC-20260804-003-fleet-settings.md`. Depende de SPEC-20260804-004
+> (Fundação de Workspace). MVP: campos obrigatórios de motorista com defaults do sistema,
+> checklist de onboarding, alerta de CNH vencendo in-app (sem e-mail — Fase 9), painel de
+> conformidade consolidado. Fora de escopo: budget/orçamento, geofencing.
+>
+> **Código implementado nesta revisão** (2026-08-04): migration
+> `supabase/migrations/20260804210200_fleet_settings.sql`; backend
+> `apps/api/src/modules/fleet-settings/` (`.module.ts`, `.controller.ts`, `.service.ts`); schemas
+> Zod em `packages/validators/src/fleet-settings.schemas.ts`; frontend
+> `apps/web/src/app/workspace/{driver-settings-tab,compliance-tab,onboarding/page}.tsx`,
+> `apps/web/src/components/workspace/profile-incomplete-banner.tsx` (montado em
+> `apps/web/src/app/(app)/layout.tsx`). **Executado e testado manualmente em 2026-08-04**:
+> migration aplicada no remoto; telas "Campos obrigatórios" e "Conformidade" verificadas no
+> navegador com dados reais (defaults ativos, painel de conformidade vazio corretamente exibido
+> sem motoristas). Sem testes automatizados (TEST_DECISIONS: aprovado, não requer testes por
+> ora).
+
+| RF    | Requisito                                                                                     | Código      | Teste       | Status |
+| ----- | ------------------------------------------------------------------------------------------------ | ----------- | ----------- | ------ |
+| RF-01 | Defaults de campos obrigatórios (CNH, validade, categoria, telefone) ativos sem configuração manual | ✅ `fleet-settings.service.ts#getDriverSettings` (`DEFAULT_SETTINGS`) | ⏳ dispensado (TEST_DECISIONS 2026-08-04) | ✅ testado manualmente |
+| RF-02 | Tela "Configurações da Frota" com toggles de campo obrigatório por workspace                     | ✅ `driver-settings-tab.tsx` + `fleet-settings.service.ts#updateDriverSettings` | ⏳ dispensado | ✅ testado manualmente |
+| RF-03 | Configuração de campos obrigatórios é por workspace, não retroativa                              | ✅ `workspace_driver_settings` (1 linha por workspace); conformidade calculada em runtime, sem coluna `completed_at` retroativa | ⏳ dispensado | ✅ código / ⏳ execução |
+| RF-04 | Checklist de onboarding do motorista convidado (campos pendentes)                                | ✅ `apps/web/src/app/workspace/onboarding/page.tsx` | ⏳ dispensado | ✅ código / ⏳ execução |
+| RF-05 | Indicador persistente de cadastro incompleto                                                     | ✅ `profile-incomplete-banner.tsx` | ⏳ dispensado | ✅ código / ⏳ execução |
+| RF-06 | Confirmação visual ao completar checklist                                                        | ✅ `onboarding/page.tsx` (Alert success quando `pending.length === 0`) | ⏳ dispensado | ✅ código / ⏳ execução |
+| RF-07 | Cálculo diário/on-load de dias até vencimento de CNH (R-TZ-01)                                   | ✅ `fleet-settings.service.ts#getCompliance` (usa `toCalendarDay`/`FALLBACK_TIMEZONE` de `shared/utils/date.utils.ts`) | ⏳ dispensado | ✅ código / ⏳ execução |
+| RF-08 | Alerta in-app `warning` para CNH vencendo em 8–30 dias                                           | ✅ `computeCnhStatus` em `fleet-settings.service.ts` + `compliance-tab.tsx` (`CNH_STATUS_STYLE`) | ⏳ dispensado | ✅ código / ⏳ execução |
+| RF-09 | Alerta in-app `urgency-hot` para CNH vencendo em 0–7 dias                                        | ✅ idem RF-08 | ⏳ dispensado | ✅ código / ⏳ execução |
+| RF-10 | Status `danger`/"Vencida" para CNH com validade no passado                                       | ✅ idem RF-08 | ⏳ dispensado | ✅ código / ⏳ execução |
+| RF-11 | Painel de conformidade consolidado (nome, status de cadastro, status de CNH)                     | ✅ `fleet-settings.service.ts#getCompliance` + `compliance-tab.tsx` | ⏳ dispensado | ✅ testado manualmente (estado vazio) |
+| RF-12 | Filtros por status de cadastro e status de CNH no painel de conformidade                         | ✅ `complianceQuerySchema` + filtro em `getCompliance`; `compliance-tab.tsx` (Combobox) | ⏳ dispensado | ✅ código / ⏳ execução |
+| RF-13 | Detalhe de campos preenchidos/ausentes por motorista, sem navegar para fora da tela               | ✅ `fleet-settings.service.ts#getMemberProfile`, `missingFields` em `ComplianceEntry` | ⏳ dispensado | ✅ código / ⏳ execução |
+| RF-14 | Audit log (`fleet_settings_updated`, C2) em toda alteração de configuração                       | ✅ `fleet-settings.service.ts#updateDriverSettings` (`auditService.log`) | ⏳ dispensado | ✅ código / ⏳ execução |
+
+---
+
+## SPEC-20260801-001 — Easter Egg: Heatmap Sazonal e Análise Combinatória (approved)
+
+> Spec em `specs/analytics/SPEC-20260801-001-easter-egg-heatmap-combinatorio.md`.
+> Widget discreto de grid 12×5 no `FleetChartsSection` do dashboard que permanece latente até
+> ≥ 40% de presença mensal (R-ANA-08), revelando então um diagrama de coocorrência de categorias
+> de gasto. Mecânica de descoberta orgânica — sem anúncio, sem barra de progresso.
+> Camadas: frontend. Regras: R-ANA-07, R-ANA-08, R-DS-07, R-NAV-06. Security: S1, S2.
+>
+> **Estado em 2026-08-04 (entrada retroativa):** Varredura completa do repositório — `@spec SPEC-20260801-001`
+> não encontrado em nenhum arquivo de código; nenhum componente de easter egg ou diagrama de
+> coocorrência identificado em `FleetCharts.tsx` ou qualquer outro arquivo. O commit `b8bcdfc`
+> é descrito como "add advanced analytics features", mas nenhuma implementação rastreável desta
+> spec existia no working tree naquele momento. Todos os RFs permaneciam pendentes de implementação.
+>
+> **Atualização em 2026-08-04:** Douglas priorizou o backlog desta spec e da SPEC-20260801-002 e
+> autorizou explicitamente promover ambas para `approved` antes do código (exceção ao fluxo padrão
+> draft→review→approved, decisão pontual registrada aqui). Implementação passa a ser trabalho ativo,
+> RFs seguem `⏳` até serem entregues nesta matriz.
+
+| RF    | Requisito                                                                                                                                           | Código | Teste | Status |
+| ----- | --------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ----- | ------ |
+| RF-01 | Widget de grid 12×5 posicionado no `FleetChartsSection`; estado latente com `opacity: 0.28`; paleta `--categorical-1..5`; sem erro visível          | `apps/web/src/components/dashboard/EasterEggHeatmapWidget.tsx`, `apps/web/src/components/dashboard/FleetCharts.tsx`, `apps/web/src/lib/analytics/easter-egg-heatmap.ts` (`topCategories`) | `apps/web/src/components/dashboard/EasterEggHeatmapWidget.spec.tsx`, `apps/web/src/lib/analytics/easter-egg-heatmap.spec.ts` | ✅ |
+| RF-02 | Ponto pulsante (`animate-pulse`, ~6×6 px) durante os 7 primeiros dias; desaparece ao hover/tap; estado persistido em `localStorage` (`nave_easter_egg_heatmap_seen`) | `EasterEggHeatmapWidget.tsx` (`readSeen`/`markSeen`), `easter-egg-heatmap.ts` (`isWithinFirstWeek`); `created_at` adicionado a `Profile`/`GET /users/me` (`apps/api/src/modules/users/users.service.ts`, `apps/web/src/lib/hooks/use-current-user.ts`) para viabilizar o cálculo client-side | `EasterEggHeatmapWidget.spec.tsx`, `easter-egg-heatmap.spec.ts`, `apps/api/src/modules/users/users.service.spec.ts` | ✅ |
+| RF-03 | Desbloqueio ao atingir ≥ 40% de presença mensal (≥ 5 de 12 meses), calculado client-side sobre cache React Query de `seasonal_expense_heatmap`; transição ~550ms | `easter-egg-heatmap.ts` (`computeMonthlyPresence`, `isUnlocked`), `EasterEggHeatmapWidget.tsx` (transição via `transition-all`/`transitionDuration`) | `easter-egg-heatmap.spec.ts`, `EasterEggHeatmapWidget.spec.tsx` | ✅ |
+| RF-04 | Drawer embutido no card exibindo diagrama de coocorrência (nós = categorias, arcos = frequência de coocorrência); dados do cache de `seasonal_expense_heatmap`; sem coeficiente numérico | `easter-egg-heatmap.ts` (`computeCategoryCooccurrence`), `EasterEggHeatmapWidget.tsx` (`CooccurrenceDiagram`, SVG manual) | `easter-egg-heatmap.spec.ts`, `EasterEggHeatmapWidget.spec.tsx` | ✅ |
+| RF-05 | `aria-label` em widget e drawer; `prefers-reduced-motion: reduce` elimina pulsação e transição — sem estado intermediário                           | `EasterEggHeatmapWidget.tsx` (`useMediaQuery("(prefers-reduced-motion: reduce)")`, `aria-label` no botão e no SVG `role="img"`) | `EasterEggHeatmapWidget.spec.tsx` (cobre estados latente/desbloqueado; motion-safety validado por leitura de código, sem teste dedicado de `matchMedia`) | 🔶 |
+| RF-06 | Chave `nave_easter_egg_heatmap_seen` removida do `localStorage` no logout (mesma lista de `navestory-dashboard-context` e `navestory-ui-state`)     | `apps/web/src/lib/auth/logout.ts` | `apps/web/src/lib/auth/logout.spec.ts` | ✅ |
+
+---
+
+## SPEC-20260801-002 — Analytics Avançado: Correlações, Simulações e Personalização (approved)
+
+> Spec em `specs/analytics/SPEC-20260801-002-analytics-avancado-correlacoes-simulacoes.md`.
+> Seção "Analytics Avançado" na página `/analytics` com card de correlação km × consumo (Pearson
+> client-side), card de correlação categoria × categoria com guardrail N ≥ 8 (R-ANA-09),
+> simulador "e se" determinístico e personalização de parâmetros.
+> Camadas: frontend, backend, database. Regras: R-ANA-03, R-ANA-05, R-ANA-06, R-ANA-07, R-ANA-09. Security: S1, S2.
+>
+> **Estado em 2026-08-04 (entrada retroativa):** Varredura completa do repositório — `@spec SPEC-20260801-002`
+> não encontrado em nenhum arquivo de código; RPC `expense_category_monthly_series` ausente em todas
+> as migrations (última migration de analytics é `20260716140000_analytics_forecast_seasonal.sql`);
+> nenhum componente de correlação ou simulação identificado em `apps/web/src/app/(app)/analytics/page.tsx`
+> (que contém apenas as seções de SPEC-20260622-001). O commit `b8bcdfc` é descrito como
+> "add advanced analytics features including correlation cards and simulation tools", mas nenhuma
+> implementação rastreável desta spec existia no working tree naquele momento.
+>
+> **Atualização em 2026-08-04:** Douglas priorizou o backlog e autorizou promover a spec para
+> `approved` antes do código (exceção pontual ao fluxo draft→review→approved). Ordem de
+> implementação definida e seguida: RF-01 (correlação km×consumo, sem RPC nova) → RF-03 (nova RPC
+> `expense_category_monthly_series`) → RF-02 (correlação categoria×categoria) → RF-04/RF-05
+> (simulador e personalização, deprioritizados pela própria spec, implementados por último).
+> RF-01 a RF-06 entregues nesta mesma data — código e testes ok. Único pendente: a migration
+> `20260804230000_expense_category_monthly_series.sql` ainda não foi aplicada no banco (mesmo
+> lote de migrations não commitadas de 2026-08-04, ver auditoria de specs no início desta sessão).
+
+| RF    | Requisito                                                                                                                                                                   | Código | Teste | Status |
+| ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ----- | ------ |
+| RF-01 | Card de correlação km × consumo: coeficiente de Pearson client-side sobre pares `(odometer_km_delta, km_per_liter)` de `fuel_consumption_trend`; guardrail N < 5; exibe coef. + N + direção natural | `apps/web/src/lib/analytics/correlation.ts` (`pearsonCorrelation`, `buildKmConsumptionPairs`), `apps/web/src/app/(app)/analytics/page.tsx` (`FuelCorrelationSection`) | `apps/web/src/lib/analytics/correlation.spec.ts` | ✅     |
+| RF-02 | Card de correlação categoria × categoria: pares com N ≥ 8 meses completos (R-ANA-09); exibe 3 maiores pares; coef. acompanha N; texto nunca usa "descoberta"                | `apps/web/src/lib/analytics/correlation.ts` (`buildCategoryCorrelations`), `apps/web/src/app/(app)/analytics/page.tsx` (`CategoryCorrelationSection`) | `apps/web/src/lib/analytics/correlation.spec.ts` | ✅     |
+| RF-03 | Nova RPC `expense_category_monthly_series(vehicle_id?)`: retorna `(year_month DATE, category TEXT, total NUMERIC, vehicle_id UUID)`; `SECURITY INVOKER`; filtro por `auth.uid()`; endpoint `GET /analytics/category-series`; cache 1h (R-ANA-06) | `supabase/migrations/20260804230000_expense_category_monthly_series.sql`, `apps/api/src/modules/analytics/analytics.service.ts#getCategorySeries`, `apps/api/src/modules/analytics/analytics.controller.ts#getCategorySeries`, `apps/api/src/modules/analytics/dto/category-series.dto.ts`, `packages/validators/src/analytics.schemas.ts` (`categorySeriesQuerySchema`, `ExpenseCategoryMonthlySeries`) | `apps/api/src/modules/analytics/analytics.service.spec.ts`, `apps/api/src/modules/analytics/analytics.controller.spec.ts` | 🔶 código+testes ok; migration ainda não aplicada no banco (mesmo lote pendente de commit de 2026-08-04, ver auditoria de specs) |
+| RF-04 | Simulador "e se" client-side determinístico: ajusta total de categoria alvo, recalcula média móvel de 3 meses sobre série histórica de `forecast_monthly_costs`; debounce 200ms; sem chamada ao backend; pré-requisito 6 meses (R-ANA-03) | `apps/web/src/lib/analytics/simulation.ts` (`categoryTotalsByMonth`, `buildAdjustedMonthlyTotals`, `projectMovingAverage`), `apps/web/src/lib/hooks/use-debounced-value.ts`, `apps/web/src/app/(app)/analytics/page.tsx` (`SimulationSection`) | `apps/web/src/lib/analytics/simulation.spec.ts`, `apps/web/src/lib/hooks/use-debounced-value.spec.ts`, `apps/web/src/app/(app)/analytics/page.spec.tsx` | ✅     |
+| RF-05 | Controles de personalização: `Select` de categoria (default `fuel`), `Slider` -50%/+50%/passo 5% (default `0%`), `Select` de período 3m/6m (default `3m`); estado efêmero por sessão | `SimulationSection` em `analytics/page.tsx` — `Combobox` para categoria/período (R-DS-09); `Slider` não existe em `@navestory/ui`, usado `<input type="range">` estilizado como exceção documentada de R-DS-09 ("controle de forma customizada que a API não cobre") | `apps/web/src/app/(app)/analytics/page.spec.tsx` | ✅     |
+| RF-06 | Empty states por seção: correlação km (< 5 pares), correlação categoria (N < 8 para todos os pares), simulação (< 6 meses histórico R-ANA-03)                              | `FuelCorrelationSection`, `CategoryCorrelationSection`, `SimulationSection` em `analytics/page.tsx` | `apps/web/src/app/(app)/analytics/page.spec.tsx` | ✅     |
+
+---
+
+## SPEC-20260804-005 — Correção de Bug: Membros de Grupo Não Inicializados na Tela de Edição (approved)
+
+> Spec em `specs/vehicle-groups/SPEC-20260804-005-bug-membros-nao-inicializados.md`. Corrige o bug
+> crítico de perda silenciosa de dados levantado na auditoria de UX de 2026-08-03/04:
+> `selectedVehicleIds` nascia vazio na tela `/vehicle-groups/[id]` e nunca era inicializado com os
+> membros atuais do grupo, então salvar sem alterar nada apagava toda a composição (replace-all,
+> R-GRP-02). Depende de SPEC-20260602-003 (domínio original de Grupos de Veículos).
+>
+> **Código implementado em 2026-08-04**: backend `vehicle-groups.service.ts#findAll` passou a
+> incluir `vehicleIds` (apenas membros ativos, R-GRP-03) no response, sem query adicional; frontend
+> `vehicle-groups/[id]/page.tsx` inicializa `selectedVehicleIds` via `useEffect`, desabilita "Salvar
+> membros" enquanto o grupo carrega, calcula diff de adições/remoções antes de confirmar via
+> `window.confirm`, e exige confirmação adicional específica quando a operação zeraria um grupo com
+> membros. Testes automatizados adicionados — obrigatórios conforme `.claude/CLAUDE.md` do projeto
+> ("Testes obrigatórios para funcionalidades novas com regra de negócio ou impacto em produção");
+> este é um bug de perda de dado em produção com regra de negócio nova (R-GRP-05).
+
+| RF    | Requisito                                                                                                          | Código                                                                                                    | Teste                                                                                                                              | Status |
+| ----- | ------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ | ------ |
+| RF-01 | `GET /vehicle-groups` inclui `vehicleIds: string[]` (apenas membros ativos, R-GRP-03) no objeto de cada grupo        | `apps/api/src/modules/vehicle-groups/vehicle-groups.service.ts#findAll`                                    | `vehicle-groups.service.spec.ts` ("findAll inclui vehicleIds apenas com membros ativos")                                           | ✅     |
+| RF-02 | Página de detalhe inicializa `selectedVehicleIds` com `group.vehicleIds` ao carregar                                 | `apps/web/src/app/(app)/vehicle-groups/[id]/page.tsx` (`useEffect`)                                        | `page.spec.tsx` ("inicializa os checkboxes com os membros atuais do grupo")                                                        | ✅     |
+| RF-03 | Botão "Salvar membros" desabilitado enquanto `isLoading` ou `group` indisponível                                     | `page.tsx` (`disabled={setMembersMutation.isPending \|\| isLoading \|\| !group}`)                          | Coberto indiretamente pelos demais testes (grupo sempre carregado antes do clique) — sem CT dedicado ao estado de loading           | 🔶     |
+| RF-04 | Diff de adições/remoções calculado e exibido via `window.confirm` antes de salvar                                    | `page.tsx#handleSaveMembers`                                                                                | `page.spec.tsx` ("sem alterar a seleção, exibe diff zerado e envia o payload atual")                                                | ✅     |
+| RF-05 | Confirmação adicional específica quando a operação resultaria em remover todos os membros de um grupo populado       | `page.tsx#handleSaveMembers`                                                                                | `page.spec.tsx` ("desmarcar todos os membros de um grupo populado exige confirmação de remoção total")                              | ✅     |
+| RF-06 | Cancelar qualquer confirmação não dispara `setMembersMutation`                                                        | `page.tsx#handleSaveMembers`                                                                                | `page.spec.tsx` ("cancelar a confirmação não dispara a requisição de salvar membros")                                              | ✅     |
+
+---
+
 ## Requisitos do PRD sem Spec (Fase 2 / Backlog)
 
 | Req PRD | Descrição                                                    | Fase   |

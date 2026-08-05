@@ -5,30 +5,20 @@ import {
   VehicleHealthScore,
   type BadgeProps,
 } from "@navestory/ui";
+import type {
+  DocumentStatus,
+  HealthFlag,
+  VehicleCard as VehicleCardData,
+} from "@navestory/validators";
 
-export type DocumentStatus = "ok" | "attention" | "overdue" | "unknown";
-
-export interface VehicleCardData {
-  id: string;
-  plate: string;
-  make: string | null;
-  model: string | null;
-  nickname: string | null;
-  odometer: number | null;
-  last_fuel_date: string | null;
-  last_fuel_amount: number | null;
-  last_fuel_odometer_missing: boolean;
-  documents: {
-    ipva: DocumentStatus;
-    insurance: DocumentStatus;
-    crlv: DocumentStatus;
-  };
-}
-
-export interface HealthFlag {
-  type: string;
-  [key: string]: unknown;
-}
+/**
+ * @spec SPEC-20260803-001 RF-04
+ * Reexportados a partir de `@navestory/validators` — reconciliação de RF-04: `VehicleCardData`
+ * e `HealthFlag` eram redeclarados aqui com shape idêntico a `VehicleCard`/`HealthFlag` do
+ * pacote compartilhado. Mantém o nome local `VehicleCardData` para não exigir rename nos
+ * consumidores existentes.
+ */
+export type { DocumentStatus, HealthFlag, VehicleCardData };
 
 /**
  * @spec SPEC-20260730-001 RF-17

@@ -81,3 +81,47 @@ export type CreateVehicleInput = z.infer<typeof createVehicleInputSchema>;
 
 export const updateVehicleInputSchema = vehicleBaseSchema.partial();
 export type UpdateVehicleInput = z.infer<typeof updateVehicleInputSchema>;
+
+/**
+ * @spec SPEC-20260803-001 RF-01
+ * Espelha as colunas reais retornadas por `VehiclesService` (`VEHICLE_COLUMNS` em
+ * apps/api/src/modules/vehicles/vehicles.service.ts). `make`/`model`/`year` são `.nullable()`
+ * aqui porque o tipo `Vehicle` do backend os declara como `string | null` / `number | null`,
+ * apesar de exigidos como obrigatórios no payload de criação (`vehicleBaseSchema`).
+ */
+export const vehicleResponseSchema = z.object({
+  id: z.string().uuid(),
+  user_id: z.string().uuid(),
+  plate: z.string(),
+  make: z.string().nullable(),
+  model: z.string().nullable(),
+  year: z.number().int().nullable(),
+  vehicle_type: vehicleTypeSchema,
+  model_year: z.number().int().nullable(),
+  nickname: z.string().nullable(),
+  color: z.string().nullable(),
+  photo_url: z.string().nullable(),
+  photo_thumbnail_url: z.string().nullable(),
+  photo_object_position: z.string().nullable(),
+  photo_zoom: z.number().nullable(),
+  odometer: z.number().nullable(),
+  fuel_type: fuelTypeSchema.nullable(),
+  fuel_efficiency: z.number().nullable(),
+  fuel_liters_capacity: z.number().nullable(),
+  status: vehicleOperationalStatusSchema,
+  renavam: z.string().nullable(),
+  chassi: z.string().nullable(),
+  fipe_code: z.string().nullable(),
+  fipe_updated_at: z.string().nullable(),
+  ipva_due_date: z.string().nullable(),
+  insurance_expires_at: z.string().nullable(),
+  crlv_expires_at: z.string().nullable(),
+  engine_displacement_cc: z.number().int().nullable(),
+  engine_power_cv: z.number().int().nullable(),
+  engine_torque_kgm: z.number().nullable(),
+  engine_config: z.string().nullable(),
+  is_turbo: z.boolean().nullable(),
+  created_at: z.string(),
+  updated_at: z.string(),
+});
+export type VehicleResponse = z.infer<typeof vehicleResponseSchema>;

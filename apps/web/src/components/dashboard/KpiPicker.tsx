@@ -106,7 +106,7 @@ export function KpiPicker({
         <div className="flex flex-col gap-1">
           {KPI_CATALOG_IDS.map((id) => {
             const isChecked = selected.includes(id);
-            // eslint-disable-next-line security/detect-object-injection -- id é KpiCatalogId, união fixa de 8 literais
+            // eslint-disable-next-line security/detect-object-injection -- id é KpiCatalogId, união fixa de 9 literais
             const meta = KPI_CATALOG_META[id];
             return (
               <label key={id} className="flex items-center gap-2">

@@ -38,6 +38,10 @@ describe("PreferencesService", () => {
       vehicle_chip_fields: ["make", "plate", "model"],
       dashboard_kpi_ids: ["expenses_month", "urgent_maintenance", "cost_per_km", "next_maintenance"],
       timezone: null,
+      // @spec SPEC-20260804-001 RF-01 — default seguro (R-PREF-01)
+      spending_window_days: 7,
+      default_context_type: null,
+      default_context_id: null,
     });
   });
 
@@ -59,7 +63,47 @@ describe("PreferencesService", () => {
       vehicle_chip_fields: ["plate"],
       dashboard_kpi_ids: ["expenses_month", "urgent_maintenance", "cost_per_km", "next_maintenance"],
       timezone: null,
+      spending_window_days: 7,
+      default_context_type: null,
+      default_context_id: null,
     });
+  });
+
+  it("findOne retorna spending_window_days persistido quando existe (SPEC-20260804-001 RF-01)", async () => {
+    const builder: Record<string, unknown> = {};
+    builder.select = jest.fn().mockReturnValue(builder);
+    builder.eq = jest.fn().mockReturnValue(builder);
+    builder.maybeSingle = jest.fn().mockResolvedValue({
+      data: { auto_draft_enabled: false, vehicle_chip_fields: ["plate"], spending_window_days: 30 },
+      error: null,
+    });
+    mockClient(builder);
+    const service = createService();
+
+    const result = await service.findOne("token", "u1");
+
+    expect(result.spending_window_days).toBe(30);
+  });
+
+  it("upsert persiste spending_window_days (SPEC-20260804-001 RF-02)", async () => {
+    const builder: Record<string, unknown> = {};
+    builder.upsert = jest.fn().mockReturnValue(builder);
+    builder.select = jest.fn().mockReturnValue(builder);
+    builder.single = jest.fn().mockResolvedValue({
+      data: { spending_window_days: 14 },
+      error: null,
+    });
+    const client = mockClient(builder);
+    const service = createService();
+
+    const result = await service.upsert("token", "u1", { spending_window_days: 14 });
+
+    expect(client.from).toHaveBeenCalledWith("user_preferences");
+    expect(builder.upsert).toHaveBeenCalledWith(
+      { user_id: "u1", spending_window_days: 14 },
+      { onConflict: "user_id" },
+    );
+    expect(result).toEqual({ spending_window_days: 14 });
   });
 
   it("findOne retorna dashboard_kpi_ids persistido quando existe (RF-01)", async () => {

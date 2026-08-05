@@ -42,7 +42,8 @@ describe("DashboardService", () => {
     findAll: jest.fn(),
   };
   const preferencesService = {
-    findOne: jest.fn().mockResolvedValue({ timezone: null }),
+    // @spec SPEC-20260804-001 RF-01 — default seguro (R-PREF-01)
+    findOne: jest.fn().mockResolvedValue({ timezone: null, spending_window_days: 7 }),
   };
 
   function createService() {
@@ -1231,6 +1232,98 @@ describe("DashboardService", () => {
       const kpis = await service.getFleetKpiCatalog("token", "u1", undefined);
 
       expect(kpis.expense_anomalies).toEqual({ ok: true, value: 1 });
+    });
+
+    describe("spending_window (SPEC-20260804-001 RF-03, RF-04)", () => {
+      it("soma as despesas retornadas e resolve label com a janela default de 7 dias", async () => {
+        (expensesService.getUpcomingCosts as jest.Mock).mockResolvedValue([]);
+        (preferencesService.findOne as jest.Mock).mockResolvedValueOnce({
+          timezone: null,
+          spending_window_days: 7,
+        });
+        const from = mockFrom({
+          expenses: { data: [{ amount: 100 }, { amount: 50 }], error: null },
+          vehicles: { data: [], count: 0, error: null },
+          maintenances: { count: 0, error: null, data: [] },
+        });
+        const rpc = buildRpcMock();
+        (createUserScopedClient as jest.Mock).mockReturnValue({ from, rpc });
+        const service = createService();
+
+        const kpis = await service.getFleetKpiCatalog("token", "u1", undefined);
+
+        expect(kpis.spending_window).toEqual({
+          ok: true,
+          value: { value: 150, window_days: 7, label: "Últ. 7 dias" },
+        });
+      });
+
+      it("usa o window_days configurado em user_preferences (14 dias) para o label (RF-03)", async () => {
+        (expensesService.getUpcomingCosts as jest.Mock).mockResolvedValue([]);
+        (preferencesService.findOne as jest.Mock).mockResolvedValueOnce({
+          timezone: null,
+          spending_window_days: 14,
+        });
+        const from = mockFrom({
+          expenses: { data: [{ amount: 200 }], error: null },
+          vehicles: { data: [], count: 0, error: null },
+          maintenances: { count: 0, error: null, data: [] },
+        });
+        const rpc = buildRpcMock();
+        (createUserScopedClient as jest.Mock).mockReturnValue({ from, rpc });
+        const service = createService();
+
+        const kpis = await service.getFleetKpiCatalog("token", "u1", undefined);
+
+        expect(kpis.spending_window).toEqual({
+          ok: true,
+          value: { value: 200, window_days: 14, label: "Últ. 14 dias" },
+        });
+      });
+
+      it("retorna 0 quando não há despesas na janela (US-01)", async () => {
+        (expensesService.getUpcomingCosts as jest.Mock).mockResolvedValue([]);
+        (preferencesService.findOne as jest.Mock).mockResolvedValueOnce({
+          timezone: null,
+          spending_window_days: 7,
+        });
+        const from = mockFrom({
+          expenses: { data: [], error: null },
+          vehicles: { data: [], count: 0, error: null },
+          maintenances: { count: 0, error: null, data: [] },
+        });
+        const rpc = buildRpcMock();
+        (createUserScopedClient as jest.Mock).mockReturnValue({ from, rpc });
+        const service = createService();
+
+        const kpis = await service.getFleetKpiCatalog("token", "u1", undefined);
+
+        expect(kpis.spending_window).toEqual({
+          ok: true,
+          value: { value: 0, window_days: 7, label: "Últ. 7 dias" },
+        });
+      });
+
+      it("isola falha da query de spending_window sem afetar os demais KPIs do catálogo", async () => {
+        (expensesService.getUpcomingCosts as jest.Mock).mockResolvedValue([]);
+        (preferencesService.findOne as jest.Mock).mockResolvedValueOnce({
+          timezone: null,
+          spending_window_days: 7,
+        });
+        const from = mockFrom({
+          expenses: { data: null, error: { message: "boom" } },
+          vehicles: { data: [], count: 0, error: null },
+          maintenances: { count: 0, error: null, data: [] },
+        });
+        const rpc = buildRpcMock();
+        (createUserScopedClient as jest.Mock).mockReturnValue({ from, rpc });
+        const service = createService();
+
+        const kpis = await service.getFleetKpiCatalog("token", "u1", undefined);
+
+        expect(kpis.spending_window).toEqual({ ok: false });
+        expect(kpis.total_vehicles.ok).toBe(true);
+      });
     });
   });
 

@@ -18,6 +18,8 @@ import {
   type KpiResult,
   type KpiSeriesValue,
   type MonthlySeriesPoint,
+  type SpendingWindowDays,
+  type SpendingWindowKpi,
   type VehicleCard,
   type VehicleDocumentsStatus,
   type VehicleHistoryItem,
@@ -29,6 +31,7 @@ import { SUPABASE_ADMIN_CLIENT } from "../../shared/supabase/supabase.constants"
 import {
   FALLBACK_TIMEZONE,
   exclusiveDayUpperBoundUtc,
+  resolveDateTimeInput,
   toCalendarDay,
 } from "../../shared/utils/date.utils";
 import { ExpensesService } from "../expenses/expenses.service";
@@ -60,6 +63,17 @@ function addDays(date: Date, days: number): Date {
 }
 
 function toDateString(date: Date): string {
+  return date.toISOString().slice(0, 10);
+}
+
+/**
+ * @spec SPEC-20260804-001 RF-03
+ * Soma/subtrai dias de um dia calendário (`YYYY-MM-DD`) — aritmética de calendário pura, sem
+ * componente de fuso (o fuso já foi resolvido por `toCalendarDay` antes de chamar esta função).
+ */
+function addCalendarDays(dateOnly: string, days: number): string {
+  const date = new Date(`${dateOnly}T00:00:00Z`);
+  date.setUTCDate(date.getUTCDate() + days);
   return date.toISOString().slice(0, 10);
 }
 
@@ -569,7 +583,13 @@ export class DashboardService {
     activeVehicleId: string | undefined,
   ): Promise<FleetKpiCatalog> {
     const client = this.clientForUser(accessToken);
-    const tz = await this.resolveUserTimezone(accessToken, userId);
+    // @spec SPEC-20260804-001 RF-03 — uma única leitura de preferências para fuso e janela de
+    // gastos, evitando duplicar a chamada que `resolveUserTimezone` já fazia isoladamente.
+    const preferences = await this.preferencesService.findOne(
+      accessToken,
+      userId,
+    );
+    const tz = preferences.timezone ?? FALLBACK_TIMEZONE;
 
     const [
       expensesMonth,
@@ -580,6 +600,7 @@ export class DashboardService {
       nextMaintenance,
       upcomingCosts7d,
       expenseAnomalies,
+      spendingWindow,
     ] = await Promise.allSettled([
       this.getExpensesMonthSeries(client, userId),
       this.getCostPerKmSeries(client, userId),
@@ -589,6 +610,12 @@ export class DashboardService {
       this.getNextMaintenance(client, userId, activeVehicleId),
       this.getUpcomingCostsSummary(accessToken),
       this.countMonthlyAnomalies(client, tz),
+      this.getSpendingWindowTotal(
+        client,
+        userId,
+        tz,
+        preferences.spending_window_days,
+      ),
     ]);
 
     return {
@@ -600,6 +627,50 @@ export class DashboardService {
       next_maintenance: toKpiResult(nextMaintenance),
       upcoming_costs_7d: toKpiResult(upcomingCosts7d),
       expense_anomalies: toKpiResult(expenseAnomalies),
+      spending_window: toKpiResult(spendingWindow),
+    };
+  }
+
+  /**
+   * @spec SPEC-20260804-001 RF-03, RNF-02
+   * Janela rolante de `windowDays` dias calendário terminados em "hoje" (inclusive), no fuso do
+   * usuário — não uma janela de instante (`NOW() - INTERVAL`), para o resultado não variar
+   * conforme a hora do dia em que a requisição é feita (R-TZ-01).
+   */
+  private async getSpendingWindowTotal(
+    client: SupabaseClient,
+    userId: string,
+    tz: string,
+    windowDays: SpendingWindowDays,
+  ): Promise<SpendingWindowKpi> {
+    const todayDay = toCalendarDay(new Date(), tz);
+    const windowStartDay = addCalendarDays(todayDay, -(windowDays - 1));
+    const rangeStartUtc = resolveDateTimeInput(windowStartDay, tz);
+    const rangeEndUtc = resolveDateTimeInput(addCalendarDays(todayDay, 1), tz);
+
+    const { data, error } = await client
+      .from("expenses")
+      .select("amount")
+      .eq("user_id", userId)
+      .is("deleted_at", null)
+      .gte("occurred_at", rangeStartUtc)
+      .lt("occurred_at", rangeEndUtc);
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    const total = round2(
+      ((data ?? []) as { amount: number }[]).reduce(
+        (sum, row) => sum + row.amount,
+        0,
+      ),
+    );
+
+    return {
+      value: total,
+      window_days: windowDays,
+      label: `Últ. ${windowDays} dias`,
     };
   }
 

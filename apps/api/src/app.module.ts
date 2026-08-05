@@ -14,6 +14,7 @@ import { CategoriesModule } from "./modules/categories/categories.module";
 import { DashboardModule } from "./modules/dashboard/dashboard.module";
 import { ExpenseTemplatesModule } from "./modules/expense-templates/expense-templates.module";
 import { ExpensesModule } from "./modules/expenses/expenses.module";
+import { FleetSettingsModule } from "./modules/fleet-settings/fleet-settings.module";
 import { FinesModule } from "./modules/fines/fines.module";
 import { MaintenancesModule } from "./modules/maintenances/maintenances.module";
 import { OdometerCyclesModule } from "./modules/odometer-cycles/odometer-cycles.module";
@@ -22,6 +23,7 @@ import { RecurringCostsModule } from "./modules/recurring-costs/recurring-costs.
 import { UsersModule } from "./modules/users/users.module";
 import { VehicleGroupsModule } from "./modules/vehicle-groups/vehicle-groups.module";
 import { VehiclesModule } from "./modules/vehicles/vehicles.module";
+import { WorkspacesModule } from "./modules/workspaces/workspaces.module";
 import { AuditModule } from "./shared/audit/audit.module";
 import { SupabaseAdminModule } from "./shared/supabase/supabase-admin.module";
 import { SupabaseModule } from "./shared/supabase/supabase.module";
@@ -60,6 +62,8 @@ import { SupabaseModule } from "./shared/supabase/supabase.module";
     RecurringCostsModule,
     AnalyticsModule,
     AuditLogsModule,
+    WorkspacesModule,
+    FleetSettingsModule,
   ],
   providers: [
     {

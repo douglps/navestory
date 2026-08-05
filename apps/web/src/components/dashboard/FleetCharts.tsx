@@ -24,6 +24,7 @@ import type {
 import { ChartWrapper } from "@navestory/ui";
 import { apiClient } from "@/lib/http/api-client";
 import { CHART_CATEGORY_COLORS } from "@/lib/chart-colors";
+import { EasterEggHeatmapWidget } from "./EasterEggHeatmapWidget";
 
 function currency(value: number): string {
   return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -190,8 +191,13 @@ export function FleetChartsSection(): ReactNode {
   return (
     <section
       aria-label="Gráficos de frota"
-      className="grid grid-cols-1 gap-4 lg:grid-cols-3"
+      className="relative grid grid-cols-1 gap-4 lg:grid-cols-3"
     >
+      {/* @spec SPEC-20260801-001 RF-01 — widget discreto, não anunciado, sem layout adicional */}
+      <div className="absolute right-0 top-0">
+        <EasterEggHeatmapWidget />
+      </div>
+
       {isLoading ? (
         <>
           <ChartWrapper title="Custo por km" loading>

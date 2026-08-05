@@ -3,6 +3,7 @@
 import {
   updateVehicleInputSchema,
   type UpdateVehicleInput,
+  type VehicleResponse as Vehicle,
 } from "@navestory/validators";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
@@ -20,16 +21,6 @@ import {
   type HealthFlag,
 } from "@/components/dashboard/VehicleHealthCard";
 import { apiClient } from "@/lib/http/api-client";
-
-interface Vehicle {
-  id: string;
-  plate: string;
-  make: string | null;
-  model: string | null;
-  year: number | null;
-  nickname: string | null;
-  color: string | null;
-}
 
 interface VehicleHealth {
   score: number;

@@ -48,10 +48,10 @@ describe("VehicleContextChip", () => {
     vi.unstubAllGlobals();
   });
 
-  it("modo none: convite a selecionar veículo, sem botão X", async () => {
+  it("modo none: exibe 'Toda a frota', sem botão X (@spec SPEC-20260804-002 RF-01, RF-03)", async () => {
     renderChip();
 
-    await waitFor(() => expect(screen.getByText(/Selecionar veículo/)).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText(/Toda a frota/)).toBeInTheDocument());
     expect(screen.queryByRole("button", { name: "Ver toda a frota" })).not.toBeInTheDocument();
   });
 
@@ -74,7 +74,7 @@ describe("VehicleContextChip", () => {
     // multi/attribute são efêmeros (R-CTX-02): o `set()` de teste antes da montagem
     // seria sobrescrito pela reidratação (`rehydrate()`, que lê o storage vazio para
     // esses modos). Por isso a seleção é aplicada só após a hidratação inicial.
-    await waitFor(() => expect(screen.getByText(/Selecionar veículo/)).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText(/Toda a frota/)).toBeInTheDocument());
 
     useDashboardStore.getState().setMultiSelected(["v1", "v2"]);
 
@@ -83,7 +83,7 @@ describe("VehicleContextChip", () => {
 
   it("modo attribute: exibe label do filtro de frota ativo", async () => {
     renderChip();
-    await waitFor(() => expect(screen.getByText(/Selecionar veículo/)).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText(/Toda a frota/)).toBeInTheDocument());
 
     useDashboardStore.getState().setAttributeFilter({ attribute: "vehicle_type", value: "moto" });
 
@@ -107,8 +107,8 @@ describe("VehicleContextChip", () => {
     isDesktopMock.mockReturnValue(true);
     renderChip();
 
-    await waitFor(() => expect(screen.getByText(/Selecionar veículo/)).toBeInTheDocument());
-    fireEvent.click(screen.getByRole("button", { name: /Sem contexto/ }));
+    await waitFor(() => expect(screen.getByText(/Toda a frota/)).toBeInTheDocument());
+    fireEvent.click(screen.getByRole("button", { name: /Toda a frota/ }));
 
     await waitFor(() => expect(screen.getByRole("dialog")).toBeInTheDocument());
   });
@@ -130,15 +130,15 @@ describe("VehicleContextChip", () => {
 
     const cta = await screen.findByRole("link", { name: "Adicionar veículo" });
     expect(cta).toHaveAttribute("href", "/vehicles/new");
-    expect(screen.queryByRole("button", { name: /Sem contexto/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Toda a frota/ })).not.toBeInTheDocument();
   });
 
   it("RF-11: em mobile, clicar no chip abre o Sheet (vaul)", async () => {
     isDesktopMock.mockReturnValue(false);
     renderChip();
 
-    await waitFor(() => expect(screen.getByText(/Selecionar veículo/)).toBeInTheDocument());
-    fireEvent.click(screen.getByRole("button", { name: /Sem contexto/ }));
+    await waitFor(() => expect(screen.getByText(/Toda a frota/)).toBeInTheDocument());
+    fireEvent.click(screen.getByRole("button", { name: /Toda a frota/ }));
 
     await waitFor(() =>
       expect(screen.getByPlaceholderText("Buscar veículo ou grupo...")).toBeInTheDocument(),

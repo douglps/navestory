@@ -87,6 +87,13 @@ function specForId(
       if (!result.ok) return "unavailable";
       return { value: result.value };
     }
+    case "spending_window": {
+      // @spec SPEC-20260804-001 RF-04 — sem trend/sparkline por design (janela desloca a base
+      // de comparação a cada dia; delta seria ruído, não tendência).
+      const result = catalog.spending_window;
+      if (!result.ok) return "unavailable";
+      return { value: currency(result.value.value), unit: result.value.label };
+    }
   }
 }
 
@@ -106,15 +113,11 @@ export function DashboardKpiGrid({
   if (!catalog) {
     return (
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        {activeIds.map((id) => (
-          // eslint-disable-next-line security/detect-object-injection -- id é KpiCatalogId, união fixa de 8 literais
-          <KpiCard
-            key={id}
-            title={KPI_CATALOG_META[id].title}
-            value=""
-            loading
-          />
-        ))}
+        {activeIds.map((id) => {
+          // eslint-disable-next-line security/detect-object-injection -- id é KpiCatalogId, união fixa de 9 literais
+          const meta = KPI_CATALOG_META[id];
+          return <KpiCard key={id} title={meta.title} value="" loading />;
+        })}
       </div>
     );
   }
@@ -122,7 +125,7 @@ export function DashboardKpiGrid({
   return (
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
       {activeIds.map((id) => {
-        // eslint-disable-next-line security/detect-object-injection -- id é KpiCatalogId, união fixa de 8 literais
+        // eslint-disable-next-line security/detect-object-injection -- id é KpiCatalogId, união fixa de 9 literais
         const meta = KPI_CATALOG_META[id];
         const spec = specForId(id, catalog);
 

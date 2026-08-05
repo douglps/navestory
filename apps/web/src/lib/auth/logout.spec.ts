@@ -1,10 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useDashboardStore } from "@/lib/stores/use-dashboard-store";
+import { EASTER_EGG_SEEN_KEY } from "@/lib/analytics/easter-egg-heatmap";
 import { logout } from "./logout";
 
 describe("logout", () => {
   beforeEach(() => {
     sessionStorage.clear();
+    localStorage.clear();
     useDashboardStore.getState().setActiveVehicle("v1");
   });
 
@@ -81,5 +83,23 @@ describe("logout", () => {
     await logout();
 
     expect(sessionStorage.getItem("navestory-ui-state")).toBeNull();
+  });
+
+  it("SPEC-20260801-001 RF-06: remove a chave do easter egg do localStorage", async () => {
+    localStorage.setItem(EASTER_EGG_SEEN_KEY, "true");
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockResolvedValue({
+          ok: true,
+          status: 204,
+          json: () => Promise.resolve({}),
+        }),
+    );
+
+    await logout();
+
+    expect(localStorage.getItem(EASTER_EGG_SEEN_KEY)).toBeNull();
   });
 });

@@ -16,38 +16,49 @@ alter table public.user_preferences
     check (timezone is null or char_length(timezone) between 1 and 64);
 
 -- expenses.date -> expenses.occurred_at (timestamptz)
-alter table public.expenses rename column date to occurred_at;
+-- Postgres não permite subquery correlacionada em `ALTER COLUMN TYPE ... USING`
+-- (SQLSTATE 0A000: cannot use subquery in transform expression), por isso a conversão
+-- usa coluna auxiliar + UPDATE...FROM (que suporta join normalmente) em vez de um único ALTER.
+alter table public.expenses add column occurred_at timestamptz;
 
-alter table public.expenses
-  alter column occurred_at type timestamptz
-  using (
-    occurred_at::timestamp at time zone coalesce(
-      (select up.timezone from public.user_preferences up where up.user_id = expenses.user_id),
-      'UTC'
-    )
-  );
+update public.expenses e
+set occurred_at = e.date::timestamp at time zone coalesce(up.timezone, 'UTC')
+from public.user_preferences up
+where up.user_id = e.user_id;
+
+update public.expenses e
+set occurred_at = e.date::timestamp at time zone 'UTC'
+where e.occurred_at is null;
+
+alter table public.expenses alter column occurred_at set not null;
+alter table public.expenses drop column date;
 
 -- maintenances.scheduled_date / completion_date (timestamptz, nomes mantidos — RF-BD-03)
-alter table public.maintenances
-  alter column scheduled_date type timestamptz
-  using (
-    scheduled_date::timestamp at time zone coalesce(
-      (select up.timezone from public.user_preferences up where up.user_id = maintenances.user_id),
-      'UTC'
-    )
-  );
+alter table public.maintenances add column scheduled_date_tz timestamptz;
+alter table public.maintenances add column completion_date_tz timestamptz;
 
-alter table public.maintenances
-  alter column completion_date type timestamptz
-  using (
-    case
-      when completion_date is null then null
-      else completion_date::timestamp at time zone coalesce(
-        (select up.timezone from public.user_preferences up where up.user_id = maintenances.user_id),
-        'UTC'
-      )
+update public.maintenances m
+set scheduled_date_tz = m.scheduled_date::timestamp at time zone coalesce(up.timezone, 'UTC'),
+    completion_date_tz = case
+      when m.completion_date is null then null
+      else m.completion_date::timestamp at time zone coalesce(up.timezone, 'UTC')
     end
-  );
+from public.user_preferences up
+where up.user_id = m.user_id;
+
+update public.maintenances m
+set scheduled_date_tz = m.scheduled_date::timestamp at time zone 'UTC',
+    completion_date_tz = case
+      when m.completion_date is null then null
+      else m.completion_date::timestamp at time zone 'UTC'
+    end
+where m.scheduled_date_tz is null;
+
+alter table public.maintenances alter column scheduled_date_tz set not null;
+alter table public.maintenances drop column scheduled_date;
+alter table public.maintenances rename column scheduled_date_tz to scheduled_date;
+alter table public.maintenances drop column completion_date;
+alter table public.maintenances rename column completion_date_tz to completion_date;
 
 -- Funções que referenciavam `expenses.date` diretamente (renomear para `occurred_at`); o rename de
 -- coluna não propaga para corpo de função (texto opaco) — sem este ajuste, as RPCs abaixo falhariam

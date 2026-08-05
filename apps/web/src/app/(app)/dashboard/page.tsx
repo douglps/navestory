@@ -6,6 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   DEFAULT_DASHBOARD_KPI_IDS,
+  type FleetHealthEntry,
   type FleetKpiCatalog,
   type KpiCatalogId,
 } from "@navestory/validators";
@@ -38,12 +39,6 @@ import { useDashboardStore } from "@/lib/stores/use-dashboard-store";
 
 const GRID_LIMIT_NO_VIRTUALIZATION = 15;
 const GRID_INITIAL_PAGE_SIZE = 10;
-
-interface FleetHealthEntry {
-  vehicle_id: string;
-  score: number;
-  flags: HealthFlag[];
-}
 
 function vehicleLabel(vehicle: VehicleCardData): string {
   return (

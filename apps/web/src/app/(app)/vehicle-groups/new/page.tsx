@@ -3,19 +3,13 @@
 import {
   createGroupInputSchema,
   PRESET_GROUP_COLORS,
+  type VehicleResponse as Vehicle,
 } from "@navestory/validators";
 import { Alert, Button, Checkbox, Container, Input } from "@navestory/ui";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent, type ReactNode } from "react";
 import { apiClient } from "@/lib/http/api-client";
-
-interface Vehicle {
-  id: string;
-  plate: string;
-  make: string | null;
-  model: string | null;
-}
 
 interface GroupResponse {
   id: string;

@@ -1,7 +1,7 @@
 ---
 id: SPEC-20260801-001
 title: "Easter Egg — Heatmap Sazonal e Análise Combinatória"
-status: draft
+status: approved
 date: 2026-08-01
 author: Douglas Lopes (lps.doug@protonmail.com)
 rules: [R-ANA-07, R-ANA-08, R-DS-07, R-NAV-06]

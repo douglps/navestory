@@ -11,6 +11,7 @@ export interface Profile {
   name: string;
   profile_type: string;
   preferences: Record<string, unknown>;
+  created_at?: string;
 }
 
 /**
@@ -32,10 +33,15 @@ export class UsersService {
     );
   }
 
+  /**
+   * @spec SPEC-20260801-001 RF-02
+   * `created_at` incluído para permitir o cálculo client-side da janela de 7 dias de
+   * exibição do ponto pulsante do easter egg (sem novo endpoint dedicado).
+   */
   async getProfile(accessToken: string, userId: string): Promise<Profile> {
     const { data, error } = await this.clientForUser(accessToken)
       .from("profiles")
-      .select("id, name, profile_type, preferences")
+      .select("id, name, profile_type, preferences, created_at")
       .eq("id", userId)
       .maybeSingle();
 

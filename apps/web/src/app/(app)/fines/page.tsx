@@ -4,6 +4,7 @@ import {
   FINE_STATUS_TRANSITIONS,
   type Fine,
   type FineStatus,
+  type VehicleResponse as Vehicle,
 } from "@navestory/validators";
 import {
   Alert,
@@ -23,14 +24,6 @@ import { useVehicleContext } from "@/lib/context/use-vehicle-context";
 import { formatDateInTz, nowInUserTz } from "@/lib/datetime-tz";
 import { usePreferences } from "@/lib/hooks/use-preferences";
 import { FINE_STATUS_BADGE_VARIANT } from "@/lib/fines/status-badge";
-
-interface Vehicle {
-  id: string;
-  plate: string;
-  make: string | null;
-  model: string | null;
-  nickname: string | null;
-}
 
 function vehicleLabel(vehicle: Vehicle | undefined): string {
   if (!vehicle) return "—";

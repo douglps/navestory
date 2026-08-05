@@ -58,6 +58,10 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
     ) {
       return NextResponse.redirect(new URL("/403", request.url));
     }
+    // @spec specs/workspace/SPEC-20260804-004-workspace-foundation.md RF-12, R-WS-01
+    // Sem checagem de role aqui: criação de workspace é aberta a qualquer usuário autenticado
+    // (ainda sem role de workspace) — a página decide entre form de criação, dashboard de
+    // owner ou dashboard de member a partir da resposta de GET /workspaces/me.
     return NextResponse.next();
   }
 

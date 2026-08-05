@@ -1,11 +1,14 @@
 import { describe, expect, it } from "vitest";
 import {
   DEFAULT_DASHBOARD_KPI_IDS,
+  DEFAULT_SPENDING_WINDOW_DAYS,
   KPI_CATALOG_IDS,
   MAX_ACTIVE_DASHBOARD_KPIS,
+  SPENDING_WINDOW_DAYS_OPTIONS,
   dashboardKpiIdsSchema,
   exportExpensesQuerySchema,
   fleetKpisQuerySchema,
+  spendingWindowDaysSchema,
   vehicleHistoryQuerySchema,
 } from "./dashboard.schemas";
 
@@ -48,6 +51,43 @@ describe("dashboardKpiIdsSchema (SPEC-20260721-002 RF-01, R-KPI-01)", () => {
       "next_maintenance",
     ]);
     expect(dashboardKpiIdsSchema.safeParse(DEFAULT_DASHBOARD_KPI_IDS).success).toBe(true);
+  });
+
+  it("KPI_CATALOG_IDS inclui spending_window como 9ª entrada (SPEC-20260804-001 RF-06)", () => {
+    expect(KPI_CATALOG_IDS).toHaveLength(9);
+    expect(KPI_CATALOG_IDS).toContain("spending_window");
+  });
+});
+
+describe("spendingWindowDaysSchema (SPEC-20260804-001 RF-01, RF-02, R-KPI-03)", () => {
+  it("aceita os 3 valores permitidos: 7, 14, 30", () => {
+    for (const days of SPENDING_WINDOW_DAYS_OPTIONS) {
+      expect(spendingWindowDaysSchema.safeParse(days).success).toBe(true);
+    }
+  });
+
+  it("rejeita valor fora do conjunto fechado {7, 14, 30}", () => {
+    expect(spendingWindowDaysSchema.safeParse(10).success).toBe(false);
+    expect(spendingWindowDaysSchema.safeParse(0).success).toBe(false);
+    expect(spendingWindowDaysSchema.safeParse(60).success).toBe(false);
+  });
+
+  it("rejeita valor não numérico", () => {
+    expect(spendingWindowDaysSchema.safeParse("7").success).toBe(false);
+  });
+
+  it("aplica default de 7 dias quando ausente (R-PREF-01)", () => {
+    const result = spendingWindowDaysSchema.safeParse(undefined);
+    expect(result.success).toBe(true);
+    if (result.success) expect(result.data).toBe(7);
+  });
+
+  it("DEFAULT_SPENDING_WINDOW_DAYS é 7", () => {
+    expect(DEFAULT_SPENDING_WINDOW_DAYS).toBe(7);
+  });
+
+  it("SPENDING_WINDOW_DAYS_OPTIONS é [7, 14, 30]", () => {
+    expect(SPENDING_WINDOW_DAYS_OPTIONS).toEqual([7, 14, 30]);
   });
 });
 

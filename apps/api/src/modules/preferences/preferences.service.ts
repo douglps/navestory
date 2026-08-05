@@ -8,8 +8,11 @@ import {
   DEFAULT_AUTO_DRAFT_ENABLED,
   DEFAULT_CHIP_FIELDS,
   DEFAULT_DASHBOARD_KPI_IDS,
+  DEFAULT_SPENDING_WINDOW_DAYS,
   type ChipField,
+  type ContextType,
   type KpiCatalogId,
+  type SpendingWindowDays,
 } from "@navestory/validators";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createUserScopedClient } from "../../shared/supabase/create-user-scoped-client";
@@ -20,10 +23,15 @@ type PreferencesResponse = {
   vehicle_chip_fields: ChipField[];
   dashboard_kpi_ids: KpiCatalogId[];
   timezone: string | null;
+  /** @spec SPEC-20260804-001 RF-01 */
+  spending_window_days: SpendingWindowDays;
+  /** @spec SPEC-20260804-002 RF-06 — `null` equivale a 'all' (R-PREF-01) */
+  default_context_type: ContextType | null;
+  default_context_id: string | null;
 };
 
 const PREFERENCES_COLUMNS =
-  "auto_draft_enabled, vehicle_chip_fields, dashboard_kpi_ids, timezone";
+  "auto_draft_enabled, vehicle_chip_fields, dashboard_kpi_ids, timezone, spending_window_days, default_context_type, default_context_id";
 
 /**
  * @spec SPEC-20260612-003
@@ -72,6 +80,12 @@ export class PreferencesService {
       // R-TZ-01, RF-BK-01: `null` cru, sem substituir por 'UTC' aqui — fallback é responsabilidade
       // de cada consumidor (DashboardService, ExpensesService, MaintenancesService).
       timezone: row?.timezone ?? null,
+      // @spec SPEC-20260804-001 RF-01 — default seguro (R-PREF-01)
+      spending_window_days:
+        row?.spending_window_days ?? DEFAULT_SPENDING_WINDOW_DAYS,
+      // @spec SPEC-20260804-002 RF-06 — `null` cru; a aplicação trata como 'all' (R-PREF-01)
+      default_context_type: row?.default_context_type ?? null,
+      default_context_id: row?.default_context_id ?? null,
     };
   }
 

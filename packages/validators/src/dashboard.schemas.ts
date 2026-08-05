@@ -19,11 +19,23 @@ export const fleetKpisQuerySchema = z.object({
 });
 export type FleetKpisQuery = z.infer<typeof fleetKpisQuerySchema>;
 
+/**
+ * @spec SPEC-20260531-001 RF-SH-01, RF-SH-02
+ * @spec SPEC-20260803-001 RF-04
+ * Canônico para o shape de flag de saúde retornado por `calculate_vehicle_health`/
+ * `calculate_fleet_health` — reconciliado com o `HealthFlag` antes redeclarado
+ * localmente em `VehicleHealthCard.tsx` (ambos já tinham o mesmo shape).
+ */
+export interface HealthFlag {
+  type: string;
+  [key: string]: unknown;
+}
+
 /** @spec SPEC-20260531-001 RF-SH-01, RF-SH-02 */
 export interface FleetHealthEntry {
   vehicle_id: string;
   score: number;
-  flags: Array<{ type: string; [key: string]: unknown }>;
+  flags: HealthFlag[];
 }
 
 /**
@@ -87,8 +99,24 @@ export const KPI_CATALOG_IDS = [
   "next_maintenance",
   "upcoming_costs_7d",
   "expense_anomalies",
+  "spending_window",
 ] as const;
 export type KpiCatalogId = (typeof KPI_CATALOG_IDS)[number];
+
+/**
+ * @spec SPEC-20260804-001 RF-01, RF-02, R-KPI-03
+ * Valores permitidos para a janela rolante do KPI `spending_window` — conjunto fechado,
+ * não um intervalo livre (ver "Notas Técnicas" da spec: mapeia aos ciclos de controle mais
+ * comuns e evita que a janela fique indistinguível do gasto histórico total).
+ */
+export const SPENDING_WINDOW_DAYS_OPTIONS = [7, 14, 30] as const;
+export type SpendingWindowDays = (typeof SPENDING_WINDOW_DAYS_OPTIONS)[number];
+/** @spec SPEC-20260804-001 RF-01 — default seguro (R-PREF-01) */
+export const DEFAULT_SPENDING_WINDOW_DAYS: SpendingWindowDays = 7;
+/** @spec SPEC-20260804-001 RF-02 */
+export const spendingWindowDaysSchema = z
+  .union([z.literal(7), z.literal(14), z.literal(30)])
+  .default(DEFAULT_SPENDING_WINDOW_DAYS);
 
 /** @spec SPEC-20260721-002 RF-01 — mesmo conjunto de 4 KPIs já exibidos antes desta feature, preservado como default para não mudar a experiência sem ação do usuário. */
 export const DEFAULT_DASHBOARD_KPI_IDS: KpiCatalogId[] = [
@@ -121,7 +149,20 @@ export interface KpiSeriesValue {
   history_6mo: number[] | null;
 }
 
-/** @spec SPEC-20260721-002 RF-01 */
+/**
+ * @spec SPEC-20260804-001 RF-03, RF-04
+ * Sem `delta_pct`/`history_6mo` por design (RF-04) — uma janela rolante desloca a base de
+ * comparação a cada dia, então delta/sparkline seriam enganosos (ver Notas Técnicas da spec).
+ * `label` é resolvido no backend (`"Últ. 7 dias"` etc.) a partir da preferência do usuário
+ * autenticado, para o frontend não precisar interpolar a janela por conta própria.
+ */
+export interface SpendingWindowKpi {
+  value: number;
+  window_days: SpendingWindowDays;
+  label: string;
+}
+
+/** @spec SPEC-20260721-002 RF-01, SPEC-20260804-001 RF-03 */
 export interface FleetKpiCatalog {
   expenses_month: KpiResult<KpiSeriesValue>;
   cost_per_km: KpiResult<KpiSeriesValue>;
@@ -131,6 +172,7 @@ export interface FleetKpiCatalog {
   next_maintenance: KpiResult<{ date: string; vehicle_plate: string } | null>;
   upcoming_costs_7d: KpiResult<{ total: number; count: number }>;
   expense_anomalies: KpiResult<number>;
+  spending_window: KpiResult<SpendingWindowKpi>;
 }
 
 /** @spec SPEC-20260531-001 RF-DA-04 */
@@ -142,6 +184,10 @@ export interface VehicleDocumentsStatus {
   crlv: DocumentStatus;
 }
 
+/**
+ * @spec SPEC-20260803-001 RF-04
+ * Canônico — mesmo shape antes redeclarado como `VehicleCardData` em `VehicleHealthCard.tsx`.
+ */
 export interface VehicleCard {
   id: string;
   plate: string;

@@ -1,7 +1,7 @@
 ---
 id: SPEC-20260801-002
 title: "Analytics Avançado — Correlações, Simulações e Personalização"
-status: draft
+status: approved
 date: 2026-08-01
 author: Douglas Lopes (lps.doug@protonmail.com)
 rules: [R-ANA-03, R-ANA-07, R-ANA-09, R-ANA-05, R-ANA-06]

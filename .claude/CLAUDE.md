@@ -25,6 +25,16 @@ Todo arquivo que implementa um requisito rastreável anota, usando a sintaxe de 
 - Ao adicionar regra de negócio nova, registrar no `RULES.md` antes de implementar
 - ADR novo é obrigatório ao mudar padrão arquitetural estabelecido — usar template em `docs/architecture/decisions/TEMPLATE.md`
 
+## Automação de Git
+
+Adotado em 2026-08-06, a partir de revisão de boas práticas (critério de aplicabilidade por nível de maturidade em `~/.claude/CLAUDE.md`, seção "Automação de qualidade e dependências"):
+
+- **Pre-commit hook**: `husky` + `lint-staged` (raiz do monorepo) — roda `eslint --fix` nos arquivos `.js/.jsx/.ts/.tsx/.mjs/.cjs` staged antes de cada commit. Config em `.lintstagedrc.json` e `.husky/pre-commit`. `.husky/_` (pasta interna gerada) está no `.gitignore` — não versionar.
+- **Dependabot**: `.github/dependabot.yml` — updates semanais do workspace pnpm (`apps/*`, `packages/*` via lockfile único na raiz) e das GitHub Actions, agrupados por dev/produção. Alertas de vulnerabilidade e correções automáticas de segurança ativados no repositório.
+- **`CODEOWNERS`**: `.github/CODEOWNERS` — `* @douglps` enquanto for o único colaborador; subdividir por camada/domínio quando entrar um segundo colaborador.
+- **Política de merge**: squash-only na `master` (`allow_merge_commit`/`allow_rebase_merge` desativados nas configurações do repositório) + `delete_branch_on_merge: true`. Escolha deliberada por histórico linear — decisão de workflow deste projeto, não regra universal (ver ressalva no `CLAUDE.md` global).
+- **Proteção de branch na `master` — pendência conhecida, não resolvida**: o repositório é privado e está no plano free do GitHub, que não permite branch protection nem rulesets (`403 Upgrade to GitHub Pro or make this repository public`). Hoje nada impede push direto/force-push na `master` — mitigado apenas por disciplina (ser o único committer). Detalhe completo e passo a passo de resolução em `important/PENDENCIAS-E-PROCESSOS.md`.
+
 ## Estrutura Padrão de Projeto
 
 Todo projeto (com processo completo aplicável) deve conter a seguinte estrutura (criada via `/iniciar-projeto`):

@@ -46,7 +46,7 @@
     "@vitest/coverage-v8": "^3.2.6",
     "esbuild": "^0.28.1",
     "jsdom": "^25.0.1",
-    "postcss": "^8.4.49",
+    "postcss": "^8.5.23",
     "serwist": "^9.5.11",
     "tailwindcss": "^4.1.18",
     "typescript": "^5.7.0",

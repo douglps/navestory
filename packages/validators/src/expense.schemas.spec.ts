@@ -15,7 +15,7 @@ describe("createExpenseInputSchema", () => {
     vehicle_id: validUuid,
     category: "maintenance",
     amount: 150.0,
-    date: "2026-07-14",
+    occurred_at: "2026-07-14",
   };
 
   it("aceita payload mínimo válido (RF-01)", () => {
@@ -44,10 +44,10 @@ describe("createExpenseInputSchema", () => {
     ).toBe(false);
   });
 
-  it("rejeita date em formato inválido", () => {
-    expect(createExpenseInputSchema.safeParse({ ...base, date: "14/07/2026" }).success).toBe(
-      false,
-    );
+  it("rejeita occurred_at em formato inválido", () => {
+    expect(
+      createExpenseInputSchema.safeParse({ ...base, occurred_at: "14/07/2026" }).success,
+    ).toBe(false);
   });
 
   it("rejeita fuel_type inválido (CA-14)", () => {

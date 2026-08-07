@@ -23,9 +23,11 @@ describe("createMaintenanceInputSchema", () => {
     expect(createMaintenanceInputSchema.safeParse({ ...base, description: "ab" }).success).toBe(false);
   });
 
-  it("rejeita scheduled_date fora do formato YYYY-MM-DD", () => {
+  it("rejeita scheduled_date fora do formato YYYY-MM-DD ou ISO 8601 (R-TZ-03)", () => {
+    // "14/08/2026" não é YYYY-MM-DD nem parseável como ISO 8601 (mês 14 é inválido) — diferente
+    // de "01/08/2026", que Date.parse aceitaria ambiguamente como MM/DD/YYYY.
     expect(
-      createMaintenanceInputSchema.safeParse({ ...base, scheduled_date: "01/08/2026" }).success,
+      createMaintenanceInputSchema.safeParse({ ...base, scheduled_date: "14/08/2026" }).success,
     ).toBe(false);
   });
 

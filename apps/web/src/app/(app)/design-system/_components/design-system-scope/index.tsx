@@ -17,10 +17,13 @@ function realTokenVars(mode: ScopeMode): Record<string, string> {
   const entries = Object.keys(colorChannels) as ColorToken[];
   const vars: Record<string, string> = {};
   for (const token of entries) {
+    // token é ColorToken, união fechada de chaves conhecidas — falso positivo do plugin
+    /* eslint-disable security/detect-object-injection */
     vars[cssVariableName(token)] =
       mode === "dark"
         ? (darkColorChannels[token] ?? colorChannels[token])
         : colorChannels[token];
+    /* eslint-enable security/detect-object-injection */
   }
   return vars;
 }

@@ -6,6 +6,7 @@ import { AuthService } from "./auth.service";
 function createConfigService(overrides?: Record<string, string>): ConfigService {
   const values: Record<string, string> = { WEB_APP_URL: "http://localhost:3000", ...overrides };
   return {
+    // eslint-disable-next-line security/detect-object-injection -- mock de teste, values é objeto interno controlado pelo próprio teste
     getOrThrow: jest.fn((key: string) => values[key]),
   } as unknown as ConfigService;
 }

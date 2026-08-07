@@ -82,7 +82,6 @@ export default function MaintenanceDetailPage({
     );
     setCost(maintenance.cost ?? undefined);
     setOdometerKm(maintenance.odometer_km ?? undefined);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [maintenance, tz]);
 
   const mutation = useMutation({

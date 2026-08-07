@@ -119,6 +119,7 @@ export function AcessibilidadeSection() {
           {CHECKLIST.map((item, index) => (
             <li key={item} className="flex items-start gap-2 text-sm">
               <Checkbox
+                // eslint-disable-next-line security/detect-object-injection -- index é índice numérico do próprio map, não input externo
                 checked={Boolean(checked[index])}
                 onChange={(e) =>
                   setChecked((current) => ({
@@ -130,6 +131,7 @@ export function AcessibilidadeSection() {
               />
               <span
                 className={
+                  // eslint-disable-next-line security/detect-object-injection -- index é índice numérico do próprio map, não input externo
                   checked[index] ? "text-muted-foreground line-through" : ""
                 }
               >

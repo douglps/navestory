@@ -16,10 +16,13 @@ const AA_NON_TEXT = 3;
 type Mode = "light" | "dark";
 
 function resolve(token: ColorToken, mode: Mode): string {
+  // token é ColorToken, união fechada de chaves conhecidas — falso positivo do plugin
+  /* eslint-disable security/detect-object-injection */
   const channels =
     mode === "dark"
       ? (darkColorChannels[token] ?? colorChannels[token])
       : colorChannels[token];
+  /* eslint-enable security/detect-object-injection */
   return `oklch(${channels})`;
 }
 

@@ -41,6 +41,13 @@ export default tseslint.config(
       ...reactHooks.configs.recommended.rules,
       ...jsxA11y.configs.recommended.rules,
       "react/react-in-jsx-scope": "off",
+      // TypeScript já valida props em tempo de compilação — a regra do plugin não entende
+      // alias de tipo separado (ex: `type Props = {...}`) e gera falso positivo.
+      "react/prop-types": "off",
+      "jsx-a11y/label-has-associated-control": [
+        "error",
+        { controlComponents: ["Checkbox", "Switch"] },
+      ],
     },
     settings: {
       react: { version: "detect" },

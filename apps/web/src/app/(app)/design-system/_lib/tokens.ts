@@ -16,9 +16,11 @@ import {
 /** Valor bruto "L C H" (sem `oklch()`) do token real de produção — usado para os papéis
  * que a proposta mantém inalterados (gold, danger, success, warning, info, accent). */
 export function tokenLight(name: ColorToken): string {
+  // eslint-disable-next-line security/detect-object-injection -- name é ColorToken, união fechada de chaves conhecidas
   return colorChannels[name];
 }
 export function tokenDark(name: ColorToken): string {
+  // eslint-disable-next-line security/detect-object-injection -- name é ColorToken, união fechada de chaves conhecidas
   return darkColorChannels[name] ?? colorChannels[name];
 }
 

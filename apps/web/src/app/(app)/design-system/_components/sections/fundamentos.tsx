@@ -40,13 +40,13 @@ export function FundamentosSection() {
       description="Resumo da decisão aprovada em 2026-07-30 — substitui a direção Prata (SPEC-20260729-001). Toda a proposta está em specs/design-system/PROPOSTA-BRAND-DESIGN-SYSTEM-2026-07-30.md."
     >
       <div className="rounded-lg border border-border bg-card p-4">
-        <h3 className="text-sm font-semibold">Princípio central — "Calm UI"</h3>
+        <h3 className="text-sm font-semibold">Princípio central — &ldquo;Calm UI&rdquo;</h3>
         <p className="mt-1 text-sm text-muted-foreground">
           navestory é um SaaS de gestão de veículos/frota consultado
           repetidamente ao longo do dia, com momentos neutros (consulta de
           rotina) e momentos emocionalmente carregados (despesa inesperada,
-          manutenção cara, alerta de atraso). A interface deve responder "meu
-          veículo/minha frota está saudável hoje?" em segundos. Nenhuma decisão
+          manutenção cara, alerta de atraso). A interface deve responder &ldquo;meu
+          veículo/minha frota está saudável hoje?&rdquo; em segundos. Nenhuma decisão
           de cor, tipografia ou componente pode comprometer esse princípio.
         </p>
       </div>

@@ -66,6 +66,7 @@ describe("ServiceWorkerUpdateListener", () => {
     const listeners: Record<string, ((...args: unknown[]) => void)[]> = {};
     const serwist = {
       addEventListener: vi.fn((event: string, fn: (...args: unknown[]) => void) => {
+        // eslint-disable-next-line security/detect-object-injection -- event vem de vi.fn tipado, mock de teste local
         listeners[event] = [...(listeners[event] ?? []), fn];
       }),
       removeEventListener: vi.fn(),
@@ -91,6 +92,7 @@ describe("ServiceWorkerUpdateListener", () => {
     const listeners: Record<string, ((...args: unknown[]) => void)[]> = {};
     const serwist = {
       addEventListener: vi.fn((event: string, fn: (...args: unknown[]) => void) => {
+        // eslint-disable-next-line security/detect-object-injection -- event vem de vi.fn tipado, mock de teste local
         listeners[event] = [...(listeners[event] ?? []), fn];
       }),
       removeEventListener: vi.fn(),

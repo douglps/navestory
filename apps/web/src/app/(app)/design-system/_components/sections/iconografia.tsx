@@ -1,5 +1,4 @@
 import {
-  AlertTriangle,
   BarChart3,
   Bell,
   Calendar,
@@ -194,7 +193,7 @@ export function IconografiaSection() {
           <li>
             Ícone herda cor via currentColor — nunca cor hardcoded no SVG.
           </li>
-          <li>Proibido ícone multicolor "sticker".</li>
+          <li>Proibido ícone multicolor &ldquo;sticker&rdquo;.</li>
         </ul>
       </Subsection>
     </Section>

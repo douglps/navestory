@@ -43,7 +43,9 @@ describe("VehicleDetailPage", () => {
   function mockApiByUrl(handlers: Record<string, unknown>) {
     vi.mocked(apiClient).mockImplementation((url: string, options?: { method?: string }) => {
       const key = options?.method ? `${options.method} ${url}` : url;
+      // eslint-disable-next-line security/detect-object-injection -- guardado por `in` acima, mock de teste
       if (key in handlers) return Promise.resolve(handlers[key]);
+      // eslint-disable-next-line security/detect-object-injection -- guardado por `in` acima, mock de teste
       if (url in handlers) return Promise.resolve(handlers[url]);
       return Promise.reject(new Error(`unmocked call: ${key}`));
     });

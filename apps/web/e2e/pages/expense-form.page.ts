@@ -86,6 +86,7 @@ export class ExpenseFormPage {
   /** Seleciona a categoria pelo slug (ex: "fuel", "toll") — traduzido para o label exibido. */
   async selectCategory(categoryValue: string): Promise<void> {
     const label =
+      // eslint-disable-next-line security/detect-object-injection -- helper de e2e, mapa estático interno, chave vem do próprio código de teste
       ExpenseFormPage.CATEGORY_LABELS[categoryValue] ?? categoryValue;
     await this.selectFromCombobox(this.categorySelect, label);
   }

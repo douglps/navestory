@@ -88,14 +88,14 @@ export function VozSection() {
 
       <Subsection title="Banidos">
         <ul className="list-inside list-disc text-sm text-muted-foreground">
-          <li>Jargão técnico exposto ("erro 422", "timeout", "payload")</li>
+          <li>Jargão técnico exposto (&ldquo;erro 422&rdquo;, &ldquo;timeout&rdquo;, &ldquo;payload&rdquo;)</li>
           <li>
-            Fórmulas de reasseguramento institucional ("seus dados estão
-            seguros")
+            Fórmulas de reasseguramento institucional (&ldquo;seus dados estão
+            seguros&rdquo;)
           </li>
-          <li>Contrações e gírias regionais ("tá", "bora", "pra")</li>
-          <li>Passividade excessiva ("O registro não pode ser processado")</li>
-          <li>Imperativo agressivo em CTA ("Clique aqui")</li>
+          <li>Contrações e gírias regionais (&ldquo;tá&rdquo;, &ldquo;bora&rdquo;, &ldquo;pra&rdquo;)</li>
+          <li>Passividade excessiva (&ldquo;O registro não pode ser processado&rdquo;)</li>
+          <li>Imperativo agressivo em CTA (&ldquo;Clique aqui&rdquo;)</li>
         </ul>
       </Subsection>
     </Section>

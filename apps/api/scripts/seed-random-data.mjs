@@ -149,6 +149,7 @@ async function waitForProfile(userId) {
 
 async function createVehicle(userId) {
   const make = randPick(Object.keys(MAKES_MODELS));
+  // eslint-disable-next-line security/detect-object-injection -- make vem de Object.keys(MAKES_MODELS), sempre uma chave válida
   const model = randPick(MAKES_MODELS[make]);
   const year = randInt(2016, 2024);
   const baselineOdometer = randInt(8000, 45000);

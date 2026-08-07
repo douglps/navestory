@@ -197,17 +197,13 @@ const DOCUMENT_LABEL: Record<keyof typeof DOCUMENT_FIELD_TO_COST_TYPE, string> =
  * Categorias fora do catálogo padrão (personalizadas, fora de escopo desta spec) caem no
  * fallback capitalizado do próprio slug.
  */
-const CATEGORY_LABELS: Record<string, string> = Object.fromEntries(
-  DEFAULT_EXPENSE_CATEGORIES.map((category) => [
-    category.value,
-    category.label,
-  ]),
+const CATEGORY_LABELS = new Map<string, string>(
+  DEFAULT_EXPENSE_CATEGORIES.map((category) => [category.value, category.label]),
 );
 
 function categoryLabel(category: string): string {
-   
   return (
-    CATEGORY_LABELS[category] ??
+    CATEGORY_LABELS.get(category) ??
     category.charAt(0).toUpperCase() + category.slice(1)
   );
 }

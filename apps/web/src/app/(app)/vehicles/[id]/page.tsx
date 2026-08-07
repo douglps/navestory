@@ -171,7 +171,6 @@ export default function VehicleDetailPage({
               const label = FLAG_LABEL[flag.type]?.(flag) ?? flag.type;
               const href = flagActionLink(flag, vehicle.id);
               return (
-                // eslint-disable-next-line react/no-array-index-key -- flags não têm id próprio, ordem é estável dentro de uma mesma resposta
                 <li key={index}>
                   {href ? (
                     <Link href={href} className="underline">

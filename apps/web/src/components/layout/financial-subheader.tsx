@@ -175,9 +175,9 @@ export function FinancialSubheader(): ReactNode {
 
         <div aria-hidden="true" className="h-[18px] w-px bg-border/20" />
 
-        {/* eslint-disable-next-line security/detect-object-injection -- status é union fixa de 3 literais (FinesStatusResponse["status"]) */}
         <Link
           href="/fines"
+          // eslint-disable-next-line security/detect-object-injection -- status é union fixa de 3 literais (FinesStatusResponse["status"])
           className={`flex items-center gap-1.5 transition-colors ${FINES_STYLE[status]}`}
         >
           Multas

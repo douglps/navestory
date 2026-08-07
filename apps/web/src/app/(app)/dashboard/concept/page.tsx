@@ -147,10 +147,7 @@ import {
 import { apiClient } from "@/lib/http/api-client";
 import { useDashboardStore } from "@/lib/stores/use-dashboard-store";
 import type { FleetAlertItem } from "@/components/dashboard/FleetAlertBar";
-import type {
-  HealthFlag,
-  VehicleCardData,
-} from "@/components/dashboard/VehicleHealthCard";
+import type { VehicleCardData } from "@/components/dashboard/VehicleHealthCard";
 
 const MOCK_VEHICLE_LIMIT = 5;
 const TIMELINE_MAX_ITEMS = 8;
@@ -800,6 +797,7 @@ function TabsExample(): ReactNode {
         ))}
       </div>
       <p role="tabpanel" className={`mt-3 text-sm ${PATTERN_MUTED}`}>
+        {/* eslint-disable-next-line security/detect-object-injection -- active é índice numérico de useState, array estático local */}
         Conteúdo de &ldquo;{tabs[active]}&rdquo; (demonstração).
       </p>
     </div>
@@ -1418,6 +1416,7 @@ function SortableTableExample(): ReactNode {
       )
       .sort((a, b) => {
         const cmp =
+          // eslint-disable-next-line security/detect-object-injection -- sortKey é keyof DemoTableRow, união fechada de chaves conhecidas
           a[sortKey] > b[sortKey] ? 1 : a[sortKey] < b[sortKey] ? -1 : 0;
         return asc ? cmp : -cmp;
       });

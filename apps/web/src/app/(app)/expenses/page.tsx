@@ -12,8 +12,10 @@ import type {
 import {
   Alert,
   Button,
+  Combobox,
   Container,
   EmptyState,
+  Input,
   KpiCard,
   Tabs,
 } from "@navestory/ui";
@@ -42,6 +44,107 @@ function vehicleLabel(vehicle: Vehicle | undefined): string {
 
 function currency(value: number): string {
   return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+}
+
+function currentPeriod(): string {
+  return new Date().toISOString().slice(0, 7);
+}
+
+/**
+ * @spec SPEC-20260531-001 seção 12.3 (migração incremental)
+ * @spec SPEC-20260721-002 RF-05
+ * @spec SPEC-20260804-006 RF-13 — movido de `dashboard/page.tsx`: exportação é ação de gestão de
+ * dados transacionais, contexto certo é a tela onde os dados de despesa residem. Complementa o
+ * link "Exportar CSV Completo" (sem filtro de período) já existente no header desta tela.
+ *
+ * Gap registrado em IMPACTO-040: o estado "desabilitado para plano Grátis" (R-BIZ-12) depende
+ * do plano do usuário, ainda não disponível client-side. Não implementado nesta rodada.
+ */
+function ExportControls({
+  vehicles,
+}: {
+  vehicles: Vehicle[] | undefined;
+}): ReactNode {
+  const [period, setPeriod] = useState(currentPeriod());
+  const [vehicleId, setVehicleId] = useState("");
+  const [status, setStatus] = useState<"idle" | "loading" | "error">("idle");
+
+  async function handleExport(): Promise<void> {
+    setStatus("loading");
+    const exportUrl = `/api/backend/dashboard/export?period=${encodeURIComponent(period)}${
+      vehicleId ? `&vehicle_id=${encodeURIComponent(vehicleId)}` : ""
+    }`;
+
+    try {
+      const response = await fetch(exportUrl);
+      if (!response.ok)
+        throw new Error(`Falha na exportação: ${response.status}`);
+
+      const blob = await response.blob();
+      const objectUrl = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = objectUrl;
+      link.download = `navestory-despesas-${period}.csv`;
+      link.click();
+      URL.revokeObjectURL(objectUrl);
+      setStatus("idle");
+    } catch {
+      setStatus("error");
+    }
+  }
+
+  return (
+    <div className="flex flex-col gap-2 border-t pt-4">
+      <h2 className="kicker">Exportar por período</h2>
+      <div className="flex flex-wrap items-end gap-3">
+        <label htmlFor="export-period" className="flex flex-col gap-1">
+          <span>Mês</span>
+          <Input
+            id="export-period"
+            type="month"
+            value={period}
+            onChange={(event) => setPeriod(event.target.value)}
+          />
+        </label>
+
+        <div className="flex flex-col gap-1">
+          <span>Veículo</span>
+          <Combobox
+            aria-label="Veículo"
+            options={[
+              { value: "", label: "Todos os veículos" },
+              ...(vehicles ?? []).map((vehicle) => ({
+                value: vehicle.id,
+                label: vehicleLabel(vehicle),
+              })),
+            ]}
+            value={vehicleId}
+            onValueChange={setVehicleId}
+            placeholder="Todos os veículos"
+            searchPlaceholder="Buscar veículo..."
+            emptyMessage="Nenhum veículo encontrado"
+            className="w-56"
+          />
+        </div>
+
+        <Button
+          type="button"
+          variant="outline"
+          onClick={handleExport}
+          disabled={status === "loading"}
+        >
+          {status === "loading" ? "Exportando…" : "Exportar CSV"}
+        </Button>
+      </div>
+
+      {status === "error" && (
+        <Alert
+          variant="error"
+          description="Não foi possível exportar. Tente novamente."
+        />
+      )}
+    </div>
+  );
 }
 
 /**
@@ -476,6 +579,8 @@ function ExpensesPageContent(): ReactNode {
           tz={tz}
         />
       )}
+
+      <ExportControls vehicles={vehicles} />
     </Container>
   );
 }

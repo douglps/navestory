@@ -85,7 +85,7 @@ function DocumentBadge({
   const badge = DOCUMENT_BADGE[status];
   if (!badge) return null;
   return (
-    <Badge variant={badge.variant} className="text-[10px]">
+    <Badge variant={badge.variant} className="text-xs">
       {label} {badge.label}
     </Badge>
   );
@@ -117,8 +117,8 @@ export function VehicleHealthCard({
       onClick={onSelect}
       aria-pressed={isActive}
       aria-label={`Ver análise de ${vehicleLabel(vehicle)}`}
-      className={`flex flex-col gap-1.5 rounded border p-3 text-left ${
-        isActive ? "border-primary/40 bg-primary/8" : "border-border"
+      className={`flex flex-col gap-1.5 rounded border p-3 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
+        isActive ? "border-primary/40 surface-selected" : "border-border"
       }`}
     >
       <div className="flex items-center justify-between gap-2">
@@ -151,7 +151,7 @@ export function VehicleHealthCard({
       {vehicle.last_fuel_odometer_missing && (
         <span
           role="alert"
-          className="rounded border border-warning bg-warning-pastel px-1.5 py-0.5 text-[10px] font-medium text-warning-foreground"
+          className="rounded border border-warning bg-warning-pastel px-1.5 py-0.5 text-xs font-medium text-foreground"
         >
           Último abastecimento sem odômetro registrado
         </span>

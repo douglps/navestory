@@ -162,6 +162,17 @@ export interface SpendingWindowKpi {
   label: string;
 }
 
+/**
+ * @spec SPEC-20260804-006 RF-05, R-KPI-04
+ * `insufficient_sample` sinaliza que a contagem total de registros históricos do usuário é
+ * menor que `DELTA_SUPPRESSION_MIN_SAMPLE` — quando `true`, `count` é sempre `0` e o frontend
+ * deve suprimir o valor numérico (nunca interpretar `0` como "zero anomalias detectadas").
+ */
+export interface ExpenseAnomaliesKpi {
+  count: number;
+  insufficient_sample: boolean;
+}
+
 /** @spec SPEC-20260721-002 RF-01, SPEC-20260804-001 RF-03 */
 export interface FleetKpiCatalog {
   expenses_month: KpiResult<KpiSeriesValue>;
@@ -171,7 +182,7 @@ export interface FleetKpiCatalog {
   total_vehicles: KpiResult<number>;
   next_maintenance: KpiResult<{ date: string; vehicle_plate: string } | null>;
   upcoming_costs_7d: KpiResult<{ total: number; count: number }>;
-  expense_anomalies: KpiResult<number>;
+  expense_anomalies: KpiResult<ExpenseAnomaliesKpi>;
   spending_window: KpiResult<SpendingWindowKpi>;
 }
 

@@ -88,28 +88,45 @@ describe("UpcomingCostsWidget", () => {
     expect(screen.getByText("R$ 150,00")).toBeInTheDocument();
   });
 
-  it("US-09: evento a ≤2 dias recebe classe danger", async () => {
+  it("SPEC-20260804-006 RF-09: o fundo do item permanece neutro independente da urgência", async () => {
     mockApi([item({ due_date: isoInDays(1) })]);
     renderWidget();
 
     const listItem = (await screen.findByText(/Troca de óleo/)).closest("li");
-    expect(listItem).toHaveClass("border-danger");
+    expect(listItem).toHaveClass("bg-muted/40");
+    expect(listItem).not.toHaveClass("bg-danger-pastel");
   });
 
-  it("US-09: evento a 3-5 dias recebe classe warning", async () => {
+  it("US-09, RF-09: evento a ≤2 dias recebe chip de urgência danger isolado", async () => {
+    mockApi([item({ due_date: isoInDays(1) })]);
+    renderWidget();
+
+    const chip = await screen.findByText("Em 1d");
+    expect(chip).toHaveClass("border-danger");
+  });
+
+  it("US-09, RF-09: evento a 3-5 dias recebe chip de urgência warning isolado", async () => {
     mockApi([item({ due_date: isoInDays(4) })]);
     renderWidget();
 
-    const listItem = (await screen.findByText(/Troca de óleo/)).closest("li");
-    expect(listItem).toHaveClass("border-warning");
+    const chip = await screen.findByText("Em 4d");
+    expect(chip).toHaveClass("border-warning");
   });
 
-  it("US-09: evento a 6-7 dias recebe classe neutra", async () => {
+  it("US-09, RF-09: evento a 6-7 dias recebe chip neutro", async () => {
     mockApi([item({ due_date: isoInDays(7) })]);
     renderWidget();
 
-    const listItem = (await screen.findByText(/Troca de óleo/)).closest("li");
-    expect(listItem).toHaveClass("border-border");
+    const chip = await screen.findByText("Em 7d");
+    expect(chip).toHaveClass("border-muted");
+  });
+
+  it("SPEC-20260804-006 RF-10: valor estimado exibe '(aprox.)' por extenso, não o prefixo '~'", async () => {
+    mockApi([item({ due_date: isoInDays(1), amount: 450, is_estimated: true })]);
+    renderWidget();
+
+    expect(await screen.findByText("R$ 450,00 (aprox.)")).toBeInTheDocument();
+    expect(screen.queryByText(/~R\$/)).not.toBeInTheDocument();
   });
 
   it("US-09, P6: exibe link 'Ver todos' quando atinge o teto de 10 itens", async () => {

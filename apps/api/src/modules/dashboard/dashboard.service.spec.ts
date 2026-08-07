@@ -473,6 +473,33 @@ describe("DashboardService", () => {
       });
     });
 
+    it("SPEC-20260804-006 RF-04: converte scheduled_date (timestamptz) para calendário YYYY-MM-DD, nunca o timestamp bruto", async () => {
+      (expensesService.getKpis as jest.Mock).mockResolvedValue({ total_this_month: 0 });
+      const from = mockFrom({
+        maintenances: {
+          count: 1,
+          error: null,
+          data: [
+            {
+              scheduled_date: "2026-08-10T00:00:00+00:00",
+              vehicles: { plate: "ABC1234" },
+            },
+          ],
+        },
+        vehicles: { data: [], error: null },
+      });
+      const rpc = jest.fn().mockResolvedValue({ data: [], error: null });
+      (createUserScopedClient as jest.Mock).mockReturnValue({ from, rpc });
+      const service = createService();
+
+      const kpis = await service.getFleetKpis("token", "u1", undefined);
+
+      expect(kpis.next_maintenance).toEqual({
+        ok: true,
+        value: { date: "2026-08-10", vehicle_plate: "ABC1234" },
+      });
+    });
+
     it("isola a falha de um KPI sem derrubar os demais (CA-S1-05.1)", async () => {
       (expensesService.getKpis as jest.Mock).mockRejectedValue(new Error("falhou"));
       const from = mockFrom({
@@ -539,6 +566,39 @@ describe("DashboardService", () => {
       expect(cards[0]?.documents).toEqual({ ipva: "overdue", insurance: "attention", crlv: "ok" });
       expect(cards[0]?.last_fuel_date).toBe("2026-07-01");
       expect(cards[1]?.documents).toEqual({ ipva: "unknown", insurance: "unknown", crlv: "unknown" });
+    });
+
+    it("SPEC-20260804-006 RF-04: converte occurred_at (timestamptz) para calendário YYYY-MM-DD, nunca o timestamp bruto", async () => {
+      const from = jest.fn((table: string) => {
+        if (table === "vehicles") {
+          return createQueryBuilder({
+            data: [
+              {
+                id: "v1",
+                plate: "ABC1234",
+                make: "Honda",
+                model: "Civic",
+                nickname: null,
+                odometer: 50_000,
+                ipva_due_date: null,
+                insurance_expires_at: null,
+                crlv_expires_at: null,
+              },
+            ],
+            error: null,
+          });
+        }
+        return createQueryBuilder({
+          data: [{ occurred_at: "2026-07-01T23:45:00+00:00", amount: 200, odometer_km: 49_500 }],
+          error: null,
+        });
+      });
+      (createUserScopedClient as jest.Mock).mockReturnValue({ from });
+      const service = createService();
+
+      const cards = await service.getVehicleCards("token", "u1");
+
+      expect(cards[0]?.last_fuel_date).toBe("2026-07-01");
     });
 
     it("lança 500 quando a query de veículos falha", async () => {
@@ -855,7 +915,11 @@ describe("DashboardService", () => {
     it("agrega os 8 KPIs do catálogo com sucesso", async () => {
       (expensesService.getUpcomingCosts as jest.Mock).mockResolvedValue([{ amount: 50 }, { amount: 30 }]);
       const from = mockFrom({
-        expenses: { data: [{ occurred_at: toDateString(new Date()), amount: 100 }], error: null },
+        expenses: {
+          data: [{ occurred_at: toDateString(new Date()), amount: 100 }],
+          count: 5,
+          error: null,
+        },
         vehicles: { data: [{ id: "v1" }], count: 1, error: null },
         maintenances: { count: 2, error: null, data: [] },
       });
@@ -881,7 +945,10 @@ describe("DashboardService", () => {
       expect(kpis.total_vehicles).toEqual({ ok: true, value: 1 });
       expect(kpis.next_maintenance).toEqual({ ok: true, value: null });
       expect(kpis.upcoming_costs_7d).toEqual({ ok: true, value: { total: 80, count: 2 } });
-      expect(kpis.expense_anomalies).toEqual({ ok: true, value: 0 });
+      expect(kpis.expense_anomalies).toEqual({
+        ok: true,
+        value: { count: 0, insufficient_sample: false },
+      });
       expect(expensesService.getUpcomingCosts).toHaveBeenCalledWith("token", {
         vehicle_id: undefined,
         horizon_days: 7,
@@ -1181,7 +1248,7 @@ describe("DashboardService", () => {
     it("isola falha de expense_anomalies quando a RPC falha", async () => {
       (expensesService.getUpcomingCosts as jest.Mock).mockResolvedValue([]);
       const from = mockFrom({
-        expenses: { data: [], error: null },
+        expenses: { data: [], count: 5, error: null },
         vehicles: { data: [], count: 0, error: null },
         maintenances: { count: 0, error: null, data: [] },
       });
@@ -1197,7 +1264,7 @@ describe("DashboardService", () => {
     it("expense_anomalies usa fallback vazio quando data vem undefined sem erro", async () => {
       (expensesService.getUpcomingCosts as jest.Mock).mockResolvedValue([]);
       const from = mockFrom({
-        expenses: { data: [], error: null },
+        expenses: { data: [], count: 5, error: null },
         vehicles: { data: [], count: 0, error: null },
         maintenances: { count: 0, error: null, data: [] },
       });
@@ -1207,7 +1274,10 @@ describe("DashboardService", () => {
 
       const kpis = await service.getFleetKpiCatalog("token", "u1", undefined);
 
-      expect(kpis.expense_anomalies).toEqual({ ok: true, value: 0 });
+      expect(kpis.expense_anomalies).toEqual({
+        ok: true,
+        value: { count: 0, insufficient_sample: false },
+      });
     });
 
     it("expense_anomalies conta apenas anomalias do mês corrente", async () => {
@@ -1216,7 +1286,7 @@ describe("DashboardService", () => {
       const startOfMonth = toDateString(new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), 1)));
       const prevMonth = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth() - 1, 15));
       const from = mockFrom({
-        expenses: { data: [], error: null },
+        expenses: { data: [], count: 5, error: null },
         vehicles: { data: [], count: 0, error: null },
         maintenances: { count: 0, error: null, data: [] },
       });
@@ -1231,7 +1301,33 @@ describe("DashboardService", () => {
 
       const kpis = await service.getFleetKpiCatalog("token", "u1", undefined);
 
-      expect(kpis.expense_anomalies).toEqual({ ok: true, value: 1 });
+      expect(kpis.expense_anomalies).toEqual({
+        ok: true,
+        value: { count: 1, insufficient_sample: false },
+      });
+    });
+
+    it("expense_anomalies suprime a contagem quando o histórico total é menor que DELTA_SUPPRESSION_MIN_SAMPLE (RF-05, R-KPI-04)", async () => {
+      (expensesService.getUpcomingCosts as jest.Mock).mockResolvedValue([]);
+      const from = mockFrom({
+        expenses: { data: [], count: 2, error: null },
+        vehicles: { data: [], count: 0, error: null },
+        maintenances: { count: 0, error: null, data: [] },
+      });
+      const rpc = buildRpcMock();
+      (createUserScopedClient as jest.Mock).mockReturnValue({ from, rpc });
+      const service = createService();
+
+      const kpis = await service.getFleetKpiCatalog("token", "u1", undefined);
+
+      expect(kpis.expense_anomalies).toEqual({
+        ok: true,
+        value: { count: 0, insufficient_sample: true },
+      });
+      expect(rpc).not.toHaveBeenCalledWith(
+        "detect_expense_anomalies",
+        expect.anything(),
+      );
     });
 
     describe("spending_window (SPEC-20260804-001 RF-03, RF-04)", () => {

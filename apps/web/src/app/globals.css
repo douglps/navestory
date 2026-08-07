@@ -209,4 +209,14 @@
     letter-spacing: 0.12em;
     color: oklch(var(--on-surface-subtle));
   }
+
+  /*
+   * @spec SPEC-20260804-006 RF-19 — token único de "superfície ativa/selecionada", substitui os
+   * valores ad hoc `bg-primary/8` (VehicleHealthCard) e `bg-primary/10` (VehicleSpotlight).
+   * 8% escolhido por já atender contraste de borda suficiente sem competir com a cor de urgência
+   * dos badges internos do card.
+   */
+  .surface-selected {
+    background: oklch(var(--primary) / 0.08);
+  }
 }

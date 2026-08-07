@@ -32,7 +32,7 @@ export type RegisterInput = z.infer<typeof registerInputSchema>;
  */
 export const loginInputSchema = z.object({
   email: z.string().email("E-mail inválido").toLowerCase(),
-  password: z.string().min(1, "Senha obrigatória"),
+  password: z.string().trim().min(1, "Senha obrigatória"),
   rememberMe: z.boolean().optional().default(false),
 });
 export type LoginInput = z.infer<typeof loginInputSchema>;

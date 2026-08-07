@@ -94,7 +94,7 @@ function Sparkline({ values, variant, ariaLabel }: SparklineProps): ReactNode {
 
 function KpiCardSkeleton(): ReactNode {
   return (
-    <Card padding="sm" className="min-w-[150px] max-w-[220px]">
+    <Card padding="sm" className="w-full">
       <div className="flex items-center justify-between">
         <Skeleton className="h-4 w-16" />
         <Skeleton className="h-4 w-4" />
@@ -109,6 +109,12 @@ export interface KpiCardProps {
   title: string;
   value: string | number;
   unit?: string;
+  /**
+   * @spec SPEC-20260804-006 RF-04, RF-07
+   * Texto secundário abaixo do valor principal (ex.: data absoluta de vencimento, "média da
+   * frota") — distinto de `trend.label`, que só aparece junto da seta de tendência.
+   */
+  caption?: string;
   icon?: ReactNode;
   trend?: {
     value: number;
@@ -126,6 +132,7 @@ export function KpiCard({
   title,
   value,
   unit,
+  caption,
   icon,
   trend,
   sparkline,
@@ -142,7 +149,7 @@ export function KpiCard({
   const resolvedVariant = variant ?? trendVariant;
 
   return (
-    <Card padding="sm" className={cn("min-w-[150px] max-w-[220px]", className)}>
+    <Card padding="sm" className={cn("w-full", className)}>
       <div className="flex items-center justify-between gap-2">
         <p className="text-sm text-muted-foreground">{title}</p>
         {icon && (
@@ -157,6 +164,8 @@ export function KpiCard({
         {value}
         {unit && <span className="ml-1 text-sm font-normal text-muted-foreground">{unit}</span>}
       </p>
+
+      {caption && <p className="mt-0.5 text-xs text-muted-foreground">{caption}</p>}
 
       {trend && (
         <p className="mt-1 flex flex-wrap items-center gap-1 text-sm font-medium">

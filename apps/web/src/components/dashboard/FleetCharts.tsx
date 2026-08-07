@@ -9,9 +9,7 @@ import {
   BarChart,
   CartesianGrid,
   Cell,
-  Legend,
-  Pie,
-  PieChart,
+  LabelList,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -101,7 +99,9 @@ export function FuelConsumptionChart({
   return (
     <ChartWrapper
       title="Combustível abastecido"
-      description="Litros por mês, frota inteira"
+      // @spec SPEC-20260804-006 RF-11 — mede volume consumido, não eficiência (km/L); aumento de
+      // volume pode refletir apenas mais km rodados, nunca interpretar como piora de eficiência.
+      description="Litros totais consumidos, frota inteira — aumento pode refletir maior quilometragem, não piora de eficiência."
       isEmpty={isEmpty}
       emptyMessage="Sem abastecimentos registrados no período."
     >
@@ -127,18 +127,21 @@ export function FuelConsumptionChart({
   );
 }
 
-/** @spec SPEC-20260721-002 RF-08, US-08 */
+/**
+ * @spec SPEC-20260721-002 RF-08, US-08
+ * @spec SPEC-20260804-006 RF-08 — `BarChart` horizontal substitui o `PieChart` original: com 6+
+ * categorias de valores próximos, comparação de ângulo/área é imprecisa; comprimento de barra é
+ * o canal visual mais preciso disponível (R-DS-08 — valor sempre com label textual na própria barra).
+ */
 export function ExpenseCategoryPie({
   breakdown,
 }: {
   breakdown: FleetChartsResponse["category_breakdown"] | undefined;
 }): ReactNode {
   const isEmpty = !breakdown || breakdown.length === 0;
-  const data =
-    breakdown?.map((item) => ({
-      name: item.label,
-      value: item.total_amount,
-    })) ?? [];
+  const data = (breakdown ?? [])
+    .map((item) => ({ name: item.label, value: item.total_amount }))
+    .sort((a, b) => b.value - a.value);
 
   return (
     <ChartWrapper
@@ -149,14 +152,20 @@ export function ExpenseCategoryPie({
     >
       <div aria-hidden="true" className="h-56">
         <ResponsiveContainer width="100%" height="100%">
-          <PieChart>
-            <Pie
-              data={data}
-              dataKey="value"
-              nameKey="name"
-              outerRadius={80}
-              label
-            >
+          <BarChart data={data} layout="vertical" margin={{ left: 16 }}>
+            <CartesianGrid
+              strokeDasharray="3 3"
+              stroke="oklch(var(--chart-grid))"
+            />
+            <XAxis type="number" hide />
+            <YAxis
+              type="category"
+              dataKey="name"
+              width={96}
+              tickLine={false}
+            />
+            <Tooltip formatter={(value) => currency(Number(value))} />
+            <Bar dataKey="value" name="Total">
               {data.map((entry, index) => (
                 <Cell
                   key={entry.name}
@@ -165,10 +174,16 @@ export function ExpenseCategoryPie({
                   }
                 />
               ))}
-            </Pie>
-            <Tooltip formatter={(value) => currency(Number(value))} />
-            <Legend />
-          </PieChart>
+              <LabelList
+                dataKey="value"
+                position="right"
+                formatter={(value: string | number | boolean | null | undefined) =>
+                  typeof value === "number" ? currency(value) : ""
+                }
+                className="fill-foreground text-xs"
+              />
+            </Bar>
+          </BarChart>
         </ResponsiveContainer>
       </div>
     </ChartWrapper>

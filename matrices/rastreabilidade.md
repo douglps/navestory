@@ -3092,10 +3092,11 @@ RNF-04 (foco preso no drawer + retorno ao hamburger ao fechar) implementado em `
 
 ## SPEC-20260730-002 — Melhorias de UX do Shell (approved)
 
-> Hold-to-confirm no logout da sidebar (1.000 ms + barra de progresso, R-NAV-05), dropdown de avatar no header com nome/email/link-settings/logout (R-NAV-08), persistência de `isSidebarCollapsed` em `sessionStorage` via `zustand persist` (R-NAV-06), reestruturação do layout para header full-width com sidebar in-flow em desktop (R-NAV-07) e, na extensão US-05, ícone sempre visível + destaque de rota ativa + remoção do texto "navestory" + largura calculada em runtime (fit-content + 20%) na sidebar expandida (R-NAV-09, R-NAV-10, R-NAV-11). Camadas: frontend. Regras: R-NAV-01, R-NAV-02, R-NAV-04, R-NAV-05, R-NAV-06, R-NAV-07, R-NAV-08, R-NAV-09, R-NAV-10, R-NAV-11. Segurança: S1.
+> Hold-to-confirm no logout da sidebar (1.000 ms + barra de progresso, R-NAV-05), dropdown de avatar no header com nome/email/link-settings/logout (R-NAV-08), persistência de `isSidebarCollapsed` em `sessionStorage` via `zustand persist` (R-NAV-06), reestruturação do layout para header full-width com sidebar in-flow em desktop (R-NAV-07), na extensão US-05, ícone sempre visível + destaque de rota ativa + remoção do texto "navestory" + largura calculada em runtime (fit-content + 20%) na sidebar expandida (R-NAV-09, R-NAV-10, R-NAV-11) e, na extensão US-06, sidebar ancorada à viewport (`md:sticky`, sem rolar junto com a página, R-NAV-12) organizada em 3 seções — Navegação/Configurações/Sair — com divisórias (R-NAV-13). Camadas: frontend. Regras: R-NAV-01, R-NAV-02, R-NAV-04, R-NAV-05, R-NAV-06, R-NAV-07, R-NAV-08, R-NAV-09, R-NAV-10, R-NAV-11, R-NAV-12, R-NAV-13. Segurança: S1.
 >
 > **2026-07-30 (criação):** Spec em `draft`. Nenhum dos requisitos implementado ainda.
 > **2026-07-31 (fechamento):** RF-01..RF-10 implementados e testados (código já existente antes desta atualização — matriz estava desatualizada). Spec estendida com US-05/RF-11..RF-14 e promovida a `approved`.
+> **2026-08-05 (extensão US-06):** RF-15 substitui o comportamento de RF-09 em desktop (`md:static` → `md:sticky md:top-14 md:h-[calc(100vh-3.5rem)]`) — corrige regressão em que a sidebar rolava junto com a página, contrariando a estrutura-alvo já documentada nas Notas Técnicas da spec original. RF-16/RF-17 implementados junto.
 
 | Req   | Descrição                                                                                                                                                                     | Código                                                                                                     | Teste                                                                                      | Status |
 | ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ | ------ |
@@ -3113,6 +3114,9 @@ RNF-04 (foco preso no drawer + retorno ao hamburger ao fechar) implementado em `
 | RF-12 | Destaque visual + `aria-current="page"` na rota ativa (igualdade ou prefixo do `href`)                                                                                        | `apps/web/src/components/layout/sidebar.tsx`                                                               | `apps/web/src/components/layout/sidebar.spec.tsx` (RF-12 ×2)                               | ✅     |
 | RF-13 | Remoção do texto de marca "navestory" do topo da sidebar                                                                                                                      | `apps/web/src/components/layout/sidebar.tsx`                                                               | `apps/web/src/components/layout/sidebar.spec.tsx` (RF-13)                                  | ✅     |
 | RF-14 | Largura da sidebar expandida calculada em runtime (`scrollWidth * 1.2`) via `ResizeObserver`                                                                                  | `apps/web/src/components/layout/sidebar.tsx`                                                               | — (dispensado, ver `specs/TEST_DECISIONS.md`)                                              | ✅     |
+| RF-15 | Sidebar `md:sticky md:top-14 md:h-[calc(100vh-3.5rem)]` em desktop (substitui `md:static` de RF-09) — não rola junto com a página                                            | `apps/web/src/components/layout/sidebar.tsx`                                                               | — (pendente — ver `specs/TEST_DECISIONS.md`)                                               | ✅     |
+| RF-16 | `overflow-y-auto` no container de itens de navegação — rolagem interna própria sem mover header/toggle/logout                                                                | `apps/web/src/components/layout/sidebar.tsx`                                                               | — (pendente — ver `specs/TEST_DECISIONS.md`)                                               | ✅     |
+| RF-17 | Sidebar organizada em 3 seções (Navegação/Configurações/Sair) com divisórias `border-t`                                                                                       | `apps/web/src/components/layout/sidebar.tsx` (`NAV_ITEMS`, `SETTINGS_ITEMS`, `SidebarNavItem`)              | `apps/web/src/components/layout/sidebar.spec.tsx` (16 testes existentes seguem passando; cobertura específica de US-06 pendente) | ✅     |
 
 ---
 
@@ -3431,6 +3435,53 @@ RNF-04 (foco preso no drawer + retorno ao hamburger ao fechar) implementado em `
 | RF-04 | Diff de adições/remoções calculado e exibido via `window.confirm` antes de salvar                                    | `page.tsx#handleSaveMembers`                                                                                | `page.spec.tsx` ("sem alterar a seleção, exibe diff zerado e envia o payload atual")                                                | ✅     |
 | RF-05 | Confirmação adicional específica quando a operação resultaria em remover todos os membros de um grupo populado       | `page.tsx#handleSaveMembers`                                                                                | `page.spec.tsx` ("desmarcar todos os membros de um grupo populado exige confirmação de remoção total")                              | ✅     |
 | RF-06 | Cancelar qualquer confirmação não dispara `setMembersMutation`                                                        | `page.tsx#handleSaveMembers`                                                                                | `page.spec.tsx` ("cancelar a confirmação não dispara a requisição de salvar membros")                                              | ✅     |
+
+---
+
+## SPEC-20260804-006 — Dashboard: Acessibilidade, Correção de Dado e Polimento Visual (approved)
+
+> Spec em `specs/dashboard/SPEC-20260804-006-dashboard-ux-polimento.md`. Formaliza 20 achados da
+> auditoria cruzada `ux-researcher` + `design-system` sobre a tela de Dashboard, em 5 blocos:
+> acessibilidade (crítico), correção de dado/interpretação, forma de apresentação de gráficos,
+> remoção/realocação de conteúdo, e hierarquia visual. Cria R-KPI-04 (supressão de
+> `expense_anomalies` por amostra insuficiente).
+>
+> **Código implementado em 2026-08-04. Testes automatizados adicionados** — mesmo com
+> `specs/TEST_DECISIONS.md` ainda `pendente` para esta spec (decisão final é de Douglas), a
+> maioria dos RFs recebeu cobertura porque tocaram lógica com regra de negócio nova (R-KPI-04) ou
+> mudaram contrato de API (`expense_anomalies` passou de `number` para
+> `{ count, insufficient_sample }`). RF-01/02/03/06/07/12/16/17/18/19/20 são só CSS/estrutura
+> visual sem lógica isolável — verificados manualmente, sem CT dedicado.
+> Suítes tocadas, todas verdes: `dashboard.service.spec.ts` (75/75, Jest),
+> `DashboardKpiGrid.spec.tsx` (26/26), `UpcomingCostsWidget.spec.tsx` (10/10),
+> `VehicleSpotlight.spec.tsx` (10/10), `expenses/page.spec.tsx` (12/12),
+> `dashboard/page.spec.tsx` (6/6), `sidebar.spec.tsx` (16/16, Vitest),
+> `kpi-card.test.tsx` (17/17), `dashboard.schemas.spec.ts` (23/23).
+> RF-12 já estava satisfeito antes desta spec: `DEFAULT_DASHBOARD_KPI_IDS` nunca incluiu
+> `total_vehicles` — nenhuma alteração de código foi necessária, só confirmação.
+
+| RF    | Requisito                                                                 | Código | Teste | Status |
+| ----- | -------------------------------------------------------------------------- | ------ | ----- | ------ |
+| RF-01 | Remover `text-[10px]` em `VehicleHealthCard.tsx` (R-DS-12)                | ✅ `apps/web/src/components/dashboard/VehicleHealthCard.tsx` | — (verificação manual) | ✅ |
+| RF-02 | Corrigir contraste `text-warning-foreground` → `text-foreground` (C-DS-01) | ✅ `VehicleHealthCard.tsx` | — (verificação manual) | ✅ |
+| RF-03 | `focus-visible:ring-*` em 3 elementos interativos                         | ✅ `VehicleHealthCard.tsx`, `VehicleSpotlight.tsx` (`StickyFocusChip`), `dashboard/page.tsx` (link, depois movido para sidebar.tsx em RF-14) | — (verificação manual) | ✅ |
+| RF-04 | KPI `next_maintenance`: prazo relativo como valor primário                | ✅ `DashboardKpiGrid.tsx` (`specForId`), `lib/relative-label.ts` | ✅ `DashboardKpiGrid.spec.tsx` (2 CTs, futuro/vencido) | ✅ |
+| RF-05 | KPI `expense_anomalies`: supressão com amostra insuficiente (R-KPI-04)    | ✅ `apps/api/.../dashboard.service.ts#countMonthlyAnomalies`, `packages/validators/src/dashboard.schemas.ts` (`ExpenseAnomaliesKpi`), `DashboardKpiGrid.tsx` | ✅ `dashboard.service.spec.ts` ("suprime a contagem..."), `DashboardKpiGrid.spec.tsx` | ✅ |
+| RF-06 | KPI `cost_per_km`: sufixo "/km" explícito                                 | ✅ `DashboardKpiGrid.tsx` (`specForId`, `unit: "/km"`) | ✅ `DashboardKpiGrid.spec.tsx` | ✅ |
+| RF-07 | KPI `cost_per_km` em frota: indicação de média ponderada                  | ✅ `DashboardKpiGrid.tsx` (`isFleetContext`), `dashboard/page.tsx` | ✅ `DashboardKpiGrid.spec.tsx` | ✅ |
+| RF-08 | `ExpenseCategoryPie` → `BarChart` horizontal                              | ✅ `apps/web/src/components/dashboard/FleetCharts.tsx` | — (recharts não renderiza em jsdom, sem CT de produção pré-existente para este chart) | ✅ |
+| RF-09 | `UpcomingCostsWidget`: chip de urgência isolado (R-DS-10, R-DS-08)        | ✅ `apps/web/src/components/dashboard/UpcomingCostsWidget.tsx` | ✅ `UpcomingCostsWidget.spec.tsx` (3 CTs de chip + 1 de fundo neutro) | ✅ |
+| RF-10 | `UpcomingCostsWidget`: valor estimado por extenso ("(aprox.)")            | ✅ `UpcomingCostsWidget.tsx` | ✅ `UpcomingCostsWidget.spec.tsx` | ✅ |
+| RF-11 | `FuelConsumptionChart`: nota de semântica do eixo Y                       | ✅ `FleetCharts.tsx` (`description`) | — (verificação manual) | ✅ |
+| RF-12 | Remover `total_vehicles` do preset padrão de KPIs (R-KPI-01)              | ✅ já satisfeito — `packages/validators/src/dashboard.schemas.ts` (`DEFAULT_DASHBOARD_KPI_IDS`) nunca incluiu `total_vehicles` | ✅ `dashboard.schemas.spec.ts` (pré-existente) | ✅ |
+| RF-13 | Mover `ExportControls` do dashboard para `/expenses`                      | ✅ removido de `dashboard/page.tsx`, adicionado em `apps/web/src/app/(app)/expenses/page.tsx` | ✅ `expenses/page.spec.tsx` (2 CTs) | ✅ |
+| RF-14 | Mover link "Histórico de Atividades" para sidebar/configurações           | ✅ removido de `dashboard/page.tsx`, adicionado a `NAV_ITEMS` em `apps/web/src/components/layout/sidebar.tsx` | ✅ `sidebar.spec.tsx` (pré-existente, cobre `NAV_ITEMS`) | ✅ |
+| RF-15 | `VehicleSpotlight`: aba inicial dinâmica por flags de urgência (R-HS-10)  | ✅ `VehicleSpotlight.tsx` (`initialTabForFlags`), `dashboard/page.tsx` (prop `flags`) | ✅ `VehicleSpotlight.spec.tsx` (3 CTs) | ✅ |
+| RF-16 | `<h2 className="kicker">` antes de cada seção principal                   | ✅ `dashboard/page.tsx` (Alertas/Indicadores/Frota/Em Foco/Gráficos); "Próximos 7 dias" já tinha kicker próprio em `UpcomingCostsWidget.tsx` | — (verificação manual) | ✅ |
+| RF-17 | Separação visual do `KpiPicker` em relação ao grid de KPIs                | ✅ `dashboard/page.tsx` (divider `border-t` + alinhamento à direita, fora do grid) | — (verificação manual, "validado por revisão visual com as personas" é critério subjetivo da spec) | ✅ |
+| RF-18 | `KpiCard`: largura responsiva via grid (remover `min-w`/`max-w` fixos)    | ✅ `packages/ui/src/components/kpi-card.tsx`, `DashboardKpiGrid.tsx` | ✅ `kpi-card.test.tsx` (pré-existente, sem assert em `min-w`/`max-w`) | ✅ |
+| RF-19 | Token `--surface-selected` em `globals.css`                               | ✅ `apps/web/src/app/globals.css` (`.surface-selected`), `VehicleHealthCard.tsx`, `VehicleSpotlight.tsx` | — (verificação manual) | ✅ |
+| RF-20 | Padronização `glass-card` vs `bg-card` entre cards do dashboard           | ✅ `UpcomingCostsWidget.tsx` (migrado para `bg-card`, único caso divergente) | — (verificação manual) | ✅ |
 
 ---
 

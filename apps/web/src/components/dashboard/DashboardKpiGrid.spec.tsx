@@ -21,7 +21,7 @@ function catalogWith(overrides: Partial<FleetKpiCatalog>): FleetKpiCatalog {
     total_vehicles: { ok: true, value: 0 },
     next_maintenance: { ok: true, value: null },
     upcoming_costs_7d: { ok: true, value: { total: 0, count: 0 } },
-    expense_anomalies: { ok: true, value: 0 },
+    expense_anomalies: { ok: true, value: { count: 0, insufficient_sample: false } },
     // @spec SPEC-20260804-001 RF-03
     spending_window: {
       ok: true,
@@ -73,7 +73,7 @@ describe("DashboardKpiGrid", () => {
     );
 
     // Verificar que não há ícone de tendência (seta)
-    expect(screen.queryByText(/[+\-]\d+%/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/[+-]\d+%/)).not.toBeInTheDocument();
   });
 
   it("SPEC-20260721-002 RF-04: exibe ícone de erro quando expenses_month falha (ok=false)", () => {
@@ -195,11 +195,14 @@ describe("DashboardKpiGrid", () => {
     expect(screen.getByText("Nenhuma agendada")).toBeInTheDocument();
   });
 
-  it("exibe next_maintenance com data formatada e placa quando há agendamento", () => {
+  it("SPEC-20260804-006 RF-04: exibe next_maintenance com prazo relativo como valor primário e data/placa como legenda", () => {
+    const future = new Date();
+    future.setDate(future.getDate() + 5);
+    const dateStr = future.toISOString().slice(0, 10);
     const catalog = catalogWith({
       next_maintenance: {
         ok: true,
-        value: { date: "2026-09-15", vehicle_plate: "XYZ-5678" },
+        value: { date: dateStr, vehicle_plate: "XYZ-5678" },
       },
     });
 
@@ -207,8 +210,26 @@ describe("DashboardKpiGrid", () => {
       <DashboardKpiGrid catalog={catalog} activeIds={["next_maintenance"]} /> as ReactNode,
     );
 
-    expect(screen.getByText(/15\/09\/2026/)).toBeInTheDocument();
-    expect(screen.getByText("XYZ-5678")).toBeInTheDocument();
+    expect(screen.getByText(/Em \d+ dias?/)).toBeInTheDocument();
+    expect(screen.getByText(new RegExp("XYZ-5678"))).toBeInTheDocument();
+  });
+
+  it("SPEC-20260804-006 RF-04: exibe próxima manutenção vencida com 'venceu há N dias'", () => {
+    const past = new Date();
+    past.setDate(past.getDate() - 3);
+    const dateStr = past.toISOString().slice(0, 10);
+    const catalog = catalogWith({
+      next_maintenance: {
+        ok: true,
+        value: { date: dateStr, vehicle_plate: "XYZ-5678" },
+      },
+    });
+
+    render(
+      <DashboardKpiGrid catalog={catalog} activeIds={["next_maintenance"]} /> as ReactNode,
+    );
+
+    expect(screen.getByText(/Venceu há \d+ dias?/)).toBeInTheDocument();
   });
 
   it("exibe next_maintenance como indisponível quando ok=false", () => {
@@ -257,7 +278,9 @@ describe("DashboardKpiGrid", () => {
   });
 
   it("exibe expense_anomalies com contagem de anomalias", () => {
-    const catalog = catalogWith({ expense_anomalies: { ok: true, value: 2 } });
+    const catalog = catalogWith({
+      expense_anomalies: { ok: true, value: { count: 2, insufficient_sample: false } },
+    });
 
     render(
       <DashboardKpiGrid catalog={catalog} activeIds={["expense_anomalies"]} /> as ReactNode,
@@ -274,6 +297,46 @@ describe("DashboardKpiGrid", () => {
     );
 
     expect(screen.getByText("—")).toBeInTheDocument();
+  });
+
+  it("SPEC-20260804-006 RF-05, R-KPI-04: suprime o valor numérico quando a amostra histórica é insuficiente", () => {
+    const catalog = catalogWith({
+      expense_anomalies: { ok: true, value: { count: 0, insufficient_sample: true } },
+    });
+
+    render(
+      <DashboardKpiGrid catalog={catalog} activeIds={["expense_anomalies"]} /> as ReactNode,
+    );
+
+    expect(screen.getByText("Amostra insuficiente")).toBeInTheDocument();
+  });
+
+  it("SPEC-20260804-006 RF-06: exibe cost_per_km com sufixo '/km'", () => {
+    const catalog = catalogWith({
+      cost_per_km: { ok: true, value: { value: 0.43, delta_pct: null, history_6mo: null } },
+    });
+
+    render(
+      <DashboardKpiGrid catalog={catalog} activeIds={["cost_per_km"]} isFleetContext={false} /> as ReactNode,
+    );
+
+    expect(screen.getByText("/km")).toBeInTheDocument();
+  });
+
+  it("SPEC-20260804-006 RF-07: exibe 'média da frota' apenas em contexto de frota/grupo", () => {
+    const catalog = catalogWith({
+      cost_per_km: { ok: true, value: { value: 0.43, delta_pct: null, history_6mo: null } },
+    });
+
+    const { rerender } = render(
+      <DashboardKpiGrid catalog={catalog} activeIds={["cost_per_km"]} isFleetContext /> as ReactNode,
+    );
+    expect(screen.getByText("média da frota")).toBeInTheDocument();
+
+    rerender(
+      <DashboardKpiGrid catalog={catalog} activeIds={["cost_per_km"]} isFleetContext={false} /> as ReactNode,
+    );
+    expect(screen.queryByText("média da frota")).not.toBeInTheDocument();
   });
 
   it("renderiza múltiplos KPIs simultâneos", () => {

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import type { UpcomingCostItem } from "@navestory/validators";
-import { EmptyState } from "@navestory/ui";
+import { Badge, EmptyState, type BadgeProps } from "@navestory/ui";
 import { apiClient } from "@/lib/http/api-client";
 
 const HORIZON_DAYS = 7;
@@ -32,12 +32,21 @@ function daysUntil(dueDate: string): number {
   return Math.round((due.getTime() - today.getTime()) / 86_400_000);
 }
 
-/** @spec SPEC-20260721-002 US-09 — faixas de urgência: ≤2d danger, 3-5d warning, 6-7d neutro */
-function urgencyClassName(days: number): string {
-  if (days <= 2) return "border-danger bg-danger-pastel text-danger-foreground";
-  if (days <= 5)
-    return "border-warning bg-warning-pastel text-warning-foreground";
-  return "border-border bg-muted text-muted-foreground";
+function urgencyLabel(days: number): string {
+  if (days < 0) return "Vencido";
+  if (days === 0) return "Vence hoje";
+  return `Em ${days}d`;
+}
+
+/**
+ * @spec SPEC-20260721-002 US-09 — faixas de urgência: ≤2d danger, 3-5d warning, 6-7d neutro
+ * @spec SPEC-20260804-006 RF-09, R-DS-10, R-DS-08 — a cor de urgência fica isolada no chip
+ * (`Badge`), nunca mais tingindo o fundo do item inteiro.
+ */
+function urgencyVariant(days: number): NonNullable<BadgeProps["variant"]> {
+  if (days <= 2) return "danger";
+  if (days <= 5) return "warning";
+  return "neutral";
 }
 
 /**
@@ -62,9 +71,12 @@ export function UpcomingCostsWidget(): ReactNode {
   const hasOverflow = items.length >= MAX_ITEMS;
 
   return (
+    // @spec SPEC-20260804-006 RF-20 — padronizado para `bg-card` sólido: todos os demais cards
+    // de primeiro nível do dashboard (KpiCard, VehicleHealthCard, FleetAlertBar, ChartWrapper) já
+    // usam esse padrão; `glass-card` era a única exceção e criava destaque involuntário.
     <section
       aria-label="Próximos 7 dias"
-      className="glass-card flex flex-col gap-3 rounded-lg p-4"
+      className="flex flex-col gap-3 rounded-lg border border-border bg-card p-4"
     >
       <div className="flex items-center justify-between">
         <h2 className="kicker">Próximos 7 dias</h2>
@@ -84,25 +96,25 @@ export function UpcomingCostsWidget(): ReactNode {
             return (
               <li
                 key={`${item.source_type}-${item.source_id}`}
-                className={`flex items-center justify-between gap-3 rounded border px-3 py-2 text-sm ${urgencyClassName(days)}`}
+                className="flex items-center justify-between gap-3 rounded border border-border bg-muted/40 px-3 py-2 text-sm"
               >
                 <div className="min-w-0">
                   <p className="truncate font-medium">
                     {SOURCE_TYPE_LABEL[item.source_type]} — {item.title}
                   </p>
-                  <p className="text-xs">
-                    {days < 0
-                      ? "Vencido"
-                      : days === 0
-                        ? "Vence hoje"
-                        : `Em ${days}d`}
-                    {item.vehicle_plate ? ` · ${item.vehicle_plate}` : ""}
+                  <p className="mt-0.5 flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <Badge variant={urgencyVariant(days)}>
+                      {urgencyLabel(days)}
+                    </Badge>
+                    {item.vehicle_plate && <span>{item.vehicle_plate}</span>}
                   </p>
                 </div>
                 <span className="shrink-0 tabular-nums">
                   {item.amount == null
                     ? "estimado"
-                    : `${item.is_estimated ? "~" : ""}${currency(item.amount)}`}
+                    : item.is_estimated
+                      ? `${currency(item.amount)} (aprox.)`
+                      : currency(item.amount)}
                 </span>
               </li>
             );

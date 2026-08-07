@@ -96,6 +96,32 @@ describe("ExpensesPage", () => {
     expect(await screen.findByRole("alert")).toBeInTheDocument();
   });
 
+  it("SPEC-20260804-006 RF-13: exibe o controle de exportação por período/veículo movido do dashboard", async () => {
+    mockApi();
+    renderPage();
+
+    expect(
+      await screen.findByRole("button", { name: "Exportar CSV" }),
+    ).toBeInTheDocument();
+  });
+
+  it("SPEC-20260804-006 RF-13: exibe erro quando a exportação por período falha", async () => {
+    mockApi();
+    const fetchMock = vi
+      .spyOn(global, "fetch")
+      .mockResolvedValue({ ok: false, status: 500 } as Response);
+    renderPage();
+
+    const button = await screen.findByRole("button", { name: "Exportar CSV" });
+    await userEvent.click(button);
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      /Não foi possível exportar/,
+    );
+
+    fetchMock.mockRestore();
+  });
+
   it("exibe os KPI cards com delta positivo (SPEC-20260608-002 RF-04, RF-05)", async () => {
     mockApi();
     renderPage();

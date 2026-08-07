@@ -6,6 +6,7 @@ import type { FleetKpiCatalog, KpiCatalogId } from "@navestory/validators";
 import { TriangleAlert } from "lucide-react";
 import { KpiCard, type KpiCardProps } from "@navestory/ui";
 import { KPI_CATALOG_META } from "./kpi-catalog";
+import { relativeLabel } from "@/lib/relative-label";
 
 function currency(value: number): string {
   return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -15,12 +16,28 @@ function formatDate(dateStr: string): string {
   return new Date(`${dateStr}T00:00:00`).toLocaleDateString("pt-BR");
 }
 
-type CardSpec = Pick<KpiCardProps, "value" | "unit" | "trend" | "sparkline">;
+/** @spec SPEC-20260804-006 RF-04 — dias corridos até a data (hoje = 0), negativo = vencido */
+function daysUntil(dateStr: string): number {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const target = new Date(`${dateStr}T00:00:00`);
+  return Math.round((target.getTime() - today.getTime()) / 86_400_000);
+}
 
-/** @spec SPEC-20260721-002 RF-01, R-KPI-02 — `delta_pct` nulo nunca vira seta de tendência */
+type CardSpec = Pick<
+  KpiCardProps,
+  "value" | "unit" | "caption" | "trend" | "sparkline"
+>;
+
+/**
+ * @spec SPEC-20260721-002 RF-01, R-KPI-02 — `delta_pct` nulo nunca vira seta de tendência
+ * @spec SPEC-20260804-006 RF-04, RF-06, RF-07 — `isFleetContext` só afeta o rótulo de
+ * `cost_per_km` (RF-07); os demais KPIs ignoram o parâmetro.
+ */
 function specForId(
   id: KpiCatalogId,
   catalog: FleetKpiCatalog,
+  isFleetContext: boolean,
 ): CardSpec | "unavailable" {
   switch (id) {
     case "expenses_month": {
@@ -39,7 +56,11 @@ function specForId(
       const result = catalog.cost_per_km;
       if (!result.ok) return "unavailable";
       return {
+        // @spec SPEC-20260804-006 RF-06 — sufixo "/km" explícito
         value: currency(result.value.value),
+        unit: "/km",
+        // @spec SPEC-20260804-006 RF-07 — só em contexto de frota/grupo (2+ veículos)
+        caption: isFleetContext ? "média da frota" : undefined,
         trend:
           result.value.delta_pct === null
             ? undefined
@@ -67,11 +88,13 @@ function specForId(
     case "next_maintenance": {
       const result = catalog.next_maintenance;
       if (!result.ok) return "unavailable";
+      // @spec SPEC-20260804-006 RF-04 — prazo relativo é o valor primário; data absoluta vira
+      // legenda secundária (mesma função `relativeLabel` do protótipo em dashboard/concept).
       return result.value === null
         ? { value: "Nenhuma agendada" }
         : {
-            value: formatDate(result.value.date),
-            unit: result.value.vehicle_plate,
+            value: relativeLabel(daysUntil(result.value.date)),
+            caption: `${formatDate(result.value.date)} · ${result.value.vehicle_plate}`,
           };
     }
     case "upcoming_costs_7d": {
@@ -85,7 +108,12 @@ function specForId(
     case "expense_anomalies": {
       const result = catalog.expense_anomalies;
       if (!result.ok) return "unavailable";
-      return { value: result.value };
+      // @spec SPEC-20260804-006 RF-05, R-KPI-04 — amostra histórica insuficiente suprime o valor
+      // numérico (evita ler "0 anomalias" quando na verdade não há dado suficiente para calcular).
+      if (result.value.insufficient_sample) {
+        return { value: "—", caption: "Amostra insuficiente" };
+      }
+      return { value: result.value.count };
     }
     case "spending_window": {
       // @spec SPEC-20260804-001 RF-04 — sem trend/sparkline por design (janela desloca a base
@@ -106,9 +134,12 @@ function specForId(
 export function DashboardKpiGrid({
   catalog,
   activeIds,
+  isFleetContext = true,
 }: {
   catalog: FleetKpiCatalog | undefined;
   activeIds: KpiCatalogId[];
+  /** @spec SPEC-20260804-006 RF-07 — falso apenas em contexto de veículo único (`selectionMode === "single"`) */
+  isFleetContext?: boolean;
 }): ReactNode {
   if (!catalog) {
     return (
@@ -127,13 +158,13 @@ export function DashboardKpiGrid({
       {activeIds.map((id) => {
         // eslint-disable-next-line security/detect-object-injection -- id é KpiCatalogId, união fixa de 9 literais
         const meta = KPI_CATALOG_META[id];
-        const spec = specForId(id, catalog);
+        const spec = specForId(id, catalog, isFleetContext);
 
         if (spec === "unavailable") {
           return (
             <div
               key={id}
-              className="min-w-[150px] max-w-[220px] rounded-lg border border-border bg-card p-3"
+              className="w-full rounded-lg border border-border bg-card p-3"
             >
               <p className="text-sm text-muted-foreground">{meta.title}</p>
               <div

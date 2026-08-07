@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import type {
   FuelTrendPoint,
   RecurringCost,
@@ -14,7 +14,10 @@ import { apiClient } from "@/lib/http/api-client";
 import { useMediaQuery } from "@/lib/hooks/use-media-query";
 import { TcoBreakdownChart } from "@/components/charts/tco-breakdown-chart";
 import { FuelTrendChart } from "@/components/charts/fuel-trend-chart";
-import type { DocumentStatus } from "@/components/dashboard/VehicleHealthCard";
+import type {
+  DocumentStatus,
+  HealthFlag,
+} from "@/components/dashboard/VehicleHealthCard";
 
 const DESKTOP_QUERY = "(min-width: 768px)";
 const CURRENT_YEAR = new Date().getFullYear();
@@ -57,6 +60,21 @@ function spotlightLabel(vehicle: SpotlightVehicle): string {
 }
 
 /**
+ * @spec SPEC-20260804-006 RF-15, R-HS-10
+ * Manutenção vencida ou qualquer documento a vencer (`*_expiring`) abre direto na aba "Docs" —
+ * caso contrário mantém o padrão "Despesas". Não é persistido em sessionStorage: recalculado a
+ * cada seleção de veículo a partir do estado atual das flags (nunca do histórico da sessão).
+ */
+function initialTabForFlags(flags: HealthFlag[] | undefined): SpotlightTab {
+  const hasUrgentDocFlag = (flags ?? []).some(
+    (flag) =>
+      (flag.type === "maintenance_overdue" && Number(flag.count) > 0) ||
+      flag.type.endsWith("_expiring"),
+  );
+  return hasUrgentDocFlag ? "docs" : "expenses";
+}
+
+/**
  * @spec SPEC-20260531-001 RF-DB-01
  * Chip complementar ao slot "Em Foco" do Sidebar (SPEC-20260602-001 RF-01) — mesmo dado, posição
  * diferente. "×" chama a mesma ação de limpar contexto (clearAllSelection), nunca uma ação própria.
@@ -71,14 +89,14 @@ function StickyFocusChip({
   return (
     <div
       role="status"
-      className="sticky top-0 z-10 flex items-center justify-between gap-2 rounded bg-primary/10 px-3 py-2 text-sm font-medium"
+      className="surface-selected sticky top-0 z-10 flex items-center justify-between gap-2 rounded px-3 py-2 text-sm font-medium"
     >
       <span>Em Foco: {label}</span>
       <button
         type="button"
         onClick={onClear}
         aria-label="Limpar veículo em foco"
-        className="rounded px-1.5 text-muted-foreground hover:text-foreground"
+        className="rounded px-1.5 text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
       >
         ×
       </button>
@@ -344,13 +362,23 @@ function HistorySection({ vehicleId }: { vehicleId: string }): ReactNode {
  */
 export function VehicleSpotlight({
   vehicle,
+  flags,
   onClear,
 }: {
   vehicle: SpotlightVehicle | undefined;
+  /** @spec SPEC-20260804-006 RF-15 */
+  flags?: HealthFlag[];
   onClear: () => void;
 }): ReactNode {
   const isDesktop = useMediaQuery(DESKTOP_QUERY);
   const [activeTab, setActiveTab] = useState<SpotlightTab>("expenses");
+
+  // @spec SPEC-20260804-006 RF-15 — computa a aba inicial (mount) e recalcula a cada troca de
+  // veículo (nunca persistida), com base no estado atual das flags do veículo recém-selecionado.
+  useEffect(() => {
+    setActiveTab(initialTabForFlags(flags));
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- só reage à troca de veículo, não a toda mudança de referência de `flags`
+  }, [vehicle?.id]);
 
   if (!vehicle) return <NoActiveVehicleEmptyState />;
 

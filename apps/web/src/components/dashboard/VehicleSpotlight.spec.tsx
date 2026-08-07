@@ -84,6 +84,42 @@ describe("VehicleSpotlight", () => {
     expect(screen.getByRole("tabpanel")).toBeInTheDocument();
   });
 
+  it("SPEC-20260804-006 RF-15, R-HS-10: abre na aba Docs quando o veículo tem documento a vencer", async () => {
+    mockApi({ recurringCosts: [] });
+    renderSpotlight({ flags: [{ type: "ipva_expiring", days: 7 }] });
+
+    await waitFor(() =>
+      expect(screen.getByRole("tab", { name: "Docs" })).toHaveAttribute(
+        "aria-selected",
+        "true",
+      ),
+    );
+  });
+
+  it("SPEC-20260804-006 RF-15, R-HS-10: abre na aba Docs quando há manutenção vencida", async () => {
+    mockApi({ recurringCosts: [] });
+    renderSpotlight({ flags: [{ type: "maintenance_overdue", count: 2 }] });
+
+    await waitFor(() =>
+      expect(screen.getByRole("tab", { name: "Docs" })).toHaveAttribute(
+        "aria-selected",
+        "true",
+      ),
+    );
+  });
+
+  it("SPEC-20260804-006 RF-15, R-HS-10: mantém a aba Despesas quando não há flags de urgência", async () => {
+    mockApi();
+    renderSpotlight({ flags: [] });
+
+    await waitFor(() =>
+      expect(screen.getByRole("tab", { name: "Despesas" })).toHaveAttribute(
+        "aria-selected",
+        "true",
+      ),
+    );
+  });
+
   it("RF-DB-06: badge Pago sobrepõe Vencido quando há recurring cost pago no ano corrente", async () => {
     mockApi({ recurringCosts: [{ cost_type: "ipva", paid_at: "2026-01-10" }] });
     renderSpotlight();

@@ -61,6 +61,19 @@ describe("loginInputSchema", () => {
       expect(result.data.rememberMe).toBe(false);
     }
   });
+
+  it("remove espaços em branco nas bordas da senha", () => {
+    const result = loginInputSchema.safeParse({ email: "a@b.com", password: "  x  " });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.password).toBe("x");
+    }
+  });
+
+  it("rejeita senha composta só de espaços", () => {
+    const result = loginInputSchema.safeParse({ email: "a@b.com", password: "   " });
+    expect(result.success).toBe(false);
+  });
 });
 
 describe("recoverPasswordInputSchema / resetPasswordInputSchema", () => {

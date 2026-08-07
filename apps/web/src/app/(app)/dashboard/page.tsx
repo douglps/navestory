@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
@@ -10,14 +9,7 @@ import {
   type FleetKpiCatalog,
   type KpiCatalogId,
 } from "@navestory/validators";
-import {
-  Alert,
-  Button,
-  Combobox,
-  Container,
-  EmptyState,
-  Input,
-} from "@navestory/ui";
+import { Button, Container, EmptyState } from "@navestory/ui";
 import { apiClient } from "@/lib/http/api-client";
 import { ActionDock } from "@/components/layout/action-dock";
 import { SystemFooter } from "@/components/layout/system-footer";
@@ -39,17 +31,6 @@ import { useDashboardStore } from "@/lib/stores/use-dashboard-store";
 
 const GRID_LIMIT_NO_VIRTUALIZATION = 15;
 const GRID_INITIAL_PAGE_SIZE = 10;
-
-function vehicleLabel(vehicle: VehicleCardData): string {
-  return (
-    vehicle.nickname ??
-    (`${vehicle.make ?? ""} ${vehicle.model ?? ""}`.trim() || vehicle.plate)
-  );
-}
-
-function currentPeriod(): string {
-  return new Date().toISOString().slice(0, 7);
-}
 
 function capitalizeFirst(text: string): string {
   return text.length > 0 ? text[0]!.toUpperCase() + text.slice(1) : text;
@@ -81,102 +62,6 @@ function DashboardDateHeader(): ReactNode {
       <p className="text-sm text-muted-foreground">
         {weekday}, {day} {month} {year}
       </p>
-    </div>
-  );
-}
-
-/**
- * @spec SPEC-20260531-001 seção 12.3 (migração incremental)
- * @spec SPEC-20260721-002 RF-05
- * Controles preservados do stub original (SPEC-20260521-003 RF-07) — reposicionados para o
- * final da página (após a Zona B) e com estados de loading/erro reais via `fetch` + `Blob`
- * (antes: `<a download>` sem feedback nenhum).
- *
- * Gap registrado em IMPACTO-040: o estado "desabilitado para plano Grátis" (R-BIZ-12) depende
- * do plano do usuário, que — assim como o nome em RF-07 — não está disponível client-side ainda.
- * Não implementado nesta rodada.
- */
-function ExportControls({
-  vehicles,
-}: {
-  vehicles: VehicleCardData[] | undefined;
-}): ReactNode {
-  const [period, setPeriod] = useState(currentPeriod());
-  const [vehicleId, setVehicleId] = useState("");
-  const [status, setStatus] = useState<"idle" | "loading" | "error">("idle");
-
-  async function handleExport(): Promise<void> {
-    setStatus("loading");
-    const exportUrl = `/api/backend/dashboard/export?period=${encodeURIComponent(period)}${
-      vehicleId ? `&vehicle_id=${encodeURIComponent(vehicleId)}` : ""
-    }`;
-
-    try {
-      const response = await fetch(exportUrl);
-      if (!response.ok)
-        throw new Error(`Falha na exportação: ${response.status}`);
-
-      const blob = await response.blob();
-      const objectUrl = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = objectUrl;
-      link.download = `navestory-despesas-${period}.csv`;
-      link.click();
-      URL.revokeObjectURL(objectUrl);
-      setStatus("idle");
-    } catch {
-      setStatus("error");
-    }
-  }
-
-  return (
-    <div className="flex flex-col gap-2 border-t pt-4">
-      <div className="flex flex-wrap items-end gap-3">
-        <label className="flex flex-col gap-1">
-          <span>Mês</span>
-          <Input
-            type="month"
-            value={period}
-            onChange={(event) => setPeriod(event.target.value)}
-          />
-        </label>
-
-        <div className="flex flex-col gap-1">
-          <span>Veículo</span>
-          <Combobox
-            aria-label="Veículo"
-            options={[
-              { value: "", label: "Todos os veículos" },
-              ...(vehicles ?? []).map((vehicle) => ({
-                value: vehicle.id,
-                label: vehicleLabel(vehicle),
-              })),
-            ]}
-            value={vehicleId}
-            onValueChange={setVehicleId}
-            placeholder="Todos os veículos"
-            searchPlaceholder="Buscar veículo..."
-            emptyMessage="Nenhum veículo encontrado"
-            className="w-56"
-          />
-        </div>
-
-        <Button
-          type="button"
-          variant="outline"
-          onClick={handleExport}
-          disabled={status === "loading"}
-        >
-          {status === "loading" ? "Exportando…" : "Exportar CSV"}
-        </Button>
-      </div>
-
-      {status === "error" && (
-        <Alert
-          variant="error"
-          description="Não foi possível exportar. Tente novamente."
-        />
-      )}
     </div>
   );
 }
@@ -356,53 +241,67 @@ export default function DashboardPage(): ReactNode {
 
   return (
     <Container size="5xl" className="pb-24">
-      <div className="flex items-center justify-between">
-        <DashboardDateHeader />
-        {/*
-          @spec SPEC-20260602-005 RF-16
-          Fora do ActionDock por decisão de RF-DC-02.1/RF-DC-03 (dock fixo em 4 itens,
-          ver action-dock.tsx) — link direto satisfaz o mesmo objetivo de acesso rápido.
-        */}
-        <Link
-          href="/atividades"
-          className="flex items-center gap-1 text-sm text-muted-foreground underline"
-        >
-          <span aria-hidden>🛡️</span>
-          Histórico de Atividades
-        </Link>
-      </div>
+      {/*
+        @spec SPEC-20260804-006 RF-14 — link "Histórico de Atividades" removido do header
+        (movido para a sidebar, ver components/layout/sidebar.tsx); o header volta a conter
+        apenas o controle de contexto da própria tela (data).
+      */}
+      <DashboardDateHeader />
 
       {hasNoVehicles ? (
         <NoVehiclesEmptyState />
       ) : (
         <>
-          {alerts && <FleetAlertBar alerts={alerts} />}
-          <div className="flex flex-col gap-2">
-            <DashboardKpiGrid catalog={kpiCatalog} activeIds={activeKpiIds} />
-            <KpiPicker activeIds={activeKpiIds} />
-          </div>
-          {vehicles && (
-            <VehicleGrid
-              vehicles={vehicles}
-              healthByVehicleId={healthByVehicleId}
-              flagsByVehicleId={flagsByVehicleId}
-              activeVehicleId={activeVehicleId}
-              onSelect={handleSelectVehicle}
+          {/* @spec SPEC-20260804-006 RF-16 */}
+          {alerts && alerts.length > 0 && (
+            <div>
+              <h2 className="kicker">Alertas</h2>
+              <FleetAlertBar alerts={alerts} />
+            </div>
+          )}
+
+          {/* @spec SPEC-20260804-006 RF-16, RF-17 — KpiPicker separado do grid por divider próprio,
+              para não parecer mais um card do grid (era um card colado, ambíguo entre indicador e ação). */}
+          <div>
+            <h2 className="kicker">Indicadores</h2>
+            <DashboardKpiGrid
+              catalog={kpiCatalog}
+              activeIds={activeKpiIds}
+              isFleetContext={selectionMode !== "single"}
             />
+            <div className="mt-3 flex justify-end border-t border-border pt-2">
+              <KpiPicker activeIds={activeKpiIds} />
+            </div>
+          </div>
+
+          {vehicles && (
+            <div>
+              <h2 className="kicker">Frota</h2>
+              <VehicleGrid
+                vehicles={vehicles}
+                healthByVehicleId={healthByVehicleId}
+                flagsByVehicleId={flagsByVehicleId}
+                activeVehicleId={activeVehicleId}
+                onSelect={handleSelectVehicle}
+              />
+            </div>
           )}
 
           <div ref={spotlightRef}>
+            <h2 className="kicker">Em Foco</h2>
             <VehicleSpotlight
               vehicle={activeVehicle}
+              flags={activeVehicleId ? flagsByVehicleId.get(activeVehicleId) : undefined}
               onClear={clearAllSelection}
             />
           </div>
 
           <UpcomingCostsWidget />
 
-          <FleetChartsSection />
-
-          <ExportControls vehicles={vehicles} />
+          <div>
+            <h2 className="kicker">Gráficos</h2>
+            <FleetChartsSection />
+          </div>
         </>
       )}
 

@@ -36,7 +36,7 @@ const okKpiCatalog = {
   total_vehicles: { ok: true, value: 1 },
   next_maintenance: { ok: true, value: null },
   upcoming_costs_7d: { ok: true, value: { total: 0, count: 0 } },
-  expense_anomalies: { ok: true, value: 0 },
+  expense_anomalies: { ok: true, value: { count: 0, insufficient_sample: false } },
 };
 
 const defaultPreferences = {
@@ -103,7 +103,7 @@ describe("DashboardPage", () => {
     vi.clearAllMocks();
   });
 
-  it("RF-DA-09: exibe empty state de boas-vindas quando não há veículos, sem KPIs nem controles de export", async () => {
+  it("RF-DA-09: exibe empty state de boas-vindas quando não há veículos, sem KPIs", async () => {
     mockDashboardData([]);
     renderPage();
 
@@ -113,9 +113,6 @@ describe("DashboardPage", () => {
     screen.getByRole("button", { name: "Cadastrar veículo" }).click();
     expect(pushMock).toHaveBeenCalledWith("/vehicles/new");
     expect(screen.queryByText("Gastos do mês")).not.toBeInTheDocument();
-    expect(
-      screen.queryByRole("button", { name: "Exportar CSV" }),
-    ).not.toBeInTheDocument();
   });
 
   it("RF-DA-08: auto-seleciona o único veículo da frota quando nada está em foco", async () => {
@@ -139,35 +136,6 @@ describe("DashboardPage", () => {
       expect(screen.getByText("ABC1234")).toBeInTheDocument(),
     );
     expect(useDashboardStore.getState().selectionMode).toBe("none");
-  });
-
-  it("preserva o seletor de mês/veículo e o botão de export CSV, reposicionado após a Zona B (RF-05)", async () => {
-    mockDashboardData([vehicleCard({ id: "v1", plate: "ABC1234" })]);
-    renderPage();
-
-    expect(
-      await screen.findByRole("button", { name: "Exportar CSV" }),
-    ).toBeInTheDocument();
-  });
-
-  it("RF-05: exibe estado de loading e depois erro quando a exportação falha", async () => {
-    mockDashboardData([vehicleCard({ id: "v1", plate: "ABC1234" })]);
-    const fetchMock = vi
-      .spyOn(global, "fetch")
-      .mockResolvedValue({ ok: false, status: 500 } as Response);
-    renderPage();
-
-    const button = await screen.findByRole("button", { name: "Exportar CSV" });
-    button.click();
-
-    expect(await screen.findByRole("alert")).toHaveTextContent(
-      /Não foi possível exportar/,
-    );
-    expect(
-      await screen.findByRole("button", { name: "Exportar CSV" }),
-    ).toBeInTheDocument();
-
-    fetchMock.mockRestore();
   });
 
   it("RF-DA-03: renderiza os 4 KPIs da Zona A", async () => {

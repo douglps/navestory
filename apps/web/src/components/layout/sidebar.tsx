@@ -18,6 +18,7 @@ import {
   PanelLeftOpen,
   Receipt,
   Settings,
+  Shield,
   User,
   Wrench,
 } from "lucide-react";
@@ -100,15 +101,66 @@ interface NavItem {
   Icon: LucideIcon;
 }
 
+// @spec SPEC-20260730-002 RF-17 — grupo "Navegação" da sidebar em 3 seções (US-06).
 const NAV_ITEMS: NavItem[] = [
   { href: "/dashboard", label: "Dashboard", Icon: LayoutDashboard },
   { href: "/vehicles", label: "Veículos", Icon: Car },
   { href: "/vehicle-groups", label: "Grupos", Icon: FolderTree },
   { href: "/expenses", label: "Despesas", Icon: Receipt },
   { href: "/maintenance", label: "Manutenções", Icon: Wrench },
+  // @spec SPEC-20260804-006 RF-14 — movido do header do dashboard: navegação global, faz mais
+  // sentido sempre acessível na sidebar do que ancorada numa tela específica.
+  { href: "/atividades", label: "Histórico de Atividades", Icon: Shield },
+];
+
+// @spec SPEC-20260730-002 RF-17 — grupo "Configurações" da sidebar em 3 seções (US-06).
+const SETTINGS_ITEMS: NavItem[] = [
   { href: "/settings/preferences", label: "Preferências", Icon: Settings },
   { href: "/settings/account", label: "Minha conta", Icon: User },
 ];
+
+interface SidebarNavItemProps {
+  item: NavItem;
+  pathname: string | null;
+  effectiveCollapsed: boolean;
+}
+
+// @spec SPEC-20260730-002 RF-11, RF-12 — ícone + label, destaque de rota ativa; extraído para
+// ser reutilizado pelas seções "Navegação" e "Configurações" (RF-17, US-06).
+function SidebarNavItem({
+  item,
+  pathname,
+  effectiveCollapsed,
+}: SidebarNavItemProps): ReactNode {
+  const { Icon } = item;
+  const isActive =
+    pathname === item.href || pathname?.startsWith(`${item.href}/`);
+  const link = (
+    <Link
+      href={item.href}
+      aria-current={isActive ? "page" : undefined}
+      className={`flex min-h-[44px] items-center gap-2 rounded-md px-2 text-sm md:min-h-0 md:py-1.5 ${
+        isActive
+          ? "bg-primary/10 font-medium text-primary"
+          : "text-foreground hover:bg-muted"
+      } ${effectiveCollapsed ? "md:justify-center md:text-center" : ""}`}
+    >
+      <Icon size={24} strokeWidth={1.75} className="shrink-0" aria-hidden />
+      {!effectiveCollapsed && item.label}
+    </Link>
+  );
+  return (
+    <li>
+      {effectiveCollapsed ? (
+        <Tooltip content={item.label} side="right">
+          {link}
+        </Tooltip>
+      ) : (
+        link
+      )}
+    </li>
+  );
+}
 
 // @spec SPEC-20260603-001 RF-16 — cor do dot passivo por modo de contexto ativo.
 // @spec SPEC-20260729-002 RF-02 — mesmo mapeamento categórico de `vehicle-context-chip.tsx`.
@@ -182,7 +234,7 @@ export function Sidebar(): ReactNode {
   const selectionMode = useDashboardStore((state) => state.selectionMode);
   const pathname = usePathname();
   const navRef = useRef<HTMLElement>(null);
-  const navListRef = useRef<HTMLUListElement>(null);
+  const navListRef = useRef<HTMLDivElement>(null);
   const prevPathnameRef = useRef(pathname);
   const isMobileViewport = useMediaQuery(MOBILE_MEDIA_QUERY);
   const effectiveCollapsed = isCollapsed && !isMobileViewport;
@@ -251,8 +303,12 @@ export function Sidebar(): ReactNode {
         />
       )}
       {/* @spec SPEC-20260730-002 RF-09 — mobile: drawer overlay (fixed, abaixo do Header via
-          top-14); desktop (md): in-flow (md:static), irmã do conteúdo dentro de `flex flex-1`
-          em layout.tsx — o Header full-width deixa de depender de padding compensado. */}
+          top-14); desktop (md): in-flow e ancorada (md:sticky, RF-15), irmã do conteúdo dentro
+          de `flex flex-1` em layout.tsx — o Header full-width deixa de depender de padding
+          compensado. */}
+      {/* @spec SPEC-20260730-002 RF-15 — md:sticky (em vez de md:static) ancora a sidebar à
+          viewport durante a rolagem da página; md:h-[calc(100vh-3.5rem)] limita sua altura ao
+          espaço abaixo do header (h-14 = 3.5rem), habilitando rolagem interna própria (RF-16). */}
       <nav
         id={MOBILE_NAV_DRAWER_ID}
         ref={navRef}
@@ -260,7 +316,7 @@ export function Sidebar(): ReactNode {
         aria-modal="true"
         aria-label="Menu de navegação"
         style={navStyle}
-        className={`fixed left-0 top-14 bottom-0 z-[250] flex w-64 flex-col gap-3 border-r border-border bg-card p-4 text-card-foreground transition-transform duration-200 ease-in-out md:static md:inset-auto md:z-30 md:translate-x-0 ${
+        className={`fixed left-0 top-14 bottom-0 z-[250] flex w-64 flex-col gap-3 border-r border-border bg-card p-4 text-card-foreground transition-transform duration-200 ease-in-out md:sticky md:top-14 md:inset-auto md:z-30 md:h-[calc(100vh-3.5rem)] md:translate-x-0 ${
           isMobileNavOpen ? "translate-x-0" : "-translate-x-full"
         } ${isCollapsed ? "md:w-16 md:items-center" : "md:w-64"}`}
       >
@@ -292,50 +348,38 @@ export function Sidebar(): ReactNode {
         />
 
         {/* @spec SPEC-20260730-002 RF-14 — md:w-fit (só quando expandida) permite medir a
-            largura intrínseca do conteúdo via navListRef; em mobile/colapsado permanece w-full. */}
-        <ul
+            largura intrínseca do conteúdo via navListRef; em mobile/colapsado permanece w-full.
+            @spec SPEC-20260730-002 RF-16 — overflow-y-auto: se o conteúdo exceder a altura
+            disponível, a rolagem acontece aqui dentro, sem mover header/toggle/botão Sair. */}
+        <div
           ref={navListRef}
-          className={`flex w-full flex-col gap-1 ${!isCollapsed ? "md:w-fit" : ""}`}
+          className={`flex w-full flex-1 flex-col gap-3 overflow-y-auto ${!isCollapsed ? "md:w-fit" : ""}`}
         >
-          {NAV_ITEMS.map((item) => {
-            const { Icon } = item;
-            // @spec SPEC-20260730-002 RF-12 — rota ativa: igualdade exata ou prefixo de sub-rota.
-            const isActive =
-              pathname === item.href || pathname?.startsWith(`${item.href}/`);
-            const link = (
-              <Link
-                href={item.href}
-                aria-current={isActive ? "page" : undefined}
-                className={`flex min-h-[44px] items-center gap-2 rounded-md px-2 text-sm md:min-h-0 md:py-1.5 ${
-                  isActive
-                    ? "bg-primary/10 font-medium text-primary"
-                    : "text-foreground hover:bg-muted"
-                } ${isCollapsed ? "md:justify-center md:text-center" : ""}`}
-              >
-                {/* @spec SPEC-20260730-002 RF-11 — ícone exibido junto ao label também no
-                    estado expandido, não apenas quando colapsado. */}
-                <Icon
-                  size={24}
-                  strokeWidth={1.75}
-                  className="shrink-0"
-                  aria-hidden
-                />
-                {!effectiveCollapsed && item.label}
-              </Link>
-            );
-            return (
-              <li key={item.href}>
-                {effectiveCollapsed ? (
-                  <Tooltip content={item.label} side="right">
-                    {link}
-                  </Tooltip>
-                ) : (
-                  link
-                )}
-              </li>
-            );
-          })}
-        </ul>
+          {/* @spec SPEC-20260730-002 RF-17 — seção 1 de 3: Navegação (US-06). */}
+          <ul className="flex w-full flex-col gap-1">
+            {NAV_ITEMS.map((item) => (
+              <SidebarNavItem
+                key={item.href}
+                item={item}
+                pathname={pathname}
+                effectiveCollapsed={effectiveCollapsed}
+              />
+            ))}
+          </ul>
+
+          {/* @spec SPEC-20260730-002 RF-17 — divisória entre seção 1 (Navegação) e seção 2
+              (Configurações); visível tanto expandida quanto colapsada. */}
+          <ul className="flex w-full flex-col gap-1 border-t border-border pt-3">
+            {SETTINGS_ITEMS.map((item) => (
+              <SidebarNavItem
+                key={item.href}
+                item={item}
+                pathname={pathname}
+                effectiveCollapsed={effectiveCollapsed}
+              />
+            ))}
+          </ul>
+        </div>
 
         {/* @spec SPEC-20260602-001 RF-19, SPEC-20260603-001 RF-17 — logout já limpa o
             contexto global (clearAllSelection() + sessionStorage) via logout()
@@ -344,12 +388,14 @@ export function Sidebar(): ReactNode {
             (transition-[width]) e volta a 0 sem chamar logout() se o hold for cancelado. */}
         {(() => {
           const logoutButton = (
+            // @spec SPEC-20260730-002 RF-17 — divisória entre seção 2 (Configurações) e
+            // seção 3 (Sair); mt-auto empurra o bloco para o rodapé fixo da sidebar.
             <button
               type="button"
               aria-label="Segure para sair"
               aria-busy={isHoldingLogout}
               {...holdLogoutHandlers}
-              className={`relative mt-auto flex min-h-[44px] w-full items-center overflow-hidden rounded-md px-2 text-left text-sm text-foreground hover:bg-muted md:min-h-0 md:py-1.5 ${
+              className={`relative mt-auto flex min-h-[44px] w-full shrink-0 items-center overflow-hidden border-t border-border px-2 pt-3 text-left text-sm text-foreground hover:bg-muted md:min-h-0 md:py-1.5 ${
                 isCollapsed ? "md:justify-center md:text-center" : ""
               }`}
             >

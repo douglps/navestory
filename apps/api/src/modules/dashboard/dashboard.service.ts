@@ -205,7 +205,7 @@ const CATEGORY_LABELS: Record<string, string> = Object.fromEntries(
 );
 
 function categoryLabel(category: string): string {
-  // eslint-disable-next-line security/detect-object-injection -- category vem de expenses.category (coluna do próprio usuário via RLS), não de input externo não sanitizado
+   
   return (
     CATEGORY_LABELS[category] ??
     category.charAt(0).toUpperCase() + category.slice(1)
@@ -559,7 +559,7 @@ export class DashboardService {
           .then((kpis) => kpis.total_this_month),
         this.countUrgentMaintenances(client, userId, tz),
         this.getFleetCostPerKm(client, userId),
-        this.getNextMaintenance(client, userId, activeVehicleId),
+        this.getNextMaintenance(client, userId, activeVehicleId, tz),
       ]);
 
     return {
@@ -607,9 +607,9 @@ export class DashboardService {
       this.getFleetHealthAverage(client, userId),
       this.countUrgentMaintenances(client, userId, tz),
       this.countActiveVehicles(client, userId),
-      this.getNextMaintenance(client, userId, activeVehicleId),
+      this.getNextMaintenance(client, userId, activeVehicleId, tz),
       this.getUpcomingCostsSummary(accessToken),
-      this.countMonthlyAnomalies(client, tz),
+      this.countMonthlyAnomalies(client, userId, tz),
       this.getSpendingWindowTotal(
         client,
         userId,
@@ -869,11 +869,27 @@ export class DashboardService {
   /**
    * @spec SPEC-20260721-002 RF-01 — conta anomalias (z-score) do mês corrente; RLS já isola por auth.uid() (R-ANA-05)
    * @spec SPEC-20260715-002 R-TZ-01 — "mês corrente" no fuso do usuário
+   * @spec SPEC-20260804-006 RF-05, R-KPI-04 — antes de computar anomalias, verifica se o usuário
+   * tem histórico suficiente (`DELTA_SUPPRESSION_MIN_SAMPLE`); abaixo do limiar, retorna
+   * `insufficient_sample: true` sem chamar a RPC (0 anomalias não seria distinguível de "sem dado").
    */
   private async countMonthlyAnomalies(
     client: SupabaseClient,
+    userId: string,
     tz: string,
-  ): Promise<number> {
+  ): Promise<{ count: number; insufficient_sample: boolean }> {
+    const { count: historicalCount, error: countError } = await client
+      .from("expenses")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", userId)
+      .is("deleted_at", null);
+    if (countError) {
+      throw new Error(countError.message);
+    }
+    if ((historicalCount ?? 0) < DELTA_SUPPRESSION_MIN_SAMPLE) {
+      return { count: 0, insufficient_sample: true };
+    }
+
     const { data, error } = await client.rpc("detect_expense_anomalies", {
       p_threshold: ANOMALY_Z_SCORE_THRESHOLD,
     });
@@ -881,9 +897,10 @@ export class DashboardService {
       throw new Error(error.message);
     }
     const startOfMonth = toCalendarDay(new Date(), tz).slice(0, 7) + "-01";
-    return ((data ?? []) as { date: string }[]).filter(
+    const count = ((data ?? []) as { date: string }[]).filter(
       (row) => row.date >= startOfMonth,
     ).length;
+    return { count, insufficient_sample: false };
   }
 
   /** @spec SPEC-20260715-002 RF-BK-03, R-TZ-01 — horizonte de urgência calculado no fuso do usuário */
@@ -958,10 +975,16 @@ export class DashboardService {
     return totalKm > 0 ? round2(totalSpent / totalKm) : null;
   }
 
+  /**
+   * @spec SPEC-20260804-006 RF-04 — `scheduled_date` é `timestamptz` (SPEC-20260715-002); o
+   * frontend espera `date` como calendário `YYYY-MM-DD` (R-TZ-01), nunca o timestamp bruto, senão
+   * o `T00:00:00` que ele concatena para formatar vira "Invalid Date".
+   */
   private async getNextMaintenance(
     client: SupabaseClient,
     userId: string,
     vehicleId: string | undefined,
+    tz: string,
   ): Promise<{ date: string; vehicle_plate: string } | null> {
     let builder = client
       .from("maintenances")
@@ -983,7 +1006,10 @@ export class DashboardService {
 
     const row = ((data ?? []) as MaintenanceAlertRow[])[0];
     return row
-      ? { date: row.scheduled_date, vehicle_plate: resolvePlate(row) }
+      ? {
+          date: toCalendarDay(new Date(row.scheduled_date), tz),
+          vehicle_plate: resolvePlate(row),
+        }
       : null;
   }
 
@@ -1032,7 +1058,11 @@ export class DashboardService {
           model: vehicle.model,
           nickname: vehicle.nickname,
           odometer: vehicle.odometer,
-          last_fuel_date: lastFuel?.occurred_at ?? null,
+          // @spec SPEC-20260804-006 RF-04 — `occurred_at` é `timestamptz`; convertido para
+          // calendário `YYYY-MM-DD` no fuso do usuário (R-TZ-01), mesmo motivo de `getNextMaintenance`.
+          last_fuel_date: lastFuel
+            ? toCalendarDay(new Date(lastFuel.occurred_at), tz)
+            : null,
           last_fuel_amount: lastFuel?.amount ?? null,
           last_fuel_odometer_missing:
             lastFuel != null && lastFuel.odometer_km == null,

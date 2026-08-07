@@ -1,5 +1,5 @@
 import { render, screen } from "@testing-library/react";
-import type { ReactElement, ReactNode } from "react";
+import type { ReactElement } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const { redirectMock } = vi.hoisted(() => ({
@@ -41,7 +41,7 @@ beforeEach(() => {
 
 describe("AdminLayout", () => {
   it("SPEC-20260731-008 RF-09: redireciona para /403 quando não há cookie de acesso", async () => {
-    vi.mocked(cookies).mockResolvedValue(makeCookieStore() as Awaited<ReturnType<typeof cookies>>);
+    vi.mocked(cookies).mockResolvedValue(makeCookieStore() as unknown as Awaited<ReturnType<typeof cookies>>);
 
     await AdminLayout({ children: <div>admin</div> });
 
@@ -49,7 +49,7 @@ describe("AdminLayout", () => {
   });
 
   it("SPEC-20260731-008 RF-09: redireciona para /403 quando role não é 'admin'", async () => {
-    vi.mocked(cookies).mockResolvedValue(makeCookieStore("user-token") as Awaited<ReturnType<typeof cookies>>);
+    vi.mocked(cookies).mockResolvedValue(makeCookieStore("user-token") as unknown as Awaited<ReturnType<typeof cookies>>);
     vi.mocked(decodeJwtRole).mockReturnValue("user");
 
     await AdminLayout({ children: <div>admin</div> });
@@ -58,7 +58,7 @@ describe("AdminLayout", () => {
   });
 
   it("SPEC-20260731-008 RF-09: redireciona para /403 quando role é null", async () => {
-    vi.mocked(cookies).mockResolvedValue(makeCookieStore("some-token") as Awaited<ReturnType<typeof cookies>>);
+    vi.mocked(cookies).mockResolvedValue(makeCookieStore("some-token") as unknown as Awaited<ReturnType<typeof cookies>>);
     vi.mocked(decodeJwtRole).mockReturnValue(null);
 
     await AdminLayout({ children: <div>admin</div> });
@@ -67,7 +67,7 @@ describe("AdminLayout", () => {
   });
 
   it("SPEC-20260731-008 RNF-04: renderiza AdminNav e os filhos quando role é 'admin'", async () => {
-    vi.mocked(cookies).mockResolvedValue(makeCookieStore("admin-token") as Awaited<ReturnType<typeof cookies>>);
+    vi.mocked(cookies).mockResolvedValue(makeCookieStore("admin-token") as unknown as Awaited<ReturnType<typeof cookies>>);
     vi.mocked(decodeJwtRole).mockReturnValue("admin");
 
     const result = await AdminLayout({ children: <div data-testid="admin-child">conteúdo admin</div> });

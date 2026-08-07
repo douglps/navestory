@@ -21,7 +21,7 @@ import { apiClient } from "@/lib/http/api-client";
 import { useUIStore } from "@/lib/stores/ui-store";
 import { DeleteUserDialog } from "./delete-user-dialog";
 
-interface AdminUser {
+export interface AdminUser {
   id: string;
   email: string | null;
   name: string | null;

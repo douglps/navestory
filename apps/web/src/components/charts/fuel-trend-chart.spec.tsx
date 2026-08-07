@@ -8,9 +8,36 @@ import type { FuelTrendPoint } from "@navestory/validators";
 import { FuelTrendChart } from "./fuel-trend-chart";
 
 const points: FuelTrendPoint[] = [
-  { date: "2026-07-01", km_per_liter: 12.5, rolling_avg_kpl: 12.1 },
-  { date: "2026-06-15", km_per_liter: 11.8, rolling_avg_kpl: 12.0 },
-  { date: "2026-06-01", km_per_liter: null, rolling_avg_kpl: null },
+  {
+    expense_id: "exp-1",
+    date: "2026-07-01",
+    liters: 40,
+    amount: 240,
+    odometer_km: 10500,
+    km_per_liter: 12.5,
+    price_per_liter: 6,
+    rolling_avg_kpl: 12.1,
+  },
+  {
+    expense_id: "exp-2",
+    date: "2026-06-15",
+    liters: 38,
+    amount: 220,
+    odometer_km: 10100,
+    km_per_liter: 11.8,
+    price_per_liter: 5.79,
+    rolling_avg_kpl: 12.0,
+  },
+  {
+    expense_id: "exp-3",
+    date: "2026-06-01",
+    liters: 35,
+    amount: 200,
+    odometer_km: null,
+    km_per_liter: null,
+    price_per_liter: null,
+    rolling_avg_kpl: null,
+  },
 ];
 
 describe("FuelTrendChart", () => {

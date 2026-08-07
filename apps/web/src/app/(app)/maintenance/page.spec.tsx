@@ -1,5 +1,5 @@
 import { render, screen } from "@testing-library/react";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { QueryProvider } from "@/lib/query/providers";
 import { useDashboardStore } from "@/lib/stores/use-dashboard-store";
 import MaintenancePage from "./page";
@@ -209,6 +209,6 @@ describe("MaintenancePage", () => {
     expect(screen.queryByText(/Revisão do v2/)).not.toBeInTheDocument();
 
     // Restaura estado padrão
-    useDashboardStore.setState({ selectionMode: "fleet", activeVehicleId: null, activeGroupId: null });
+    useDashboardStore.setState({ selectionMode: "none", activeVehicleId: null, activeGroupId: null });
   });
 });

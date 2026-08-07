@@ -41,7 +41,7 @@ function makeContext(overrides = {}) {
 
 beforeEach(() => {
   vi.mocked(useOnlineStatus).mockReturnValue(true);
-  vi.mocked(useVehicleContext).mockReturnValue(makeContext() as ReturnType<typeof useVehicleContext>);
+  vi.mocked(useVehicleContext).mockReturnValue(makeContext() as unknown as ReturnType<typeof useVehicleContext>);
 });
 
 describe("VehicleSwitcherContent", () => {
@@ -58,7 +58,7 @@ describe("VehicleSwitcherContent", () => {
       makeContext({
         vehiclesQuery: { isLoading: true, isError: false, refetch: vi.fn() },
         groupsQuery: { isLoading: false, isError: false, refetch: vi.fn() },
-      }) as ReturnType<typeof useVehicleContext>,
+      }) as unknown as ReturnType<typeof useVehicleContext>,
     );
 
     const { container } = render(
@@ -75,7 +75,7 @@ describe("VehicleSwitcherContent", () => {
       makeContext({
         vehiclesQuery: { isLoading: false, isError: true, refetch: vi.fn() },
         groupsQuery: { isLoading: false, isError: false, refetch: vi.fn() },
-      }) as ReturnType<typeof useVehicleContext>,
+      }) as unknown as ReturnType<typeof useVehicleContext>,
     );
 
     render(
@@ -91,7 +91,7 @@ describe("VehicleSwitcherContent", () => {
         vehicles: [
           { id: "v1", plate: "ABC-1234", make: "Honda", model: "Civic", vehicle_type: "car" },
         ],
-      }) as ReturnType<typeof useVehicleContext>,
+      }) as unknown as ReturnType<typeof useVehicleContext>,
     );
 
     render(
@@ -112,7 +112,7 @@ describe("VehicleSwitcherContent", () => {
           { id: "v1", plate: "ABC-1234", make: "Honda", model: "Civic", vehicle_type: "car" },
         ],
         setActiveVehicle,
-      }) as ReturnType<typeof useVehicleContext>,
+      }) as unknown as ReturnType<typeof useVehicleContext>,
     );
 
     render(
@@ -129,7 +129,7 @@ describe("VehicleSwitcherContent", () => {
     vi.mocked(useVehicleContext).mockReturnValue(
       makeContext({
         groups: [{ id: "g1", name: "Frota Sul", member_count: 3 }],
-      }) as ReturnType<typeof useVehicleContext>,
+      }) as unknown as ReturnType<typeof useVehicleContext>,
     );
 
     render(
@@ -149,7 +149,7 @@ describe("VehicleSwitcherContent", () => {
       makeContext({
         groups: [{ id: "g1", name: "Frota Sul", member_count: 3 }],
         setActiveGroup,
-      }) as ReturnType<typeof useVehicleContext>,
+      }) as unknown as ReturnType<typeof useVehicleContext>,
     );
 
     render(
@@ -171,7 +171,7 @@ describe("VehicleSwitcherContent", () => {
           { id: "v1", plate: "ABC-1234", make: "Honda", model: "Civic", vehicle_type: "car" },
           { id: "v2", plate: "XYZ-5678", make: "Toyota", model: "Corolla", vehicle_type: "car" },
         ],
-      }) as ReturnType<typeof useVehicleContext>,
+      }) as unknown as ReturnType<typeof useVehicleContext>,
     );
 
     render(
@@ -195,7 +195,7 @@ describe("VehicleSwitcherContent", () => {
         vehicles: [
           { id: "v1", plate: "ABC-1234", make: "Honda", model: "Civic", vehicle_type: "car" },
         ],
-      }) as ReturnType<typeof useVehicleContext>,
+      }) as unknown as ReturnType<typeof useVehicleContext>,
     );
 
     render(
@@ -218,7 +218,7 @@ describe("VehicleSwitcherContent", () => {
         vehicles: [
           { id: "v1", plate: "ABC-1234", make: "Honda", model: "Civic", vehicle_type: "car" },
         ],
-      }) as ReturnType<typeof useVehicleContext>,
+      }) as unknown as ReturnType<typeof useVehicleContext>,
     );
 
     render(
@@ -239,7 +239,7 @@ describe("VehicleSwitcherContent", () => {
     vi.mocked(useVehicleContext).mockReturnValue(
       makeContext({
         groups: [{ id: "g1", name: "Frota Sul", member_count: 3 }],
-      }) as ReturnType<typeof useVehicleContext>,
+      }) as unknown as ReturnType<typeof useVehicleContext>,
     );
 
     render(

@@ -24,9 +24,9 @@ vi.mock("@/lib/http/api-client", async () => {
 });
 
 import { apiClient } from "@/lib/http/api-client";
-import { AdminUsersTable } from "./admin-users-table";
+import { AdminUsersTable, type AdminUser } from "./admin-users-table";
 
-const adminUser = {
+const adminUser: AdminUser = {
   id: "admin-1",
   email: "admin@exemplo.com",
   name: "Admin User",
@@ -35,7 +35,7 @@ const adminUser = {
   created_at: "2026-01-01T00:00:00.000Z",
 };
 
-const regularUser = {
+const regularUser: AdminUser = {
   id: "user-1",
   email: "user@exemplo.com",
   name: "Regular User",
@@ -44,7 +44,7 @@ const regularUser = {
   created_at: "2026-02-01T00:00:00.000Z",
 };
 
-const deletedUser = {
+const deletedUser: AdminUser = {
   id: "user-2",
   email: "deleted@exemplo.com",
   name: "Deleted User",
@@ -62,7 +62,7 @@ function renderTable() {
   );
 }
 
-function mockApiResponses(users: typeof adminUser[]) {
+function mockApiResponses(users: AdminUser[]) {
   vi.mocked(apiClient).mockImplementation((url: string) => {
     if (String(url).includes("/users/me")) {
       return Promise.resolve({ id: "admin-1" });

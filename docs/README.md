@@ -26,6 +26,7 @@ Documentos oficiais que guiam o ciclo de vida de desenvolvimento do MVP.
 - 📝 [Esquema JSON do PRD](./PRD/prd-schema.json)
 - 🔄 [Changelog Oficial](./PRD/changelog.md)
 - 📖 [User Stories — Jornadas e Gaps](./user-stories.md)
+- 🧭 [Benchmarking de UX de Mercado — Oportunidades](./product/ux-benchmarking-oportunidades.md)
 - 🎨 [Apresentação do Sistema — Referência para Design e Produto](./product/apresentacao-sistema-design-produto.md)
 
 ---

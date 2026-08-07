@@ -1,0 +1,8 @@
+# CODEOWNERS — navestory
+# Define quem é dono/responsável por revisar mudanças em cada área do repositório.
+# Ver https://docs.github.com/articles/about-code-owners
+#
+# Enquanto houver um único colaborador, todo PR passa por @douglps por padrão.
+# Ao entrar um segundo colaborador, subdividir por camada/domínio conforme necessário.
+
+* @douglps

@@ -19,7 +19,8 @@
     "check:test-pairing": "node scripts/check-test-pairing.mjs",
     "check:hardcoded-colors": "node scripts/check-hardcoded-colors.mjs",
     "db:migrate": "supabase db push",
-    "db:generate": "supabase gen types typescript --local > packages/database/src/types.ts"
+    "db:generate": "supabase gen types typescript --local > packages/database/src/types.ts",
+    "prepare": "husky"
   },
   "devDependencies": {
     "@eslint/js": "^9.17.0",
@@ -29,6 +30,8 @@
     "eslint-plugin-react-hooks": "^5.1.0",
     "eslint-plugin-security": "^3.0.1",
     "globals": "^15.14.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.3.0",
     "turbo": "^2.3.0",
     "typescript": "^5.7.0",
     "typescript-eslint": "^8.19.0"

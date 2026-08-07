@@ -2,6 +2,9 @@
 node_modules/
 .pnpm-store/
 
+# Husky (diretório interno gerado, não versionar)
+.husky/_
+
 # Build / output
 .next/
 dist/

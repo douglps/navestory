@@ -82,7 +82,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
       - run: pnpm --filter @navestory/validators build
-      - uses: supabase/setup-cli@v1
+      - uses: supabase/setup-cli@v3
         with:
           version: latest
       - run: supabase start
@@ -144,7 +144,7 @@ jobs:
       - uses: ./.github/actions/setup
 
       # RF-CI-03: inicializa Supabase local (banco + auth)
-      - uses: supabase/setup-cli@v1
+      - uses: supabase/setup-cli@v3
         with:
           version: latest
       - run: supabase start

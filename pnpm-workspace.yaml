@@ -9,5 +9,13 @@ allowBuilds:
   sharp: true
 overrides:
   vite: ">=6.4.3"
-  postcss: ">=8.5.10"
+  postcss: ">=8.5.23"
   esbuild: ">=0.25.0"
+  sharp: ">=0.35.0"
+  fast-uri: ">=3.1.5 <4"
+  "js-yaml@<4": ">=3.15.1 <4"
+  "js-yaml@>=4 <5": ">=4.3.1 <5"
+  "js-yaml@>=5 <6": ">=5.2.2 <6"
+  "brace-expansion@1": ">=1.1.18 <2"
+  "brace-expansion@2": ">=2.1.4 <3"
+  "brace-expansion@>=4 <6": ">=5.0.9 <6"

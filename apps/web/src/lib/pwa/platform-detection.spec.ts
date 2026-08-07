@@ -34,4 +34,16 @@ describe("isIosInstallable", () => {
 
     expect(isIosInstallable()).toBe(false);
   });
+
+  it("RF-04: retorna true em iPadOS 13+ (UA de desktop Safari com suporte a touch)", () => {
+    vi.stubGlobal("navigator", {
+      userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_6) AppleWebKit/605.1.15",
+      standalone: false,
+    });
+    Object.defineProperty(document, "ontouchend", { value: null, configurable: true });
+
+    expect(isIosInstallable()).toBe(true);
+
+    delete (document as { ontouchend?: unknown }).ontouchend;
+  });
 });

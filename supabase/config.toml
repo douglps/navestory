@@ -151,11 +151,13 @@ max_indexes = 5
 enabled = true
 # The base URL of your website. Used as an allow-list for redirects and for constructing URLs used
 # in emails.
-site_url = "http://127.0.0.1:3000"
+site_url = "http://localhost:3000"
 # The public URL that Auth serves on. Defaults to the API external URL with `/auth/v1` appended.
 # external_url = ""
 # A list of *exact* URLs that auth providers are permitted to redirect to post authentication.
-additional_redirect_urls = ["https://127.0.0.1:3000"]
+# localhost:3000 (não 127.0.0.1) porque é onde apps/web roda de fato (default de WEB_APP_URL em
+# env.validation.ts) e é o valor já correto hoje no projeto remoto navestory (sfkefpoanmoiagwxbwld).
+additional_redirect_urls = ["http://localhost:3000", "http://localhost:3000/reset-password"]
 # How long tokens are valid for, in seconds. Defaults to 3600 (1 hour), maximum 604,800 (1 week).
 jwt_expiry = 3600
 # JWT issuer URL. If not set, defaults to auth.external_url.
@@ -242,6 +244,13 @@ otp_expiry = 3600
 # [auth.email.template.invite]
 # subject = "You have been invited"
 # content_path = "./supabase/templates/invite.html"
+
+# Link direto para a página de reset do app, com token_hash — evita o redirect implícito
+# do GoTrue /auth/v1/verify, que não é compatível com o fluxo verifyOtp(token_hash) usado
+# em apps/api/src/modules/auth/auth.service.ts (resetPassword).
+[auth.email.template.recovery]
+subject = "Redefinir senha"
+content_path = "./supabase/templates/recovery.html"
 
 # Uncomment to customize notification email template
 # [auth.email.notification.password_changed]

@@ -6,6 +6,7 @@ import {
   InternalServerErrorException,
   UnauthorizedException,
 } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { SUPABASE_ADMIN_CLIENT, SUPABASE_CLIENT } from "../../shared/supabase/supabase.constants";
 import { AuditService } from "../../shared/audit/audit.service";
@@ -33,6 +34,7 @@ export class AuthService {
     @Inject(SUPABASE_CLIENT) private readonly supabase: SupabaseClient,
     @Inject(SUPABASE_ADMIN_CLIENT) private readonly supabaseAdmin: SupabaseClient,
     private readonly auditService: AuditService,
+    private readonly configService: ConfigService,
   ) {}
 
   /**
@@ -135,7 +137,10 @@ export class AuthService {
    */
   async recoverPassword(dto: RecoverPasswordDto): Promise<void> {
     try {
-      await this.supabase.auth.resetPasswordForEmail(dto.email);
+      const webAppUrl = this.configService.getOrThrow<string>("WEB_APP_URL");
+      await this.supabase.auth.resetPasswordForEmail(dto.email, {
+        redirectTo: `${webAppUrl}/reset-password`,
+      });
     } catch {
       // Anti-enumeração: falha silenciosa, resposta ao cliente é sempre 200 genérico.
     }

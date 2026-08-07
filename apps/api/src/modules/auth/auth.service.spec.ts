@@ -1,6 +1,14 @@
 import { ConflictException, ForbiddenException, UnauthorizedException } from "@nestjs/common";
+import type { ConfigService } from "@nestjs/config";
 import type { AuditService } from "../../shared/audit/audit.service";
 import { AuthService } from "./auth.service";
+
+function createConfigService(overrides?: Record<string, string>): ConfigService {
+  const values: Record<string, string> = { WEB_APP_URL: "http://localhost:3000", ...overrides };
+  return {
+    getOrThrow: jest.fn((key: string) => values[key]),
+  } as unknown as ConfigService;
+}
 
 type QueryResult = { data: unknown; error: unknown };
 
@@ -67,13 +75,16 @@ describe("AuthService", () => {
 
     const auditService = { log: jest.fn() } as unknown as AuditService;
 
+    const configService = createConfigService();
+
     const service = new AuthService(
       supabase as never,
       supabaseAdmin as never,
       auditService,
+      configService,
     );
 
-    return { service, supabase, supabaseAdmin, auditService };
+    return { service, supabase, supabaseAdmin, auditService, configService };
   }
 
   describe("register", () => {
@@ -277,6 +288,7 @@ describe("AuthService", () => {
         supabase as never,
         supabase as never,
         { log: jest.fn() } as unknown as AuditService,
+        createConfigService(),
       );
 
       await expect(service.refresh("invalid", false)).rejects.toBeInstanceOf(UnauthorizedException);
@@ -289,6 +301,16 @@ describe("AuthService", () => {
       supabase.auth.resetPasswordForEmail = jest.fn().mockRejectedValue(new Error("not found"));
 
       await expect(service.recoverPassword({ email: "inexistente@example.com" })).resolves.toBeUndefined();
+    });
+
+    it("envia redirectTo apontando para a página de reset do app (WEB_APP_URL)", async () => {
+      const { service, supabase } = createService();
+
+      await service.recoverPassword({ email: "ana@example.com" });
+
+      expect(supabase.auth.resetPasswordForEmail).toHaveBeenCalledWith("ana@example.com", {
+        redirectTo: "http://localhost:3000/reset-password",
+      });
     });
   });
 

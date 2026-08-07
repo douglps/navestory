@@ -108,6 +108,7 @@ describe("ExpensesService", () => {
   it("CT-004b: create com category=fuel e sem odometer_km lança BadRequestException (R4)", async () => {
     mockClient({ vehicles: { data: { id: "veh1" }, error: null } });
     const service = createService();
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { odometer_km: _unused, ...dtoSemOdometro } = createDto;
 
     await expect(
@@ -322,6 +323,7 @@ describe("ExpensesService", () => {
       const service = createService();
       // categoria não-fuel: R4 só exige odometer_km para fuel — mantém o teste focado
       // na lógica de warning, não na validação de obrigatoriedade (coberta por CT-004b)
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { odometer_km: _unused, ...dtoSemOdometro } = createDto;
 
       const expense = await service.create(
@@ -575,6 +577,7 @@ describe("ExpensesService", () => {
       });
       // categoria não-fuel e sem odometer_km: isola a chamada de maybeSingle mockada
       // para a verificação de duplicata, sem interferência de buildOdometerWarning
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { odometer_km: _unused, ...dtoSemOdometro } = createDto;
 
       const expense = await service.create(

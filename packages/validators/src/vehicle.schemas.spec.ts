@@ -118,6 +118,7 @@ describe("vehicleResponseSchema", () => {
   });
 
   it("rejeita quando falta um campo obrigatório (id)", () => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { id: _id, ...withoutId } = realBackendShape;
     expect(vehicleResponseSchema.safeParse(withoutId).success).toBe(false);
   });

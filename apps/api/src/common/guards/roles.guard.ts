@@ -1,5 +1,6 @@
 import { type CanActivate, type ExecutionContext, Injectable } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
+import * as Sentry from "@sentry/nestjs";
 import type { Request } from "express";
 import { ROLES_KEY } from "../decorators/roles.decorator";
 import type { JwtPayload } from "../../modules/auth/jwt.strategy";
@@ -26,6 +27,23 @@ export class RolesGuard implements CanActivate {
 
     const request = context.switchToHttp().getRequest<Request & { user?: JwtPayload }>();
     const role = request.user?.app_metadata?.role;
-    return typeof role === "string" && requiredRoles.includes(role);
+    const allowed = typeof role === "string" && requiredRoles.includes(role);
+
+    if (!allowed) {
+      // @spec SPEC-20260807-002 RF-B01 — valida S16
+      Sentry.captureMessage("Acesso admin negado: role insuficiente", {
+        level: "warning",
+        tags: { security_event: true, scenario: "unauthorized_admin_access" },
+        extra: {
+          userId: request.user?.sub ?? "unknown",
+          route: request.url,
+          method: request.method,
+          requiredRole: requiredRoles,
+          actualRole: role ?? null,
+        },
+      });
+    }
+
+    return allowed;
   }
 }

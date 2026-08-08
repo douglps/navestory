@@ -1,6 +1,6 @@
 # Specs — Despesas
 
-Regras: R1, R2, R3, R4, R5, R6, R-CAT-01..04, R-FUEL-01..06, R-LED-01..05, R-HUB-01..02, R-REC-01..02, R-EXP-01, R-ODO-01..02
+Regras: R1, R2, R3, R4, R5, R6, R-CAT-01..04, R-FUEL-01..07, R-LED-01..05, R-HUB-01..02, R-REC-01..02, R-EXP-01, R-ODO-01..02, R-ODO-07
 
 | Spec | Título | Status |
 |------|--------|--------|
@@ -21,6 +21,7 @@ Regras: R1, R2, R3, R4, R5, R6, R-CAT-01..04, R-FUEL-01..06, R-LED-01..05, R-HUB
 | [SPEC-20260612-001](SPEC-20260612-001-expense-form-ux-improvements.md) | Melhorias de UX no Formulário de Despesas e Hub Financeiro | Aprovada |
 | [SPEC-20260612-002](SPEC-20260612-002-form-fields-adjustments.md) | Ajustes de Campos e Layout do Formulário de Despesas | Aprovada |
 | [SPEC-20260720-002](SPEC-20260720-002-duplicate-warning-ui.md) | Aviso de Duplicata no Formulário de Criação de Despesa | Aprovada |
+| [SPEC-20260807-004](SPEC-20260807-004-formulario-despesa-hint-combustivel.md) | Formulário de Despesa: Hint de Odômetro e Pré-preenchimento de Combustível | Draft |
 
 Implementação em `apps/api/src/modules/expenses/`, `apps/api/src/modules/recurring-costs/`, `apps/web/app/(dashboard)/expenses/`, `apps/web/app/(dashboard)/recurring-costs/`.
 

@@ -15,6 +15,10 @@ async function bootstrap(): Promise<void> {
   app.useLogger(app.get(Logger));
   const configService = app.get(ConfigService);
 
+  // @spec SPEC-20260807-002 RF-A01, RNF-05 — precede os demais middlewares para que req.ip
+  // resolva o IP real do cliente atrás de proxy/CDN em todos eles (inclui o ThrottlerGuard).
+  app.getHttpAdapter().getInstance().set("trust proxy", 1);
+
   app.use(helmet());
   app.use(cookieParser());
   app.enableCors({ origin: true, credentials: true });

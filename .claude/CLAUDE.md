@@ -187,6 +187,7 @@ Ao subir a versão de uma regra (`vN → vN+1`): registrar a linha de histórico
 
 | Agente              | Quando usar                                                                                                                                                   |
 | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `product-owner`     | Visão de produto, priorização e gestão de backlog — decidir o que entra/sai do escopo, consultar fluxos existentes e mercado para embasar a decisão, orientado a outcome |
 | `spec-writer`       | Criar ou atualizar especificações de features                                                                                                                 |
 | `impact-analyzer`   | Analisar impacto antes de mudanças significativas                                                                                                             |
 | `reviewer`          | Revisar código e specs antes de commitar                                                                                                                      |

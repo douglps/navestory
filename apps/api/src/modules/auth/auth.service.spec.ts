@@ -25,6 +25,7 @@ function createQueryBuilder(result: QueryResult) {
 }
 
 describe("AuthService", () => {
+  const securityContext = { ip: "127.0.0.1", userAgent: "jest" };
   const validSession = {
     access_token: "access-token",
     refresh_token: "refresh-token",
@@ -92,12 +93,15 @@ describe("AuthService", () => {
     it("cria conta e retorna sessão (STORY-REG-01)", async () => {
       const { service } = createService();
 
-      const session = await service.register({
-        name: "Ana",
-        email: "ana@example.com",
-        password: "abc12!",
-        profile_type: "autonomous",
-      });
+      const session = await service.register(
+        {
+          name: "Ana",
+          email: "ana@example.com",
+          password: "abc12!",
+          profile_type: "autonomous",
+        },
+        securityContext,
+      );
 
       expect(session.accessToken).toBe("access-token");
     });
@@ -111,7 +115,10 @@ describe("AuthService", () => {
       });
 
       await expect(
-        service.register({ name: "Ana", email: "ana@example.com", password: "abc12!", profile_type: "autonomous" }),
+        service.register(
+          { name: "Ana", email: "ana@example.com", password: "abc12!", profile_type: "autonomous" },
+          securityContext,
+        ),
       ).rejects.toBeInstanceOf(ConflictException);
     });
 
@@ -124,7 +131,10 @@ describe("AuthService", () => {
       });
 
       await expect(
-        service.register({ name: "Ana", email: "ana@example.com", password: "abc12!", profile_type: "autonomous" }),
+        service.register(
+          { name: "Ana", email: "ana@example.com", password: "abc12!", profile_type: "autonomous" },
+          securityContext,
+        ),
       ).rejects.toThrow("erro inesperado");
     });
 
@@ -134,7 +144,10 @@ describe("AuthService", () => {
       });
 
       await expect(
-        service.register({ name: "Ana", email: "ana@example.com", password: "abc12!", profile_type: "autonomous" }),
+        service.register(
+          { name: "Ana", email: "ana@example.com", password: "abc12!", profile_type: "autonomous" },
+          securityContext,
+        ),
       ).rejects.toThrow("Falha ao criar conta");
     });
 
@@ -144,7 +157,10 @@ describe("AuthService", () => {
       });
 
       await expect(
-        service.register({ name: "Ana", email: "ana@example.com", password: "abc12!", profile_type: "autonomous" }),
+        service.register(
+          { name: "Ana", email: "ana@example.com", password: "abc12!", profile_type: "autonomous" },
+          securityContext,
+        ),
       ).rejects.toThrow();
       expect(supabase.auth.admin.deleteUser).toHaveBeenCalledWith("user-1");
     });
@@ -158,12 +174,15 @@ describe("AuthService", () => {
         .mockResolvedValueOnce({ data: null, error: null })
         .mockResolvedValueOnce({ data: { id: "user-1" }, error: null });
 
-      const session = await service.register({
-        name: "Ana",
-        email: "ana@example.com",
-        password: "abc12!",
-        profile_type: "autonomous",
-      });
+      const session = await service.register(
+        {
+          name: "Ana",
+          email: "ana@example.com",
+          password: "abc12!",
+          profile_type: "autonomous",
+        },
+        securityContext,
+      );
 
       expect(session.accessToken).toBe("access-token");
       expect(profilesBuilder.maybeSingle).toHaveBeenCalledTimes(2);
@@ -178,7 +197,10 @@ describe("AuthService", () => {
       >;
 
       await expect(
-        service.register({ name: "Ana", email: "ana@example.com", password: "abc12!", profile_type: "autonomous" }),
+        service.register(
+          { name: "Ana", email: "ana@example.com", password: "abc12!", profile_type: "autonomous" },
+          securityContext,
+        ),
       ).rejects.toThrow("Falha ao consultar perfil da conta: JWT invalid");
       expect(profilesBuilder.maybeSingle).toHaveBeenCalledTimes(1);
     });
@@ -188,11 +210,14 @@ describe("AuthService", () => {
     it("autentica com credenciais válidas (STORY-01)", async () => {
       const { service } = createService();
 
-      const session = await service.login({
-        email: "ana@example.com",
-        password: "abc12!",
-        rememberMe: false,
-      });
+      const session = await service.login(
+        {
+          email: "ana@example.com",
+          password: "abc12!",
+          rememberMe: false,
+        },
+        securityContext,
+      );
 
       expect(session.accessToken).toBe("access-token");
     });
@@ -205,7 +230,10 @@ describe("AuthService", () => {
       });
 
       await expect(
-        service.login({ email: "ana@example.com", password: "errada", rememberMe: false }),
+        service.login(
+          { email: "ana@example.com", password: "errada", rememberMe: false },
+          securityContext,
+        ),
       ).rejects.toMatchObject({ message: "INVALID_CREDENTIALS" });
     });
 
@@ -219,7 +247,10 @@ describe("AuthService", () => {
       });
 
       await expect(
-        service.login({ email: "ana@example.com", password: "errada", rememberMe: false }),
+        service.login(
+          { email: "ana@example.com", password: "errada", rememberMe: false },
+          securityContext,
+        ),
       ).rejects.toBeInstanceOf(UnauthorizedException);
 
       // supabaseAdmin.from("auth_login_attempts") retorna o mesmo attemptsBuilder
@@ -236,7 +267,10 @@ describe("AuthService", () => {
     it("EC-10: login bem-sucedido zera o failed_count em auth_login_attempts (S4)", async () => {
       const { service, supabaseAdmin } = createService();
 
-      await service.login({ email: "ana@example.com", password: "abc12!", rememberMe: false });
+      await service.login(
+        { email: "ana@example.com", password: "abc12!", rememberMe: false },
+        securityContext,
+      );
 
       const attemptsBuilder = (supabaseAdmin as unknown as { from: jest.Mock }).from(
         "auth_login_attempts",
@@ -255,7 +289,10 @@ describe("AuthService", () => {
       });
 
       await expect(
-        service.login({ email: "ana@example.com", password: "x", rememberMe: false }),
+        service.login(
+          { email: "ana@example.com", password: "x", rememberMe: false },
+          securityContext,
+        ),
       ).rejects.toBeInstanceOf(ForbiddenException);
     });
   });

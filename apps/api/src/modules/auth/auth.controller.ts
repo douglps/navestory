@@ -20,6 +20,7 @@ import { Throttle } from "@nestjs/throttler";
 import type { Request, Response } from "express";
 import { ZodValidationPipe } from "../../common/pipes/zod-validation.pipe";
 import { SupabaseAuthGuard } from "../../common/guards/supabase-auth.guard";
+import { extractSecurityContext } from "../../common/security/security-context";
 import { AuthService, type AuthSession } from "./auth.service";
 import { loginDtoSchema, type LoginDto } from "./dto/login.dto";
 import {
@@ -31,6 +32,7 @@ import {
   resetPasswordDtoSchema,
   type ResetPasswordDto,
 } from "./dto/reset-password.dto";
+import { LOGIN_THROTTLE_LIMIT, LOGIN_THROTTLE_TTL_MS } from "./auth.constants";
 
 const REMEMBER_ME_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
 
@@ -75,16 +77,17 @@ export class AuthController {
   })
   async register(
     @Body() dto: RegisterDto,
+    @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ): Promise<{ data: { message: string } }> {
-    const session = await this.authService.register(dto);
+    const session = await this.authService.register(dto, extractSecurityContext(req));
     this.setSessionCookies(res, session);
     return { data: { message: "Conta criada com sucesso" } };
   }
 
   @Post("login")
   @HttpCode(HttpStatus.OK)
-  @Throttle({ default: { limit: 10, ttl: 900_000 } })
+  @Throttle({ default: { limit: LOGIN_THROTTLE_LIMIT, ttl: LOGIN_THROTTLE_TTL_MS } })
   @UsePipes(new ZodValidationPipe(loginDtoSchema))
   @ApiOperation({ summary: "Login com e-mail e senha" })
   @ApiBody({
@@ -113,9 +116,10 @@ export class AuthController {
   })
   async login(
     @Body() dto: LoginDto,
+    @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ): Promise<{ data: { message: string } }> {
-    const session = await this.authService.login(dto);
+    const session = await this.authService.login(dto, extractSecurityContext(req));
     this.setSessionCookies(res, session);
     return { data: { message: "Login realizado com sucesso" } };
   }

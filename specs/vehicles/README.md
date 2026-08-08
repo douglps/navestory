@@ -1,6 +1,6 @@
 # Specs — Veículos
 
-Regras: R5, R-VEH-01, R-VEH-02, R-DISP-01, R-DISP-02, R-DISP-03, R-ODO-03, R-ODO-04, R-ODO-05, R-ODO-06, R-HS-01 a R-HS-10
+Regras: R5, R-VEH-01, R-VEH-02, R-VEH-03, R-DISP-01, R-DISP-02, R-DISP-03, R-ODO-03, R-ODO-04, R-ODO-05, R-ODO-06, R-FORM-08, R-HS-01 a R-HS-10 | Segurança: S17
 
 | Spec | Título | Status |
 |------|--------|--------|
@@ -8,6 +8,7 @@ Regras: R5, R-VEH-01, R-VEH-02, R-DISP-01, R-DISP-02, R-DISP-03, R-ODO-03, R-ODO
 | [SPEC-20260603-003](SPEC-20260603-003-vehicle-display-preferences.md) | Preferências de Exibição do Veículo no Chip | Aprovada |
 | [SPEC-20260711-001](SPEC-20260711-001-odometer-cycles.md) | Ciclos de Odômetro | Aprovada |
 | [SPEC-20260730-001](SPEC-20260730-001-vehicle-health-score.md) | Score de Saúde de Veículo e Frota | Draft |
+| [SPEC-20260807-003](SPEC-20260807-003-integridade-edicao-dados-veiculo.md) | Integridade e Edição de Dados de Veículo | Draft |
 
 > SPEC-20260602-003 (Grupos de Veículos) foi reorganizada para [`specs/vehicle-groups/`](../vehicle-groups/). O arquivo `SPEC-20260602-003.md` nesta pasta é apenas um ponteiro redirect.
 

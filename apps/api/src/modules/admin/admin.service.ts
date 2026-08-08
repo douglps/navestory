@@ -1,5 +1,7 @@
 import { Injectable, NotFoundException, UnprocessableEntityException } from "@nestjs/common";
+import * as Sentry from "@sentry/nestjs";
 import { AuditService } from "../../shared/audit/audit.service";
+import type { SecurityContext } from "../../common/security/security-context";
 import { AdminSupabaseService } from "./admin-supabase.service";
 import type { ListAuditLogsQueryDto } from "./dto/list-audit-logs-query.dto";
 import type { ListUsersQueryDto } from "./dto/list-users-query.dto";
@@ -40,24 +42,48 @@ export class AdminService {
   /**
    * @spec SPEC-20260521-004 RF-08 — exclusão de conta de terceiro por admin (LGPD).
    */
-  async deleteUser(targetUserId: string, adminUserId: string): Promise<void> {
+  async deleteUser(
+    targetUserId: string,
+    adminUserId: string,
+    securityContext: SecurityContext,
+  ): Promise<void> {
     await this.adminSupabase.deleteUser(targetUserId);
 
+    // @spec SPEC-20260807-002 RF-A02 — valida S15
     void this.auditService.log({
       userId: adminUserId,
       action: "ADMIN_USER_DELETED",
       tableName: "profiles",
       recordId: targetUserId,
-      changes: { admin_id: adminUserId },
+      changes: {
+        admin_id: adminUserId,
+        ip: securityContext.ip,
+        user_agent: securityContext.userAgent,
+      },
     });
   }
 
   /**
    * @spec SPEC-20260731-008 RF-01 a RF-07 — promoção/rebaixamento de role de admin.
    */
-  async updateUserRole(targetUserId: string, adminUserId: string, role: "admin" | null) {
+  async updateUserRole(
+    targetUserId: string,
+    adminUserId: string,
+    role: "admin" | null,
+    securityContext: SecurityContext,
+  ) {
     // valida S14 — bloqueia auto-rebaixamento antes de qualquer chamada ao Supabase
     if (targetUserId === adminUserId && role === null) {
+      // @spec SPEC-20260807-002 RF-B03 — valida S16
+      Sentry.captureMessage("Tentativa de auto-rebaixamento de admin bloqueada (S14)", {
+        level: "warning",
+        tags: { security_event: true, scenario: "admin_self_demotion_attempt" },
+        extra: {
+          adminUserId,
+          targetUserId,
+          requestedRole: role,
+        },
+      });
       throw new UnprocessableEntityException("Admin não pode revogar o próprio role");
     }
 
@@ -73,12 +99,18 @@ export class AdminService {
 
     await this.adminSupabase.updateUserRole(targetUserId, role);
 
+    // @spec SPEC-20260807-002 RF-A02 — valida S15
     void this.auditService.log({
       userId: adminUserId,
       action: role === "admin" ? "ADMIN_ROLE_GRANTED" : "ADMIN_ROLE_REVOKED",
       tableName: "auth.users",
       recordId: targetUserId,
-      changes: { role_before: roleBefore, role_after: role },
+      changes: {
+        role_before: roleBefore,
+        role_after: role,
+        ip: securityContext.ip,
+        user_agent: securityContext.userAgent,
+      },
     });
 
     return { data: { id: targetUserId, role } };

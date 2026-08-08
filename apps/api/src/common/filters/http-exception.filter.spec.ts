@@ -2,21 +2,27 @@ import {
   ArgumentsHost,
   BadRequestException,
   ForbiddenException,
+  HttpException,
+  HttpStatus,
   InternalServerErrorException,
   Logger,
 } from "@nestjs/common";
 import * as Sentry from "@sentry/nestjs";
 import { HttpExceptionFilter } from "./http-exception.filter";
 
-jest.mock("@sentry/nestjs", () => ({ captureException: jest.fn() }));
+jest.mock("@sentry/nestjs", () => ({ captureException: jest.fn(), captureMessage: jest.fn() }));
 
-function createHost(): { host: ArgumentsHost; json: jest.Mock; status: jest.Mock } {
+function createHost(request?: Record<string, unknown>): {
+  host: ArgumentsHost;
+  json: jest.Mock;
+  status: jest.Mock;
+} {
   const json = jest.fn();
   const status = jest.fn().mockReturnValue({ json });
   const host = {
     switchToHttp: () => ({
       getResponse: () => ({ status }),
-      getRequest: () => ({}),
+      getRequest: () => request ?? {},
     }),
   } as unknown as ArgumentsHost;
   return { host, json, status };
@@ -151,5 +157,33 @@ describe("HttpExceptionFilter", () => {
     filter.catch(new Error("detalhe de debug"), host);
 
     expect(json).toHaveBeenCalledWith(expect.objectContaining({ message: "detalhe de debug" }));
+  });
+
+  // @spec SPEC-20260807-002 RF-B02 — valida S16
+  it("emite Sentry.captureMessage warning quando 429 ocorre em /auth/login (RF-B02)", () => {
+    const filter = new HttpExceptionFilter();
+    const { host } = createHost({ path: "/auth/login", ip: "203.0.113.9" });
+    const exception = new HttpException("Too many requests", HttpStatus.TOO_MANY_REQUESTS);
+
+    filter.catch(exception, host);
+
+    expect(Sentry.captureMessage).toHaveBeenCalledWith(
+      "Rate limit de login atingido: possível força bruta",
+      expect.objectContaining({
+        level: "warning",
+        tags: { security_event: true, scenario: "brute_force_login" },
+        extra: expect.objectContaining({ ip: "203.0.113.9", endpoint: "/auth/login" }),
+      }),
+    );
+  });
+
+  it("não emite Sentry.captureMessage para 429 em outra rota", () => {
+    const filter = new HttpExceptionFilter();
+    const { host } = createHost({ path: "/auth/register", ip: "203.0.113.9" });
+    const exception = new HttpException("Too many requests", HttpStatus.TOO_MANY_REQUESTS);
+
+    filter.catch(exception, host);
+
+    expect(Sentry.captureMessage).not.toHaveBeenCalled();
   });
 });

@@ -12,7 +12,8 @@
     "test:coverage": "jest --coverage",
     "test:integration": "jest --config test/integration/jest-integration.config.js",
     "seed:e2e": "node scripts/seed-e2e.mjs",
-    "seed:random": "node scripts/seed-random-data.mjs"
+    "seed:random": "node scripts/seed-random-data.mjs",
+    "create:admin": "node scripts/create-admin.mjs"
   },
   "dependencies": {
     "@navestory/validators": "workspace:*",

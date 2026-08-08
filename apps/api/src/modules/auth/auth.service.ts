@@ -10,6 +10,7 @@ import { ConfigService } from "@nestjs/config";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { SUPABASE_ADMIN_CLIENT, SUPABASE_CLIENT } from "../../shared/supabase/supabase.constants";
 import { AuditService } from "../../shared/audit/audit.service";
+import type { SecurityContext } from "../../common/security/security-context";
 import type { LoginDto } from "./dto/login.dto";
 import type { RecoverPasswordDto } from "./dto/recover-password.dto";
 import type { RegisterDto } from "./dto/register.dto";
@@ -40,7 +41,7 @@ export class AuthService {
   /**
    * @spec SPEC-20260524-001 STORY-REG-01
    */
-  async register(dto: RegisterDto): Promise<AuthSession> {
+  async register(dto: RegisterDto, securityContext: SecurityContext): Promise<AuthSession> {
     const { data, error } = await this.supabase.auth.signUp({
       email: dto.email,
       password: dto.password,
@@ -70,11 +71,13 @@ export class AuthService {
       throw new InternalServerErrorException("Falha ao criar perfil da conta");
     }
 
+    // @spec SPEC-20260807-002 RF-A02 — valida S15
     void this.auditService.log({
       userId: data.user.id,
       action: "REGISTER",
       tableName: "auth",
       recordId: data.user.id,
+      changes: { ip: securityContext.ip, user_agent: securityContext.userAgent },
     });
 
     return this.toAuthSession(data.session, false);
@@ -83,7 +86,7 @@ export class AuthService {
   /**
    * @spec SPEC-20260524-001 STORY-01, STORY-02, STORY-03
    */
-  async login(dto: LoginDto): Promise<AuthSession> {
+  async login(dto: LoginDto, securityContext: SecurityContext): Promise<AuthSession> {
     const attempt = await this.getLoginAttempt(dto.email);
     if (attempt?.locked_until && new Date(attempt.locked_until) > new Date()) {
       throw new ForbiddenException(
@@ -103,11 +106,13 @@ export class AuthService {
 
     await this.resetLoginAttempts(dto.email);
 
+    // @spec SPEC-20260807-002 RF-A02 — valida S15
     void this.auditService.log({
       userId: data.user.id,
       action: "LOGIN",
       tableName: "auth",
       recordId: data.user.id,
+      changes: { ip: securityContext.ip, user_agent: securityContext.userAgent },
     });
 
     return this.toAuthSession(data.session, dto.rememberMe);

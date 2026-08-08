@@ -7,7 +7,11 @@ import {
   Logger,
 } from "@nestjs/common";
 import * as Sentry from "@sentry/nestjs";
-import type { Response } from "express";
+import type { Request, Response } from "express";
+import {
+  LOGIN_THROTTLE_LIMIT,
+  LOGIN_THROTTLE_TTL_MS,
+} from "../../modules/auth/auth.constants";
 
 interface ErrorResponseBody {
   statusCode: number;
@@ -28,11 +32,26 @@ export class HttpExceptionFilter implements ExceptionFilter {
   catch(exception: unknown, host: ArgumentsHost): void {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
+    const request = ctx.getRequest<Request>();
 
     const isHttpException = exception instanceof HttpException;
     const statusCode = isHttpException
       ? exception.getStatus()
       : HttpStatus.INTERNAL_SERVER_ERROR;
+
+    // @spec SPEC-20260807-002 RF-B02 — valida S16
+    if (statusCode === HttpStatus.TOO_MANY_REQUESTS && request.path === "/auth/login") {
+      Sentry.captureMessage("Rate limit de login atingido: possível força bruta", {
+        level: "warning",
+        tags: { security_event: true, scenario: "brute_force_login" },
+        extra: {
+          ip: request.ip,
+          endpoint: "/auth/login",
+          throttle_limit: LOGIN_THROTTLE_LIMIT,
+          window_ms: LOGIN_THROTTLE_TTL_MS,
+        },
+      });
+    }
 
     const isProduction = process.env.NODE_ENV === "production";
     const genericMessage = "Erro interno do servidor";

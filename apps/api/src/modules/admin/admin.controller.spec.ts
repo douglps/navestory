@@ -1,6 +1,10 @@
 import { AdminController } from "./admin.controller";
 import type { AdminService } from "./admin.service";
 
+function createRequestMock() {
+  return { ip: "127.0.0.1", headers: { "user-agent": "jest" } } as never;
+}
+
 describe("AdminController", () => {
   function createController(overrides?: Partial<AdminService>) {
     const adminService = {
@@ -36,24 +40,48 @@ describe("AdminController", () => {
   it("deleteUser exclui a conta de um terceiro (RF-08, LGPD)", async () => {
     const { controller, adminService } = createController();
 
-    await controller.deleteUser("target-user", "admin-user");
+    await controller.deleteUser("target-user", "admin-user", createRequestMock());
 
-    expect(adminService.deleteUser).toHaveBeenCalledWith("target-user", "admin-user");
+    expect(adminService.deleteUser).toHaveBeenCalledWith(
+      "target-user",
+      "admin-user",
+      expect.objectContaining({ ip: "127.0.0.1" }),
+    );
   });
 
   it("updateUserRole delega para o service com id, adminUserId e role (RF-01)", async () => {
     const { controller, adminService } = createController();
 
-    await controller.updateUserRole("target-user", { role: "admin" }, "admin-user");
+    await controller.updateUserRole(
+      "target-user",
+      { role: "admin" },
+      "admin-user",
+      createRequestMock(),
+    );
 
-    expect(adminService.updateUserRole).toHaveBeenCalledWith("target-user", "admin-user", "admin");
+    expect(adminService.updateUserRole).toHaveBeenCalledWith(
+      "target-user",
+      "admin-user",
+      "admin",
+      expect.objectContaining({ ip: "127.0.0.1" }),
+    );
   });
 
   it("updateUserRole aceita role null para revogação (RF-01)", async () => {
     const { controller, adminService } = createController();
 
-    await controller.updateUserRole("target-user", { role: null }, "admin-user");
+    await controller.updateUserRole(
+      "target-user",
+      { role: null },
+      "admin-user",
+      createRequestMock(),
+    );
 
-    expect(adminService.updateUserRole).toHaveBeenCalledWith("target-user", "admin-user", null);
+    expect(adminService.updateUserRole).toHaveBeenCalledWith(
+      "target-user",
+      "admin-user",
+      null,
+      expect.objectContaining({ ip: "127.0.0.1" }),
+    );
   });
 });

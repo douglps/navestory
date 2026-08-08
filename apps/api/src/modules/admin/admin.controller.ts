@@ -8,15 +8,18 @@ import {
   Param,
   Patch,
   Query,
+  Req,
   UseGuards,
   UsePipes,
 } from "@nestjs/common";
 import { ApiBearerAuth, ApiOperation, ApiQuery, ApiResponse, ApiTags } from "@nestjs/swagger";
+import type { Request } from "express";
 import { Roles } from "../../common/decorators/roles.decorator";
 import { UserId } from "../../common/decorators/user-id.decorator";
 import { RolesGuard } from "../../common/guards/roles.guard";
 import { SupabaseAuthGuard } from "../../common/guards/supabase-auth.guard";
 import { ZodValidationPipe } from "../../common/pipes/zod-validation.pipe";
+import { extractSecurityContext } from "../../common/security/security-context";
 import { AdminService } from "./admin.service";
 import { listAuditLogsQueryDtoSchema } from "./dto/list-audit-logs-query.dto";
 import { listUsersQueryDtoSchema } from "./dto/list-users-query.dto";
@@ -43,7 +46,7 @@ export class AdminController {
   @ApiResponse({ status: 403, description: "Usuário autenticado não é admin" })
   async listUsers(@Query() query: unknown) {
     const parsed = listUsersQueryDtoSchema.parse(query);
-    return this.adminService.listUsers(parsed);
+    return { data: await this.adminService.listUsers(parsed) };
   }
 
   @Get("audit-logs")
@@ -57,7 +60,7 @@ export class AdminController {
   @ApiResponse({ status: 403, description: "Usuário autenticado não é admin" })
   async listAuditLogs(@Query() query: unknown) {
     const parsed = listAuditLogsQueryDtoSchema.parse(query);
-    return this.adminService.listAuditLogs(parsed);
+    return { data: await this.adminService.listAuditLogs(parsed) };
   }
 
   @Patch("users/:id/role")
@@ -72,8 +75,14 @@ export class AdminController {
     @Param("id") id: string,
     @Body() dto: UpdateUserRoleDto,
     @UserId() adminUserId: string,
+    @Req() req: Request,
   ) {
-    return this.adminService.updateUserRole(id, adminUserId, dto.role);
+    return this.adminService.updateUserRole(
+      id,
+      adminUserId,
+      dto.role,
+      extractSecurityContext(req),
+    );
   }
 
   @Delete("users/:id")
@@ -82,7 +91,11 @@ export class AdminController {
   @ApiResponse({ status: 204, description: "Conta excluída" })
   @ApiResponse({ status: 403, description: "Usuário autenticado não é admin" })
   @ApiResponse({ status: 404, description: "Usuário não encontrado" })
-  async deleteUser(@Param("id") id: string, @UserId() adminUserId: string): Promise<void> {
-    await this.adminService.deleteUser(id, adminUserId);
+  async deleteUser(
+    @Param("id") id: string,
+    @UserId() adminUserId: string,
+    @Req() req: Request,
+  ): Promise<void> {
+    await this.adminService.deleteUser(id, adminUserId, extractSecurityContext(req));
   }
 }

@@ -11,6 +11,10 @@ function createResponseMock(): Response {
   return res as Response;
 }
 
+function createRequestMock() {
+  return { ip: "127.0.0.1", headers: { "user-agent": "jest" } };
+}
+
 describe("AuthController", () => {
   const session = {
     accessToken: "access-token",
@@ -44,6 +48,7 @@ describe("AuthController", () => {
         password: "abc12!",
         profile_type: "autonomous",
       },
+      createRequestMock() as never,
       res,
     );
 
@@ -60,6 +65,7 @@ describe("AuthController", () => {
 
     const result = await controller.login(
       { email: "ana@example.com", password: "abc12!", rememberMe: false },
+      createRequestMock() as never,
       res,
     );
 
@@ -114,6 +120,7 @@ describe("AuthController", () => {
 
     await controller.login(
       { email: "ana@example.com", password: "abc12!", rememberMe: true },
+      createRequestMock() as never,
       res,
     );
 

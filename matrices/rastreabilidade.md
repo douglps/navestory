@@ -275,6 +275,25 @@
 >   linha 79 (linha longa, omitida por ferramentas de busca com limite de caracteres — confirmado
 >   por leitura direta). Nenhuma regra de frontmatter sem par em RULES.md encontrada nesta auditoria.
 
+> **ATUALIZAÇÃO — 2026-08-07 — SPEC-20260807-003 e SPEC-20260807-004 criadas (draft): lacunas de UX de veículos e despesas**
+> Auditoria comparativa de UX contra o projeto Nave-SaaS-main identificou seis lacunas priorizadas como
+> "ciclo imediato" (afetam integridade de dado hoje). As lacunas foram consolidadas em duas specs novas:
+>
+> - `specs/vehicles/SPEC-20260807-003-integridade-edicao-dados-veiculo.md` — edição completa de veículo
+>   (RF-01/02: expansão de `updateVehicleInputSchema`), máscara de placa no frontend (RF-03/04),
+>   normalização de `make`/`model` para uppercase+trim (RF-05, nova regra R-VEH-03), confirmação de
+>   exclusão por digitação da placa via `AlertDialog` (RF-06/07, nova regra S17 — substituição de
+>   `window.confirm`), e exibição simultânea de todos os erros de validação por campo (RF-08, nova
+>   regra R-FORM-08).
+> - `specs/expenses/SPEC-20260807-004-formulario-despesa-hint-combustivel.md` — hint de último
+>   odômetro registrado no formulário de despesa via `getOdometerHintAction` (RF-01–04, nova regra
+>   R-ODO-07) e pré-preenchimento de tipo de combustível favorito conforme R-FUEL-07 já existente
+>   (RF-05–09, implementação pendente desde SPEC-20260619-001).
+>
+> Quatro regras novas adicionadas a `specs/RULES.md`: R-VEH-03, R-FORM-08, S17, R-ODO-07 (com
+> entradas de histórico v1 em cada uma). Entradas de matriz para ambas as specs adicionadas acima
+> de "Requisitos do PRD sem Spec", todas com status ⏳ Pendente. Nenhum código implementado.
+
 ---
 
 ## Legenda de Status
@@ -3482,6 +3501,88 @@ RNF-04 (foco preso no drawer + retorno ao hamburger ao fechar) implementado em `
 | RF-18 | `KpiCard`: largura responsiva via grid (remover `min-w`/`max-w` fixos)    | ✅ `packages/ui/src/components/kpi-card.tsx`, `DashboardKpiGrid.tsx` | ✅ `kpi-card.test.tsx` (pré-existente, sem assert em `min-w`/`max-w`) | ✅ |
 | RF-19 | Token `--surface-selected` em `globals.css`                               | ✅ `apps/web/src/app/globals.css` (`.surface-selected`), `VehicleHealthCard.tsx`, `VehicleSpotlight.tsx` | — (verificação manual) | ✅ |
 | RF-20 | Padronização `glass-card` vs `bg-card` entre cards do dashboard           | ✅ `UpcomingCostsWidget.tsx` (migrado para `bg-card`, único caso divergente) | — (verificação manual) | ✅ |
+
+---
+
+## SPEC-20260807-001 — Audit Log — Cobertura, Taxonomia e Política de Retenção (draft)
+
+> Spec em `specs/security/SPEC-20260807-001-audit-log-cobertura-taxonomia-retencao.md`. Estende a
+> cobertura de `AuditService.log()` para módulos hoje sem registro (vehicle-groups, categories,
+> expense-templates, preferences, softDeleteBySource em expenses) e para eventos de auth
+> (LOGOUT, PASSWORD_RESET). Corrige violação de taxonomia em fleet-settings.service.ts
+> (lowercase → SCREAMING_SNAKE_CASE, R-MON-05). Implementa política de retenção em duas camadas:
+> quente 0–90 dias (tabela audit_logs), fria 90 dias–5 anos (bucket audit-logs-archive, pg_cron),
+> expurgo literal após 5 anos (C3).
+>
+> **Status:** Spec em draft — aguarda revisão de Douglas antes de implementação. Nenhum código
+> implementado ainda.
+
+| RF    | Requisito                                                                                              | Código              | Teste               | Status  |
+| ----- | ------------------------------------------------------------------------------------------------------ | ------------------- | ------------------- | ------- |
+| RF-01 | Cobertura: LOGOUT e PASSWORD_RESET em auth.service.ts                                                  | ⏳ Pendente          | ⏳ Pendente          | ⏳       |
+| RF-02 | Cobertura: create/update/remove/setMembers em vehicle-groups.service.ts                                | ⏳ Pendente          | ⏳ Pendente          | ⏳       |
+| RF-03 | Cobertura: updateProfile (users) e updateMyProfile (fleet-settings)                                    | ⏳ Pendente          | ⏳ Pendente          | ⏳       |
+| RF-04 | Cobertura: softDeleteBySource em expenses.service.ts (cascade_from)                                    | ⏳ Pendente          | ⏳ Pendente          | ⏳       |
+| RF-05 | Cobertura: categories (create/remove), expense-templates (create/update/remove), preferences (upsert)  | ⏳ Pendente          | ⏳ Pendente          | ⏳       |
+| RF-06 | Correção de taxonomia: fleet_settings_updated → FLEET_SETTINGS_UPDATED (R-MON-05)                     | ⏳ Pendente          | ⏳ Pendente          | ⏳       |
+| RF-07 | Campo description recomendado em changes para eventos não autoexplicativos                             | ⏳ Pendente          | — (orientação, sem CT dedicado) | ⏳ |
+| RF-08 | Política de retenção: job de arquivamento (0–90d quente / 90d–5a fria) + job de expurgo (5a+)         | ⏳ Pendente          | ⏳ Pendente          | ⏳       |
+
+---
+
+## SPEC-20260807-002 — Eventos de Segurança: IP/User-Agent e Tentativas Negadas (approved)
+
+> Spec em `specs/security/SPEC-20260807-002-eventos-seguranca-ip-tentativas-negadas.md`. Fecha duas lacunas deixadas fora de escopo em specs anteriores: (1) captura de `ip` e `user_agent` em eventos de alto risco de auth e admin no `audit_logs`, com retenção diferenciada de 12 meses (S15, extensão do job RF-08 de SPEC-20260807-001); (2) promoção de tentativas de acesso negado de alto risco (acesso admin sem role, brute force de login, auto-rebaixamento de admin) a eventos `Sentry.captureMessage()` com nível `warning` (S16, extensão de SPEC-20260716-002). Pré-requisito de código: `trust proxy` em `main.ts`. Bloco C registra pendência operacional de log aggregation/shipping (já em `important/PENDENCIAS-E-PROCESSOS.md`).
+>
+> **Status:** Aprovada e implementada em 2026-08-07. Ressalvas: CA-A04 (LOGOUT/PASSWORD_RESET) e CA-A08 (arquivamento hot/cold) dependem de SPEC-20260807-001 RF-01/RF-08, ainda sem código — ver changelog da spec.
+
+| RF      | Requisito                                                                                                      | Código      | Teste       | Status |
+| ------- | -------------------------------------------------------------------------------------------------------------- | ----------- | ----------- | ------ |
+| RF-A01  | `trust proxy` configurado em `main.ts` (pré-requisito para `req.ip` correto)                                  | `apps/api/src/main.ts` | — | ✅      |
+| RF-A02  | IP e `user_agent` adicionados a `changes` de LOGIN, REGISTER, ADMIN_ROLE_* e ADMIN_USER_DELETED (LOGOUT/PASSWORD_RESET pendentes de SPEC-001 RF-01) | `apps/api/src/common/security/security-context.ts`, `apps/api/src/modules/auth/auth.controller.ts`, `apps/api/src/modules/auth/auth.service.ts`, `apps/api/src/modules/admin/admin.controller.ts`, `apps/api/src/modules/admin/admin.service.ts` | `apps/api/src/modules/auth/auth.service.spec.ts`, `apps/api/src/modules/auth/auth.controller.spec.ts`, `apps/api/src/modules/admin/admin.service.spec.ts`, `apps/api/src/modules/admin/admin.controller.spec.ts` | ✅ (parcial — CA-A04 pendente) |
+| RF-A03  | Job de expurgo de IP/UA: remoção de `ip`/`user_agent` do JSONB após 12 meses (job mínimo autocontido, não o arquivamento completo de SPEC-20260807-001 RF-08) | `supabase/migrations/20260807120000_audit_log_ip_ua_retention_job.sql` | — (SQL, sem harness de teste de migration no projeto) | ✅ (parcial — CA-A08 pendente) |
+| RF-B01  | `RolesGuard` emite `Sentry.captureMessage(warning)` ao negar acesso a rota `@Roles("admin")`                  | `apps/api/src/common/guards/roles.guard.ts` | `apps/api/src/common/guards/roles.guard.spec.ts` | ✅      |
+| RF-B02  | ThrottlerGuard/filtro emite `Sentry.captureMessage(warning)` ao atingir rate limit de `/auth/login`           | `apps/api/src/common/filters/http-exception.filter.ts`, `apps/api/src/modules/auth/auth.constants.ts` | `apps/api/src/common/filters/http-exception.filter.spec.ts` | ✅      |
+| RF-B03  | `admin.service.ts` emite `Sentry.captureMessage(warning)` antes de lançar 422 de auto-rebaixamento (S14)      | `apps/api/src/modules/admin/admin.service.ts` | `apps/api/src/modules/admin/admin.service.spec.ts` | ✅      |
+
+---
+
+## SPEC-20260807-003 — Integridade e Edição de Dados de Veículo (draft)
+
+> Spec em `specs/vehicles/SPEC-20260807-003-integridade-edicao-dados-veiculo.md`. Fecha cinco lacunas de integridade e UX no domínio de veículos identificadas em auditoria comparativa (2026-08-07): (1) edição completa de veículo — `updateVehicleInputSchema` expandido além de `nickname`/`color`; (2) máscara de placa no frontend com detecção de formato BR e Mercosul; (3) normalização de `make`/`model` para uppercase+trim antes de persistir (R-VEH-03); (4) confirmação de exclusão por digitação da placa via `AlertDialog` (S17 — substituição de `window.confirm`); (5) exibição simultânea de todos os erros de validação por campo (R-FORM-08).
+>
+> **Status:** Spec em draft — aguarda revisão de Douglas antes de implementação. Nenhum código implementado ainda.
+
+| RF    | Requisito                                                                                              | Código              | Teste               | Status  |
+| ----- | ------------------------------------------------------------------------------------------------------ | ------------------- | ------------------- | ------- |
+| RF-01 | Rota `/vehicles/[id]/edit` com formulário completo (todos os campos editáveis)                         | ⏳ Pendente          | ⏳ Pendente          | ⏳       |
+| RF-02 | `updateVehicleInputSchema` expandido; normalização R-VEH-02 e R-VEH-03 aplicadas                      | ⏳ Pendente          | ⏳ Pendente          | ⏳       |
+| RF-03 | Máscara automática de placa no input (BR e Mercosul) — somente visual, backend normaliza              | ⏳ Pendente          | ⏳ Pendente          | ⏳       |
+| RF-04 | Erro inline de placa inválida no campo antes do submit (validação onBlur)                              | ⏳ Pendente          | ⏳ Pendente          | ⏳       |
+| RF-05 | Normalização uppercase+trim de `make` e `model` na server action de criação e atualização             | ⏳ Pendente          | ⏳ Pendente          | ⏳       |
+| RF-06 | AlertDialog com campo de digitação da placa para confirmar exclusão (S17)                             | ⏳ Pendente          | ⏳ Pendente          | ⏳       |
+| RF-07 | Server action de exclusão valida `confirmationPlate` antes de executar soft-delete                    | ⏳ Pendente          | ⏳ Pendente          | ⏳       |
+| RF-08 | Todos os formulários de veículo exibem erros de validação simultâneos por campo (R-FORM-08)           | ⏳ Pendente          | ⏳ Pendente          | ⏳       |
+
+---
+
+## SPEC-20260807-004 — Formulário de Despesa: Hint de Odômetro e Pré-preenchimento de Combustível (draft)
+
+> Spec em `specs/expenses/SPEC-20260807-004-formulario-despesa-hint-combustivel.md`. Implementa dois aprimoramentos de UX no formulário de nova despesa: (1) hint textual do último odômetro registrado para o veículo selecionado via `getOdometerHintAction` (R-ODO-07 — novo); (2) pré-preenchimento do tipo de combustível favorito do veículo conforme R-FUEL-07 (regra já definida em SPEC-20260619-001, ainda não implementada). Referência de implementação: `expense-form.tsx` do projeto Nave-SaaS-main.
+>
+> **Status:** Spec em draft — aguarda revisão de Douglas antes de implementação. Nenhum código implementado ainda.
+
+| RF    | Requisito                                                                                              | Código              | Teste               | Status  |
+| ----- | ------------------------------------------------------------------------------------------------------ | ------------------- | ------------------- | ------- |
+| RF-01 | Server action `getOdometerHintAction(vehicleId)` — retorna MAX(odometer_km) de expenses + maintenances | ⏳ Pendente         | ⏳ Pendente          | ⏳       |
+| RF-02 | Hint textual "Último registrado: N.NNN km" abaixo do campo `odometer_km` ao selecionar veículo        | ⏳ Pendente          | ⏳ Pendente          | ⏳       |
+| RF-03 | Campo `odometer_km` permanece vazio por padrão (hint é referência, não pre-fill)                       | ⏳ Pendente          | ⏳ Pendente          | ⏳       |
+| RF-04 | Hint atualizado ao trocar veículo selecionado; removido ao desmarcar veículo                           | ⏳ Pendente          | ⏳ Pendente          | ⏳       |
+| RF-05 | Server action `getFavoriteFuelTypeAction(vehicleId)` — retorna `vehicles.favorite_fuel_type`           | ⏳ Pendente          | ⏳ Pendente          | ⏳       |
+| RF-06 | Pré-preenchimento de Tipo de Combustível com `favorite_fuel_type` ao selecionar veículo (categoria fuel) | ⏳ Pendente        | ⏳ Pendente          | ⏳       |
+| RF-07 | Prioridade R-FUEL-07 respeitada: favorite_fuel_type > template > vazio                                 | ⏳ Pendente          | ⏳ Pendente          | ⏳       |
+| RF-08 | Pré-preenchimento não sobrescreve edição manual prévia do usuário (R-FUEL-08)                          | ⏳ Pendente          | ⏳ Pendente          | ⏳       |
+| RF-09 | Ambas as actions são fire-and-forget: erros silenciados, formulário não é bloqueado                    | ⏳ Pendente          | ⏳ Pendente          | ⏳       |
 
 ---
 

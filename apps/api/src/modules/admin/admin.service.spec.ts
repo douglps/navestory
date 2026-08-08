@@ -1,8 +1,14 @@
+import * as Sentry from "@sentry/nestjs";
 import type { AuditService } from "../../shared/audit/audit.service";
+import type { SecurityContext } from "../../common/security/security-context";
 import { AdminService } from "./admin.service";
 import type { AdminSupabaseService } from "./admin-supabase.service";
 
+jest.mock("@sentry/nestjs", () => ({ captureMessage: jest.fn() }));
+
 describe("AdminService", () => {
+  const securityContext: SecurityContext = { ip: "127.0.0.1", userAgent: "jest" };
+
   it("listUsers delega para AdminSupabaseService e monta meta de paginação (RF-06)", async () => {
     const adminSupabase = {
       listUsers: jest.fn().mockResolvedValue({ users: [{ id: "u1" }], total: 1 }),
@@ -42,7 +48,7 @@ describe("AdminService", () => {
     const auditService = { log: jest.fn() } as unknown as AuditService;
     const service = new AdminService(adminSupabase, auditService);
 
-    await service.deleteUser("target-user", "admin-user");
+    await service.deleteUser("target-user", "admin-user", securityContext);
 
     expect(adminSupabase.deleteUser).toHaveBeenCalledWith("target-user");
     expect(auditService.log).toHaveBeenCalledWith(
@@ -50,7 +56,7 @@ describe("AdminService", () => {
         userId: "admin-user",
         action: "ADMIN_USER_DELETED",
         recordId: "target-user",
-        changes: { admin_id: "admin-user" },
+        changes: { admin_id: "admin-user", ip: "127.0.0.1", user_agent: "jest" },
       }),
     );
   });
@@ -64,7 +70,12 @@ describe("AdminService", () => {
       const auditService = { log: jest.fn() } as unknown as AuditService;
       const service = new AdminService(adminSupabase, auditService);
 
-      const result = await service.updateUserRole("target-user", "admin-user", "admin");
+      const result = await service.updateUserRole(
+        "target-user",
+        "admin-user",
+        "admin",
+        securityContext,
+      );
 
       expect(adminSupabase.updateUserRole).toHaveBeenCalledWith("target-user", "admin");
       expect(auditService.log).toHaveBeenCalledWith(
@@ -73,7 +84,12 @@ describe("AdminService", () => {
           action: "ADMIN_ROLE_GRANTED",
           tableName: "auth.users",
           recordId: "target-user",
-          changes: { role_before: null, role_after: "admin" },
+          changes: {
+            role_before: null,
+            role_after: "admin",
+            ip: "127.0.0.1",
+            user_agent: "jest",
+          },
         }),
       );
       expect(result).toEqual({ data: { id: "target-user", role: "admin" } });
@@ -87,13 +103,18 @@ describe("AdminService", () => {
       const auditService = { log: jest.fn() } as unknown as AuditService;
       const service = new AdminService(adminSupabase, auditService);
 
-      await service.updateUserRole("target-user", "admin-user", null);
+      await service.updateUserRole("target-user", "admin-user", null, securityContext);
 
       expect(adminSupabase.updateUserRole).toHaveBeenCalledWith("target-user", null);
       expect(auditService.log).toHaveBeenCalledWith(
         expect.objectContaining({
           action: "ADMIN_ROLE_REVOKED",
-          changes: { role_before: "admin", role_after: null },
+          changes: {
+            role_before: "admin",
+            role_after: null,
+            ip: "127.0.0.1",
+            user_agent: "jest",
+          },
         }),
       );
     });
@@ -107,12 +128,35 @@ describe("AdminService", () => {
       const auditService = { log: jest.fn() } as unknown as AuditService;
       const service = new AdminService(adminSupabase, auditService);
 
-      await expect(service.updateUserRole("admin-user", "admin-user", null)).rejects.toThrow(
-        "Admin não pode revogar o próprio role",
-      );
+      await expect(
+        service.updateUserRole("admin-user", "admin-user", null, securityContext),
+      ).rejects.toThrow("Admin não pode revogar o próprio role");
       expect(adminSupabase.getUserById).not.toHaveBeenCalled();
       expect(adminSupabase.updateUserRole).not.toHaveBeenCalled();
       expect(auditService.log).not.toHaveBeenCalled();
+    });
+
+    // @spec SPEC-20260807-002 RF-B03 — valida S16
+    it("emite Sentry.captureMessage warning ao bloquear auto-rebaixamento (RF-B03)", async () => {
+      const adminSupabase = {
+        getUserById: jest.fn(),
+        updateUserRole: jest.fn(),
+      } as unknown as AdminSupabaseService;
+      const auditService = { log: jest.fn() } as unknown as AuditService;
+      const service = new AdminService(adminSupabase, auditService);
+
+      await expect(
+        service.updateUserRole("admin-user", "admin-user", null, securityContext),
+      ).rejects.toThrow();
+
+      expect(Sentry.captureMessage).toHaveBeenCalledWith(
+        "Tentativa de auto-rebaixamento de admin bloqueada (S14)",
+        expect.objectContaining({
+          level: "warning",
+          tags: { security_event: true, scenario: "admin_self_demotion_attempt" },
+          extra: expect.objectContaining({ adminUserId: "admin-user", targetUserId: "admin-user" }),
+        }),
+      );
     });
 
     it("admin promove a si mesmo para admin novamente sem 422 (auto-promoção permitida)", async () => {
@@ -124,7 +168,7 @@ describe("AdminService", () => {
       const service = new AdminService(adminSupabase, auditService);
 
       await expect(
-        service.updateUserRole("admin-user", "admin-user", "admin"),
+        service.updateUserRole("admin-user", "admin-user", "admin", securityContext),
       ).resolves.toEqual({ data: { id: "admin-user", role: "admin" } });
     });
 
@@ -136,9 +180,9 @@ describe("AdminService", () => {
       const auditService = { log: jest.fn() } as unknown as AuditService;
       const service = new AdminService(adminSupabase, auditService);
 
-      await expect(service.updateUserRole("missing-user", "admin-user", "admin")).rejects.toThrow(
-        "Usuário não encontrado",
-      );
+      await expect(
+        service.updateUserRole("missing-user", "admin-user", "admin", securityContext),
+      ).rejects.toThrow("Usuário não encontrado");
       expect(adminSupabase.updateUserRole).not.toHaveBeenCalled();
     });
 
@@ -150,7 +194,7 @@ describe("AdminService", () => {
       const auditService = { log: jest.fn() } as unknown as AuditService;
       const service = new AdminService(adminSupabase, auditService);
 
-      await service.updateUserRole("target-user", "admin-user", "admin");
+      await service.updateUserRole("target-user", "admin-user", "admin", securityContext);
 
       expect(adminSupabase.updateUserRole).not.toHaveBeenCalled();
       expect(auditService.log).not.toHaveBeenCalled();
@@ -166,7 +210,7 @@ describe("AdminService", () => {
       const auditService = { log: jest.fn() } as unknown as AuditService;
       const service = new AdminService(adminSupabase, auditService);
 
-      await service.deleteUser("target-user", "admin-user");
+      await service.deleteUser("target-user", "admin-user", securityContext);
 
       // deleteUser recebe apenas o userId — sem objeto de payload contendo deleted_at
       expect(adminSupabase.deleteUser).toHaveBeenCalledWith("target-user");

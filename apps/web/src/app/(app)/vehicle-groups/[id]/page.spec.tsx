@@ -70,12 +70,18 @@ describe("VehicleGroupDetailPage", () => {
     );
   });
 
-  it("remove o grupo após confirmação e redireciona (RF-04, CA-07)", async () => {
-    vi.spyOn(window, "confirm").mockReturnValue(true);
+  /**
+   * @spec SPEC-20260807-005 RF-09
+   */
+  it("remove o grupo após confirmação via AlertDialog e redireciona (RF-04, CA-07)", async () => {
     mockApi();
     renderPage();
 
     fireEvent.click(await screen.findByRole("button", { name: "Remover grupo" }));
+    expect(await screen.findByRole("alertdialog")).toHaveAccessibleName(
+      "Remover este grupo?",
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Confirmar" }));
 
     await waitFor(() => expect(pushMock).toHaveBeenCalledWith("/vehicle-groups"));
     expect(apiClient).toHaveBeenCalledWith("/vehicle-groups/g1", { method: "DELETE" });
@@ -92,8 +98,10 @@ describe("VehicleGroupDetailPage", () => {
     expect(yamaha).not.toBeChecked();
   });
 
-  it("sem alterar a seleção, exibe diff zerado e envia o payload atual (SPEC-20260804-005 RF-04, CA-03, CA-04)", async () => {
-    const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(true);
+  /**
+   * @spec SPEC-20260807-005 RF-08
+   */
+  it("sem alterar a seleção, exibe diff zerado via AlertDialog e envia o payload atual (SPEC-20260804-005 RF-04, CA-03, CA-04)", async () => {
     mockApi();
     renderPage();
 
@@ -101,9 +109,13 @@ describe("VehicleGroupDetailPage", () => {
     await waitFor(() => expect(honda).toBeChecked());
     fireEvent.click(screen.getByRole("button", { name: "Salvar membros" }));
 
-    expect(confirmSpy).toHaveBeenCalledWith(
-      "Adicionar 0 veículo(s), remover 0 veículo(s). Confirmar?",
+    const dialog = await screen.findByRole("alertdialog");
+    expect(dialog).toHaveAccessibleName("Confirmar alterações?");
+    expect(dialog).toHaveAccessibleDescription(
+      "Adicionar 0 veículo(s), remover 0 veículo(s).",
     );
+    fireEvent.click(screen.getByRole("button", { name: "Confirmar" }));
+
     await waitFor(() =>
       expect(apiClient).toHaveBeenCalledWith(
         "/vehicle-groups/g1/members",
@@ -112,8 +124,10 @@ describe("VehicleGroupDetailPage", () => {
     );
   });
 
-  it("desmarcar todos os membros de um grupo populado exige confirmação de remoção total (SPEC-20260804-005 RF-05, CA-05)", async () => {
-    const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(true);
+  /**
+   * @spec SPEC-20260807-005 RF-07
+   */
+  it("desmarcar todos os membros de um grupo populado exige confirmação de remoção total via AlertDialog (SPEC-20260804-005 RF-05, CA-05)", async () => {
     mockApi();
     renderPage();
 
@@ -122,9 +136,13 @@ describe("VehicleGroupDetailPage", () => {
     fireEvent.click(honda);
     fireEvent.click(screen.getByRole("button", { name: "Salvar membros" }));
 
-    expect(confirmSpy).toHaveBeenCalledWith(
-      "Isso removerá todos os 1 veículo(s) deste grupo. Confirmar?",
+    const dialog = await screen.findByRole("alertdialog");
+    expect(dialog).toHaveAccessibleName("Remover todos os membros?");
+    expect(dialog).toHaveAccessibleDescription(
+      "Isso removerá todos os 1 veículo(s) deste grupo.",
     );
+    fireEvent.click(screen.getByRole("button", { name: "Confirmar" }));
+
     await waitFor(() =>
       expect(apiClient).toHaveBeenCalledWith(
         "/vehicle-groups/g1/members",
@@ -133,17 +151,22 @@ describe("VehicleGroupDetailPage", () => {
     );
   });
 
-  it("cancelar a confirmação não dispara a requisição de salvar membros (SPEC-20260804-005 RF-06, CA-06)", async () => {
-    vi.spyOn(window, "confirm").mockReturnValue(false);
+  it("cancelar o AlertDialog não dispara a requisição de salvar membros (SPEC-20260804-005 RF-06, CA-06)", async () => {
     mockApi();
     renderPage();
 
     await screen.findByRole("checkbox", { name: /Honda CG 160/ });
     fireEvent.click(screen.getByRole("button", { name: "Salvar membros" }));
 
-    await waitFor(() => expect(apiClient).not.toHaveBeenCalledWith(
+    await screen.findByRole("alertdialog");
+    fireEvent.click(screen.getByRole("button", { name: "Cancelar" }));
+
+    await waitFor(() =>
+      expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument(),
+    );
+    expect(apiClient).not.toHaveBeenCalledWith(
       "/vehicle-groups/g1/members",
       expect.anything(),
-    ));
+    );
   });
 });

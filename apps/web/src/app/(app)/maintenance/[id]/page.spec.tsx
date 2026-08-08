@@ -131,29 +131,53 @@ describe("MaintenanceDetailPage", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent("Manutenção não encontrada.");
   });
 
-  it("SPEC-20260619-001 R-FORM-05: cancelar exibe window.confirm e não navega se recusado", async () => {
-    const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(false);
+  /**
+   * @spec SPEC-20260807-005 RF-06
+   * Corrige o bug pré-existente onde a confirmação era exibida mesmo com o formulário
+   * limpo (sem checar `isDirty`).
+   */
+  it("SPEC-20260807-005 RF-06: cancela sem confirmação quando o formulário está limpo", async () => {
     mockApi();
     renderPage();
 
     await screen.findByDisplayValue("Troca de óleo");
     await userEvent.click(screen.getByRole("button", { name: "Cancelar" }));
 
-    expect(confirmSpy).toHaveBeenCalled();
-    expect(pushMock).not.toHaveBeenCalled();
-    confirmSpy.mockRestore();
+    expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
+    expect(pushMock).toHaveBeenCalledWith("/maintenance");
   });
 
-  it("SPEC-20260619-001 R-FORM-05: cancelar navega para /maintenance quando confirm é aceito", async () => {
-    const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(true);
+  it("SPEC-20260619-001 R-FORM-05, SPEC-20260807-005 RF-06: exibe AlertDialog e não navega ao continuar editando", async () => {
     mockApi();
     renderPage();
 
     await screen.findByDisplayValue("Troca de óleo");
+    await userEvent.type(screen.getByLabelText("Descrição *"), " revisada");
     await userEvent.click(screen.getByRole("button", { name: "Cancelar" }));
 
+    expect(await screen.findByRole("alertdialog")).toHaveAccessibleName(
+      "Descartar alterações?",
+    );
+    expect(pushMock).not.toHaveBeenCalled();
+
+    await userEvent.click(screen.getByRole("button", { name: "Continuar editando" }));
+    await waitFor(() =>
+      expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument(),
+    );
+    expect(pushMock).not.toHaveBeenCalled();
+  });
+
+  it("SPEC-20260807-005 RF-06: navega para /maintenance ao confirmar descarte", async () => {
+    mockApi();
+    renderPage();
+
+    await screen.findByDisplayValue("Troca de óleo");
+    await userEvent.type(screen.getByLabelText("Descrição *"), " revisada");
+    await userEvent.click(screen.getByRole("button", { name: "Cancelar" }));
+    await screen.findByRole("alertdialog");
+    await userEvent.click(screen.getByRole("button", { name: "Descartar" }));
+
     expect(pushMock).toHaveBeenCalledWith("/maintenance");
-    confirmSpy.mockRestore();
   });
 
   it("exibe completion_date quando preenchida na manutenção", async () => {

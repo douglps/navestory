@@ -7,6 +7,14 @@ import {
 } from "@navestory/validators";
 import {
   Alert,
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
   Button,
   Combobox,
   Container,
@@ -74,6 +82,7 @@ export default function NewFinePage(): ReactNode {
   const [driverName, setDriverName] = useState("");
   const [notes, setNotes] = useState("");
   const [fieldError, setFieldError] = useState<string | null>(null);
+  const [showDiscardDialog, setShowDiscardDialog] = useState(false);
 
   const mutation = useMutation({
     mutationFn: (input: CreateFineInput) =>
@@ -131,8 +140,14 @@ export default function NewFinePage(): ReactNode {
     occurredAt !== "" ||
     showDetails;
 
+  /**
+   * @spec SPEC-20260807-005 RF-03
+   */
   function handleCancel(): void {
-    if (isDirty && !window.confirm("Descartar alterações?")) return;
+    if (isDirty) {
+      setShowDiscardDialog(true);
+      return;
+    }
     router.push("/fines");
   }
 
@@ -356,6 +371,23 @@ export default function NewFinePage(): ReactNode {
           </Button>
         </div>
       </form>
+
+      <AlertDialog open={showDiscardDialog} onOpenChange={setShowDiscardDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Descartar alterações?</AlertDialogTitle>
+            <AlertDialogDescription>
+              As alterações não salvas serão perdidas permanentemente.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Continuar editando</AlertDialogCancel>
+            <AlertDialogAction onClick={() => router.push("/fines")}>
+              Descartar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Container>
   );
 }

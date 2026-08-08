@@ -150,8 +150,7 @@ describe("NewMaintenancePage", () => {
     expect(pushMock).toHaveBeenCalledWith("/maintenance");
   });
 
-  it("SPEC-20260619-001 R-FORM-05: pede confirmação ao cancelar com o formulário sujo", async () => {
-    const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(false);
+  it("SPEC-20260619-001 R-FORM-05, SPEC-20260807-005 RF-05: pede confirmação via AlertDialog ao cancelar com o formulário sujo", async () => {
     mockLookups();
     renderPage();
 
@@ -160,9 +159,10 @@ describe("NewMaintenancePage", () => {
     fireEvent.change(screen.getByLabelText("Descrição *"), { target: { value: "Troca de pneu" } });
     fireEvent.click(screen.getByRole("button", { name: "Cancelar" }));
 
-    expect(confirmSpy).toHaveBeenCalledWith("Descartar alterações?");
+    expect(await screen.findByRole("alertdialog")).toHaveAccessibleName(
+      "Descartar alterações?",
+    );
     expect(pushMock).not.toHaveBeenCalled();
-    confirmSpy.mockRestore();
   });
 
   it("exibe erro da API quando o POST falha (onError)", async () => {

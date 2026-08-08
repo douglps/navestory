@@ -9,6 +9,14 @@ import {
 } from "@navestory/validators";
 import {
   Alert,
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
   Button,
   Combobox,
   Container,
@@ -70,6 +78,7 @@ export default function MaintenanceDetailPage({
   const [odometerKm, setOdometerKm] = useState<number | undefined>(undefined);
   const [nextStatus, setNextStatus] = useState<MaintenanceStatus | "">("");
   const [fieldError, setFieldError] = useState<string | null>(null);
+  const [showDiscardDialog, setShowDiscardDialog] = useState(false);
 
   useEffect(() => {
     if (!maintenance) return;
@@ -123,8 +132,28 @@ export default function MaintenanceDetailPage({
     mutation.mutate(result.data);
   }
 
+  /**
+   * @spec SPEC-20260807-005 RF-06
+   * Corrige bug pré-existente: `handleCancel` exibia a confirmação sempre, mesmo com o
+   * formulário no estado original (sem checar `isDirty`).
+   */
+  const isDirty =
+    !!maintenance &&
+    (description !== maintenance.description ||
+      scheduledDate !== isoToDatetimeLocal(maintenance.scheduled_date, tz) ||
+      completionDate !==
+        (maintenance.completion_date
+          ? isoToDatetimeLocal(maintenance.completion_date, tz)
+          : "") ||
+      cost !== (maintenance.cost ?? undefined) ||
+      odometerKm !== (maintenance.odometer_km ?? undefined) ||
+      nextStatus !== "");
+
   function handleCancel(): void {
-    if (!window.confirm("Descartar alterações?")) return;
+    if (isDirty) {
+      setShowDiscardDialog(true);
+      return;
+    }
     router.push("/maintenance");
   }
 
@@ -223,6 +252,23 @@ export default function MaintenanceDetailPage({
           </Button>
         </div>
       </form>
+
+      <AlertDialog open={showDiscardDialog} onOpenChange={setShowDiscardDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Descartar alterações?</AlertDialogTitle>
+            <AlertDialogDescription>
+              As alterações não salvas serão perdidas permanentemente.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Continuar editando</AlertDialogCancel>
+            <AlertDialogAction onClick={() => router.push("/maintenance")}>
+              Descartar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Container>
   );
 }

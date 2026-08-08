@@ -123,15 +123,16 @@ describe("NewFinePage", () => {
     expect(pushMock).toHaveBeenCalledWith("/vehicles/new");
   });
 
-  it("pede confirmação ao cancelar com o formulário sujo (CA-10, R-FORM-05)", async () => {
-    const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(false);
+  it("pede confirmação via AlertDialog ao cancelar com o formulário sujo (CA-10, R-FORM-05, SPEC-20260807-005 RF-03)", async () => {
     mockLookups();
     renderPage();
 
     await fillValidForm();
     fireEvent.click(screen.getByRole("button", { name: "Cancelar" }));
 
-    expect(confirmSpy).toHaveBeenCalledWith("Descartar alterações?");
+    expect(await screen.findByRole("alertdialog")).toHaveAccessibleName(
+      "Descartar alterações?",
+    );
     expect(pushMock).not.toHaveBeenCalled();
   });
 

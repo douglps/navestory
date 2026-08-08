@@ -3547,22 +3547,22 @@ RNF-04 (foco preso no drawer + retorno ao hamburger ao fechar) implementado em `
 
 ---
 
-## SPEC-20260807-003 — Integridade e Edição de Dados de Veículo (draft)
+## SPEC-20260807-003 — Integridade e Edição de Dados de Veículo (approved)
 
 > Spec em `specs/vehicles/SPEC-20260807-003-integridade-edicao-dados-veiculo.md`. Fecha cinco lacunas de integridade e UX no domínio de veículos identificadas em auditoria comparativa (2026-08-07): (1) edição completa de veículo — `updateVehicleInputSchema` expandido além de `nickname`/`color`; (2) máscara de placa no frontend com detecção de formato BR e Mercosul; (3) normalização de `make`/`model` para uppercase+trim antes de persistir (R-VEH-03); (4) confirmação de exclusão por digitação da placa via `AlertDialog` (S17 — substituição de `window.confirm`); (5) exibição simultânea de todos os erros de validação por campo (R-FORM-08).
 >
-> **Status:** Spec em draft — aguarda revisão de Douglas antes de implementação. Nenhum código implementado ainda.
+> **Status:** Aprovada e implementada em 2026-08-07. Desvios do texto original da spec: (a) `updateVehicleInputSchema` já era `vehicleBaseSchema.partial()` — RF-02 só precisou da normalização de make/model, o schema já cobria todos os campos; a lacuna real estava só no frontend (RF-01), não no schema; (b) RF-01 expande a tela existente `/vehicles/[id]` em vez de criar rota `/vehicles/[id]/edit` separada (decisão explicitamente deixada para o implementador na spec); (c) `AlertDialog` e `FipeCombobox` eram assumidos como já existentes no design system — nenhum dos dois existia; `AlertDialog` foi criado sobre o primitivo `Dialog`/`@radix-ui/react-dialog` já em uso (sem nova dependência); `FipeCombobox` não existe e não foi criado — RF-05 aplica a normalização uppercase+trim diretamente no schema Zod (cobre tanto texto livre quanto uma eventual futura integração FIPE); (d) R-FORM-01/02/06 (padrão react-hook-form) é aspiracional e não adotado em nenhum formulário do projeto — RF-08 foi implementado com um helper puro (`zodIssuesToFieldErrors`) sobre o padrão `useState` já usado em todo o domínio de veículos/despesas, mesma decisão de design já registrada em `expenses/new/page.tsx` (SPEC-20260619-001).
 
 | RF    | Requisito                                                                                              | Código              | Teste               | Status  |
 | ----- | ------------------------------------------------------------------------------------------------------ | ------------------- | ------------------- | ------- |
-| RF-01 | Rota `/vehicles/[id]/edit` com formulário completo (todos os campos editáveis)                         | ⏳ Pendente          | ⏳ Pendente          | ⏳       |
-| RF-02 | `updateVehicleInputSchema` expandido; normalização R-VEH-02 e R-VEH-03 aplicadas                      | ⏳ Pendente          | ⏳ Pendente          | ⏳       |
-| RF-03 | Máscara automática de placa no input (BR e Mercosul) — somente visual, backend normaliza              | ⏳ Pendente          | ⏳ Pendente          | ⏳       |
-| RF-04 | Erro inline de placa inválida no campo antes do submit (validação onBlur)                              | ⏳ Pendente          | ⏳ Pendente          | ⏳       |
-| RF-05 | Normalização uppercase+trim de `make` e `model` na server action de criação e atualização             | ⏳ Pendente          | ⏳ Pendente          | ⏳       |
-| RF-06 | AlertDialog com campo de digitação da placa para confirmar exclusão (S17)                             | ⏳ Pendente          | ⏳ Pendente          | ⏳       |
-| RF-07 | Server action de exclusão valida `confirmationPlate` antes de executar soft-delete                    | ⏳ Pendente          | ⏳ Pendente          | ⏳       |
-| RF-08 | Todos os formulários de veículo exibem erros de validação simultâneos por campo (R-FORM-08)           | ⏳ Pendente          | ⏳ Pendente          | ⏳       |
+| RF-01 | Formulário completo de edição cobrindo todos os campos editáveis (expande `/vehicles/[id]` em vez de rota `/edit` separada) | `apps/web/src/app/(app)/vehicles/[id]/page.tsx` | `apps/web/src/app/(app)/vehicles/[id]/page.spec.tsx` | ✅ |
+| RF-02 | `updateVehicleInputSchema` (já `vehicleBaseSchema.partial()`) recebe normalização R-VEH-03 via `.transform()` | `packages/validators/src/vehicle.schemas.ts` | `packages/validators/src/vehicle.schemas.spec.ts` | ✅ |
+| RF-03 | `PlateInput`: máscara progressiva BR/Mercosul (acumulador de teclas, mesmo padrão de `CurrencyInput`/`OdometerInput`) — valor enviado ao backend sempre sem hífen | `packages/ui/src/components/plate-input.tsx` | `packages/ui/src/components/plate-input.spec.tsx` | ✅ |
+| RF-04 | Erro inline de placa exibido via `fieldErrors.plate` (mapeado de todos os issues do Zod, não só o formato) | `apps/web/src/app/(app)/vehicles/new/page.tsx`, `.../vehicles/[id]/page.tsx` | `apps/web/src/app/(app)/vehicles/new/page.spec.tsx` | ✅ |
+| RF-05 | Normalização uppercase+trim de `make`/`model` no schema Zod compartilhado (cria e atualiza); `FipeCombobox` não existe no projeto — não criado nesta spec (nota de desvio acima) | `packages/validators/src/vehicle.schemas.ts` | `packages/validators/src/vehicle.schemas.spec.ts` | ✅ |
+| RF-06 | `AlertDialog` (novo componente, sobre `@radix-ui/react-dialog`) com `PlateInput` de confirmação; botão desabilitado até a placa corresponder | `packages/ui/src/components/alert-dialog.tsx`, `apps/web/src/app/(app)/vehicles/[id]/page.tsx` | `packages/ui/src/components/alert-dialog.test.tsx`, `apps/web/src/app/(app)/vehicles/[id]/page.spec.tsx` | ✅ |
+| RF-07 | `VehiclesService.remove` recebe e valida `confirmationPlate` (comparação normalizada) antes do soft-delete em cascata; `DELETE /vehicles/:id` exige body `{ confirmationPlate }` | `apps/api/src/modules/vehicles/vehicles.service.ts`, `vehicles.controller.ts`, `dto/delete-vehicle.dto.ts` | `apps/api/src/modules/vehicles/vehicles.service.spec.ts`, `vehicles.controller.spec.ts` | ✅ |
+| RF-08 | `zodIssuesToFieldErrors` (helper puro) mapeia todos os issues do Zod para erro por campo, exibidos simultaneamente; aplicado em `/vehicles/new` e `/vehicles/[id]` — sem adotar react-hook-form (nota de desvio acima) | `apps/web/src/lib/form-errors.ts`, `apps/web/src/app/(app)/vehicles/new/page.tsx`, `.../vehicles/[id]/page.tsx` | `apps/web/src/lib/form-errors.spec.ts`, `apps/web/src/app/(app)/vehicles/new/page.spec.tsx` | ✅ |
 
 ---
 
@@ -3583,6 +3583,26 @@ RNF-04 (foco preso no drawer + retorno ao hamburger ao fechar) implementado em `
 | RF-07 | Prioridade R-FUEL-07 respeitada: favorite_fuel_type > template > vazio                                 | ⏳ Pendente          | ⏳ Pendente          | ⏳       |
 | RF-08 | Pré-preenchimento não sobrescreve edição manual prévia do usuário (R-FUEL-08)                          | ⏳ Pendente          | ⏳ Pendente          | ⏳       |
 | RF-09 | Ambas as actions são fire-and-forget: erros silenciados, formulário não é bloqueado                    | ⏳ Pendente          | ⏳ Pendente          | ⏳       |
+
+---
+
+## SPEC-20260807-005 — Substituição de window.confirm por AlertDialog em Formulários Transacionais (approved)
+
+> Spec em `specs/forms/SPEC-20260807-005-dirty-check-alert-dialog.md`. Fecha a violação de R-FORM-05 (dirty-check via `window.confirm` em vez de `AlertDialog`) em 6 pontos de `apps/web` (despesas, multas, manutenção) e padroniza as 3 confirmações de ação de `vehicle-groups/[id]` para o mesmo componente. Reutiliza o `AlertDialog` criado em SPEC-20260807-003 (S17), sem nova dependência. Corrige também um bug pré-existente em `maintenance/[id]/page.tsx`, onde a confirmação era exibida mesmo com o formulário sem alterações (ausência de cálculo de `isDirty`).
+>
+> **Desvio do texto original da spec:** as Notas Técnicas sugeriam `import ... from "@navestory/ui/alert-dialog"` (subpath); o pacote `@navestory/ui` não expõe subpath exports (só `main`/`types` na raiz do `src/index.ts`) — todos os imports usam `from "@navestory/ui"`, mesmo padrão já usado em `vehicles/[id]/page.tsx` (SPEC-20260807-003).
+
+| RF    | Requisito | Código | Teste | Status |
+| ----- | --------- | ------ | ----- | ------ |
+| RF-01 | Substitui `window.confirm` de dirty-check por `AlertDialog` em `expenses/new` | `apps/web/src/app/(app)/expenses/new/page.tsx` | `apps/web/src/app/(app)/expenses/new/page.spec.tsx` | ✅ |
+| RF-02 | Substitui `window.confirm` de dirty-check por `AlertDialog` em `expenses/[id]` | `apps/web/src/app/(app)/expenses/[id]/page.tsx` | `apps/web/src/app/(app)/expenses/[id]/page.spec.tsx` | ✅ |
+| RF-03 | Substitui `window.confirm` de dirty-check por `AlertDialog` em `fines/new` | `apps/web/src/app/(app)/fines/new/page.tsx` | `apps/web/src/app/(app)/fines/new/page.spec.tsx` | ✅ |
+| RF-04 | Substitui `window.confirm` de dirty-check por `AlertDialog` em `fines/[id]` | `apps/web/src/app/(app)/fines/[id]/page.tsx` | `apps/web/src/app/(app)/fines/[id]/page.spec.tsx` | ✅ |
+| RF-05 | Substitui `window.confirm` de dirty-check por `AlertDialog` em `maintenance/new` | `apps/web/src/app/(app)/maintenance/new/page.tsx` | `apps/web/src/app/(app)/maintenance/new/page.spec.tsx` | ✅ |
+| RF-06 | Substitui `window.confirm` por `AlertDialog` em `maintenance/[id]` **e** adiciona cálculo de `isDirty` ausente (corrige bug: confirmação exibida sempre, independente de alteração) | `apps/web/src/app/(app)/maintenance/[id]/page.tsx` | `apps/web/src/app/(app)/maintenance/[id]/page.spec.tsx` | ✅ |
+| RF-07 | `vehicle-groups/[id]`: confirmação de remoção total de membros via `AlertDialog` (estado genérico `confirmDialog`) | `apps/web/src/app/(app)/vehicle-groups/[id]/page.tsx` | `apps/web/src/app/(app)/vehicle-groups/[id]/page.spec.tsx` | ✅ |
+| RF-08 | `vehicle-groups/[id]`: confirmação de alteração normal de membros via `AlertDialog` | `apps/web/src/app/(app)/vehicle-groups/[id]/page.tsx` | `apps/web/src/app/(app)/vehicle-groups/[id]/page.spec.tsx` | ✅ |
+| RF-09 | `vehicle-groups/[id]`: confirmação de exclusão do grupo via `AlertDialog` | `apps/web/src/app/(app)/vehicle-groups/[id]/page.tsx` | `apps/web/src/app/(app)/vehicle-groups/[id]/page.spec.tsx` | ✅ |
 
 ---
 

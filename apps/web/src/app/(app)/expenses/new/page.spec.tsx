@@ -334,17 +334,52 @@ describe("NewExpensePage", () => {
 
   /**
    * @spec SPEC-20260619-001 R-FORM-05
+   * @spec SPEC-20260807-005 RF-01
    */
-  it("pede confirmação ao cancelar com o formulário sujo", async () => {
-    const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(false);
+  it("pede confirmação via AlertDialog ao cancelar com o formulário sujo", async () => {
     mockLookups();
     renderPage();
 
     await fillValidForm();
     fireEvent.click(screen.getByRole("button", { name: "Cancelar" }));
 
-    expect(confirmSpy).toHaveBeenCalledWith("Descartar alterações?");
+    expect(await screen.findByRole("alertdialog")).toHaveAccessibleName(
+      "Descartar alterações?",
+    );
     expect(pushMock).not.toHaveBeenCalled();
+  });
+
+  /**
+   * @spec SPEC-20260807-005 RF-01
+   */
+  it("continua editando sem perder dados ao clicar em 'Continuar editando'", async () => {
+    mockLookups();
+    renderPage();
+
+    await fillValidForm();
+    fireEvent.click(screen.getByRole("button", { name: "Cancelar" }));
+    await screen.findByRole("alertdialog");
+    fireEvent.click(screen.getByRole("button", { name: "Continuar editando" }));
+
+    await waitFor(() =>
+      expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument(),
+    );
+    expect(pushMock).not.toHaveBeenCalled();
+  });
+
+  /**
+   * @spec SPEC-20260807-005 RF-01
+   */
+  it("descarta e navega para /expenses ao confirmar no AlertDialog", async () => {
+    mockLookups();
+    renderPage();
+
+    await fillValidForm();
+    fireEvent.click(screen.getByRole("button", { name: "Cancelar" }));
+    await screen.findByRole("alertdialog");
+    fireEvent.click(screen.getByRole("button", { name: "Descartar" }));
+
+    expect(pushMock).toHaveBeenCalledWith("/expenses");
   });
 
   /**

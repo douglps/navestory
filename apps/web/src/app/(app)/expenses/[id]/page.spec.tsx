@@ -204,9 +204,9 @@ describe("ExpenseDetailPage", () => {
 
   /**
    * @spec SPEC-20260619-001 R-FORM-05
+   * @spec SPEC-20260807-005 RF-02
    */
-  it("pede confirmação ao cancelar com alterações não salvas", async () => {
-    const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(false);
+  it("pede confirmação via AlertDialog ao cancelar com alterações não salvas", async () => {
     mockApi();
     renderPage();
 
@@ -214,7 +214,9 @@ describe("ExpenseDetailPage", () => {
     typeDigits(amountInput, "9");
     fireEvent.click(screen.getByRole("button", { name: "Cancelar" }));
 
-    expect(confirmSpy).toHaveBeenCalledWith("Descartar alterações?");
+    expect(await screen.findByRole("alertdialog")).toHaveAccessibleName(
+      "Descartar alterações?",
+    );
     expect(pushMock).not.toHaveBeenCalled();
   });
 

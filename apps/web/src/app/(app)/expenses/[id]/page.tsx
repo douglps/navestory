@@ -9,6 +9,14 @@ import {
 } from "@navestory/validators";
 import {
   Alert,
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
   Button,
   Combobox,
   Container,
@@ -91,6 +99,7 @@ export default function ExpenseDetailPage({
   const [savedTemplateName, setSavedTemplateName] = useState<string | null>(
     null,
   );
+  const [showDiscardDialog, setShowDiscardDialog] = useState(false);
   const fuelCalc = useFuelCrossCalc();
 
   const isFuel = category === "fuel";
@@ -199,8 +208,14 @@ export default function ExpenseDetailPage({
       supplier !== (expense.supplier ?? "") ||
       (fuelCalc.liters ?? null) !== expense.liters);
 
+  /**
+   * @spec SPEC-20260807-005 RF-02
+   */
   function handleCancel(): void {
-    if (isDirty && !window.confirm("Descartar alterações?")) return;
+    if (isDirty) {
+      setShowDiscardDialog(true);
+      return;
+    }
     router.push("/expenses");
   }
 
@@ -461,6 +476,23 @@ export default function ExpenseDetailPage({
           </Button>
         </div>
       </form>
+
+      <AlertDialog open={showDiscardDialog} onOpenChange={setShowDiscardDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Descartar alterações?</AlertDialogTitle>
+            <AlertDialogDescription>
+              As alterações não salvas serão perdidas permanentemente.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Continuar editando</AlertDialogCancel>
+            <AlertDialogAction onClick={() => router.push("/expenses")}>
+              Descartar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <Button
         type="button"

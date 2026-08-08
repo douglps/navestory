@@ -184,9 +184,8 @@ describe("FineDetailPage", () => {
     confirmSpy.mockRestore();
   });
 
-  it("SPEC-20260619-001 R-FORM-05: cancelar com alterações exibe window.confirm", async () => {
+  it("SPEC-20260619-001 R-FORM-05, SPEC-20260807-005 RF-04: cancelar com alterações exibe AlertDialog", async () => {
     const user = userEvent.setup();
-    const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(false);
     mockApi(makeFine());
     renderPage();
 
@@ -198,9 +197,10 @@ describe("FineDetailPage", () => {
     const cancelBtns = screen.getAllByRole("button", { name: "Cancelar" });
     await user.click(cancelBtns[cancelBtns.length - 1]!);
 
-    expect(confirmSpy).toHaveBeenCalled();
+    expect(await screen.findByRole("alertdialog")).toHaveAccessibleName(
+      "Descartar alterações?",
+    );
     expect(pushMock).not.toHaveBeenCalled();
-    confirmSpy.mockRestore();
   });
 
   it("exibe erro da API quando o PATCH falha", async () => {

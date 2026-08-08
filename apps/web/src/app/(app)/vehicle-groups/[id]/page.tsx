@@ -7,7 +7,21 @@ import {
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
-import { Alert, Button, Checkbox, Container, Input } from "@navestory/ui";
+import {
+  Alert,
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  Button,
+  Checkbox,
+  Container,
+  Input,
+} from "@navestory/ui";
 import { apiClient } from "@/lib/http/api-client";
 
 interface VehicleGroup {
@@ -59,6 +73,16 @@ export default function VehicleGroupDetailPage({
   const [color, setColor] = useState("");
   const [selectedVehicleIds, setSelectedVehicleIds] = useState<string[]>([]);
   const [fieldError, setFieldError] = useState<string | null>(null);
+  /**
+   * @spec SPEC-20260807-005 RF-07, RF-08, RF-09
+   * Estado genérico para as 3 confirmações de ação deste formulário — evita proliferação
+   * de `useState` por diálogo, já que os três seguem o mesmo padrão de mensagem+confirmação.
+   */
+  const [confirmDialog, setConfirmDialog] = useState<{
+    title: string;
+    description?: string;
+    onConfirm: () => void;
+  } | null>(null);
 
   useEffect(() => {
     if (group) {
@@ -107,6 +131,9 @@ export default function VehicleGroupDetailPage({
     );
   }
 
+  /**
+   * @spec SPEC-20260807-005 RF-07, RF-08
+   */
   function handleSaveMembers(): void {
     if (!group) return;
 
@@ -115,18 +142,18 @@ export default function VehicleGroupDetailPage({
     const removed = currentIds.filter((v) => !selectedVehicleIds.includes(v)).length;
 
     if (selectedVehicleIds.length === 0 && currentIds.length > 0) {
-      const confirmed = window.confirm(
-        `Isso removerá todos os ${currentIds.length} veículo(s) deste grupo. Confirmar?`,
-      );
-      if (!confirmed) return;
+      setConfirmDialog({
+        title: "Remover todos os membros?",
+        description: `Isso removerá todos os ${currentIds.length} veículo(s) deste grupo.`,
+        onConfirm: () => setMembersMutation.mutate(),
+      });
     } else {
-      const confirmed = window.confirm(
-        `Adicionar ${added} veículo(s), remover ${removed} veículo(s). Confirmar?`,
-      );
-      if (!confirmed) return;
+      setConfirmDialog({
+        title: "Confirmar alterações?",
+        description: `Adicionar ${added} veículo(s), remover ${removed} veículo(s).`,
+        onConfirm: () => setMembersMutation.mutate(),
+      });
     }
-
-    setMembersMutation.mutate();
   }
 
   function handleSubmit(event: FormEvent): void {
@@ -142,14 +169,15 @@ export default function VehicleGroupDetailPage({
     updateMutation.mutate();
   }
 
+  /**
+   * @spec SPEC-20260807-005 RF-09
+   */
   function handleDelete(): void {
-    if (
-      window.confirm(
-        "Remover este grupo? Os veículos membros não serão afetados.",
-      )
-    ) {
-      deleteMutation.mutate();
-    }
+    setConfirmDialog({
+      title: "Remover este grupo?",
+      description: "Os veículos membros não serão afetados.",
+      onConfirm: () => deleteMutation.mutate(),
+    });
   }
 
   if (id === null || isLoading)
@@ -237,6 +265,35 @@ export default function VehicleGroupDetailPage({
           description="Não foi possível remover o grupo."
         />
       )}
+
+      <AlertDialog
+        open={confirmDialog !== null}
+        onOpenChange={(open) => {
+          if (!open) setConfirmDialog(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{confirmDialog?.title}</AlertDialogTitle>
+            {confirmDialog?.description && (
+              <AlertDialogDescription>
+                {confirmDialog.description}
+              </AlertDialogDescription>
+            )}
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                confirmDialog?.onConfirm();
+                setConfirmDialog(null);
+              }}
+            >
+              Confirmar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Container>
   );
 }

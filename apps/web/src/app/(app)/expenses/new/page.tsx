@@ -10,6 +10,14 @@ import {
 } from "@navestory/validators";
 import {
   Alert,
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
   Button,
   Combobox,
   Container,
@@ -291,6 +299,7 @@ function NewExpensePageContent(): ReactNode {
   const [fieldError, setFieldError] = useState<string | null>(null);
   const [templateNotice, setTemplateNotice] = useState<string | null>(null);
   const [duplicateId, setDuplicateId] = useState<string | null>(null);
+  const [showDiscardDialog, setShowDiscardDialog] = useState(false);
   const fuelCalc = useFuelCrossCalc();
 
   /** @spec SPEC-20260715-002 RF-FE-03 — preenchimento automático da hora corrente no fuso do usuário */
@@ -411,8 +420,14 @@ function NewExpensePageContent(): ReactNode {
     fuelCalc.liters != null ||
     fuelCalc.pricePerLiter != null;
 
+  /**
+   * @spec SPEC-20260807-005 RF-01
+   */
   function handleCancel(): void {
-    if (isDirty && !window.confirm("Descartar alterações?")) return;
+    if (isDirty) {
+      setShowDiscardDialog(true);
+      return;
+    }
     router.push("/expenses");
   }
 
@@ -749,6 +764,23 @@ function NewExpensePageContent(): ReactNode {
           </Button>
         </div>
       </form>
+
+      <AlertDialog open={showDiscardDialog} onOpenChange={setShowDiscardDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Descartar alterações?</AlertDialogTitle>
+            <AlertDialogDescription>
+              As alterações não salvas serão perdidas permanentemente.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Continuar editando</AlertDialogCancel>
+            <AlertDialogAction onClick={() => router.push("/expenses")}>
+              Descartar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Container>
   );
 }

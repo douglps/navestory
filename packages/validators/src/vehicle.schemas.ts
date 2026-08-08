@@ -46,10 +46,23 @@ export const fuelTypeSchema = z.enum([
  * @spec SPEC-20260602-002 RF-01, RF-07
  * Campos obrigatórios (plate, make, model, year, vehicle_type) + opcionais (RF-07).
  */
+/**
+ * @spec SPEC-20260807-003 RF-02, RF-05, R-VEH-03
+ * Normaliza make/model para uppercase + trim antes de persistir, garantindo a mesma chave
+ * de agregação em analytics/relatórios de frota independente da origem (FipeCombobox ou
+ * texto livre) — estende R-SAN-01/R-SAN-02 ao domínio de marca/modelo de veículo.
+ */
+function normalizedMakeModelSchema(message: string): z.ZodEffects<z.ZodString, string, string> {
+  return z
+    .string()
+    .min(1, message)
+    .transform((value) => value.trim().toUpperCase());
+}
+
 export const vehicleBaseSchema = z.object({
   plate: plateSchema,
-  make: z.string().min(1, "Marca é obrigatória"),
-  model: z.string().min(1, "Modelo é obrigatório"),
+  make: normalizedMakeModelSchema("Marca é obrigatória"),
+  model: normalizedMakeModelSchema("Modelo é obrigatório"),
   year: z.number().int().min(1900).max(2100),
   vehicle_type: vehicleTypeSchema,
   nickname: z.string().max(50).nullable().optional(),
@@ -81,6 +94,16 @@ export type CreateVehicleInput = z.infer<typeof createVehicleInputSchema>;
 
 export const updateVehicleInputSchema = vehicleBaseSchema.partial();
 export type UpdateVehicleInput = z.infer<typeof updateVehicleInputSchema>;
+
+/**
+ * @spec SPEC-20260807-003 RF-07, S17
+ * Confirmação de exclusão por digitação da placa — comparação case-insensitive contra a
+ * placa persistida é feita no service (normalização via `normalizePlate`), não aqui.
+ */
+export const deleteVehicleInputSchema = z.object({
+  confirmationPlate: z.string().min(1, "Digite a placa para confirmar"),
+});
+export type DeleteVehicleInput = z.infer<typeof deleteVehicleInputSchema>;
 
 /**
  * @spec SPEC-20260803-001 RF-01

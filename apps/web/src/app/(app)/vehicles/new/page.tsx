@@ -4,20 +4,13 @@ import {
   createVehicleInputSchema,
   type CreateVehicleInput,
 } from "@navestory/validators";
-import { Alert, Button, Combobox, Container, Input } from "@navestory/ui";
+import { Alert, Button, Combobox, Container, Input, PlateInput } from "@navestory/ui";
 import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent, type ReactNode } from "react";
 import { apiClient } from "@/lib/http/api-client";
-
-const VEHICLE_TYPES = [
-  { value: "carro", label: "Carro" },
-  { value: "moto", label: "Moto" },
-  { value: "caminhao", label: "Caminhão" },
-  { value: "onibus", label: "Ônibus" },
-  { value: "utilitario", label: "Utilitário" },
-  { value: "outro", label: "Outro" },
-] as const;
+import { VEHICLE_TYPE_OPTIONS } from "@/lib/vehicle-types";
+import { zodIssuesToFieldErrors } from "@/lib/form-errors";
 
 interface VehicleResponse {
   id: string;
@@ -25,6 +18,7 @@ interface VehicleResponse {
 
 /**
  * @spec SPEC-20260602-002 RF-01
+ * @spec SPEC-20260807-003 RF-03, RF-04, RF-08
  */
 export default function NewVehiclePage(): ReactNode {
   const router = useRouter();
@@ -34,7 +28,7 @@ export default function NewVehiclePage(): ReactNode {
   const [year, setYear] = useState("");
   const [vehicleType, setVehicleType] =
     useState<CreateVehicleInput["vehicle_type"]>("carro");
-  const [fieldError, setFieldError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   const mutation = useMutation({
     mutationFn: (input: CreateVehicleInput) =>
@@ -44,7 +38,7 @@ export default function NewVehiclePage(): ReactNode {
 
   function handleSubmit(event: FormEvent): void {
     event.preventDefault();
-    setFieldError(null);
+    setFieldErrors({});
 
     const result = createVehicleInputSchema.safeParse({
       plate,
@@ -54,7 +48,7 @@ export default function NewVehiclePage(): ReactNode {
       vehicle_type: vehicleType,
     });
     if (!result.success) {
-      setFieldError(result.error.issues[0]?.message ?? "Dados inválidos");
+      setFieldErrors(zodIssuesToFieldErrors(result.error.issues));
       return;
     }
 
@@ -66,28 +60,44 @@ export default function NewVehiclePage(): ReactNode {
       <h1 className="text-xl font-semibold">Cadastrar veículo</h1>
       <form onSubmit={handleSubmit} className="flex flex-col gap-3">
         <label htmlFor="plate">Placa</label>
-        <Input
+        <PlateInput
           id="plate"
           value={plate}
-          onChange={(event) => setPlate(event.target.value)}
-          required
+          onChange={setPlate}
+          aria-invalid={Boolean(fieldErrors.plate)}
+          aria-describedby={fieldErrors.plate ? "plate-error" : undefined}
         />
+        {fieldErrors.plate && (
+          <p id="plate-error" role="alert" className="text-sm text-danger">
+            {fieldErrors.plate}
+          </p>
+        )}
 
         <label htmlFor="make">Marca</label>
         <Input
           id="make"
           value={make}
           onChange={(event) => setMake(event.target.value)}
-          required
+          aria-invalid={Boolean(fieldErrors.make)}
         />
+        {fieldErrors.make && (
+          <p role="alert" className="text-sm text-danger">
+            {fieldErrors.make}
+          </p>
+        )}
 
         <label htmlFor="model">Modelo</label>
         <Input
           id="model"
           value={model}
           onChange={(event) => setModel(event.target.value)}
-          required
+          aria-invalid={Boolean(fieldErrors.model)}
         />
+        {fieldErrors.model && (
+          <p role="alert" className="text-sm text-danger">
+            {fieldErrors.model}
+          </p>
+        )}
 
         <label htmlFor="year">Ano</label>
         <Input
@@ -95,16 +105,18 @@ export default function NewVehiclePage(): ReactNode {
           type="number"
           value={year}
           onChange={(event) => setYear(event.target.value)}
-          required
+          aria-invalid={Boolean(fieldErrors.year)}
         />
+        {fieldErrors.year && (
+          <p role="alert" className="text-sm text-danger">
+            {fieldErrors.year}
+          </p>
+        )}
 
         <span className="text-sm font-medium">Tipo</span>
         <Combobox
           aria-label="Tipo"
-          options={VEHICLE_TYPES.map((type) => ({
-            value: type.value,
-            label: type.label,
-          }))}
+          options={VEHICLE_TYPE_OPTIONS}
           value={vehicleType}
           onValueChange={(value) =>
             setVehicleType(value as CreateVehicleInput["vehicle_type"])
@@ -114,7 +126,9 @@ export default function NewVehiclePage(): ReactNode {
           emptyMessage="Nenhum tipo encontrado"
         />
 
-        {fieldError && <Alert variant="error" description={fieldError} />}
+        {fieldErrors._root && (
+          <Alert variant="error" description={fieldErrors._root} />
+        )}
         {mutation.isError && (
           <Alert
             variant="error"

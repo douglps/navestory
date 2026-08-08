@@ -1,7 +1,7 @@
 ---
 id: SPEC-20260807-003
 title: "Integridade e Edição de Dados de Veículo"
-status: draft
+status: approved
 date: 2026-08-07
 author: Douglas Lopes (lps.doug@protonmail.com)
 rules: [R-VEH-02, R-VEH-03, R-SAN-01, R-SAN-02, R-SAN-03, R-FORM-08]

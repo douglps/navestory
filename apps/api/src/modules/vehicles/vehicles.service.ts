@@ -1,6 +1,7 @@
-import { Inject, Injectable, InternalServerErrorException, NotFoundException } from "@nestjs/common";
+import { BadRequestException, Inject, Injectable, InternalServerErrorException, NotFoundException } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { normalizePlate } from "@navestory/validators";
 import { AuditService } from "../../shared/audit/audit.service";
 import { createUserScopedClient } from "../../shared/supabase/create-user-scoped-client";
 import { SUPABASE_ADMIN_CLIENT } from "../../shared/supabase/supabase.constants";
@@ -156,15 +157,24 @@ export class VehiclesService {
 
   /**
    * @spec SPEC-20260602-002 RF-06, RF-15, R-VEH-01
+   * @spec SPEC-20260807-003 RF-07, S17
    * Soft-delete em cascata: veículo, despesas e manutenções recebem o mesmo `deleted_at`.
+   * Exige confirmação por digitação da placa (comparação normalizada, case-insensitive)
+   * antes de executar qualquer operação destrutiva — proteção contra bypass via chamada
+   * direta ao endpoint sem passar pelo AlertDialog do frontend.
    */
-  async remove(accessToken: string, userId: string, vehicleId: string): Promise<void> {
+  async remove(
+    accessToken: string,
+    userId: string,
+    vehicleId: string,
+    confirmationPlate: string,
+  ): Promise<void> {
     const client = this.clientForUser(accessToken);
     const deletedAt = new Date().toISOString();
 
     const { data: existing, error: findError } = await client
       .from("vehicles")
-      .select("id")
+      .select("id, plate")
       .eq("id", vehicleId)
       .eq("user_id", userId)
       .is("deleted_at", null)
@@ -172,6 +182,10 @@ export class VehiclesService {
 
     if (findError || !existing) {
       throw new NotFoundException("Veículo não encontrado");
+    }
+
+    if (normalizePlate(confirmationPlate) !== (existing as { plate: string }).plate) {
+      throw new BadRequestException("Placa de confirmação não corresponde ao veículo");
     }
 
     const [vehicleResult, expensesResult, maintenancesResult] = await Promise.all([

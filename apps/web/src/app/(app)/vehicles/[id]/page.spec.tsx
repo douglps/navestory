@@ -1,4 +1,5 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { QueryProvider } from "@/lib/query/providers";
 import VehicleDetailPage from "./page";
@@ -28,8 +29,14 @@ describe("VehicleDetailPage", () => {
     make: "Fiat",
     model: "Uno",
     year: 2020,
+    vehicle_type: "carro",
+    fuel_type: null,
+    odometer: null,
     nickname: null,
     color: null,
+    ipva_due_date: null,
+    renavam: null,
+    chassi: null,
   };
 
   const health = { score: 100, flags: [] };
@@ -87,8 +94,49 @@ describe("VehicleDetailPage", () => {
     );
   });
 
-  it("remove o veículo após confirmação e redireciona (RF-06, CA-05)", async () => {
-    vi.spyOn(window, "confirm").mockReturnValue(true);
+  /**
+   * @spec SPEC-20260807-003 RF-01
+   */
+  it("carrega todos os campos editáveis pré-preenchidos (RF-01)", async () => {
+    mockApiByUrl({
+      "/vehicles/v1": { ...vehicle, nickname: "Carango", color: "Azul" },
+      "/vehicles/v1/health": health,
+    });
+    renderPage();
+
+    expect(await screen.findByDisplayValue("Fiat")).toBeInTheDocument();
+    expect(screen.getByDisplayValue("Uno")).toBeInTheDocument();
+    expect(screen.getByDisplayValue("2020")).toBeInTheDocument();
+    expect(screen.getByDisplayValue("Carango")).toBeInTheDocument();
+    expect(screen.getByDisplayValue("Azul")).toBeInTheDocument();
+  });
+
+  /**
+   * @spec SPEC-20260807-003 RF-06, RF-07, S17
+   * Substitui o antigo `window.confirm` — a exclusão agora exige digitar a placa no
+   * AlertDialog e o botão de confirmação permanece desabilitado até o valor bater.
+   */
+  it("mantém o botão de exclusão desabilitado até a placa digitada corresponder (RF-06)", async () => {
+    const user = userEvent.setup();
+    mockApiByUrl({
+      "/vehicles/v1": vehicle,
+      "/vehicles/v1/health": health,
+    });
+    renderPage();
+
+    await user.click(await screen.findByRole("button", { name: "Remover veículo" }));
+    const confirmButton = await screen.findByRole("button", {
+      name: "Excluir definitivamente",
+    });
+    expect(confirmButton).toBeDisabled();
+
+    const confirmationInput = screen.getByPlaceholderText("Digite ABC1234 para confirmar");
+    await user.type(confirmationInput, "XYZ9999");
+    expect(confirmButton).toBeDisabled();
+  });
+
+  it("remove o veículo após digitar a placa correta e redireciona (RF-06, RF-07, CA-05)", async () => {
+    const user = userEvent.setup();
     mockApiByUrl({
       "/vehicles/v1": vehicle,
       "/vehicles/v1/health": health,
@@ -96,10 +144,21 @@ describe("VehicleDetailPage", () => {
     });
     renderPage();
 
-    fireEvent.click(await screen.findByRole("button", { name: "Remover veículo" }));
+    await user.click(await screen.findByRole("button", { name: "Remover veículo" }));
+    const confirmationInput = await screen.findByPlaceholderText(
+      "Digite ABC1234 para confirmar",
+    );
+    await user.type(confirmationInput, "ABC1234");
+
+    const confirmButton = screen.getByRole("button", { name: "Excluir definitivamente" });
+    expect(confirmButton).toBeEnabled();
+    await user.click(confirmButton);
 
     await waitFor(() => expect(pushMock).toHaveBeenCalledWith("/vehicles"));
-    expect(apiClient).toHaveBeenCalledWith("/vehicles/v1", { method: "DELETE" });
+    expect(apiClient).toHaveBeenCalledWith("/vehicles/v1", {
+      method: "DELETE",
+      body: { confirmationPlate: "ABC1234" },
+    });
   });
 
   it("exibe a seção de saúde com score e flags em linguagem humana (RF-17, CA-03)", async () => {

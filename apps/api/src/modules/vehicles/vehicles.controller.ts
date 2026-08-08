@@ -31,6 +31,10 @@ import {
   updateVehicleDtoSchema,
   type UpdateVehicleDto,
 } from "./dto/update-vehicle.dto";
+import {
+  deleteVehicleDtoSchema,
+  type DeleteVehicleDto,
+} from "./dto/delete-vehicle.dto";
 import { VehiclesService } from "./vehicles.service";
 
 /**
@@ -120,18 +124,24 @@ export class VehiclesController {
     return { data: vehicle };
   }
 
+  /**
+   * @spec SPEC-20260807-003 RF-07, S17
+   */
   @Delete(":id")
   @HttpCode(HttpStatus.NO_CONTENT)
+  @UsePipes(new ZodValidationPipe(deleteVehicleDtoSchema))
   @ApiOperation({ summary: "Remover veículo (soft-delete em cascata)" })
   @ApiResponse({ status: 204, description: "Veículo removido" })
+  @ApiResponse({ status: 400, description: "Placa de confirmação não corresponde" })
   @ApiResponse({ status: 404, description: "Veículo não encontrado" })
   async remove(
     @Req() req: Request,
     @UserId() userId: string,
     @Param("id") id: string,
+    @Body() dto: DeleteVehicleDto,
   ): Promise<void> {
     const accessToken = this.extractAccessToken(req);
-    await this.vehiclesService.remove(accessToken, userId, id);
+    await this.vehiclesService.remove(accessToken, userId, id, dto.confirmationPlate);
   }
 
   private extractAccessToken(req: Request): string {

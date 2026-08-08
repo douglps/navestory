@@ -138,7 +138,19 @@ describe("VehiclesService", () => {
     mockClient({ data: null, error: null });
     const service = createService();
 
-    await expect(service.remove("token", "u1", "v1")).rejects.toBeInstanceOf(NotFoundException);
+    await expect(
+      service.remove("token", "u1", "v1", "ABC1234"),
+    ).rejects.toBeInstanceOf(NotFoundException);
+  });
+
+  // valida S17
+  it("remove lança 400 quando a placa de confirmação não corresponde (SPEC-20260807-003 RF-07, S17)", async () => {
+    mockClient({ data: { id: "v1", plate: "ABC1234" }, error: null });
+    const service = createService();
+
+    await expect(
+      service.remove("token", "u1", "v1", "XYZ9999"),
+    ).rejects.toBeInstanceOf(BadRequestException);
   });
 
   // valida R-VEH-02
@@ -159,7 +171,9 @@ describe("VehiclesService", () => {
       builder.update = jest.fn().mockReturnValue(builder);
       builder.eq = jest.fn().mockReturnValue(builder);
       builder.is = jest.fn().mockReturnValue(builder);
-      builder.maybeSingle = jest.fn().mockResolvedValue({ data: { id: "v1" }, error: null });
+      builder.maybeSingle = jest
+        .fn()
+        .mockResolvedValue({ data: { id: "v1", plate: "ABC1234" }, error: null });
       (builder.update as jest.Mock).mockImplementation(() => ({
         ...builder,
         eq: jest.fn().mockReturnValue({
@@ -171,7 +185,7 @@ describe("VehiclesService", () => {
       (createUserScopedClient as jest.Mock).mockReturnValue(client);
       const service = createService();
 
-      await service.remove("token", "u1", "v1");
+      await service.remove("token", "u1", "v1", "ABC1234");
 
       // Deve haver 3 chamadas a update: vehicles, expenses, maintenances
       const updateCalls = (builder.update as jest.Mock).mock.calls;
@@ -193,7 +207,9 @@ describe("VehiclesService", () => {
     builder.update = jest.fn().mockReturnValue(builder);
     builder.eq = jest.fn().mockReturnValue(builder);
     builder.is = jest.fn().mockReturnValue(builder);
-    builder.maybeSingle = jest.fn().mockResolvedValue({ data: { id: "v1" }, error: null });
+    builder.maybeSingle = jest
+      .fn()
+      .mockResolvedValue({ data: { id: "v1", plate: "ABC1234" }, error: null });
     (builder.update as jest.Mock).mockImplementation(() => ({
       ...builder,
       eq: jest.fn().mockReturnValue({
@@ -206,7 +222,7 @@ describe("VehiclesService", () => {
     const auditLog = jest.fn();
     const service = createService(auditLog);
 
-    await service.remove("token", "u1", "v1");
+    await service.remove("token", "u1", "v1", "ABC1234");
 
     expect(auditLog).toHaveBeenCalledWith(
       expect.objectContaining({ action: "VEHICLE_DELETED", recordId: "v1" }),

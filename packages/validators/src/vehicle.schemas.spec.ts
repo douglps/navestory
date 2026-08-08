@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   createVehicleInputSchema,
+  deleteVehicleInputSchema,
   normalizePlate,
   plateSchema,
   updateVehicleInputSchema,
@@ -46,6 +47,19 @@ describe("createVehicleInputSchema", () => {
     delete withoutMake.make;
     expect(createVehicleInputSchema.safeParse(withoutMake).success).toBe(false);
   });
+
+  it("normaliza make/model para uppercase com trim (SPEC-20260807-003 R-VEH-03)", () => {
+    const result = createVehicleInputSchema.safeParse({
+      ...base,
+      make: "  fiat  ",
+      model: "strada",
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.make).toBe("FIAT");
+      expect(result.data.model).toBe("STRADA");
+    }
+  });
 });
 
 describe("updateVehicleInputSchema", () => {
@@ -55,6 +69,35 @@ describe("updateVehicleInputSchema", () => {
 
   it("aceita objeto vazio (todos os campos opcionais)", () => {
     expect(updateVehicleInputSchema.safeParse({}).success).toBe(true);
+  });
+
+  it("aceita atualização de todos os campos editáveis (SPEC-20260807-003 RF-01)", () => {
+    const result = updateVehicleInputSchema.safeParse({
+      plate: "abc-1234",
+      make: "fiat",
+      model: "strada",
+      year: 2021,
+      vehicle_type: "utilitario",
+      fuel_type: "diesel",
+      nickname: "Trampo",
+      color: "Branco",
+      odometer: 12000,
+    });
+    expect(result.success).toBe(true);
+  });
+});
+
+describe("deleteVehicleInputSchema", () => {
+  it("aceita confirmationPlate não vazio (SPEC-20260807-003 RF-07, S17)", () => {
+    expect(
+      deleteVehicleInputSchema.safeParse({ confirmationPlate: "ABC1234" }).success,
+    ).toBe(true);
+  });
+
+  it("rejeita confirmationPlate vazio", () => {
+    expect(deleteVehicleInputSchema.safeParse({ confirmationPlate: "" }).success).toBe(
+      false,
+    );
   });
 });
 

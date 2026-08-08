@@ -10,6 +10,12 @@ export {
   CurrencyInput,
   OdometerInput,
 } from "./components/masked-input";
+export {
+  PLATE_MAX_CHARS,
+  PlateInput,
+  type PlateInputProps,
+  formatPlateDisplay,
+} from "./components/plate-input";
 
 export { Button, type ButtonProps } from "./components/button";
 export { Input, type InputProps, inputBaseClass } from "./components/input";
@@ -62,6 +68,19 @@ export {
   DialogTitle,
   DialogDescription,
 } from "./components/dialog";
+export {
+  AlertDialog,
+  AlertDialogTrigger,
+  AlertDialogClose,
+  AlertDialogContent,
+  type AlertDialogContentProps,
+  AlertDialogHeader,
+  AlertDialogFooter,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogAction,
+  AlertDialogCancel,
+} from "./components/alert-dialog";
 
 export { NavBadge, type NavBadgeProps } from "./components/nav-badge";
 export {

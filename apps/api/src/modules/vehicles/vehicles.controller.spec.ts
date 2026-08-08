@@ -87,15 +87,18 @@ describe("VehiclesController", () => {
     expect(result.data).toEqual({ score: 100, flags: [] });
   });
 
-  it("remove remove o veículo", async () => {
+  it("remove remove o veículo com a placa de confirmação (SPEC-20260807-003 RF-07)", async () => {
     const { controller, vehiclesService } = createController();
 
-    await controller.remove(req, "u1", "v1");
+    await controller.remove(req, "u1", "v1", {
+      confirmationPlate: "ABC1234",
+    } as never);
 
     expect(vehiclesService.remove).toHaveBeenCalledWith(
       "token-123",
       "u1",
       "v1",
+      "ABC1234",
     );
   });
 

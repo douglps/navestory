@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  normalizePlate,
   updateVehicleInputSchema,
   type UpdateVehicleInput,
   type VehicleResponse as Vehicle,
@@ -10,10 +11,22 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
   Alert,
   Button,
+  Combobox,
   Container,
   Input,
+  OdometerInput,
+  PlateInput,
   VehicleHealthScore,
 } from "@navestory/ui";
 import {
@@ -21,6 +34,9 @@ import {
   type HealthFlag,
 } from "@/components/dashboard/VehicleHealthCard";
 import { apiClient } from "@/lib/http/api-client";
+import { FUEL_TYPE_OPTIONS } from "@/lib/fuel-types";
+import { VEHICLE_TYPE_OPTIONS } from "@/lib/vehicle-types";
+import { zodIssuesToFieldErrors } from "@/lib/form-errors";
 
 interface VehicleHealth {
   score: number;
@@ -47,8 +63,63 @@ function flagActionLink(flag: HealthFlag, vehicleId: string): string | null {
   }
 }
 
+interface FormState {
+  plate: string;
+  make: string;
+  model: string;
+  year: string;
+  vehicle_type: string;
+  fuel_type: string;
+  nickname: string;
+  color: string;
+  odometer: number | undefined;
+  ipva_due_date: string;
+  renavam: string;
+  chassi: string;
+}
+
+function vehicleToFormState(vehicle: Vehicle): FormState {
+  return {
+    plate: vehicle.plate,
+    make: vehicle.make ?? "",
+    model: vehicle.model ?? "",
+    year: vehicle.year != null ? String(vehicle.year) : "",
+    vehicle_type: vehicle.vehicle_type,
+    fuel_type: vehicle.fuel_type ?? "",
+    nickname: vehicle.nickname ?? "",
+    color: vehicle.color ?? "",
+    odometer: vehicle.odometer ?? undefined,
+    ipva_due_date: vehicle.ipva_due_date ?? "",
+    renavam: vehicle.renavam ?? "",
+    chassi: vehicle.chassi ?? "",
+  };
+}
+
+/**
+ * @spec SPEC-20260807-003 RF-02
+ * Monta o payload de update a partir do formulário; campos de texto vazios viram `null`
+ * (limpar o campo), exceto os obrigatórios (plate/make/model/year/vehicle_type).
+ */
+function formStateToPayload(form: FormState): Record<string, unknown> {
+  return {
+    plate: form.plate,
+    make: form.make,
+    model: form.model,
+    year: Number(form.year),
+    vehicle_type: form.vehicle_type,
+    fuel_type: form.fuel_type || null,
+    nickname: form.nickname || null,
+    color: form.color || null,
+    odometer: form.odometer ?? null,
+    ipva_due_date: form.ipva_due_date || null,
+    renavam: form.renavam || null,
+    chassi: form.chassi || null,
+  };
+}
+
 /**
  * @spec SPEC-20260602-002 RF-04, RF-05, RF-06
+ * @spec SPEC-20260807-003 RF-01, RF-02, RF-03, RF-04, RF-06, RF-07, RF-08
  */
 export default function VehicleDetailPage({
   params,
@@ -82,14 +153,14 @@ export default function VehicleDetailPage({
     retry: false,
   });
 
-  const [nickname, setNickname] = useState("");
-  const [color, setColor] = useState("");
-  const [fieldError, setFieldError] = useState<string | null>(null);
+  const [form, setForm] = useState<FormState | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [confirmationPlate, setConfirmationPlate] = useState("");
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   useEffect(() => {
     if (vehicle) {
-      setNickname(vehicle.nickname ?? "");
-      setColor(vehicle.color ?? "");
+      setForm(vehicleToFormState(vehicle));
     }
   }, [vehicle]);
 
@@ -102,37 +173,43 @@ export default function VehicleDetailPage({
   });
 
   const deleteMutation = useMutation({
-    mutationFn: () => apiClient<void>(`/vehicles/${id}`, { method: "DELETE" }),
+    mutationFn: () =>
+      apiClient<void>(`/vehicles/${id}`, {
+        method: "DELETE",
+        body: { confirmationPlate },
+      }),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["vehicles"] });
       router.push("/vehicles");
     },
   });
 
+  function updateField<K extends keyof FormState>(key: K, value: FormState[K]): void {
+    setForm((current) => (current ? { ...current, [key]: value } : current));
+  }
+
   function handleSubmit(event: FormEvent): void {
     event.preventDefault();
-    setFieldError(null);
+    setFieldErrors({});
+    if (!form) return;
 
-    const result = updateVehicleInputSchema.safeParse({
-      nickname: nickname || null,
-      color: color || null,
-    });
+    const result = updateVehicleInputSchema.safeParse(formStateToPayload(form));
     if (!result.success) {
-      setFieldError(result.error.issues[0]?.message ?? "Dados inválidos");
+      setFieldErrors(zodIssuesToFieldErrors(result.error.issues));
       return;
     }
 
     updateMutation.mutate(result.data);
   }
 
-  function handleDelete(): void {
-    if (
-      window.confirm(
-        "Remover este veículo? O histórico de despesas e manutenções também será ocultado.",
-      )
-    ) {
-      deleteMutation.mutate();
-    }
+  const deleteConfirmationValid =
+    vehicle !== undefined &&
+    confirmationPlate.length > 0 &&
+    normalizePlate(confirmationPlate) === vehicle.plate;
+
+  function handleConfirmDelete(): void {
+    if (!deleteConfirmationValid) return;
+    deleteMutation.mutate();
   }
 
   if (id === null || isLoading)
@@ -143,6 +220,7 @@ export default function VehicleDetailPage({
         <Alert variant="error" description="Veículo não encontrado." />
       </main>
     );
+  if (!form) return <main className="p-8">Carregando...</main>;
 
   return (
     <Container size="sm">
@@ -187,21 +265,134 @@ export default function VehicleDetailPage({
       </section>
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+        <label htmlFor="plate">Placa</label>
+        <PlateInput
+          id="plate"
+          value={form.plate}
+          onChange={(value) => updateField("plate", value)}
+          aria-invalid={Boolean(fieldErrors.plate)}
+          aria-describedby={fieldErrors.plate ? "plate-error" : undefined}
+        />
+        {fieldErrors.plate && (
+          <p id="plate-error" role="alert" className="text-sm text-danger">
+            {fieldErrors.plate}
+          </p>
+        )}
+
+        <label htmlFor="make">Marca</label>
+        <Input
+          id="make"
+          value={form.make}
+          onChange={(event) => updateField("make", event.target.value)}
+          aria-invalid={Boolean(fieldErrors.make)}
+        />
+        {fieldErrors.make && (
+          <p role="alert" className="text-sm text-danger">
+            {fieldErrors.make}
+          </p>
+        )}
+
+        <label htmlFor="model">Modelo</label>
+        <Input
+          id="model"
+          value={form.model}
+          onChange={(event) => updateField("model", event.target.value)}
+          aria-invalid={Boolean(fieldErrors.model)}
+        />
+        {fieldErrors.model && (
+          <p role="alert" className="text-sm text-danger">
+            {fieldErrors.model}
+          </p>
+        )}
+
+        <label htmlFor="year">Ano</label>
+        <Input
+          id="year"
+          type="number"
+          value={form.year}
+          onChange={(event) => updateField("year", event.target.value)}
+          aria-invalid={Boolean(fieldErrors.year)}
+        />
+        {fieldErrors.year && (
+          <p role="alert" className="text-sm text-danger">
+            {fieldErrors.year}
+          </p>
+        )}
+
+        <span className="text-sm font-medium">Tipo</span>
+        <Combobox
+          aria-label="Tipo"
+          options={VEHICLE_TYPE_OPTIONS}
+          value={form.vehicle_type}
+          onValueChange={(value) => updateField("vehicle_type", value)}
+          placeholder="Selecione um tipo"
+          searchPlaceholder="Buscar tipo..."
+          emptyMessage="Nenhum tipo encontrado"
+        />
+
+        <span className="text-sm font-medium">Combustível</span>
+        <Combobox
+          aria-label="Combustível"
+          options={FUEL_TYPE_OPTIONS}
+          value={form.fuel_type}
+          onValueChange={(value) => updateField("fuel_type", value)}
+          placeholder="Selecione o combustível"
+          searchPlaceholder="Buscar combustível..."
+          emptyMessage="Nenhum combustível encontrado"
+        />
+
+        <label htmlFor="odometer">Odômetro (km)</label>
+        <OdometerInput
+          id="odometer"
+          value={form.odometer}
+          onChange={(value) => updateField("odometer", value)}
+          aria-label="Odômetro (km)"
+        />
+        {fieldErrors.odometer && (
+          <p role="alert" className="text-sm text-danger">
+            {fieldErrors.odometer}
+          </p>
+        )}
+
         <label htmlFor="nickname">Apelido</label>
         <Input
           id="nickname"
-          value={nickname}
-          onChange={(event) => setNickname(event.target.value)}
+          value={form.nickname}
+          onChange={(event) => updateField("nickname", event.target.value)}
         />
 
         <label htmlFor="color">Cor</label>
         <Input
           id="color"
-          value={color}
-          onChange={(event) => setColor(event.target.value)}
+          value={form.color}
+          onChange={(event) => updateField("color", event.target.value)}
         />
 
-        {fieldError && <Alert variant="error" description={fieldError} />}
+        <label htmlFor="ipva_due_date">Vencimento do IPVA</label>
+        <Input
+          id="ipva_due_date"
+          type="date"
+          value={form.ipva_due_date}
+          onChange={(event) => updateField("ipva_due_date", event.target.value)}
+        />
+
+        <label htmlFor="renavam">RENAVAM</label>
+        <Input
+          id="renavam"
+          value={form.renavam}
+          onChange={(event) => updateField("renavam", event.target.value)}
+        />
+
+        <label htmlFor="chassi">Chassi</label>
+        <Input
+          id="chassi"
+          value={form.chassi}
+          onChange={(event) => updateField("chassi", event.target.value)}
+        />
+
+        {fieldErrors._root && (
+          <Alert variant="error" description={fieldErrors._root} />
+        )}
         {updateMutation.isError && (
           <Alert
             variant="error"
@@ -215,14 +406,51 @@ export default function VehicleDetailPage({
         </Button>
       </form>
 
-      <Button
-        type="button"
-        variant="destructive"
-        onClick={handleDelete}
-        disabled={deleteMutation.isPending}
+      <AlertDialog
+        open={deleteDialogOpen}
+        onOpenChange={(open) => {
+          setDeleteDialogOpen(open);
+          if (!open) setConfirmationPlate("");
+        }}
       >
-        {deleteMutation.isPending ? "Removendo..." : "Remover veículo"}
-      </Button>
+        <AlertDialogTrigger asChild>
+          <Button type="button" variant="destructive">
+            Remover veículo
+          </Button>
+        </AlertDialogTrigger>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              Excluir {vehicle.nickname ?? `${vehicle.make} ${vehicle.model}`} (
+              {vehicle.plate})?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              O histórico de despesas e manutenções também será ocultado. Esta ação não
+              pode ser desfeita facilmente. Digite a placa {vehicle.plate} para confirmar.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+
+          <label htmlFor="confirmation-plate" className="sr-only">
+            Digite {vehicle.plate} para confirmar
+          </label>
+          <PlateInput
+            id="confirmation-plate"
+            value={confirmationPlate}
+            onChange={setConfirmationPlate}
+            placeholder={`Digite ${vehicle.plate} para confirmar`}
+          />
+
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={!deleteConfirmationValid || deleteMutation.isPending}
+              onClick={handleConfirmDelete}
+            >
+              {deleteMutation.isPending ? "Removendo..." : "Excluir definitivamente"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
       {deleteMutation.isError && (
         <Alert
           variant="error"

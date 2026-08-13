@@ -29,6 +29,9 @@ type CardSpec = Pick<
   "value" | "unit" | "caption" | "trend" | "sparkline"
 >;
 
+/** @spec SPEC-20260813-001 RF-07 — a partir daqui o grid secundário ganha divisor + opacidade reduzida */
+const PRIMARY_KPI_COUNT = 4;
+
 /**
  * @spec SPEC-20260721-002 RF-01, R-KPI-02 — `delta_pct` nulo nunca vira seta de tendência
  * @spec SPEC-20260804-006 RF-04, RF-06, RF-07 — `isFleetContext` só afeta o rótulo de
@@ -141,59 +144,67 @@ export function DashboardKpiGrid({
   /** @spec SPEC-20260804-006 RF-07 — falso apenas em contexto de veículo único (`selectionMode === "single"`) */
   isFleetContext?: boolean;
 }): ReactNode {
-  if (!catalog) {
+  const primaryIds = activeIds.slice(0, PRIMARY_KPI_COUNT);
+  const secondaryIds = activeIds.slice(PRIMARY_KPI_COUNT);
+
+  function renderCard(id: KpiCatalogId): ReactNode {
+    // eslint-disable-next-line security/detect-object-injection -- id é KpiCatalogId, união fixa de 9 literais
+    const meta = KPI_CATALOG_META[id];
+
+    if (!catalog) {
+      return <KpiCard key={id} title={meta.title} value="" loading />;
+    }
+
+    const spec = specForId(id, catalog, isFleetContext);
+
+    if (spec === "unavailable") {
+      return (
+        <div
+          key={id}
+          className="w-full rounded-lg border border-border bg-card p-3"
+        >
+          <p className="text-sm text-muted-foreground">{meta.title}</p>
+          <div
+            className="mt-1 flex items-center gap-1 text-lg font-semibold text-muted-foreground"
+            title="Não foi possível carregar. Tente novamente."
+          >
+            {/* @spec SPEC-20260731-007 RF-04 */}
+            <TriangleAlert size={16} aria-hidden />
+            <span>—</span>
+          </div>
+        </div>
+      );
+    }
+
     return (
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        {activeIds.map((id) => {
-          // eslint-disable-next-line security/detect-object-injection -- id é KpiCatalogId, união fixa de 9 literais
-          const meta = KPI_CATALOG_META[id];
-          return <KpiCard key={id} title={meta.title} value="" loading />;
-        })}
-      </div>
+      <Link
+        key={id}
+        href={meta.href}
+        className="rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+      >
+        <KpiCard
+          title={meta.title}
+          icon={<meta.icon size={16} aria-hidden />}
+          reverseTrend={meta.reverseTrend}
+          {...spec}
+        />
+      </Link>
     );
   }
 
   return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-      {activeIds.map((id) => {
-        // eslint-disable-next-line security/detect-object-injection -- id é KpiCatalogId, união fixa de 9 literais
-        const meta = KPI_CATALOG_META[id];
-        const spec = specForId(id, catalog, isFleetContext);
-
-        if (spec === "unavailable") {
-          return (
-            <div
-              key={id}
-              className="w-full rounded-lg border border-border bg-card p-3"
-            >
-              <p className="text-sm text-muted-foreground">{meta.title}</p>
-              <div
-                className="mt-1 flex items-center gap-1 text-lg font-semibold text-muted-foreground"
-                title="Não foi possível carregar. Tente novamente."
-              >
-                {/* @spec SPEC-20260731-007 RF-04 */}
-                <TriangleAlert size={16} aria-hidden />
-                <span>—</span>
-              </div>
-            </div>
-          );
-        }
-
-        return (
-          <Link
-            key={id}
-            href={meta.href}
-            className="rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-          >
-            <KpiCard
-              title={meta.title}
-              icon={<meta.icon size={16} aria-hidden />}
-              reverseTrend={meta.reverseTrend}
-              {...spec}
-            />
-          </Link>
-        );
-      })}
+    <div className="flex flex-col gap-3">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        {primaryIds.map(renderCard)}
+      </div>
+      {secondaryIds.length > 0 && (
+        <>
+          <div className="border-t border-border" />
+          <div className="grid grid-cols-2 gap-3 opacity-75 sm:grid-cols-4">
+            {secondaryIds.map(renderCard)}
+          </div>
+        </>
+      )}
     </div>
   );
 }

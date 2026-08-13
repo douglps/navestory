@@ -4,12 +4,11 @@ import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { NavBadge, Skeleton } from "@navestory/ui";
-import type {
-  CategorySummaryItem,
-  FinesStatusResponse,
-} from "@navestory/validators";
+import type { CategorySummaryItem } from "@navestory/validators";
 import { apiClient } from "@/lib/http/api-client";
 import { useDashboardStore } from "@/lib/stores/use-dashboard-store";
+import { DashboardDateChip } from "./dashboard-date-chip";
+import { VehicleContextChip } from "./vehicle-context-chip";
 
 const QUERY_STALE_TIME_MS = 5 * 60 * 1000;
 const CHIP_SKELETON_COUNT = 3;
@@ -62,12 +61,6 @@ function buildChipHref(
   return `/expenses?${params.toString()}`;
 }
 
-const FINES_STYLE: Record<FinesStatusResponse["status"], string> = {
-  none: "text-muted-foreground",
-  open: "text-warning",
-  overdue: "text-danger",
-};
-
 /**
  * @spec SPEC-20260722-004 RF-03, RF-04, RF-05, RF-06, RF-07, RF-09
  * Barra fina de 44px, irmã do `<Header />` no shell autenticado (nunca wrapper) — chips de
@@ -119,16 +112,6 @@ export function FinancialSubheader(): ReactNode {
     refetchOnWindowFocus: true,
   });
 
-  const { data: finesStatus } = useQuery({
-    queryKey: ["fines-status"],
-    queryFn: () => apiClient<FinesStatusResponse>("/dashboard/fines-status"),
-    staleTime: QUERY_STALE_TIME_MS,
-    refetchOnWindowFocus: true,
-  });
-
-  const status = finesStatus?.status ?? "none";
-  const finesCount = finesStatus?.count ?? 0;
-
   return (
     <div className="flex h-11 items-center gap-3 border-b border-border bg-card/90 px-4 text-card-foreground">
       <div className="flex flex-1 items-center gap-2 overflow-hidden">
@@ -159,30 +142,12 @@ export function FinancialSubheader(): ReactNode {
             ))}
       </div>
 
+      {/* @spec SPEC-20260813-001 RF-02, RF-03 — links duplicados (Despesas/Manutenções/Multas, já
+          presentes na navegação principal da Sidebar) removidos; lado direito passa a exibir
+          apenas o contexto do momento: veículo ativo + data. */}
       <div className="flex shrink-0 items-center gap-3 text-sm">
-        <Link
-          href="/expenses"
-          className="text-muted-foreground transition-colors hover:text-foreground"
-        >
-          Despesas
-        </Link>
-        <Link
-          href="/maintenance"
-          className="text-muted-foreground transition-colors hover:text-foreground"
-        >
-          Manutenções
-        </Link>
-
-        <div aria-hidden="true" className="h-[18px] w-px bg-border/20" />
-
-        <Link
-          href="/fines"
-          // eslint-disable-next-line security/detect-object-injection -- status é union fixa de 3 literais (FinesStatusResponse["status"])
-          className={`flex items-center gap-1.5 transition-colors ${FINES_STYLE[status]}`}
-        >
-          Multas
-          <NavBadge count={finesCount} />
-        </Link>
+        <VehicleContextChip />
+        <DashboardDateChip />
       </div>
     </div>
   );

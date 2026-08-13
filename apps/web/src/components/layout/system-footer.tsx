@@ -19,7 +19,7 @@ const CONTA_LINKS = [
  */
 export function SystemFooter(): ReactNode {
   return (
-    <div className="mt-12 space-y-6 pt-8">
+    <div className="mt-16 space-y-6 px-4 pb-8 pt-8 md:px-6 lg:px-8">
       <div className="h-px w-full rounded-full bg-border" />
 
       <footer

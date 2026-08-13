@@ -17,13 +17,13 @@ describe("dashboardKpiIdsSchema (SPEC-20260721-002 RF-01, R-KPI-01)", () => {
     expect(dashboardKpiIdsSchema.safeParse(["expenses_month"]).success).toBe(true);
   });
 
-  it("aceita o teto de 6 ids ativos", () => {
-    const result = dashboardKpiIdsSchema.safeParse(KPI_CATALOG_IDS.slice(0, 6));
+  it("aceita o teto de 8 ids ativos", () => {
+    const result = dashboardKpiIdsSchema.safeParse(KPI_CATALOG_IDS.slice(0, 8));
     expect(result.success).toBe(true);
   });
 
-  it("rejeita mais de 6 ids ativos (R-KPI-01)", () => {
-    const result = dashboardKpiIdsSchema.safeParse(KPI_CATALOG_IDS.slice(0, 7));
+  it("rejeita mais de 8 ids ativos (R-KPI-01)", () => {
+    const result = dashboardKpiIdsSchema.safeParse(KPI_CATALOG_IDS.slice(0, 9));
     expect(result.success).toBe(false);
   });
 
@@ -39,8 +39,8 @@ describe("dashboardKpiIdsSchema (SPEC-20260721-002 RF-01, R-KPI-01)", () => {
     expect(dashboardKpiIdsSchema.safeParse(["expenses_month", "expenses_month"]).success).toBe(false);
   });
 
-  it("MAX_ACTIVE_DASHBOARD_KPIS é 6", () => {
-    expect(MAX_ACTIVE_DASHBOARD_KPIS).toBe(6);
+  it("MAX_ACTIVE_DASHBOARD_KPIS é 8", () => {
+    expect(MAX_ACTIVE_DASHBOARD_KPIS).toBe(8);
   });
 
   it("DEFAULT_DASHBOARD_KPI_IDS preserva os 4 KPIs já exibidos antes desta feature", () => {

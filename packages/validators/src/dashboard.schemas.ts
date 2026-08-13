@@ -126,8 +126,8 @@ export const DEFAULT_DASHBOARD_KPI_IDS: KpiCatalogId[] = [
   "next_maintenance",
 ];
 
-/** @spec SPEC-20260721-002 R-KPI-01 — teto de KPIs simultâneos no dashboard */
-export const MAX_ACTIVE_DASHBOARD_KPIS = 6;
+/** @spec SPEC-20260813-001 RF-07 — teto de KPIs simultâneos no dashboard, elevado de 6 para 8 */
+export const MAX_ACTIVE_DASHBOARD_KPIS = 8;
 
 /** @spec SPEC-20260721-002 R-KPI-01 */
 export const dashboardKpiIdsSchema = z

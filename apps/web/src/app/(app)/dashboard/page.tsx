@@ -12,7 +12,6 @@ import {
 import { Button, Container, EmptyState } from "@navestory/ui";
 import { apiClient } from "@/lib/http/api-client";
 import { ActionDock } from "@/components/layout/action-dock";
-import { SystemFooter } from "@/components/layout/system-footer";
 import { DashboardKpiGrid } from "@/components/dashboard/DashboardKpiGrid";
 import {
   FleetAlertBar,
@@ -31,40 +30,6 @@ import { useDashboardStore } from "@/lib/stores/use-dashboard-store";
 
 const GRID_LIMIT_NO_VIRTUALIZATION = 15;
 const GRID_INITIAL_PAGE_SIZE = 10;
-
-function capitalizeFirst(text: string): string {
-  return text.length > 0 ? text[0]!.toUpperCase() + text.slice(1) : text;
-}
-
-/**
- * @spec SPEC-20260721-002 RF-07
- * Formato abreviado "Qua, 22 Jul. 26" — saudação removida (decisão do usuário em 2026-07-22):
- * sem dado de identidade do usuário disponível client-side, o texto "Bom dia/Boa tarde/Boa
- * noite" era genérico e não agregava valor. `h1` de "Dashboard" mantido apenas para leitores
- * de tela (`sr-only`) — a data abreviada é o único conteúdo visível.
- */
-function DashboardDateHeader(): ReactNode {
-  const now = new Date();
-  const weekday = capitalizeFirst(
-    new Intl.DateTimeFormat("pt-BR", { weekday: "short" })
-      .format(now)
-      .replace(/\.$/, ""),
-  );
-  const day = String(now.getDate()).padStart(2, "0");
-  const month = capitalizeFirst(
-    new Intl.DateTimeFormat("pt-BR", { month: "short" }).format(now),
-  );
-  const year = String(now.getFullYear()).slice(-2);
-
-  return (
-    <div>
-      <h1 className="sr-only">Dashboard</h1>
-      <p className="text-sm text-muted-foreground">
-        {weekday}, {day} {month} {year}
-      </p>
-    </div>
-  );
-}
 
 /**
  * @spec SPEC-20260531-001 RF-DA-09
@@ -240,13 +205,15 @@ export default function DashboardPage(): ReactNode {
   const hasNoVehicles = vehicles?.length === 0;
 
   return (
-    <Container size="5xl" className="pb-24">
-      {/*
-        @spec SPEC-20260804-006 RF-14 — link "Histórico de Atividades" removido do header
-        (movido para a sidebar, ver components/layout/sidebar.tsx); o header volta a conter
-        apenas o controle de contexto da própria tela (data).
-      */}
-      <DashboardDateHeader />
+    <Container size="6xl" className="pb-24">
+      <h1 className="sr-only">Dashboard</h1>
+
+      {/* @spec SPEC-20260813-001 RF-04 — ActionDock desktop sai do fim da página (abaixo de 5
+          seções, fora do alcance sem scroll) para uma barra sticky logo abaixo do header, com
+          acesso imediato às 4 ações mais frequentes. Mobile mantém o FAB inalterado. */}
+      <div className="sticky top-14 z-10 mb-4 flex items-center justify-end border-b border-border bg-background/95 py-2 backdrop-blur-sm">
+        <ActionDock />
+      </div>
 
       {hasNoVehicles ? (
         <NoVehiclesEmptyState />
@@ -255,7 +222,7 @@ export default function DashboardPage(): ReactNode {
           {/* @spec SPEC-20260804-006 RF-16 */}
           {alerts && alerts.length > 0 && (
             <div>
-              <h2 className="kicker">Alertas</h2>
+              <h2 className="kicker pb-2">Alertas</h2>
               <FleetAlertBar alerts={alerts} />
             </div>
           )}
@@ -263,7 +230,7 @@ export default function DashboardPage(): ReactNode {
           {/* @spec SPEC-20260804-006 RF-16, RF-17 — KpiPicker separado do grid por divider próprio,
               para não parecer mais um card do grid (era um card colado, ambíguo entre indicador e ação). */}
           <div>
-            <h2 className="kicker">Indicadores</h2>
+            <h2 className="kicker pb-2">Indicadores</h2>
             <DashboardKpiGrid
               catalog={kpiCatalog}
               activeIds={activeKpiIds}
@@ -276,7 +243,7 @@ export default function DashboardPage(): ReactNode {
 
           {vehicles && (
             <div>
-              <h2 className="kicker">Frota</h2>
+              <h2 className="kicker pb-2">Frota</h2>
               <VehicleGrid
                 vehicles={vehicles}
                 healthByVehicleId={healthByVehicleId}
@@ -288,7 +255,7 @@ export default function DashboardPage(): ReactNode {
           )}
 
           <div ref={spotlightRef}>
-            <h2 className="kicker">Em Foco</h2>
+            <h2 className="kicker pb-2">Em Foco</h2>
             <VehicleSpotlight
               vehicle={activeVehicle}
               flags={activeVehicleId ? flagsByVehicleId.get(activeVehicleId) : undefined}
@@ -299,14 +266,11 @@ export default function DashboardPage(): ReactNode {
           <UpcomingCostsWidget />
 
           <div>
-            <h2 className="kicker">Gráficos</h2>
+            <h2 className="kicker pb-2">Gráficos</h2>
             <FleetChartsSection />
           </div>
         </>
       )}
-
-      <ActionDock />
-      <SystemFooter />
     </Container>
   );
 }

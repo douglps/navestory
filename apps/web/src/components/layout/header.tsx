@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useTheme } from "next-themes";
 import { AvatarDropdown, ThemeToggle } from "@navestory/ui";
-import { VehicleContextChip } from "./vehicle-context-chip";
+import { AlertsBell } from "./alerts-bell";
 import { CommandPaletteTrigger } from "./command-palette-trigger";
 import { MOBILE_NAV_DRAWER_ID } from "./sidebar";
 import { ConnectivityIndicator } from "@/components/pwa/connectivity-indicator";
@@ -12,8 +12,9 @@ import { useCurrentUser } from "@/lib/hooks/use-current-user";
 import { useUIStore } from "@/lib/stores/ui-store";
 
 /**
- * Header superior fixo do app shell — logo + chip de contexto de veículo,
- * sempre visível em todos os breakpoints (substitui o `FocusSlot` do sidebar).
+ * Header superior fixo do app shell — logo + atalho de Command Palette, sempre visível em
+ * todos os breakpoints (substitui o `FocusSlot` do sidebar). O chip de contexto de veículo
+ * vive no `FinancialSubheader` (ver SPEC-20260813-001 RF-02).
  *
  * @spec SPEC-20260603-001 RF-01
  * @spec SPEC-20260721-001 RF-03, RF-06 — cores em tokens (bg-card/border-border) em vez de
@@ -87,11 +88,14 @@ export function Header(): ReactNode {
         )}
       </button>
       <span className="text-base font-semibold">navestory</span>
+      {/* @spec SPEC-20260813-001 RF-02 — chip de contexto de veículo movido para o
+          FinancialSubheader (lado direito, junto da data). */}
       <div className="hidden items-center gap-3 md:flex">
-        <VehicleContextChip />
         <CommandPaletteTrigger />
       </div>
       <div className="ml-auto flex items-center gap-1">
+        {/* @spec SPEC-20260813-001 RF-05 — sino de alertas, visível em todos os breakpoints. */}
+        <AlertsBell />
         <div className="hidden items-center gap-1 md:flex">
           {/* @spec SPEC-20260712-001 RF-13 */}
           <ConnectivityIndicator />

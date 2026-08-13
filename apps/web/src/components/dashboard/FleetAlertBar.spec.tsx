@@ -19,33 +19,32 @@ describe("FleetAlertBar", () => {
     expect(container).toBeEmptyDOMElement();
   });
 
-  it("RF-DA-01: exibe descrição e prazo de cada alerta vencido/futuro", () => {
+  it("@spec SPEC-20260813-001 RF-05: agrega vencidos e próximos em contadores por severidade", () => {
     render(
       <FleetAlertBar
         alerts={[
           alert({ id: "a1", days_until_due: -2 }),
           alert({ id: "a2", days_until_due: 0 }),
+          alert({ id: "a3", days_until_due: 5 }),
         ]}
       />,
     );
 
-    expect(screen.getByText(/Vencido há 2 dias/)).toBeInTheDocument();
-    expect(screen.getByText(/Vence hoje/)).toBeInTheDocument();
+    expect(screen.getByText("1 vencido")).toBeInTheDocument();
+    expect(screen.getByText("2 próximos")).toBeInTheDocument();
   });
 
-  it("RF-DA-02: mostra no máximo 3 alertas e o link 'ver todos (+N)' para os demais", () => {
-    const alerts = [1, 2, 3, 4, 5].map((n) => alert({ id: `a${n}`, days_until_due: n }));
-    render(<FleetAlertBar alerts={alerts} />);
+  it("@spec SPEC-20260813-001 RF-05: exibe apenas o contador de severidade presente", () => {
+    render(<FleetAlertBar alerts={[alert({ id: "a1", days_until_due: 3 })]} />);
 
-    expect(screen.getAllByText(/ABC1234/)).toHaveLength(3);
-    const link = screen.getByRole("link", { name: "ver todos (+2)" });
+    expect(screen.queryByText(/vencido/)).not.toBeInTheDocument();
+    expect(screen.getByText("1 próximo")).toBeInTheDocument();
+  });
+
+  it("@spec SPEC-20260813-001 RF-05: link 'Ver alertas' aponta para /maintenance?filter=urgent", () => {
+    render(<FleetAlertBar alerts={[alert({ id: "a1" })]} />);
+
+    const link = screen.getByRole("link", { name: "Ver alertas" });
     expect(link).toHaveAttribute("href", "/maintenance?filter=urgent");
-  });
-
-  it("não exibe o link de overflow quando há 3 ou menos alertas", () => {
-    const alerts = [1, 2, 3].map((n) => alert({ id: `a${n}` }));
-    render(<FleetAlertBar alerts={alerts} />);
-
-    expect(screen.queryByRole("link")).not.toBeInTheDocument();
   });
 });

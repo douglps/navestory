@@ -49,12 +49,13 @@ describe("Header", () => {
     vi.unstubAllGlobals();
   });
 
-  it("RF-01: exibe o logo e o chip de contexto", async () => {
+  // @spec SPEC-20260813-001 RF-02 — chip de contexto de veículo migrou para o FinancialSubheader.
+  it("RF-01: exibe o logo e o sino de alertas", async () => {
     renderHeader();
 
     expect(screen.getByText("navestory")).toBeInTheDocument();
     await waitFor(() =>
-      expect(screen.getByText(/Toda a frota/)).toBeInTheDocument(),
+      expect(screen.getByRole("button", { name: "Alertas da frota" })).toBeInTheDocument(),
     );
   });
 

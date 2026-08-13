@@ -9,6 +9,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
   Car,
   FolderTree,
@@ -19,11 +20,14 @@ import {
   Receipt,
   Settings,
   Shield,
+  Ticket,
   User,
   Wrench,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import { Tooltip } from "@navestory/ui";
+import { NavBadge, Tooltip } from "@navestory/ui";
+import type { FinesStatusResponse } from "@navestory/validators";
+import { apiClient } from "@/lib/http/api-client";
 import { logout } from "@/lib/auth/logout";
 import { useMediaQuery } from "@/lib/hooks/use-media-query";
 import {
@@ -31,6 +35,8 @@ import {
   type SelectionMode,
 } from "@/lib/stores/use-dashboard-store";
 import { useUIStore } from "@/lib/stores/ui-store";
+
+const QUERY_STALE_TIME_MS = 5 * 60 * 1000;
 
 // @spec SPEC-20260730-002 RF-01, RF-02, RF-03
 const HOLD_TO_LOGOUT_DURATION_MS = 1000;
@@ -99,19 +105,26 @@ interface NavItem {
   href: string;
   label: string;
   Icon: LucideIcon;
+  badge?: ReactNode;
 }
 
 // @spec SPEC-20260730-002 RF-17 — grupo "Navegação" da sidebar em 3 seções (US-06).
-const NAV_ITEMS: NavItem[] = [
-  { href: "/dashboard", label: "Dashboard", Icon: LayoutDashboard },
-  { href: "/vehicles", label: "Veículos", Icon: Car },
-  { href: "/vehicle-groups", label: "Grupos", Icon: FolderTree },
-  { href: "/expenses", label: "Despesas", Icon: Receipt },
-  { href: "/maintenance", label: "Manutenções", Icon: Wrench },
-  // @spec SPEC-20260804-006 RF-14 — movido do header do dashboard: navegação global, faz mais
-  // sentido sempre acessível na sidebar do que ancorada numa tela específica.
-  { href: "/atividades", label: "Histórico de Atividades", Icon: Shield },
-];
+// @spec SPEC-20260813-001 RF-01 — "Multas" migrou do FinancialSubheader (removido por
+// duplicidade com a navegação principal) para cá, mantendo o único ponto de acesso à rota
+// e o badge de contagem (antes exclusivo do subheader).
+function buildNavItems(finesBadge: ReactNode): NavItem[] {
+  return [
+    { href: "/dashboard", label: "Dashboard", Icon: LayoutDashboard },
+    { href: "/vehicles", label: "Veículos", Icon: Car },
+    { href: "/vehicle-groups", label: "Grupos", Icon: FolderTree },
+    { href: "/expenses", label: "Despesas", Icon: Receipt },
+    { href: "/maintenance", label: "Manutenções", Icon: Wrench },
+    { href: "/fines", label: "Multas", Icon: Ticket, badge: finesBadge },
+    // @spec SPEC-20260804-006 RF-14 — movido do header do dashboard: navegação global, faz mais
+    // sentido sempre acessível na sidebar do que ancorada numa tela específica.
+    { href: "/atividades", label: "Histórico de Atividades", Icon: Shield },
+  ];
+}
 
 // @spec SPEC-20260730-002 RF-17 — grupo "Configurações" da sidebar em 3 seções (US-06).
 const SETTINGS_ITEMS: NavItem[] = [
@@ -146,7 +159,12 @@ function SidebarNavItem({
       } ${effectiveCollapsed ? "md:justify-center md:text-center" : ""}`}
     >
       <Icon size={24} strokeWidth={1.75} className="shrink-0" aria-hidden />
-      {!effectiveCollapsed && item.label}
+      {!effectiveCollapsed && (
+        <span className="flex flex-1 items-center justify-between gap-2">
+          {item.label}
+          {item.badge}
+        </span>
+      )}
     </Link>
   );
   return (
@@ -273,6 +291,14 @@ export function Sidebar(): ReactNode {
   const { isHolding: isHoldingLogout, handlers: holdLogoutHandlers } =
     useHoldToConfirm(() => void logout());
 
+  const { data: finesStatus } = useQuery({
+    queryKey: ["fines-status"],
+    queryFn: () => apiClient<FinesStatusResponse>("/dashboard/fines-status"),
+    staleTime: QUERY_STALE_TIME_MS,
+    refetchOnWindowFocus: true,
+  });
+  const navItems = buildNavItems(<NavBadge count={finesStatus?.count ?? 0} />);
+
   // @spec SPEC-20260730-002 RF-14 — largura da sidebar expandida = largura intrínseca do
   // conteúdo de navegação (md:w-fit no <ul>, ver className abaixo) + 20%, medida via
   // ResizeObserver em vez de valor Tailwind fixo. `md:w-64` no <nav> é usado só como fallback
@@ -357,7 +383,7 @@ export function Sidebar(): ReactNode {
         >
           {/* @spec SPEC-20260730-002 RF-17 — seção 1 de 3: Navegação (US-06). */}
           <ul className="flex w-full flex-col gap-1">
-            {NAV_ITEMS.map((item) => (
+            {navItems.map((item) => (
               <SidebarNavItem
                 key={item.href}
                 item={item}
@@ -407,12 +433,9 @@ export function Sidebar(): ReactNode {
                     : "w-0 transition-none"
                 }`}
               />
-              <span className="relative flex items-center justify-center">
-                {effectiveCollapsed ? (
-                  <LogOut size={20} strokeWidth={1.75} aria-hidden />
-                ) : (
-                  "Sair"
-                )}
+              <span className="relative flex items-center justify-center gap-2">
+                <LogOut size={20} strokeWidth={1.75} className="shrink-0" aria-hidden />
+                {!effectiveCollapsed && "Sair"}
               </span>
             </button>
           );

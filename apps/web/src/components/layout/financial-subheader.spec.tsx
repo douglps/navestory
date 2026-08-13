@@ -81,64 +81,26 @@ describe("FinancialSubheader", () => {
   it("não renderiza chip nenhum quando não há despesas no mês (área vazia, sem erro)", async () => {
     stubFetch({
       "/dashboard/spending-highlights": { data: [] },
-      "/dashboard/fines-status": { data: { status: "none", count: 0 } },
     });
 
     renderSubheader();
 
-    await waitFor(() =>
-      expect(screen.getByText("Despesas")).toBeInTheDocument(),
-    );
+    await waitFor(() => expect(screen.getByText(/Toda a frota/)).toBeInTheDocument());
     expect(screen.queryByText("Combustível")).not.toBeInTheDocument();
   });
 
-  // @spec SPEC-20260722-004 US-02
-  it("RF-05: exibe atalhos estáticos para /expenses e /maintenance", async () => {
+  // @spec SPEC-20260813-001 RF-02, RF-03
+  it("RF-02, RF-03: lado direito mostra o chip de veículo e a data, sem os links duplicados removidos da navegação", async () => {
     stubFetch({
       "/dashboard/spending-highlights": { data: [] },
-      "/dashboard/fines-status": { data: { status: "none", count: 0 } },
     });
 
     renderSubheader();
 
-    expect(screen.getByText("Despesas").closest("a")).toHaveAttribute(
-      "href",
-      "/expenses",
-    );
-    expect(screen.getByText("Manutenções").closest("a")).toHaveAttribute(
-      "href",
-      "/maintenance",
-    );
-  });
-
-  // @spec SPEC-20260722-004 US-03, R-SUB-04
-  it("RF-06: aplica estilo de perigo e badge quando há multa vencida", async () => {
-    stubFetch({
-      "/dashboard/spending-highlights": { data: [] },
-      "/dashboard/fines-status": { data: { status: "overdue", count: 2 } },
-    });
-
-    renderSubheader();
-
-    await waitFor(() =>
-      expect(screen.getByText("Multas").closest("a")).toHaveClass(
-        "text-danger",
-      ),
-    );
-    expect(screen.getByText("2")).toBeInTheDocument();
-  });
-
-  // @spec SPEC-20260722-004 US-03
-  it("RF-06: estilo neutro e sem badge quando não há multas ativas", async () => {
-    stubFetch({
-      "/dashboard/spending-highlights": { data: [] },
-      "/dashboard/fines-status": { data: { status: "none", count: 0 } },
-    });
-
-    renderSubheader();
-
-    const finesLink = await screen.findByText("Multas");
-    expect(finesLink.closest("a")).toHaveClass("text-muted-foreground");
+    await waitFor(() => expect(screen.getByText(/Toda a frota/)).toBeInTheDocument());
+    expect(screen.queryByRole("link", { name: "Despesas" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Manutenções" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /Multas/ })).not.toBeInTheDocument();
   });
 
   // @spec SPEC-20260722-004 US-01

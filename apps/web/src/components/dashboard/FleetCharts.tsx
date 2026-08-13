@@ -19,7 +19,7 @@ import type {
   FleetChartsResponse,
   MonthlySeriesPoint,
 } from "@navestory/validators";
-import { ChartWrapper } from "@navestory/ui";
+import { ChartTooltip, ChartWrapper } from "@navestory/ui";
 import { apiClient } from "@/lib/http/api-client";
 import { CHART_CATEGORY_COLORS } from "@/lib/chart-colors";
 import { EasterEggHeatmapWidget } from "./EasterEggHeatmapWidget";
@@ -68,7 +68,18 @@ export function CostPerKmChart({
             />
             <XAxis dataKey="month" />
             <YAxis />
-            <Tooltip formatter={(value) => currency(Number(value))} />
+            <Tooltip
+              content={({ active, payload, label }) => (
+                <ChartTooltip
+                  active={active}
+                  payload={payload}
+                  label={label}
+                  formatter={(value) => currency(value)}
+                />
+              )}
+              allowEscapeViewBox={{ x: false, y: false }}
+              cursor={{ fill: "oklch(var(--border) / 0.35)" }}
+            />
             <Area
               type="monotone"
               dataKey="value"
@@ -114,7 +125,18 @@ export function FuelConsumptionChart({
             />
             <XAxis dataKey="month" />
             <YAxis />
-            <Tooltip formatter={(value) => `${Number(value).toFixed(1)} L`} />
+            <Tooltip
+              content={({ active, payload, label }) => (
+                <ChartTooltip
+                  active={active}
+                  payload={payload}
+                  label={label}
+                  formatter={(value) => `${value.toFixed(1)} L`}
+                />
+              )}
+              allowEscapeViewBox={{ x: false, y: false }}
+              cursor={{ fill: "oklch(var(--border) / 0.35)" }}
+            />
             <Bar
               dataKey="value"
               name="Litros"
@@ -164,7 +186,18 @@ export function ExpenseCategoryPie({
               width={96}
               tickLine={false}
             />
-            <Tooltip formatter={(value) => currency(Number(value))} />
+            <Tooltip
+              content={({ active, payload, label }) => (
+                <ChartTooltip
+                  active={active}
+                  payload={payload}
+                  label={label}
+                  formatter={(value) => currency(value)}
+                />
+              )}
+              allowEscapeViewBox={{ x: false, y: false }}
+              cursor={{ fill: "oklch(var(--border) / 0.35)" }}
+            />
             <Bar dataKey="value" name="Total">
               {data.map((entry, index) => (
                 <Cell

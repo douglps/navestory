@@ -5,6 +5,7 @@ import { FinancialSubheader } from "@/components/layout/financial-subheader";
 import { FleetAside } from "@/components/layout/fleet-aside";
 import { Header } from "@/components/layout/header";
 import { Sidebar } from "@/components/layout/sidebar";
+import { SystemFooter } from "@/components/layout/system-footer";
 import { TimezoneDetector } from "@/components/layout/timezone-detector";
 import { VehicleActivator } from "@/components/layout/vehicle-activator";
 import { InstallPromptBanner } from "@/components/pwa/install-prompt-banner";
@@ -31,6 +32,7 @@ export default function AppLayout({ children }: { children: ReactNode }): ReactN
         <div className="flex-1">
           <FinancialSubheader />
           {children}
+          <SystemFooter />
         </div>
       </div>
       <InstallPromptBanner />

@@ -188,6 +188,7 @@ Ao subir a versão de uma regra (`vN → vN+1`): registrar a linha de histórico
 | Agente              | Quando usar                                                                                                                                                   |
 | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `product-owner`     | Visão de produto, priorização e gestão de backlog — decidir o que entra/sai do escopo, consultar fluxos existentes e mercado para embasar a decisão, orientado a outcome |
+| `tech-lead`         | Decisões de arquitetura e ADRs, gate técnico de specs antes da aprovação, dívida técnica/saúde do código, arbitragem entre demandas de produto e capacidade técnica |
 | `spec-writer`       | Criar ou atualizar especificações de features                                                                                                                 |
 | `impact-analyzer`   | Analisar impacto antes de mudanças significativas                                                                                                             |
 | `reviewer`          | Revisar código e specs antes de commitar                                                                                                                      |

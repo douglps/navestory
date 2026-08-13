@@ -6,7 +6,7 @@ import { cn } from "../lib/cn";
  * @spec SPEC-20260730-001 RF-03 — substitui `<main className="mx-auto flex max-w-{size}
  * flex-col gap-{n} p-8">`, idêntico em 32 ocorrências através de quase toda rota `page.tsx`.
  */
-const containerVariants = cva("mx-auto flex w-full flex-col p-8", {
+const containerVariants = cva("mx-auto flex w-full flex-col p-4 md:p-6 lg:p-8", {
   variants: {
     size: {
       sm: "max-w-sm",
@@ -15,6 +15,7 @@ const containerVariants = cva("mx-auto flex w-full flex-col p-8", {
       "3xl": "max-w-3xl",
       "4xl": "max-w-4xl",
       "5xl": "max-w-5xl",
+      "6xl": "max-w-6xl 2xl:max-w-[1600px]",
     },
   },
   defaultVariants: {

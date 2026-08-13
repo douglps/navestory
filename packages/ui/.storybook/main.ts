@@ -1,24 +1,20 @@
-import tailwindcss from "@tailwindcss/vite";
 import type { StorybookConfig } from "@storybook/react-vite";
 
-/**
- * Storybook para os componentes de `@navestory/ui`, usando o builder Vite (mesmo bundler já
- * usado pelo Vitest do pacote — sem builder duplicado). Reaproveita o Tailwind v4 e os
- * tokens de design já existentes via `.storybook/preview.css` (ver preview.ts).
- */
 const config: StorybookConfig = {
-  stories: ["../src/**/*.stories.@(ts|tsx)"],
-  // Controls, actions, viewport e backgrounds já vêm no core do Storybook 10 — addon-essentials
-  // (última versão publicada: 8.6.14) é anterior a essa consolidação e não é mais necessário.
+  stories: ["../src/**/*.mdx", "../src/**/*.stories.@(js|jsx|mjs|ts|tsx)"],
+  addons: [],
   framework: {
     name: "@storybook/react-vite",
     options: {},
   },
-  async viteFinal(viteConfig) {
-    const { mergeConfig } = await import("vite");
-    return mergeConfig(viteConfig, {
-      plugins: [tailwindcss()],
-    });
+  /**
+   * Injeta o plugin @tailwindcss/vite para que as classes Tailwind dos componentes
+   * sejam compiladas no Storybook. O plugin está em devDependencies de packages/ui.
+   */
+  viteFinal: async (config) => {
+    const { default: tailwindcss } = await import("@tailwindcss/vite");
+    config.plugins = [...(config.plugins ?? []), tailwindcss()];
+    return config;
   },
 };
 

@@ -56,6 +56,11 @@ export {
 } from "./components/date-range-picker";
 export { FileUpload, type FileUploadProps } from "./components/file-upload";
 export { ChartWrapper, type ChartWrapperProps } from "./components/chart-wrapper";
+export {
+  ChartTooltip,
+  type ChartTooltipProps,
+  type ChartTooltipPayloadItem,
+} from "./components/chart-tooltip";
 export { Breadcrumb, type BreadcrumbProps, type BreadcrumbItem } from "./components/breadcrumb";
 export {
   Dialog,
@@ -94,5 +99,51 @@ export {
   type CommandPaletteProps,
   type CommandPaletteItem,
 } from "./components/command-palette";
+
+// ── Onda 2: DatePicker, PlateDisplay, CurrencyShortcuts, Label, Popover ──────
+
+export { DatePicker, type DatePickerProps } from "./components/date-picker";
+
+export {
+  PlateDisplay,
+  type PlateDisplayProps,
+  type PlateDisplaySize,
+} from "./components/plate-display";
+
+export {
+  CurrencyShortcuts,
+  type CurrencyShortcutsProps,
+  type ShortcutItem,
+} from "./components/currency-shortcuts";
+
+export { Label, type LabelProps } from "./components/label";
+
+export {
+  Popover,
+  PopoverTrigger,
+  PopoverAnchor,
+  PopoverContent,
+  type PopoverContentProps,
+} from "./components/popover";
+
+// ── Onda 3: Icon, Typography, SelectNative, StatsCard ────────────────────────
+
+export { Icon, type IconProps, type IconSize, type IconColor } from "./components/icon";
+
+export {
+  Typography,
+  typographyVariants,
+  type TypographyProps,
+} from "./components/typography";
+
+export { SelectNative, type SelectNativeProps } from "./components/select";
+
+export {
+  StatsCard,
+  type StatsCardProps,
+  type StatsCardVariant,
+} from "./components/stats-card";
+
+// ── Utilitários ───────────────────────────────────────────────────────────────
 
 export { cn } from "./lib/cn";

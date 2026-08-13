@@ -6,60 +6,57 @@ import {
   Injectable,
   UnauthorizedException,
 } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Request } from "express";
-import { SUPABASE_ADMIN_CLIENT } from "../../shared/supabase/supabase.constants";
+import type { JWTVerifyGetKey } from "jose";
+import { SUPABASE_ADMIN_CLIENT, SUPABASE_JWKS } from "../../shared/supabase/supabase.constants";
 import type { JwtPayload } from "../../modules/auth/jwt.strategy";
+import { extractSupabaseToken, verifySupabaseJwt } from "./supabase-jwt.util";
+
+const PROFILE_CACHE_TTL_MS = 5_000;
 
 /**
  * @spec SPEC-20260521-001 RULES.md S1
- * Bloqueia rotas sem sessão válida do Supabase Auth. Valida o token chamando `auth.getUser`
- * no próprio Supabase em vez de verificar a assinatura localmente contra um segredo estático:
- * o GoTrue deste projeto assina os access tokens com chave assimétrica rotacionável
- * (ES256/JWKS, padrão do Supabase CLI atual), então `SUPABASE_JWT_SECRET` (HS256, legado) não
- * consegue validar a assinatura — todo token, mesmo válido, era rejeitado com 401 antes desta
- * correção (achado do teste de ambiente local em 2026-07-19). Também aceita o token via cookie
- * httpOnly (`navestory_access_token`), não só via header `Authorization`, alinhando o guard ao
- * mesmo padrão de extração já usado manualmente em cada controller (ver `extractAccessToken`).
+ * Bloqueia rotas sem sessão válida do Supabase Auth. Valida a assinatura do access token
+ * localmente contra o JWKS do GoTrue (ver `verifySupabaseJwt`) em vez de round-trip a
+ * `auth.getUser()` — também aceita o token via cookie httpOnly (`navestory_access_token`),
+ * não só via header `Authorization`.
+ *
+ * A checagem de `profiles.deleted_at` continua sendo uma query real (soft-delete não é algo
+ * que dá pra inferir do JWT), mas com cache em memória de 5s por usuário: o dashboard dispara
+ * várias chamadas paralelas por carregamento de tela, e sem esse cache cada uma delas pagava
+ * a mesma query redundante (achado de performance de Douglas em 2026-08-08).
  */
 @Injectable()
 export class SupabaseAuthGuard implements CanActivate {
+  private readonly profileCache = new Map<
+    string,
+    { deletedAt: string | null; expiresAt: number }
+  >();
+
   constructor(
     @Inject(SUPABASE_ADMIN_CLIENT)
     private readonly supabaseAdmin: SupabaseClient,
+    @Inject(SUPABASE_JWKS)
+    private readonly jwks: JWTVerifyGetKey,
+    private readonly configService: ConfigService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context
       .switchToHttp()
       .getRequest<Request & { user?: JwtPayload }>();
-    const token = this.extractToken(request);
+    const token = extractSupabaseToken(request);
     if (!token) {
       throw new UnauthorizedException("Token de acesso ausente");
     }
 
-    const { data, error } = await this.supabaseAdmin.auth.getUser(token);
-    if (error || !data.user) {
-      throw new UnauthorizedException("Token inválido ou expirado");
-    }
+    const supabaseUrl = this.configService.getOrThrow<string>("SUPABASE_URL");
+    const payload = await verifySupabaseJwt(token, this.jwks, supabaseUrl);
 
-    const payload: JwtPayload = {
-      sub: data.user.id,
-      email: data.user.email ?? "",
-      aud: data.user.aud,
-      app_metadata: data.user.app_metadata as { role?: string },
-    };
-    if (payload.aud !== "authenticated") {
-      throw new UnauthorizedException("Token inválido");
-    }
-
-    const { data: profile, error: profileError } = await this.supabaseAdmin
-      .from("profiles")
-      .select("deleted_at")
-      .eq("id", payload.sub)
-      .maybeSingle();
-
-    if (profileError || !profile) {
+    const deletedAt = await this.getProfileDeletedAt(payload.sub);
+    if (deletedAt === undefined) {
       throw new UnauthorizedException("Conta inexistente ou desativada");
     }
 
@@ -68,10 +65,10 @@ export class SupabaseAuthGuard implements CanActivate {
      * Distingue conta em soft-delete (403 + code para o frontend redirecionar ao fluxo de
      * restore) de token inválido/ausente (401 genérico).
      */
-    if (profile.deleted_at !== null) {
+    if (deletedAt !== null) {
       throw new ForbiddenException({
         code: "ACCOUNT_PENDING_DELETION",
-        deleted_at: profile.deleted_at,
+        deleted_at: deletedAt,
         message: "Conta marcada para exclusão. Faça login para restaurá-la.",
       });
     }
@@ -80,13 +77,27 @@ export class SupabaseAuthGuard implements CanActivate {
     return true;
   }
 
-  private extractToken(request: Request): string | null {
-    const header = request.headers.authorization;
-    if (header?.startsWith("Bearer ")) {
-      return header.slice("Bearer ".length);
+  private async getProfileDeletedAt(userId: string): Promise<string | null | undefined> {
+    const cached = this.profileCache.get(userId);
+    const now = Date.now();
+    if (cached && cached.expiresAt > now) {
+      return cached.deletedAt;
     }
-    const cookieToken = (request.cookies as Record<string, string> | undefined)
-      ?.navestory_access_token;
-    return cookieToken ?? null;
+
+    const { data: profile, error } = await this.supabaseAdmin
+      .from("profiles")
+      .select("deleted_at")
+      .eq("id", userId)
+      .maybeSingle();
+
+    if (error || !profile) {
+      return undefined;
+    }
+
+    this.profileCache.set(userId, {
+      deletedAt: profile.deleted_at,
+      expiresAt: now + PROFILE_CACHE_TTL_MS,
+    });
+    return profile.deleted_at;
   }
 }

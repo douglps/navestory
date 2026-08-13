@@ -275,6 +275,16 @@
 >   linha 79 (linha longa, omitida por ferramentas de busca com limite de caracteres — confirmado
 >   por leitura direta). Nenhuma regra de frontmatter sem par em RULES.md encontrada nesta auditoria.
 
+> **ATUALIZAÇÃO — 2026-08-13 — SPEC-20260813-001 criada (review): Header + Dashboard UX v3**
+> Spec retroativa criada para cobrir código já implementado sem document formal. RF-01 a RF-09
+> reconstituídos por inspeção do código fonte (grep + leitura dos arquivos referenciados). RF-10 a
+> RF-17 são novos achados da auditoria UX de 2026-08-13 (agentes `ux-researcher` +
+> `ui-layout-reviewer`) ainda sem implementação. Spec em
+> `specs/dashboard/SPEC-20260813-001-header-dashboard-ux-v3.md`. Status `review` — aguarda
+> aprovação de Douglas. Entrada adicionada nesta matriz acima de "Requisitos do PRD sem Spec".
+> Achado crítico de processo: o code já referenciava `@spec SPEC-20260813-001` em 8+ arquivos
+> sem que o documento existisse — violação de "specs aprovadas são pré-requisito para implementação".
+
 > **ATUALIZAÇÃO — 2026-08-07 — SPEC-20260807-003 e SPEC-20260807-004 criadas (draft): lacunas de UX de veículos e despesas**
 > Auditoria comparativa de UX contra o projeto Nave-SaaS-main identificou seis lacunas priorizadas como
 > "ciclo imediato" (afetam integridade de dado hoje). As lacunas foram consolidadas em duas specs novas:
@@ -3603,6 +3613,44 @@ RNF-04 (foco preso no drawer + retorno ao hamburger ao fechar) implementado em `
 | RF-07 | `vehicle-groups/[id]`: confirmação de remoção total de membros via `AlertDialog` (estado genérico `confirmDialog`) | `apps/web/src/app/(app)/vehicle-groups/[id]/page.tsx` | `apps/web/src/app/(app)/vehicle-groups/[id]/page.spec.tsx` | ✅ |
 | RF-08 | `vehicle-groups/[id]`: confirmação de alteração normal de membros via `AlertDialog` | `apps/web/src/app/(app)/vehicle-groups/[id]/page.tsx` | `apps/web/src/app/(app)/vehicle-groups/[id]/page.spec.tsx` | ✅ |
 | RF-09 | `vehicle-groups/[id]`: confirmação de exclusão do grupo via `AlertDialog` | `apps/web/src/app/(app)/vehicle-groups/[id]/page.tsx` | `apps/web/src/app/(app)/vehicle-groups/[id]/page.spec.tsx` | ✅ |
+
+---
+
+## SPEC-20260813-001 — Header + Dashboard UX v3 (review)
+
+> Spec em `specs/dashboard/SPEC-20260813-001-header-dashboard-ux-v3.md`. Criada retroativamente
+> em 2026-08-13 para cobrir código já implementado sem spec formal — violação de processo
+> identificada na sessão de auditoria UX do dia. RF-01 a RF-09 reconstituídos a partir do código;
+> RF-10 a RF-17 novos achados da auditoria ainda sem implementação.
+> **Status:** `review` — aguarda aprovação formal por Douglas para transicionar para `approved`.
+> RF-10 a RF-17 apenas implementáveis após aprovação.
+
+### Retroativos — implementados (RF-01 a RF-09)
+
+| RF    | Requisito (resumo) | Código | Teste | Status |
+| ----- | ------------------ | ------ | ----- | ------ |
+| RF-01 | "Multas" migrado do FinancialSubheader para a Sidebar com badge de contagem | `apps/web/src/components/layout/sidebar.tsx` | `apps/web/src/components/layout/sidebar.spec.tsx` | 🔶 (migração de link; sem teste dedicado ao badge de multas) |
+| RF-02 | `DashboardDateChip` criado; chip veículo + data movidos para lado direito do FinancialSubheader; chip removido do header | `apps/web/src/components/layout/dashboard-date-chip.tsx`, `apps/web/src/components/layout/financial-subheader.tsx`, `apps/web/src/components/layout/header.tsx` | `apps/web/src/components/layout/financial-subheader.spec.tsx`, `apps/web/src/components/layout/header.spec.tsx` | ✅ |
+| RF-03 | Links Despesas/Manutenções/Multas removidos do FinancialSubheader (duplicidade com sidebar) | `apps/web/src/components/layout/financial-subheader.tsx` | `apps/web/src/components/layout/financial-subheader.spec.tsx` | ✅ |
+| RF-04 | `ActionDock` desktop movido para barra `sticky top-14` com backdrop-blur logo abaixo do header | `apps/web/src/app/(app)/dashboard/page.tsx` | — (sem teste automatizado de posicionamento CSS) | 🔶 |
+| RF-05 | `FleetAlertBar` reformulado de lista vertical para faixa de 1 linha com badges danger/warning por severidade | `apps/web/src/components/dashboard/FleetAlertBar.tsx` | `apps/web/src/components/dashboard/FleetAlertBar.spec.tsx` | ✅ |
+| RF-06 | `AlertsBell` criado no header: sino global, tooltip com prévia, Dialog com lista completa | `apps/web/src/components/layout/alerts-bell.tsx` | — (sem teste de componente dedicado; coberto indiretamente por `header.spec.tsx`) | 🔶 |
+| RF-07 | KpiGrid com divisão primário (4)/secundário (restantes, opacity-75, divisor); teto elevado para 8 (`MAX_ACTIVE_DASHBOARD_KPIS`) | `apps/web/src/components/dashboard/DashboardKpiGrid.tsx`, `packages/validators/src/dashboard.schemas.ts` | `packages/validators/src/dashboard.schemas.spec.ts` | 🔶 (divisor visual sem CT; MAX_ACTIVE ✅ via schemas.spec) |
+| RF-08 | `VehicleContextDialog` ganhou `VehicleActivePreview`: health score, flags, quick links abaixo da lista | `apps/web/src/components/layout/vehicle-context-dialog.tsx` | `apps/web/src/components/layout/vehicle-context-dialog.spec.tsx` | ✅ |
+| RF-09 | `ChartTooltip` em `packages/ui` seguindo tokens do design system (bg-card, border-border — sem inline style) | `packages/ui/src/components/chart-tooltip.tsx` | — (componente de UI puro; sem CT dedicado) | 🔶 |
+
+### Novos — pendentes de implementação (RF-10 a RF-17)
+
+| RF    | Requisito (resumo) | Código | Teste | Status |
+| ----- | ------------------ | ------ | ----- | ------ |
+| RF-10 | `FleetAlertBar` com estado positivo explícito quando vazio ("Frota em dia", badge success) | — | — | ⏳ |
+| RF-11 | Ordenação condicional das seções do dashboard: 2+ veículos → VehicleGrid antes de KpiGrid | — | — | ⏳ |
+| RF-12 | `UpcomingCostsWidget` posicionado após `DashboardKpiGrid` (3ª seção) em ambos os contextos | — | — | ⏳ |
+| RF-13 | Flag `cost_outlier` em `VehicleHealthCard` + caption warning em KpiCard de cost_per_km | — | — | ⏳ (bloqueado: threshold de outlier não definido em RULES.md) |
+| RF-14 | `KpiCard` com largura mínima de 133.25 px para evitar quebra em colunas estreitas | — | — | ⏳ |
+| RF-15 | Badge do `NavBadge` no `AlertsBell` reposicionado para não sobrepor o glifo do ícone Bell | — | — | ⏳ |
+| RF-16 | Posição correta do `CommandPaletteTrigger` no header (confirmar bug de centralização; documentar ancoragem) | — | — | ⏳ (requer verificação visual) |
+| RF-17 | Migração de iconografia no shell: emoji `🔍` eliminado; imports diretos Lucide migrados para wrapper `<Icon>` de packages/ui | — | — | ⏳ |
 
 ---
 

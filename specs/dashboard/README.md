@@ -10,6 +10,7 @@ Regras: R-MON-01, R-MON-02, R-MON-03, R-TZ-01, R-ANA-04, R-BIZ-12, C2, P6, R-KPI
 | [SPEC-20260722-004](SPEC-20260722-004-financial-subheader.md) | Subheader Financeiro — Chips de Categoria e Indicador de Multas | Draft |
 | [SPEC-20260804-001](SPEC-20260804-001-kpi-spending-window.md) | KPI Dashboard — Gastos nos Últimos X Dias (Janela Rolante Configurável) | Aprovada |
 | [SPEC-20260804-006](SPEC-20260804-006-dashboard-ux-polimento.md) | Dashboard — Acessibilidade, Correções de Dado e Polimento Visual | Draft |
+| [SPEC-20260813-001](SPEC-20260813-001-header-dashboard-ux-v3.md) | Header + Dashboard UX v3 — Reorganização de Shell, Alertas, KPI Grid e Polimento Visual | Review |
 
 Histórias de usuário do épico v2: [`STORIES.md`](STORIES.md)
 

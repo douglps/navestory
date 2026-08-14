@@ -4,7 +4,7 @@ title: "Formulário de Despesa: Hint de Odômetro e Pré-preenchimento de Combus
 status: draft
 date: 2026-08-07
 author: Douglas Lopes (lps.doug@protonmail.com)
-rules: [R-FUEL-07, R-ODO-07, R-FORM-01, R-FORM-02, R4]
+rules: [R-FUEL-07, R-FUEL-09, R-ODO-07, R-FORM-01, R-FORM-02, R4]
 security: [S1, S2]
 camadas: [frontend, backend]
 ---
@@ -76,8 +76,8 @@ Item 6 da auditoria original (exibição de todos os erros de validação) é co
 | RF-04 | A busca do hint é disparada toda vez que o `vehicle_id` selecionado muda; se o veículo for desmarcado (nenhum selecionado), o hint some | Alta | US-01 |
 | RF-05 | Implementar server action `getFavoriteFuelTypeAction(vehicleId: string): Promise<FuelType \| null>` que retorna `vehicles.favorite_fuel_type` para o veículo informado (campo já existente no schema — verificar coluna real na tabela `vehicles`) | Alta | US-02 |
 | RF-06 | Ao selecionar um veículo no formulário de despesa com `category = 'fuel'`, chamar `getFavoriteFuelTypeAction` e pré-preencher o campo Tipo de Combustível com o valor retornado; se `null`, deixar vazio | Alta | US-02 |
-| RF-07 | O pré-preenchimento de Tipo de Combustível respeita a regra de prioridade de R-FUEL-07: `favorite_fuel_type` do veículo tem prioridade máxima; se `null`, verificar se há template ativo com `fuel_type`; se não, campo vazio | Alta | US-02 |
-| RF-08 | O pré-preenchimento NÃO sobrescreve edição manual do usuário: se o usuário já alterou o campo Tipo de Combustível antes de trocar o veículo, a troca de veículo não deve resetar a edição manual (R-FUEL-08) | Alta | US-02 |
+| RF-07 | O pré-preenchimento de Tipo de Combustível respeita a regra de prioridade de R-FUEL-07: `favorite_fuel_type` do veículo tem prioridade máxima; se `null`, campo vazio — o segundo nível de fallback ("último abastecimento") definido em R-FUEL-07 não é implementado neste ciclo (ver Fora de Escopo) | Alta | US-02 |
+| RF-08 | O pré-preenchimento NÃO sobrescreve edição manual do usuário: se o usuário já alterou o campo Tipo de Combustível antes de trocar o veículo, a troca de veículo não deve resetar a edição manual (R-FUEL-09) | Alta | US-02 |
 | RF-09 | Ambas as server actions (`getOdometerHintAction`, `getFavoriteFuelTypeAction`) são fire-and-forget: erros de execução (timeout, DB error) são silenciados no cliente e não bloqueiam o formulário | Média | US-01, US-02 |
 
 ---
@@ -97,6 +97,7 @@ Item 6 da auditoria original (exibição de todos os erros de validação) é co
 ## Fora de Escopo
 
 - Pre-fill automático do valor do campo `odometer_km` com o último odômetro registrado — esta spec define apenas hint textual, não pre-fill de valor (pre-fill automático causaria violações silenciosas de R1).
+- Segundo nível de fallback de R-FUEL-07 ("último abastecimento"): RF-05/06/07 implementam apenas o primeiro nível de prioridade — `favorite_fuel_type`; o fallback de "último abastecimento" de R-FUEL-07 fica fora deste ciclo e pode ser adicionado em spec futura.
 - Edição do campo `favorite_fuel_type` direto no formulário de despesa — a preferência é configurada nas configurações do veículo, não aqui.
 - Hint de preço por litro baseado no último abastecimento do mesmo fornecedor — coberto por R-FUEL-08 (já definido em SPEC-20260619-001) e não incluído nesta spec.
 - Pré-preenchimento de outros campos além de `fuel_type` (ex: fornecedor, litros) — fora do escopo do ciclo imediato.
@@ -111,8 +112,8 @@ Item 6 da auditoria original (exibição de todos os erros de validação) é co
 | Spec | SPEC-20260601-001 | Validação de Odômetro — R1, R4 permanecem aplicados; o hint não altera a regra de validação |
 | Spec | SPEC-20260606-001 | Combustível e Cálculo de Consumo — R-FUEL-01, R-FUEL-02, R-FUEL-07 implementados aqui |
 | Spec | SPEC-20260612-001 | Melhorias de UX no Formulário de Despesas — `getOdometerHintAction` é novo; verificar se já existe versão prévia |
-| Spec | SPEC-20260619-001 | Padrão de Formulário — R-FORM-01, R-FORM-02 aplicados; R-FUEL-08 (pre-fill não sobrescreve edição manual) |
-| Schema | `vehicles.favorite_fuel_type` | Coluna existente na tabela `vehicles` — verificar nome real da coluna antes de implementar |
+| Spec | SPEC-20260619-001 | Padrão de Formulário — R-FORM-01, R-FORM-02 aplicados; R-FUEL-09 (pre-fill de fuel_type não sobrescreve edição manual) |
+| Schema | `vehicles.favorite_fuel_type` | Coluna confirmada na tabela `vehicles` (migration `20260712171830_core_tables.sql`, linha 30) |
 | Referência | `Nave-SaaS-main/expense-form.tsx` | Implementação de referência em `C:\Dev\Antigravity\Nave-SaaS-main\apps\web\components\expenses\expense-form.tsx` |
 
 ---
@@ -137,13 +138,15 @@ FROM (
 
 Alternativamente, se a tabela `vehicle_odometer_cycles` tiver o último valor, usar como fonte (verificar SPEC-20260711-001). A implementação de referência no Nave-SaaS-main usa a abordagem de UNION nas duas tabelas.
 
-### Controle de pre-fill sem sobrescrever edição manual (R-FUEL-08)
+**Desvio intencional de R-ODO-04 (v1):** a query acima não filtra por ciclo ativo de odômetro (`date >= started_at` do ciclo mais recente em `vehicle_odometer_cycles`), como exige R-ODO-04. Isso é deliberado nesta v1: o hint é referência visual para orientar o digitador e não bloqueia nem valida o formulário. Exibir um valor de ciclo anterior após um reset não causa inconsistência de dados — apenas apresenta um contexto potencialmente defasado, o que é aceitável para um campo informativo. A aderência completa a R-ODO-04 pode ser adicionada em iteração futura se o custo de uma falsa referência se mostrar relevante.
+
+### Controle de pre-fill sem sobrescrever edição manual (R-FUEL-09)
 
 Usar um ref booleano `fuelTypeUserEdited` inicializado em `false`. O campo Tipo de Combustível registra `onChange` do usuário via `onValueChange` e seta `fuelTypeUserEdited = true`. A lógica de pré-preenchimento ao trocar veículo executa `setValue('fuel_type', ...)` somente se `!fuelTypeUserEdited`. O ref é resetado para `false` se o usuário clicar em "Limpar formulário" ou montar um novo formulário.
 
-### Verificação de coluna `favorite_fuel_type`
+### Coluna `favorite_fuel_type`
 
-Antes de implementar RF-05, verificar se a coluna `vehicles.favorite_fuel_type` existe no schema atual do banco (`supabase/migrations/`) ou se está apenas no schema Zod. A SPEC-20260602-002 RF-07 lista `fuel_type` (combustível principal do veículo) mas não menciona `favorite_fuel_type` explicitamente. R-FUEL-07 cita `vehicles.favorite_fuel_type` como campo existente — confirmar o nome exato da coluna antes de implementar.
+A coluna `vehicles.favorite_fuel_type` existe no schema do banco — confirmada na migration `20260712171830_core_tables.sql`, linha 30. Implementar RF-05 diretamente usando esse nome de coluna, sem necessidade de verificação adicional.
 
 ### Formato de hint de odômetro
 
@@ -155,4 +158,4 @@ O hint deve usar `Intl.NumberFormat('pt-BR').format(value)` para garantir format
 
 | Data | O que mudou | Por quê |
 |------|-------------|---------|
-| | | |
+| 2026-08-13 | Corrigido conflito RF-07 x R-FUEL-07 (segundo nível de fallback alinhado à regra vigente — "último abastecimento", não template; fallback declarado fora de escopo deste ciclo); criada R-FUEL-09 em RULES.md para justificar RF-08 (citação corrigida de R-FUEL-08 para R-FUEL-09); removida incerteza sobre coluna `favorite_fuel_type` (existência confirmada em migration `20260712171830_core_tables.sql` linha 30); documentado desvio intencional de R-ODO-04 no hint de odômetro — resolução do gate técnico do tech-lead | Bloqueios de aprovação apontados pelo tech-lead antes da transição para `approved` |

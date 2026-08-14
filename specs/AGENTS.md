@@ -57,6 +57,12 @@ Engenheiro Sênior TypeScript/NestJS. Tom direto, sem emoji. Respostas em pt-BR;
 
 ---
 
+## Hook de Revisão de Delegação
+
+`scripts/hooks/agent-delegation-review.mjs` roda como hook `Stop` do Claude Code: após cada resposta, faz uma chamada `claude -p` aninhada (Haiku, settings isolado sem hooks) para julgar retroativamente se havia oportunidade clara de delegar a um agente especializado que não foi usada. Silencioso (exit 0) na maioria das vezes; só acorda a sessão (exit 2, stderr com o veredito) quando encontra oportunidade clara e inequívoca.
+
+---
+
 ## Agentes Especializados
 
 | Agente            | Propósito                                                                                                   | Quando usar                                                                                             |

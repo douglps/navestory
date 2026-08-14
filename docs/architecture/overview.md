@@ -99,6 +99,12 @@ HTTP Request
 | ADR-005 (domínio) | Audit log universalizado para Web Actions           | Accepted | `docs/architecture/decisions/ADR-005-audit-log-web-actions.md`    |
 | ADR-006 (domínio) | Padrão polimórfico para ledger financeiro unificado | Accepted | `docs/architecture/decisions/ADR-006-unified-financial-ledger.md` |
 | ADR-007 (domínio) | Ciclos de odômetro como série temporal segmentada   | Accepted | `docs/architecture/decisions/ADR-007-vehicle-odometer-cycles.md`  |
+| ADR-008 (domínio) | TanStack Query vs. Zustand — divisão de responsabilidade | Accepted | `docs/architecture/decisions/ADR-008-frontend-state-management.md` |
+| ADR-009 (domínio) | Direção "Prata" como identidade visual de marca     | Accepted | `docs/architecture/decisions/ADR-009-adocao-direcao-prata.md`     |
+| ADR-010 (domínio) | Paleta categórica dedicada e escala de urgência     | Accepted | `docs/architecture/decisions/ADR-010-paleta-categorica-e-escala-urgencia.md` |
+| ADR-011 (domínio) | Direção "Azul-Índigo" como identidade visual de marca | Accepted | `docs/architecture/decisions/ADR-011-adocao-direcao-azul-indigo.md` |
+| ADR-012 (domínio) | Validação local de JWT via JWKS (substitui round-trip a `auth.getUser()`) | Accepted | `docs/architecture/decisions/ADR-012-validacao-jwt-local-via-jwks.md` |
+| ADR-013 (domínio) | Adoção do Tailwind CSS v4 como solução de estilização | Accepted | `docs/architecture/decisions/ADR-013-adocao-tailwind.md`          |
 
 > **Nota:** `docs/adr/` contém versões legadas e resumidas dos ADRs de infraestrutura. A localização canônica é `docs/architecture/decisions/`.
 

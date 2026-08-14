@@ -87,6 +87,13 @@ HTTP Request
 | ADR-004                   | Revalidação centralizada via helpers no Next.js                         | Accepted |
 | ADR-005                   | Audit log unificado para REST + Server Actions (C2)                     | Accepted |
 | ADR-006                   | Ledger financeiro unificado em `expenses` via `source_type`/`source_id` | Accepted |
+| ADR-007                   | Ciclos de odômetro como série temporal segmentada                       | Accepted |
+| ADR-008                   | TanStack Query vs. Zustand — divisão de responsabilidade                | Accepted |
+| ADR-009                   | Direção "Prata" como identidade visual de marca                         | Accepted |
+| ADR-010                   | Paleta categórica dedicada e escala de urgência                         | Accepted |
+| ADR-011                   | Direção "Azul-Índigo" como identidade visual de marca                   | Accepted |
+| ADR-012                   | Validação local de JWT via JWKS                                         | Accepted |
+| ADR-013                   | Adoção do Tailwind CSS v4 como solução de estilização                   | Accepted |
 
 ---
 

@@ -4,7 +4,8 @@ import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
-import type { CommandPaletteItem } from "@navestory/ui";
+import { Search } from "lucide-react";
+import { Icon, type CommandPaletteItem } from "@navestory/ui";
 import { apiClient } from "@/lib/http/api-client";
 
 // RNF-03: `CommandPalette` (e suas dependências `cmdk`/`@radix-ui/react-dialog`) fica em
@@ -185,7 +186,8 @@ export function CommandPaletteTrigger(): ReactNode {
         }}
         className="flex h-9 items-center gap-2 rounded-md border border-border px-3 text-sm text-muted-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
       >
-        <span aria-hidden="true">🔍</span>
+        {/* @spec SPEC-20260813-001 RF-17 — emoji substituído pelo wrapper <Icon> do design system */}
+        <Icon icon={Search} size="sm" />
         <span className="hidden sm:inline">Buscar...</span>
         <kbd className="hidden rounded border border-border px-1.5 py-0.5 text-xs sm:inline">
           Ctrl K

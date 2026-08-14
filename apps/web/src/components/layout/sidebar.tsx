@@ -25,7 +25,7 @@ import {
   Wrench,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import { NavBadge, Tooltip } from "@navestory/ui";
+import { Icon, NavBadge, Tooltip } from "@navestory/ui";
 import type { FinesStatusResponse } from "@navestory/validators";
 import { apiClient } from "@/lib/http/api-client";
 import { logout } from "@/lib/auth/logout";
@@ -104,7 +104,7 @@ function useHoldToConfirm(onConfirm: () => void): {
 interface NavItem {
   href: string;
   label: string;
-  Icon: LucideIcon;
+  icon: LucideIcon;
   badge?: ReactNode;
 }
 
@@ -114,22 +114,22 @@ interface NavItem {
 // e o badge de contagem (antes exclusivo do subheader).
 function buildNavItems(finesBadge: ReactNode): NavItem[] {
   return [
-    { href: "/dashboard", label: "Dashboard", Icon: LayoutDashboard },
-    { href: "/vehicles", label: "Veículos", Icon: Car },
-    { href: "/vehicle-groups", label: "Grupos", Icon: FolderTree },
-    { href: "/expenses", label: "Despesas", Icon: Receipt },
-    { href: "/maintenance", label: "Manutenções", Icon: Wrench },
-    { href: "/fines", label: "Multas", Icon: Ticket, badge: finesBadge },
+    { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+    { href: "/vehicles", label: "Veículos", icon: Car },
+    { href: "/vehicle-groups", label: "Grupos", icon: FolderTree },
+    { href: "/expenses", label: "Despesas", icon: Receipt },
+    { href: "/maintenance", label: "Manutenções", icon: Wrench },
+    { href: "/fines", label: "Multas", icon: Ticket, badge: finesBadge },
     // @spec SPEC-20260804-006 RF-14 — movido do header do dashboard: navegação global, faz mais
     // sentido sempre acessível na sidebar do que ancorada numa tela específica.
-    { href: "/atividades", label: "Histórico de Atividades", Icon: Shield },
+    { href: "/atividades", label: "Histórico de Atividades", icon: Shield },
   ];
 }
 
 // @spec SPEC-20260730-002 RF-17 — grupo "Configurações" da sidebar em 3 seções (US-06).
 const SETTINGS_ITEMS: NavItem[] = [
-  { href: "/settings/preferences", label: "Preferências", Icon: Settings },
-  { href: "/settings/account", label: "Minha conta", Icon: User },
+  { href: "/settings/preferences", label: "Preferências", icon: Settings },
+  { href: "/settings/account", label: "Minha conta", icon: User },
 ];
 
 interface SidebarNavItemProps {
@@ -145,7 +145,7 @@ function SidebarNavItem({
   pathname,
   effectiveCollapsed,
 }: SidebarNavItemProps): ReactNode {
-  const { Icon } = item;
+  const { icon } = item;
   const isActive =
     pathname === item.href || pathname?.startsWith(`${item.href}/`);
   const link = (
@@ -158,7 +158,8 @@ function SidebarNavItem({
           : "text-foreground hover:bg-muted"
       } ${effectiveCollapsed ? "md:justify-center md:text-center" : ""}`}
     >
-      <Icon size={24} strokeWidth={1.75} className="shrink-0" aria-hidden />
+      {/* @spec SPEC-20260813-001 RF-17 — migrado para o wrapper <Icon> do design system */}
+      <Icon icon={icon} size="lg" className="shrink-0" />
       {!effectiveCollapsed && (
         <span className="flex flex-1 items-center justify-between gap-2">
           {item.label}
@@ -356,9 +357,9 @@ export function Sidebar(): ReactNode {
             className="hidden rounded-md px-2 py-1 text-muted-foreground hover:bg-muted md:block"
           >
             {isCollapsed ? (
-              <PanelLeftOpen size={20} strokeWidth={1.75} aria-hidden />
+              <Icon icon={PanelLeftOpen} size="md" />
             ) : (
-              <PanelLeftClose size={20} strokeWidth={1.75} aria-hidden />
+              <Icon icon={PanelLeftClose} size="md" />
             )}
           </button>
         </div>
@@ -434,7 +435,7 @@ export function Sidebar(): ReactNode {
                 }`}
               />
               <span className="relative flex items-center justify-center gap-2">
-                <LogOut size={20} strokeWidth={1.75} className="shrink-0" aria-hidden />
+                <Icon icon={LogOut} size="md" className="shrink-0" />
                 {!effectiveCollapsed && "Sair"}
               </span>
             </button>

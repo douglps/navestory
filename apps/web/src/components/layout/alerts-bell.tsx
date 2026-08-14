@@ -10,6 +10,7 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
+  Icon,
   NavBadge,
   Tooltip,
 } from "@navestory/ui";
@@ -51,9 +52,13 @@ export function AlertsBell(): ReactNode {
           onClick={() => setOpen(true)}
           className="relative flex h-9 w-9 items-center justify-center rounded-md text-foreground hover:bg-muted"
         >
-          <Bell size={18} strokeWidth={1.75} aria-hidden />
+          {/* @spec SPEC-20260813-001 RF-17 — migrado para o wrapper <Icon> do design system */}
+          <Icon icon={Bell} size="sm" />
           {overdueCount > 0 && (
-            <span className="absolute right-0.5 top-0.5">
+            // @spec SPEC-20260813-001 RF-15 — offset negativo posiciona o badge fora da área do
+            // ícone (evita sobreposição ao glifo do Bell, que antes ficava coberto entre 16–34px
+            // num botão de 36×36 com ícone centralizado ocupando ~9–27px).
+            <span className="absolute -right-1 -top-1">
               <NavBadge count={overdueCount} />
             </span>
           )}

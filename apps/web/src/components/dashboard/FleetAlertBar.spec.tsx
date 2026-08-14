@@ -14,9 +14,16 @@ function alert(overrides: Partial<FleetAlertItem>): FleetAlertItem {
 }
 
 describe("FleetAlertBar", () => {
-  it("RF-DA-01: não renderiza nada quando não há alertas", () => {
-    const { container } = render(<FleetAlertBar alerts={[]} />);
-    expect(container).toBeEmptyDOMElement();
+  it("@spec SPEC-20260813-001 RF-10: exibe skeleton de loading quando alerts é undefined", () => {
+    const { container } = render(<FleetAlertBar alerts={undefined} />);
+    expect(
+      container.querySelector('[aria-label="Carregando resumo de alertas críticos da frota"]'),
+    ).toBeInTheDocument();
+  });
+
+  it("@spec SPEC-20260813-001 RF-10: exibe 'Frota em dia' quando não há alertas", () => {
+    render(<FleetAlertBar alerts={[]} />);
+    expect(screen.getByText("Frota em dia")).toBeInTheDocument();
   });
 
   it("@spec SPEC-20260813-001 RF-05: agrega vencidos e próximos em contadores por severidade", () => {

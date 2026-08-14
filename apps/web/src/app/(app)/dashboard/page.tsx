@@ -204,6 +204,36 @@ export default function DashboardPage(): ReactNode {
 
   const hasNoVehicles = vehicles?.length === 0;
 
+  /** @spec SPEC-20260813-001 RF-11 */
+  const isMultiVehicle = (vehicles?.length ?? 0) >= 2;
+
+  const kpiSection = (
+    <div>
+      <h2 className="kicker pb-2">Indicadores</h2>
+      <DashboardKpiGrid
+        catalog={kpiCatalog}
+        activeIds={activeKpiIds}
+        isFleetContext={selectionMode !== "single"}
+      />
+      <div className="mt-3 flex justify-end border-t border-border pt-2">
+        <KpiPicker activeIds={activeKpiIds} />
+      </div>
+    </div>
+  );
+
+  const vehicleGridSection = vehicles && (
+    <div>
+      <h2 className="kicker pb-2">Frota</h2>
+      <VehicleGrid
+        vehicles={vehicles}
+        healthByVehicleId={healthByVehicleId}
+        flagsByVehicleId={flagsByVehicleId}
+        activeVehicleId={activeVehicleId}
+        onSelect={handleSelectVehicle}
+      />
+    </div>
+  );
+
   return (
     <Container size="6xl" className="pb-24">
       <h1 className="sr-only">Dashboard</h1>
@@ -219,40 +249,24 @@ export default function DashboardPage(): ReactNode {
         <NoVehiclesEmptyState />
       ) : (
         <>
-          {/* @spec SPEC-20260804-006 RF-16 */}
-          {alerts && alerts.length > 0 && (
-            <div>
-              <h2 className="kicker pb-2">Alertas</h2>
-              <FleetAlertBar alerts={alerts} />
-            </div>
-          )}
-
-          {/* @spec SPEC-20260804-006 RF-16, RF-17 — KpiPicker separado do grid por divider próprio,
-              para não parecer mais um card do grid (era um card colado, ambíguo entre indicador e ação). */}
+          {/* @spec SPEC-20260813-001 RF-10 — sempre renderizado; o componente distingue
+              loading (alerts undefined) de vazio ("Frota em dia"). */}
           <div>
-            <h2 className="kicker pb-2">Indicadores</h2>
-            <DashboardKpiGrid
-              catalog={kpiCatalog}
-              activeIds={activeKpiIds}
-              isFleetContext={selectionMode !== "single"}
-            />
-            <div className="mt-3 flex justify-end border-t border-border pt-2">
-              <KpiPicker activeIds={activeKpiIds} />
-            </div>
+            <h2 className="kicker pb-2">Alertas</h2>
+            <FleetAlertBar alerts={alerts} />
           </div>
 
-          {vehicles && (
-            <div>
-              <h2 className="kicker pb-2">Frota</h2>
-              <VehicleGrid
-                vehicles={vehicles}
-                healthByVehicleId={healthByVehicleId}
-                flagsByVehicleId={flagsByVehicleId}
-                activeVehicleId={activeVehicleId}
-                onSelect={handleSelectVehicle}
-              />
-            </div>
-          )}
+          {/* @spec SPEC-20260813-001 RF-11 — 2+ veículos: grade de frota antes dos KPIs
+              agregados; 1 veículo: ordem anterior mantida (KPIs primeiro). */}
+          {isMultiVehicle && vehicleGridSection}
+
+          {kpiSection}
+
+          {/* @spec SPEC-20260813-001 RF-12 — custos futuros ficam junto do contexto financeiro
+              dos KPIs, não do detalhe de veículo. */}
+          <UpcomingCostsWidget />
+
+          {!isMultiVehicle && vehicleGridSection}
 
           <div ref={spotlightRef}>
             <h2 className="kicker pb-2">Em Foco</h2>
@@ -262,8 +276,6 @@ export default function DashboardPage(): ReactNode {
               onClear={clearAllSelection}
             />
           </div>
-
-          <UpcomingCostsWidget />
 
           <div>
             <h2 className="kicker pb-2">Gráficos</h2>

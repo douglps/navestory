@@ -17,6 +17,16 @@
 
 ---
 
+### SPEC-20260813-001 — Header + Dashboard UX v3 (RF-10 a RF-17)
+
+**Status:** aprovado
+**Decisão:** requer testes (parcial)
+**Justificativa:** RF-11/RF-12 (reordenação de seções no dashboard), RF-14 (min-width de CSS), RF-15 (offset de badge) e RF-17 (migração de ícones) são mudanças de apresentação/posicionamento sem lógica de domínio nova — nenhuma introduz um branch verificável análogo a R-KPI-04 (SPEC-20260804-006), e ficam sem teste dedicado, validadas por revisão visual. RF-10 (`FleetAlertBar`), porém, introduz dois estados visuais distintos e verificáveis (`alerts=undefined` → skeleton com `aria-label`; `alerts=[]` → texto "Frota em dia") — branch determinístico o suficiente para justificar cobertura, e não puro CSS/reposicionamento como o restante do lote. RF-13 está bloqueado (não implementado) e RF-16 não teve alteração de código (análise estática não confirmou o bug).
+**Escopo (se aprovado):** unit/component (RF-10: `FleetAlertBar.spec.tsx` — estados `undefined` e `[]`)
+**Decidido em:** 2026-08-13 (revisado em 2026-08-14 — auditoria de tech-lead identificou que RF-10 já tinha testes reais escritos, contradizendo a decisão original de "não requer")
+
+---
+
 ### SPEC-20260804-005 — Correção de Bug: Membros de Grupo Não Inicializados na Tela de Edição
 
 **Status:** aprovado

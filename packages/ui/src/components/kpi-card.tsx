@@ -94,7 +94,7 @@ function Sparkline({ values, variant, ariaLabel }: SparklineProps): ReactNode {
 
 function KpiCardSkeleton(): ReactNode {
   return (
-    <Card padding="sm" className="w-full">
+    <Card padding="sm" className="w-full min-w-[133px]">
       <div className="flex items-center justify-between">
         <Skeleton className="h-4 w-16" />
         <Skeleton className="h-4 w-4" />
@@ -149,7 +149,9 @@ export function KpiCard({
   const resolvedVariant = variant ?? trendVariant;
 
   return (
-    <Card padding="sm" className={cn("w-full", className)}>
+    // @spec SPEC-20260813-001 RF-14 — min-w evita quebra do conteúdo interno (número + trend +
+    // sparkline) quando o grid produz colunas abaixo de ~133px em viewports estreitos.
+    <Card padding="sm" className={cn("w-full min-w-[133px]", className)}>
       <div className="flex items-center justify-between gap-2">
         <p className="text-sm text-muted-foreground">{title}</p>
         {icon && (

@@ -3616,14 +3616,14 @@ RNF-04 (foco preso no drawer + retorno ao hamburger ao fechar) implementado em `
 
 ---
 
-## SPEC-20260813-001 — Header + Dashboard UX v3 (review)
+## SPEC-20260813-001 — Header + Dashboard UX v3 (approved)
 
 > Spec em `specs/dashboard/SPEC-20260813-001-header-dashboard-ux-v3.md`. Criada retroativamente
 > em 2026-08-13 para cobrir código já implementado sem spec formal — violação de processo
 > identificada na sessão de auditoria UX do dia. RF-01 a RF-09 reconstituídos a partir do código;
-> RF-10 a RF-17 novos achados da auditoria ainda sem implementação.
-> **Status:** `review` — aguarda aprovação formal por Douglas para transicionar para `approved`.
-> RF-10 a RF-17 apenas implementáveis após aprovação.
+> RF-10 a RF-17 novos achados da auditoria, aprovados em 2026-08-13 e implementados na mesma data
+> (exceto RF-13, bloqueado, e RF-16, sem alteração de código — ver notas abaixo).
+> **Status:** `approved`.
 
 ### Retroativos — implementados (RF-01 a RF-09)
 
@@ -3639,18 +3639,18 @@ RNF-04 (foco preso no drawer + retorno ao hamburger ao fechar) implementado em `
 | RF-08 | `VehicleContextDialog` ganhou `VehicleActivePreview`: health score, flags, quick links abaixo da lista | `apps/web/src/components/layout/vehicle-context-dialog.tsx` | `apps/web/src/components/layout/vehicle-context-dialog.spec.tsx` | ✅ |
 | RF-09 | `ChartTooltip` em `packages/ui` seguindo tokens do design system (bg-card, border-border — sem inline style) | `packages/ui/src/components/chart-tooltip.tsx` | — (componente de UI puro; sem CT dedicado) | 🔶 |
 
-### Novos — pendentes de implementação (RF-10 a RF-17)
+### Novos — implementados em 2026-08-13 (RF-10 a RF-17)
 
 | RF    | Requisito (resumo) | Código | Teste | Status |
 | ----- | ------------------ | ------ | ----- | ------ |
-| RF-10 | `FleetAlertBar` com estado positivo explícito quando vazio ("Frota em dia", badge success) | — | — | ⏳ |
-| RF-11 | Ordenação condicional das seções do dashboard: 2+ veículos → VehicleGrid antes de KpiGrid | — | — | ⏳ |
-| RF-12 | `UpcomingCostsWidget` posicionado após `DashboardKpiGrid` (3ª seção) em ambos os contextos | — | — | ⏳ |
-| RF-13 | Flag `cost_outlier` em `VehicleHealthCard` + caption warning em KpiCard de cost_per_km | — | — | ⏳ (bloqueado: threshold de outlier não definido em RULES.md) |
-| RF-14 | `KpiCard` com largura mínima de 133.25 px para evitar quebra em colunas estreitas | — | — | ⏳ |
-| RF-15 | Badge do `NavBadge` no `AlertsBell` reposicionado para não sobrepor o glifo do ícone Bell | — | — | ⏳ |
-| RF-16 | Posição correta do `CommandPaletteTrigger` no header (confirmar bug de centralização; documentar ancoragem) | — | — | ⏳ (requer verificação visual) |
-| RF-17 | Migração de iconografia no shell: emoji `🔍` eliminado; imports diretos Lucide migrados para wrapper `<Icon>` de packages/ui | — | — | ⏳ |
+| RF-10 | `FleetAlertBar` com skeleton de loading e estado positivo explícito quando vazio ("Frota em dia", badge success) | `apps/web/src/components/dashboard/FleetAlertBar.tsx`, `apps/web/src/app/(app)/dashboard/page.tsx` | `apps/web/src/components/dashboard/FleetAlertBar.spec.tsx` | ✅ |
+| RF-11 | Ordenação condicional das seções do dashboard: 2+ veículos → VehicleGrid antes de KpiGrid | `apps/web/src/app/(app)/dashboard/page.tsx` | pendente | 🔶 |
+| RF-12 | `UpcomingCostsWidget` posicionado logo após `DashboardKpiGrid` em ambos os contextos | `apps/web/src/app/(app)/dashboard/page.tsx` | — (reposicionamento estrutural, sem CT dedicado) | ✅ |
+| RF-13 | Flag `cost_outlier` em `VehicleHealthCard` + caption warning em KpiCard de cost_per_km | — | — | ⏳ (bloqueado: threshold de outlier não definido em RULES.md; backend não emite o campo) |
+| RF-14 | `KpiCard` com `min-w-[133px]` para evitar quebra em colunas estreitas | `packages/ui/src/components/kpi-card.tsx` | — (mudança de CSS puro) | ✅ |
+| RF-15 | Badge do `NavBadge` no `AlertsBell` reposicionado (`-right-1 -top-1`) para não sobrepor o glifo do ícone Bell | `apps/web/src/components/layout/alerts-bell.tsx` | — (mudança visual/CSS) | ✅ |
+| RF-16 | Posição do `CommandPaletteTrigger` no header investigada | `apps/web/src/components/layout/header.tsx` (sem alteração) | — | 🔶 (análise estática não encontrou `flex-1`/`mx-auto`/`justify-center` — DOM já ancorado à esquerda do logo, conforme a própria spec previa; confirmação visual em ambiente rodando segue pendente) |
+| RF-17 | Migração de iconografia do shell para o wrapper `<Icon>`: emoji `🔍` eliminado, `Bell` (header) e ícones da sidebar (`Car`, `LayoutDashboard`, `LogOut`, `PanelLeftOpen/Close`, etc.) migrados | `apps/web/src/components/layout/command-palette-trigger.tsx`, `apps/web/src/components/layout/alerts-bell.tsx`, `apps/web/src/components/layout/sidebar.tsx` | — (mudança visual/CSS) | ✅ |
 
 ---
 

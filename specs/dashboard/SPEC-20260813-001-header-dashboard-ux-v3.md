@@ -131,7 +131,7 @@ numéricos, **para** ter uma visão geral da frota antes de mergulhar nos númer
 | RF-08 | `VehicleContextDialog` ganhou seção `VehicleActivePreview` abaixo da lista de seleção: exibe health score circular, placa e modelo do veículo em foco, até 2 flags de saúde, e links rápidos "Ver despesas" / "Ver manutenção" filtrados pelo `vehicle_id`. Visível apenas quando `selectionMode === "single"` com veículo selecionado. | `apps/web/src/components/layout/vehicle-context-dialog.tsx` | Média | Implementado |
 | RF-09 | `ChartTooltip` criado em `packages/ui` para substituir o tooltip padrão do Recharts, que aplica `contentStyle` inline sobrepondo os tokens do design system e quebrando o contraste no dark mode. O novo componente usa `bg-card`, `border-border`, `text-card-foreground` e `text-muted-foreground` — mesmas classes do restante do shell. Consumido via `<Tooltip content={(props) => <ChartTooltip {...props} />} />` nos gráficos em `FleetCharts.tsx`. | `packages/ui/src/components/chart-tooltip.tsx`, `apps/web/src/components/dashboard/FleetCharts.tsx` | Média | Implementado |
 
-### Novos (RF-10 a RF-17) — achados de 2026-08-13, pendentes de implementação
+### Novos (RF-10 a RF-17) — achados de 2026-08-13, pendentes de implementação (maioria implementada — ver changelog)
 
 | ID    | Requisito | Contexto / Justificativa | Prioridade | Status |
 | ----- | --------- | ------------------------ | ---------- | ------ |

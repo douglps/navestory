@@ -1,4 +1,4 @@
-import { UnauthorizedException } from "@nestjs/common";
+import { BadRequestException, UnauthorizedException } from "@nestjs/common";
 import type { Request, Response } from "express";
 import { ExpensesController } from "./expenses.controller";
 import type { ExpensesService } from "./expenses.service";
@@ -14,7 +14,19 @@ describe("ExpensesController", () => {
       findOne: jest.fn().mockResolvedValue({ id: "e1" }),
       update: jest.fn().mockResolvedValue({ id: "e1", amount: 200 }),
       remove: jest.fn().mockResolvedValue(undefined),
-      listSuppliers: jest.fn().mockResolvedValue(["Shell Av. Paulista"]),
+      getSupplierSuggestions: jest
+        .fn()
+        .mockResolvedValue([
+          { supplier: "Shell Av. Paulista", source: "personal" },
+        ]),
+      getFuelStats: jest.fn().mockResolvedValue({
+        avg_price_per_liter: 5.5,
+        avg_km_per_liter: 12.3,
+        record_count: 3,
+        last_odometer_km: 45230,
+        // @spec SPEC-20260807-004 RF-05
+        favorite_fuel_type: "gasoline",
+      }),
       getUpcomingCosts: jest
         .fn()
         .mockResolvedValue([{ source_type: "fine", source_id: "f1" }]),
@@ -31,6 +43,15 @@ describe("ExpensesController", () => {
         .mockResolvedValue(
           "Data,Veiculo,Placa,Categoria,Valor,Origem,Descricao\n",
         ),
+      uploadReceipt: jest
+        .fn()
+        .mockResolvedValue({ id: "e1", receipt_storage_key: "u1/x.jpg" }),
+      getReceiptUrls: jest.fn().mockResolvedValue({
+        original_url: "https://signed/original",
+        thumbnail_url: null,
+        thumbnail_status: "pending",
+        is_pdf: false,
+      }),
       ...overrides,
     } as unknown as ExpensesService;
     return {
@@ -147,16 +168,44 @@ describe("ExpensesController", () => {
     );
   });
 
-  it("listSuppliers retorna sugestões de fornecedores (SPEC-20260606-002 RF-02)", async () => {
+  it("listSuppliers retorna sugestões de fornecedores (SPEC-20260814-003 RF-01)", async () => {
     const { controller, expensesService } = createController();
 
-    const result = await controller.listSuppliers(req, "u1");
+    const result = await controller.listSuppliers(req, "u1", {
+      q: "shell",
+      workspace_id: undefined,
+    } as never);
 
-    expect(expensesService.listSuppliers).toHaveBeenCalledWith(
+    expect(expensesService.getSupplierSuggestions).toHaveBeenCalledWith(
       "token-123",
       "u1",
+      "shell",
+      undefined,
     );
-    expect(result.data).toEqual(["Shell Av. Paulista"]);
+    expect(result.data).toEqual([
+      { supplier: "Shell Av. Paulista", source: "personal" },
+    ]);
+  });
+
+  it("getFuelStats retorna as médias históricas de combustível (SPEC-20260814-002 RF-04)", async () => {
+    const { controller, expensesService } = createController();
+
+    const result = await controller.getFuelStats(req, "u1", {
+      vehicle_id: "v1",
+    } as never);
+
+    expect(expensesService.getFuelStats).toHaveBeenCalledWith(
+      "token-123",
+      "u1",
+      "v1",
+    );
+    expect(result.data).toEqual({
+      avg_price_per_liter: 5.5,
+      avg_km_per_liter: 12.3,
+      record_count: 3,
+      last_odometer_km: 45230,
+      favorite_fuel_type: "gasoline",
+    });
   });
 
   it("getUpcoming retorna a lista de próximas despesas (SPEC-20260608-001 RF-01)", async () => {
@@ -220,6 +269,61 @@ describe("ExpensesController", () => {
       "u1",
       "e1",
     );
+  });
+
+  /**
+   * @spec SPEC-20260814-004 RF-04
+   */
+  it("uploadReceipt lança 400 quando nenhum arquivo é enviado", async () => {
+    const { controller, expensesService } = createController();
+
+    await expect(
+      controller.uploadReceipt(req, "u1", "e1", undefined),
+    ).rejects.toBeInstanceOf(BadRequestException);
+    expect(expensesService.uploadReceipt).not.toHaveBeenCalled();
+  });
+
+  /**
+   * @spec SPEC-20260814-004 RF-03, RF-04
+   */
+  it("uploadReceipt extrai o token e repassa buffer/mimetype/size ao service", async () => {
+    const { controller, expensesService } = createController();
+    const file = {
+      buffer: Buffer.from("fake-jpeg"),
+      mimetype: "image/jpeg",
+      size: 9,
+    } as Express.Multer.File;
+
+    const result = await controller.uploadReceipt(req, "u1", "e1", file);
+
+    expect(expensesService.uploadReceipt).toHaveBeenCalledWith(
+      "token-123",
+      "u1",
+      "e1",
+      { buffer: file.buffer, mimetype: "image/jpeg", size: 9 },
+    );
+    expect(result.data).toEqual({ id: "e1", receipt_storage_key: "u1/x.jpg" });
+  });
+
+  /**
+   * @spec SPEC-20260814-004 RF-07, RNF-03
+   */
+  it("getReceipt extrai o token e retorna as URLs assinadas do service", async () => {
+    const { controller, expensesService } = createController();
+
+    const result = await controller.getReceipt(req, "u1", "e1");
+
+    expect(expensesService.getReceiptUrls).toHaveBeenCalledWith(
+      "token-123",
+      "u1",
+      "e1",
+    );
+    expect(result.data).toEqual({
+      original_url: "https://signed/original",
+      thumbnail_url: null,
+      thumbnail_status: "pending",
+      is_pdf: false,
+    });
   });
 
   it("lança 401 quando não há token disponível", async () => {

@@ -275,6 +275,45 @@
 >   linha 79 (linha longa, omitida por ferramentas de busca com limite de caracteres — confirmado
 >   por leitura direta). Nenhuma regra de frontmatter sem par em RULES.md encontrada nesta auditoria.
 
+> **ATUALIZAÇÃO — 2026-08-14 (3) — SPEC-20260814-002 e -003 implementadas (SPEC-20260814-004 intocada)**
+> Implementação concluída para SPEC-20260814-002 (indicadores em tempo real) e SPEC-20260814-003
+> (autocomplete de fornecedor). Backend: `GET /expenses/fuel-stats` e extensão de
+> `GET /expenses/suppliers` (`q`, `workspace_id`) em `apps/api/src/modules/expenses/`, tipos novos
+> em `packages/validators/src/expense.schemas.ts`, migration
+> `supabase/migrations/20260814150000_expenses_supplier_autocomplete_index.sql`. Frontend:
+> `apps/web/src/lib/fuel-realtime-calc.ts` (cálculo puro), `use-fuel-historical-stats.ts`,
+> `components/expenses/fuel-realtime-indicators.tsx`, `components/expenses/supplier-combobox.tsx`,
+> wiring em `app/(app)/expenses/new/page.tsx`. Dois ajustes de implementação registrados nas
+> entradas de RF abaixo: (1) SPEC-002 RF-03 não reaproveita `getOdometerHintAction` — essa spec
+> (SPEC-20260807-004) nunca foi construída; `GET /expenses/fuel-stats` passou a devolver também
+> `last_odometer_km` para cobrir a mesma necessidade sem uma 3ª chamada de rede. (2) SPEC-003 usa
+> `Popover`+`Input` com navegação por teclado própria em vez de `Command`(cmdk)+`Popover` — cmdk
+> força seleção de uma opção da lista, incompatível com o requisito de texto livre (R-FUEL-04).
+> Testes: `apps/web/src/lib/fuel-realtime-calc.spec.ts` (18), `supplier-combobox.spec.tsx` (5),
+> `apps/api/.../expenses.service.spec.ts` e `expenses.controller.spec.ts` estendidos. Decisões de
+> teste registradas em `specs/TEST_DECISIONS.md`. **SPEC-20260814-004 permanece intocada**,
+> aguardando checkpoint do usuário sobre thumbnail síncrono vs. assíncrono.
+
+> **ATUALIZAÇÃO — 2026-08-14 (2) — SPEC-20260814-002, -003, -004 aprovadas: melhorias de formulário de abastecimento**
+> Gate técnico concluído para as três specs de abastecimento. Achado relevante: o "gap de campos ausentes"
+> (`fuel_type`, `liters`, `full_tank`, `supplier`) identificado no brainstorm não era um gap real — todos os campos
+> já são renderizados no formulário atual. Decisão arquitetural: novas funcionalidades seguem padrão REST
+> (`apps/api`) e não introduzem Server Actions (manter consistência; ADR necessário se padrão mudar no futuro).
+> Entradas de rastreabilidade adicionadas acima de "Requisitos do PRD sem Spec".
+
+> **ATUALIZAÇÃO — 2026-08-14 — SPEC-20260813-001 estendida (RF-18 a RF-23) + SPEC-20260814-001 criada (review)**
+> Segunda sessão de auditoria UX de 2026-08-14. RF-18 a RF-23 adicionados como bloco de novos
+> achados à SPEC-20260813-001 (subheader sticky, chip sem emoji, KpiPicker → preferências,
+> sidebar rodapé + Upgrade, avatar + plano, padronização de ChartTooltip). SPEC-20260814-001
+> criada em `specs/layout-responsivo/` para o menu aside desktop com aba Agenda (status `review`).
+> Regras R-AGE-01, R-AGE-02, R-NAV-12, R-NAV-13 adicionadas ao `specs/RULES.md`. Entradas de
+> rastreabilidade adicionadas acima de "Requisitos do PRD sem Spec".
+>
+> **ATUALIZAÇÃO — 2026-08-15 — RF-18 a RF-23 confirmados como implementados no working tree**
+> Varredura via grep de `@spec SPEC-20260813-001 RF-1X` confirmou que todos os 6 RFs têm
+> anotação no código. Linhas da matriz atualizadas de `⏳ pendente` para `✅` com caminhos reais.
+> RF-13 (outlier custo/km) permanece bloqueado — sem regra R-KPI definida.
+
 > **ATUALIZAÇÃO — 2026-08-13 — SPEC-20260813-001 criada (review): Header + Dashboard UX v3**
 > Spec retroativa criada para cobrir código já implementado sem document formal. RF-01 a RF-09
 > reconstituídos por inspeção do código fonte (grep + leitura dos arquivos referenciados). RF-10 a
@@ -474,34 +513,44 @@ que o artefato ainda não existe no repositório.
 
 ---
 
-## SPEC-20260620-001 — Business Strategy Stories (draft)
+## SPEC-20260620-001 — Business Strategy Stories (approved)
 
 > Define cadastro, elegibilidade, modelo de assinatura (Gratis/Pro/Frota), consolidação de
 > dados, controle de acesso por roles, onboarding, retenção, crescimento e compliance LGPD.
-> Status: draft. Regras: R-BIZ-01..R-BIZ-14, S1, S2, S4, C1. Nenhum código implementado.
+> **Status: approved** (2026-08-15). Regras: R-BIZ-01..R-BIZ-16, S1, S2, S4, C1, C2.
+>
+> **Separação MVP vs. Fase 2+:** stories da Seção 1 (cadastro/elegibilidade) e Seção 3 —
+> subconjunto MVP (BS-ACL-01..05, BS-SEC-01..04) — estão implementadas via Supabase Auth e RLS,
+> referenciadas em SPEC-20260719-002 e SPEC-20260804-004. Stories de Fase 2+ (monetização,
+> consolidação, feature flags, crescimento, retenção) aguardam billing/infra — marcadas ⏳.
+> As regras R-BIZ-01..R-BIZ-16 são âncora estável citada por outras specs aprovadas.
 
-### Cadastro e Elegibilidade (Seção 1)
+### Cadastro e Elegibilidade (Seção 1) — MVP parcialmente implementado
 
 | Requisito     | Descrição                                                                                                                 | Código | Teste | Status |
 | ------------- | ------------------------------------------------------------------------------------------------------------------------- | ------ | ----- | ------ |
-| BS-REG-01..05 | Cadastro self-service com email válido; campo `profile_type`; email único; acesso imediato                                | —      | —     | ⏳     |
-| BS-BLK-01..05 | Blacklist de emails banidos; rate limit 5/15min (S4); honeypot anti-bot; rejeição de emails descartáveis; verificação 18+ | —      | —     | ⏳     |
-| BS-FLW-01..05 | Formulário único (4 campos); redirect para onboarding; pular onboarding; email de boas-vindas; PWA responsivo             | —      | —     | ⏳     |
+| BS-REG-01..05 | Cadastro self-service com email válido; campo `profile_type`; email único; acesso imediato                                | Supabase Auth + `apps/api/src/modules/auth/` | — | 🔶 MVP ativo; honeypot/profile_type pendentes |
+| BS-BLK-01..02 | Blacklist de emails banidos (BS-BLK-01); rate limit 5/15min S4 (BS-BLK-02)                                               | Supabase Auth (rate limit nativo) | — | 🔶 Parcial — blacklist manual via Supabase Dashboard |
+| BS-BLK-03..05 | Honeypot anti-bot; rejeição de emails descartáveis; verificação 18+ (Fase 2)                                              | — | — | ⏳ Fase 2 |
+| BS-FLW-01..03 | Formulário único (4 campos); redirect para onboarding; pular onboarding                                                   | `apps/web/src/app/(auth)/` | — | 🔶 Fluxo base implementado; onboarding wizard pendente |
+| BS-FLW-04..05 | Email de boas-vindas (Fase 9 — depende de domínio próprio); PWA responsivo                                                | — | — | ⏳ BS-FLW-04 bloqueado (Resend/domínio); BS-FLW-05 presente via Next.js PWA |
 
-### Modelo de Assinatura e Monetização (Seção 2)
+### Modelo de Assinatura e Monetização (Seção 2) — Fase 2, sem código ainda
 
 | Requisito     | Descrição                                                                                                                                                                           | Código | Teste | Status |
 | ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ----- | ------ |
-| BS-PLN-01..06 | Planos Gratis (beta ilimitado, pós-beta 3 veículos/2 meses), Pro Mensal (R$ 29,90), Pro Anual (R$ 199), Frota (R$ 49,90); trial 14 dias                                             | —      | —     | ⏳     |
-| BS-MON-01..08 | Banners de upgrade; checkout integrado (Stripe/MP); downgrade com consolidação; cancelamento self-service; retry de cobrança; grace period proporcional; win-back; countdown banner | —      | —     | ⏳     |
-| BS-VLT-01..06 | Timeline com meses consolidados; CTA de upgrade; garantia de retenção de dados; KPIs com dados gerais; batch job de consolidação; busca em meses consolidados                       | —      | —     | ⏳     |
+| BS-PLN-01..06 | Planos Gratis (beta ilimitado, pós-beta 3 veículos/2 meses), Pro Mensal (R$ 29,90), Pro Anual (R$ 199), Frota (R$ 49,90); trial 14 dias                                             | — | — | ⏳ Fase 2 — gateway de pagamento não integrado |
+| BS-MON-01..08 | Banners de upgrade; checkout integrado (Stripe/MP); downgrade com consolidação; cancelamento self-service; retry de cobrança; grace period proporcional; win-back; countdown banner | — | — | ⏳ Fase 2 |
+| BS-VLT-01..06 | Timeline com meses consolidados; CTA de upgrade; garantia de retenção de dados; KPIs com dados gerais; batch job de consolidação; busca em meses consolidados                       | — | — | ⏳ Fase 2 — tabela `monthly_summaries` e cron pendentes |
 
 ### Controle de Acesso (Seção 3)
 
 | Requisito     | Descrição                                                                                                                                                                                                | Código | Teste | Status |
 | ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ----- | ------ |
-| BS-ACL-01..07 | Roles: anonymous, user, admin, workspace_owner, workspace_member; CRUD owner-only (RLS); anti-enumeração (404 não 403); admin sem acesso a dados de negócio; workspace member com atribuição por veículo | —      | —     | ⏳     |
-| BS-SEC-01..06 | Lock após 5 tentativas; exclusão LGPD self-service; sessão 30min inatividade; troca de senha invalida sessões; (Fase 2) MFA TOTP; (Fase 2) Login social                                                  | —      | —     | ⏳     |
+| BS-ACL-01..05 | anonymous/user/admin; CRUD owner-only (RLS auth.uid()); anti-enumeração (404 não 403); admin sem acesso a dados de negócio | RLS em todas as tabelas (Supabase); `apps/api/src/modules/` com `SupabaseAuthGuard` | — | ✅ via SPEC-20260719-002 e auth base |
+| BS-ACL-06..07 | workspace_member vê só veículos atribuídos; workspace_owner convida/remove membros e atribui veículos | `apps/api/src/modules/workspace/`, migrations `20260804_*` | — | ✅ via SPEC-20260804-004 |
+| BS-SEC-01..04 | Lock após 5 tentativas; exclusão LGPD self-service; sessão 30min inatividade; troca de senha invalida sessões | Supabase Auth (configuração de projeto) | — | 🔶 Parcial — lock e sessão via Supabase; exclusão self-service pendente de spec própria |
+| BS-SEC-05..06 | (Fase 2) MFA TOTP; (Fase 2) Login social Google/Apple                                                                                                                                                     | — | — | ⏳ Fase 2 |
 
 ### Onboarding e Ativação (Seção 4)
 
@@ -535,10 +584,10 @@ que o artefato ainda não existe no repositório.
 
 | Fase                 | Stories                                                                                             | Status          |
 | -------------------- | --------------------------------------------------------------------------------------------------- | --------------- |
-| MVP (atual)          | BS-REG-01..05, BS-BLK-01..02, BS-FLW-01..03, BS-ACL-01..05, BS-SEC-01..04, BS-LGP-02..04            | ⏳ Não iniciado |
-| Pós-beta (Fase 2)    | BS-PLN-01..06, BS-MON-01..08, BS-VLT-01..06, BS-BLK-03..05, BS-FLW-04, BS-ONB-01..06, BS-TRM-01..03 | ⏳              |
-| Crescimento (Fase 3) | BS-RET-01..07, BS-GRW-01..05, BS-EXP-01..03, BS-SUP-01..05, BS-SEC-05..06, BS-INFRA-01..02          | ⏳              |
-| Enterprise (Fase 4)  | BS-ACL-06..07, BS-EXP-04, BS-PLN-05 (Frota expandido com API)                                       | ⏳              |
+| MVP (atual)          | BS-REG-01..05 🔶, BS-BLK-01..02 🔶, BS-FLW-01..03 🔶, BS-ACL-01..05 ✅ (SPEC-20260719-002 + auth), BS-ACL-06..07 ✅ (SPEC-20260804-004), BS-SEC-01..04 🔶, BS-LGP-02..04 ⏳ | Mix — ver detalhes por requisito acima |
+| Pós-beta (Fase 2)    | BS-PLN-01..06, BS-MON-01..08, BS-VLT-01..06, BS-BLK-03..05, BS-FLW-04, BS-ONB-01..06, BS-ADM-01..08, BS-TRM-01..03 | ⏳ Aguarda gateway de pagamento e email transacional |
+| Crescimento (Fase 3) | BS-RET-01..07, BS-GRW-01..05, BS-EXP-01..03, BS-SUP-01..05, BS-SEC-05..06, BS-INFRA-01..02          | ⏳ Aguarda analytics, push, OAuth e simulação de custos |
+| Enterprise (Fase 4)  | BS-EXP-04, BS-PLN-05 (Frota expandido com API pública — pós BS-INFRA-01)                             | ⏳ Bloqueado por simulação de custos e API pública |
 
 ---
 
@@ -1415,6 +1464,13 @@ que o artefato ainda não existe no repositório.
 ---
 
 ## SPEC-20260601-003 — Sistema de Modelos Rápidos de Despesas (approved)
+
+> **2026-08-15: REMOVIDO temporariamente.** Código (frontend, `ExpenseTemplatesModule`,
+> schemas Zod) e dados (tabela `expense_templates`, migration
+> `20260815120000_drop_expense_templates.sql`) foram eliminados por completo — sem usuários
+> reais em produção, não fazia sentido manter feature flag ou dados órfãos. As linhas abaixo
+> documentam o que existiu até esta data; todos os artefatos marcados ✅ estão de fato
+> ausentes do código a partir daqui. Retomada depende de spec nova (ver changelog da spec).
 
 > **2026-07-14 (T3.4):** Implementado. Tabela, índices, trigger de limite (RNF-06) e RLS já
 > existiam desde T0.2 (schema recuperado do banco remoto) — nenhuma migration nova necessária.
@@ -3576,23 +3632,23 @@ RNF-04 (foco preso no drawer + retorno ao hamburger ao fechar) implementado em `
 
 ---
 
-## SPEC-20260807-004 — Formulário de Despesa: Hint de Odômetro e Pré-preenchimento de Combustível (draft)
+## SPEC-20260807-004 — Formulário de Despesa: Hint de Odômetro e Pré-preenchimento de Combustível (approved)
 
-> Spec em `specs/expenses/SPEC-20260807-004-formulario-despesa-hint-combustivel.md`. Implementa dois aprimoramentos de UX no formulário de nova despesa: (1) hint textual do último odômetro registrado para o veículo selecionado via `getOdometerHintAction` (R-ODO-07 — novo); (2) pré-preenchimento do tipo de combustível favorito do veículo conforme R-FUEL-07 (regra já definida em SPEC-20260619-001, ainda não implementada). Referência de implementação: `expense-form.tsx` do projeto Nave-SaaS-main.
+> Spec em `specs/expenses/SPEC-20260807-004-formulario-despesa-hint-combustivel.md`. Implementa dois aprimoramentos de UX no formulário de nova despesa: (1) hint textual do último odômetro registrado para o veículo selecionado; (2) pré-preenchimento do tipo de combustível favorito do veículo conforme R-FUEL-07.
 >
-> **Status:** Spec em draft — aguarda revisão de Douglas antes de implementação. Nenhum código implementado ainda.
+> **Decisão de implementação (2026-08-14):** em vez de server actions separadas (`getOdometerHintAction` / `getFavoriteFuelTypeAction` como descrito na spec), os dois dados foram consolidados no endpoint `GET /expenses/fuel-stats` já existente (SPEC-20260814-002). `last_odometer_km` passou a refletir MAX(expenses ∪ maintenances); `favorite_fuel_type` foi adicionado ao retorno. Isso evita uma 3ª chamada de rede no mount do formulário e mantém RNF-03 (segurança: validação de posse do veículo já presente no endpoint). A spec foi aprovada reconhecendo este consolidação como desvio de implementação, não de requisito.
 
 | RF    | Requisito                                                                                              | Código              | Teste               | Status  |
 | ----- | ------------------------------------------------------------------------------------------------------ | ------------------- | ------------------- | ------- |
-| RF-01 | Server action `getOdometerHintAction(vehicleId)` — retorna MAX(odometer_km) de expenses + maintenances | ⏳ Pendente         | ⏳ Pendente          | ⏳       |
-| RF-02 | Hint textual "Último registrado: N.NNN km" abaixo do campo `odometer_km` ao selecionar veículo        | ⏳ Pendente          | ⏳ Pendente          | ⏳       |
-| RF-03 | Campo `odometer_km` permanece vazio por padrão (hint é referência, não pre-fill)                       | ⏳ Pendente          | ⏳ Pendente          | ⏳       |
-| RF-04 | Hint atualizado ao trocar veículo selecionado; removido ao desmarcar veículo                           | ⏳ Pendente          | ⏳ Pendente          | ⏳       |
-| RF-05 | Server action `getFavoriteFuelTypeAction(vehicleId)` — retorna `vehicles.favorite_fuel_type`           | ⏳ Pendente          | ⏳ Pendente          | ⏳       |
-| RF-06 | Pré-preenchimento de Tipo de Combustível com `favorite_fuel_type` ao selecionar veículo (categoria fuel) | ⏳ Pendente        | ⏳ Pendente          | ⏳       |
-| RF-07 | Prioridade R-FUEL-07 respeitada: favorite_fuel_type > template > vazio                                 | ⏳ Pendente          | ⏳ Pendente          | ⏳       |
-| RF-08 | Pré-preenchimento não sobrescreve edição manual prévia do usuário (R-FUEL-08)                          | ⏳ Pendente          | ⏳ Pendente          | ⏳       |
-| RF-09 | Ambas as actions são fire-and-forget: erros silenciados, formulário não é bloqueado                    | ⏳ Pendente          | ⏳ Pendente          | ⏳       |
+| RF-01 | MAX(odometer_km) de expenses ∪ maintenances — consolidado em `getFuelStats` (não server action separada) | `apps/api/src/modules/expenses/expenses.service.ts#getFuelStats` (`maintenanceOdos` query) | `expenses.service.spec.ts` ("RF-01: last_odometer_km reflete MAX entre expenses e maintenances") | ✅ |
+| RF-02 | Hint textual "Último registrado: N.NNN km" abaixo do campo `odometer_km` ao selecionar veículo        | `apps/web/src/app/(app)/expenses/new/page.tsx` (hint via `fuelStats.last_odometer_km`, `Intl.NumberFormat('pt-BR')`) | — (verificação visual) | ✅ |
+| RF-03 | Campo `odometer_km` permanece vazio por padrão (hint é referência, não pre-fill)                       | `apps/web/src/app/(app)/expenses/new/page.tsx` (OdometerInput sem `defaultValue`) | — (comportamento pré-existente) | ✅ |
+| RF-04 | Hint atualizado ao trocar veículo selecionado; removido ao desmarcar veículo                           | `apps/web/src/lib/hooks/use-fuel-historical-stats.ts` (queryKey inclui `vehicleId`); hint condicionado a `vehicleId !== ""` | — (mesmo mecanismo de SPEC-20260814-002 RF-04, já testado) | ✅ |
+| RF-05 | `vehicles.favorite_fuel_type` retornado por `getFuelStats` — consolidado (não server action separada) | `apps/api/src/modules/expenses/expenses.service.ts#getFuelStats` (campo `favorite_fuel_type` no SELECT + retorno); `packages/validators/src/expense.schemas.ts` (`FuelStats.favorite_fuel_type`) | `expenses.service.spec.ts` ("RF-05: favorite_fuel_type retorna null", "RF-04 atualizado com gasoline") | ✅ |
+| RF-06 | Pré-preenchimento de Tipo de Combustível com `favorite_fuel_type` ao selecionar veículo (categoria fuel) | `apps/web/src/app/(app)/expenses/new/page.tsx` (`useEffect` de pre-fill, `setFuelType(fuelStats?.favorite_fuel_type ?? "")`) | — (verificação visual) | ✅ |
+| RF-07 | Prioridade R-FUEL-07 respeitada: `favorite_fuel_type` > vazio; segundo nível de fallback fora de escopo | `apps/web/src/app/(app)/expenses/new/page.tsx` (useEffect aplica `fuelStats.favorite_fuel_type ?? ""`) | — | ✅ |
+| RF-08 | Pré-preenchimento não sobrescreve edição manual prévia do usuário (R-FUEL-09)                          | `apps/web/src/app/(app)/expenses/new/page.tsx` (`fuelTypeUserEdited` ref, `onValueChange` do Combobox seta `true`) | — (verificação visual) | ✅ |
+| RF-09 | Fire-and-forget: erros silenciados, formulário não bloqueado                                           | `apps/web/src/lib/hooks/use-fuel-historical-stats.ts` (`retry: false`); query de maintenances no service silencia erro | — (mesmo mecanismo de SPEC-20260814-002) | ✅ |
 
 ---
 
@@ -3651,6 +3707,155 @@ RNF-04 (foco preso no drawer + retorno ao hamburger ao fechar) implementado em `
 | RF-15 | Badge do `NavBadge` no `AlertsBell` reposicionado (`-right-1 -top-1`) para não sobrepor o glifo do ícone Bell | `apps/web/src/components/layout/alerts-bell.tsx` | — (mudança visual/CSS) | ✅ |
 | RF-16 | Posição do `CommandPaletteTrigger` no header investigada | `apps/web/src/components/layout/header.tsx` (sem alteração) | — | 🔶 (análise estática não encontrou `flex-1`/`mx-auto`/`justify-center` — DOM já ancorado à esquerda do logo, conforme a própria spec previa; confirmação visual em ambiente rodando segue pendente) |
 | RF-17 | Migração de iconografia do shell para o wrapper `<Icon>`: emoji `🔍` eliminado, `Bell` (header) e ícones da sidebar (`Car`, `LayoutDashboard`, `LogOut`, `PanelLeftOpen/Close`, etc.) migrados | `apps/web/src/components/layout/command-palette-trigger.tsx`, `apps/web/src/components/layout/alerts-bell.tsx`, `apps/web/src/components/layout/sidebar.tsx` | — (mudança visual/CSS) | ✅ |
+
+### Novos — achados de 2026-08-14, implementados no working tree (RF-18 a RF-23)
+
+> Adicionados à SPEC-20260813-001 em 2026-08-14 como pendentes. Verificado em 2026-08-15
+> via grep de `@spec SPEC-20260813-001 RF-1X` nos arquivos: todos os 6 RFs têm anotação
+> confirmada no código — implementação não commitada ainda (working tree).
+
+| RF    | Requisito (resumo) | Código | Teste | Status |
+| ----- | ------------------ | ------ | ----- | ------ |
+| RF-18 | `FinancialSubheader` sticky (`sticky top-14 z-[19]`); `dashboard/page.tsx` usa `top-[6.25rem]` para compensar header + subheader | `apps/web/src/components/layout/financial-subheader.tsx` (linha 116), `apps/web/src/app/(app)/dashboard/page.tsx` (linha 242) | — (mudança CSS/visual) | ✅ |
+| RF-19 | `VehicleContextChip`: emojis de `MODE_ICONS` substituídos por `<Icon>` Lucide (Opção A; Opção B backlog futuro) | `apps/web/src/components/layout/vehicle-context-chip.tsx` (linha 16) | — (mudança visual) | ✅ |
+| RF-20 | `KpiPicker` removido do dashboard e movido para `/settings/preferences`; comentário `@spec` em ambos os arquivos | `apps/web/src/app/(app)/dashboard/page.tsx` (linha 209), `apps/web/src/app/(app)/settings/preferences/page.tsx` (linha 600) | — (mudança de layout) | ✅ |
+| RF-21 | Sidebar: bloco [Configurações + Upgrade + Sair] ancorado no rodapé com `mt-auto`; `/upgrade` criado como placeholder (Fase 9) | `apps/web/src/components/layout/sidebar.tsx` (linhas 399, 416), `apps/web/src/app/(app)/upgrade/page.tsx` | — | ✅ |
+| RF-22 | `AvatarDropdown`: prop `plan?: string` exibe plano; fallback `"Beta"` hardcoded até Fase 9 | `packages/ui/src/components/avatar-dropdown.tsx` (linha 12), `apps/web/src/components/layout/header.tsx` (linha 123) | — | ✅ (fallback "Beta", não "Free" — ver comentário no arquivo) |
+| RF-23 | `ChartTooltip` padronizado em `fuel-trend-chart.tsx` (1 instância), `tco-breakdown-chart.tsx` (1 instância), `analytics/page.tsx` (4 instâncias: linhas 201/417/534/748) | `apps/web/src/components/charts/fuel-trend-chart.tsx` (linha 54), `apps/web/src/components/charts/tco-breakdown-chart.tsx` (linha 67), `apps/web/src/app/(app)/analytics/page.tsx` (linhas 201/417/534/748) | — (mudança visual) | ✅ |
+
+> **RF-13 (outlier custo/km) — BLOQUEADO:** não commitado; sem regra R-KPI definida em `specs/RULES.md`. Permanece pendente até que a regra seja criada e o critério de outlier seja especificado. Não faz parte dos RF-18..RF-23.
+
+---
+
+## SPEC-20260814-001 — FleetAside: Menu Aside Desktop com Aba Agenda (approved)
+
+> Spec em `specs/layout-responsivo/SPEC-20260814-001-fleet-aside-agenda.md`.
+> Criada em 2026-08-14. **Status:** `approved` — gate técnico concluído em 2026-08-14; pronta para implementação.
+> Nenhum código foi escrito ainda. Pré-condição de RF-01: renomear `fleet-aside.tsx` existente para `vehicle-context-watcher.tsx`.
+
+| RF    | Requisito (resumo) | Código | Teste | Status |
+| ----- | ------------------ | ------ | ----- | ------ |
+| RF-01 | `FleetAside` shell: container lateral direito `w-72`, desktop-only (≥ lg), sticky, scroll interno. Pré-cond.: renomear `FleetAside` existente para `VehicleContextWatcher` | pendente | pendente | ⏳ |
+| RF-02 | Sistema de abas (`Tabs` de `packages/ui` ou `@radix-ui/react-tabs`) no `FleetAside`; aba "Agenda" como única aba v1 | pendente | pendente | ⏳ |
+| RF-03 | Aba "Agenda": renderiza `CalendarView` com eventos mapeados da query `["dashboard","alerts"]` (manutenções/documentos) + query `["agenda","recurring-costs"]` (custos recorrentes) | pendente | pendente | ⏳ |
+| RF-04 | `CalendarView` em `packages/ui` — componente genérico de calendário mensal com suporte a eventos externos; sem dependência de contexto de frota; sem lib de data externa (Date nativo) | pendente | pendente | ⏳ |
+| RF-05 | Célula de dia: indicador visual por severidade + badge "+N" para ≥ 3 eventos (R-AGE-02) | pendente | pendente | ⏳ |
+| RF-06 | `onDayClick` abre painel/popover com lista de eventos do dia e links diretos ao registro | pendente | pendente | ⏳ |
+| RF-07 | Navegação prev/próximo mês com `aria-label`s; modo controlado e não-controlado suportados | pendente | pendente | ⏳ |
+| RF-08 | `FleetAlertBar` removido do `dashboard/page.tsx` em ≥ lg via `useMediaQuery` (renderização condicional, não CSS `hidden`); permanece inalterado em < lg | pendente | pendente | ⏳ |
+
+---
+
+## SPEC-20260814-002 — Formulário de Abastecimento: Cálculo em Tempo Real de Consumo e Preço por Litro (approved)
+
+> Spec em `specs/expenses/SPEC-20260814-002-calculo-tempo-real-consumo-preco.md`.
+> Criada em 2026-08-14. **Status:** `approved` — gate técnico concluído em 2026-08-14.
+> Depende de: SPEC-20260606-001 (cálculo backend), SPEC-20260612-002 (tri-state full_tank), SPEC-20260807-004 (getOdometerHintAction — não implementada, ver nota abaixo).
+> Nota de implementação (2026-08-14, na entrega): `getFuelHistoricalStats` implementada como `GET /expenses/fuel-stats?vehicle_id=:id` em `apps/api`. Os campos do formulário (`liters`, `full_tank`, `fuel_type`) já existem — o gap identificado no brainstorm não era um gap real. **Ajuste de RF-03**: `getOdometerHintAction` (SPEC-20260807-004) nunca foi implementada no projeto; em vez de introduzir uma 3ª chamada de rede, `GET /expenses/fuel-stats` também retorna `last_odometer_km` (maior odômetro já registrado, independente do limiar de 3 usado pelas médias) — preserva a intenção de RF-03 ("nenhuma server action nova exclusiva") sem depender de uma spec não construída. Cálculo puro extraído para `apps/web/src/lib/fuel-realtime-calc.ts` (testável sem montar componente React).
+
+| RF    | Requisito (resumo) | Código | Teste | Status |
+| ----- | ------------------ | ------ | ----- | ------ |
+| RF-01 | Calcular `price_per_liter` client-side (`amount ÷ liters`) e exibir em tempo real; sem fetch durante digitação | `apps/web/src/lib/fuel-realtime-calc.ts` (`computePricePerLiter`), `apps/web/src/components/expenses/fuel-realtime-indicators.tsx` | `apps/web/src/lib/fuel-realtime-calc.spec.ts` | ✅ |
+| RF-02 | Calcular `km_per_liter` client-side quando `full_tank = true`, `liters > 0` e `odometer_anterior` disponível | `apps/web/src/lib/fuel-realtime-calc.ts` (`computeKmPerLiter`) | `apps/web/src/lib/fuel-realtime-calc.spec.ts` | ✅ |
+| RF-03 | `odometer_anterior` reaproveitado sem nova server action exclusiva (ver nota de ajuste acima — `last_odometer_km` embutido em `GET /expenses/fuel-stats`) | `apps/api/src/modules/expenses/expenses.service.ts` (`getFuelStats`), `apps/web/src/lib/hooks/use-fuel-historical-stats.ts` | `apps/api/src/modules/expenses/expenses.service.spec.ts` | ✅ |
+| RF-04 | `GET /expenses/fuel-stats?vehicle_id=:id` — retorna avg `price_per_liter`, avg `km_per_liter`, count, `last_odometer_km`; avg `null` se count < 3 (R-FUEL-11) | `apps/api/src/modules/expenses/expenses.controller.ts`, `expenses.service.ts` (`getFuelStats`), `packages/validators/src/expense.schemas.ts` (`fuelStatsQuerySchema`, `FuelStats`) | `apps/api/src/modules/expenses/expenses.controller.spec.ts`, `expenses.service.spec.ts` | ✅ |
+| RF-05 | Aviso warning não-bloqueante quando `price_per_liter` calculado diverge >50% da média histórica (R-FUEL-11) | `apps/web/src/lib/fuel-realtime-calc.ts` (`computeAnomalyMessage`) | `apps/web/src/lib/fuel-realtime-calc.spec.ts` | ✅ |
+| RF-06 | Aviso warning não-bloqueante quando `km_per_liter` calculado diverge >50% da média histórica | `apps/web/src/lib/fuel-realtime-calc.ts` (`computeAnomalyMessage`) | `apps/web/src/lib/fuel-realtime-calc.spec.ts` | ✅ |
+| RF-07 | Aviso informativo quando `liters` vazio: "Preencha os litros para calcular..." (R-FUEL-12) | `apps/web/src/lib/fuel-realtime-calc.ts` (`computeMissingLitersNotice`) | `apps/web/src/lib/fuel-realtime-calc.spec.ts` | ✅ |
+| RF-08 | Aviso informativo quando `liters > 0` mas `full_tank ≠ true`: "Marque Tanque cheio para calcular consumo" (R-FUEL-12) | `apps/web/src/lib/fuel-realtime-calc.ts` (`computeMissingFullTankNotice`) | `apps/web/src/lib/fuel-realtime-calc.spec.ts` | ✅ |
+| RF-09 | Indicadores e avisos nunca bloqueiam submissão; puramente informativos | `apps/web/src/components/expenses/fuel-realtime-indicators.tsx` | validado por inspeção (sem `disabled`/bloqueio no form) | ✅ |
+| RF-10 | Erros em `GET /expenses/fuel-stats` resultam em ausência de dado (fire-and-forget); sem exibição de erro ao usuário | `apps/web/src/lib/hooks/use-fuel-historical-stats.ts` (`retry:false`) | validado por inspeção | ✅ |
+| RF-11 | Seção de indicadores renderizada somente quando `category = 'fuel'` | `apps/web/src/app/(app)/expenses/new/page.tsx`, `apps/web/src/app/(app)/expenses/[id]/page.tsx` | `apps/web/src/app/(app)/expenses/new/page.spec.tsx` (suíte completa, seção só monta com `isFuel`) | ✅ |
+
+> **Atualização — 2026-08-15 — paridade criar/editar.** `FuelRealtimeIndicators` (RF-02, RF-05, RF-06, RF-07, RF-08, RF-11) estendido para `/expenses/[id]` (edição), antes só presente em `/expenses/new`. Decisão de produto: negar o feedback de anomalia/gap silencioso justamente no fluxo de correção de erro contradizia o objetivo da spec. RF-01 (preço/litro) não replicado na edição — já coberto pelo campo editável "Valor por litro" (`useFuelCrossCalc`), mesma reconciliação de 2026-08-15 aplicada à criação. `useFuelHistoricalStats` reaproveitado com `expense?.vehicle_id ?? ""`. Débito técnico de baixa prioridade: `GET /expenses/fuel-stats` não exclui da média o próprio registro em edição (viés de 1/N, inofensivo para N≥3 com limiar de 50%). Código: `apps/web/src/app/(app)/expenses/[id]/page.tsx`. Sem teste dedicado novo — cobertura por inspeção (mesmo componente puro já testado em `fuel-realtime-calc.spec.ts`); `page.spec.tsx` da tela de edição não cobre este componente ainda.
+
+---
+
+## SPEC-20260814-003 — Formulário de Abastecimento: Autocomplete de Fornecedor (approved)
+
+> Spec em `specs/expenses/SPEC-20260814-003-autocomplete-fornecedor.md`.
+> Criada em 2026-08-14. **Status:** `approved` — gate técnico concluído em 2026-08-14.
+> Depende de: SPEC-20260606-002 (campo `supplier`), SPEC-20260804-004 (workspace_members).
+> Nota de implementação (2026-08-14, na entrega): `getSuggestedSuppliers` implementada como `getSupplierSuggestions()` — extensão de `GET /expenses/suppliers?q=...&workspace_id=...` em `apps/api`. Migration: índice partial `idx_expenses_user_supplier` **sem** `CONCURRENTLY` (nenhuma outra migration do projeto usa; roda dentro da transação padrão do runner, volume atual não justifica o risco). Combobox implementado como `Popover` + `Input` + navegação por teclado própria (`apps/web/src/components/expenses/supplier-combobox.tsx`) em vez de `Command`(cmdk)+`Popover` — o `cmdk` força seleção de uma opção da lista e este campo precisa aceitar texto livre com o menu aberto (R-FUEL-04); o `Combobox` padrão do design system (`@navestory/ui`) tem a mesma limitação, por isso não foi reaproveitado diretamente.
+
+| RF    | Requisito (resumo) | Código | Teste | Status |
+| ----- | ------------------ | ------ | ----- | ------ |
+| RF-01 | `GET /expenses/suppliers?q=:query&workspace_id=:id` — retorna até 10 sugestões combinadas (pessoal + workspace) | `apps/api/src/modules/expenses/expenses.controller.ts`, `expenses.service.ts` (`getSupplierSuggestions`), `packages/validators/src/expense.schemas.ts` | `apps/api/.../expenses.controller.spec.ts`, `expenses.service.spec.ts`; `apps/web/src/components/expenses/supplier-combobox.spec.tsx` | ✅ |
+| RF-02 | Histórico pessoal: até 10 fornecedores distintos por `MAX(occurred_at) DESC`; filtro por substring com query normalizada | `expenses.service.ts` (`findPersonalSupplierSuggestions`) | `expenses.service.spec.ts` | ✅ |
+| RF-03 | Histórico workspace: top 5 fornecedores por frequência, com `used_by_count`/`most_recent_user_name`; apenas se workspaceId não nulo e usuário pertence ao workspace | `expenses.service.ts` (`findWorkspaceSupplierSuggestions`, bypass de RLS via `SUPABASE_ADMIN_CLIENT` após checagem de membership) | `expenses.service.spec.ts` | ✅ |
+| RF-04 | Debounce de 200ms no cliente antes do fetch (R-SUGG-03) | `apps/web/src/components/expenses/supplier-combobox.tsx` (`useDebouncedValue`) | validado por inspeção (mesmo hook testado em `use-debounced-value.spec.ts`) | ✅ |
+| RF-05 | Máximo 10 itens na lista; pessoais têm precedência | `expenses.service.ts` (`getSupplierSuggestions`, slice final) | `expenses.service.spec.ts` | ✅ |
+| RF-06 | Deduplicação por `LOWER(TRIM(supplier))` + NFC; forma canônica = primeira ocorrência cronológica (R-SUGG-02) | `expenses.service.ts` (`normalizeSupplierKey`) | `expenses.service.spec.ts` | ✅ |
+| RF-07 | Lista fecha ao selecionar, pressionar Esc ou clicar fora; campo permanece texto livre (R-FUEL-04) | `apps/web/src/components/expenses/supplier-combobox.tsx` | `supplier-combobox.spec.tsx` | ✅ |
+| RF-08 | `.trim()` + `.normalize('NFC')` no parâmetro `q` antes de qualquer comparação (R-SAN-01, R-SAN-02) | `expenses.service.ts` (`getSupplierSuggestions`) | `expenses.service.spec.ts` | ✅ |
+| RF-09 | Se `q` vazio, retorna últimos 5 fornecedores pessoais sem filtro de texto | `expenses.service.ts` (`findPersonalSupplierSuggestions`) | `expenses.service.spec.ts` | ✅ |
+| RF-10 | Erro de rede → lista vazia sem mensagem ao usuário; campo permanece funcional como texto livre | `apps/web/src/components/expenses/supplier-combobox.tsx` (`useQuery` sem tratamento de erro visível) | `supplier-combobox.spec.tsx` | ✅ |
+
+---
+
+## SPEC-20260814-004 — Formulário de Abastecimento: Captura de Comprovante (approved)
+
+> Spec em `specs/expenses/SPEC-20260814-004-captura-comprovante-abastecimento.md`.
+> Criada em 2026-08-14. **Status:** `approved` — gate técnico concluído em 2026-08-14. Implementada em 2026-08-14.
+> Depende de: SPEC-20260606-001 (tabela `expenses`), SPEC-20260714-001 (CRUD base de expenses).
+> **Decisão de implementação (Douglas, 2026-08-14):** thumbnail gerado de forma ASSÍNCRONA — o upload do arquivo original salva `receipt_storage_key`/`receipt_uploaded_at` de forma síncrona e retorna; o thumbnail roda em job fire-and-forget separado (`ExpensesService.generateReceiptThumbnail`). Isso exigiu uma coluna adicional não prevista no esqueleto original da spec: `receipt_thumbnail_key` + `receipt_thumbnail_status` (`not_applicable`/`pending`/`completed`/`failed`) — ver comentário completo em `supabase/migrations/20260814160000_expenses_receipt_columns.sql`. Enquanto `pending`, a UI mostra fallback "preparando prévia"; `failed` e PDF caem permanentemente no ícone estático de documento.
+> Upload via `POST /expenses/:id/receipt` (multipart, `FileInterceptor` em memória) e leitura via `GET /expenses/:id/receipt` (signed URLs) em `apps/api/src/modules/expenses/`. `sharp` roda em Node.js (NestJS, não Edge). Bucket `receipts` privado, policy RLS owner-only, signed URLs TTL 60min.
+> **Desvio de arquitetura do fluxo de frontend:** como o endpoint de upload exige uma despesa já existente, `/expenses/new` cria a despesa primeiro e só então envia o comprovante selecionado (arquivo fica em memória local até a submissão); falha no upload não desfaz a despesa e mostra aviso com link para tentar novamente na tela de detalhe (que também permite anexar/reenviar comprovante).
+
+| RF    | Requisito (resumo) | Código | Teste | Status |
+| ----- | ------------------ | ------ | ----- | ------ |
+| RF-01 | Migration: ADD COLUMNS `receipt_storage_key`, `receipt_uploaded_at`, `receipt_ocr_status` (CHECK), `receipt_ocr_raw`, `receipt_ocr_parsed`, `receipt_ocr_confidence` em `expenses` | `supabase/migrations/20260814160000_expenses_receipt_columns.sql` | validado via `expenses.service.spec.ts` (mocks assumem as colunas no `EXPENSE_COLUMNS`) | ✅ |
+| RF-02 | Bucket `receipts` privado; policy RLS owner-only (INSERT/SELECT/DELETE por `user_id` no path); sem LIST público (S8, R-RCP-06) | `supabase/migrations/20260814160500_receipts_bucket_rls.sql` | revisão manual (sem harness de teste de RLS no projeto — mesmo padrão de `20260712172120_storage_vehicle_photos.sql`) | ✅ |
+| RF-03 | Path no bucket: `{user_id}/{uuid_v4}.{ext}`; UUID gerado no servidor; extensão inferida do MIME (R-RCP-02) | `apps/api/src/modules/expenses/expenses.service.ts` (`uploadReceipt`) | `expenses.service.spec.ts` "gera path {user_id}/{uuid}.ext" | ✅ |
+| RF-04 | Validação cliente + servidor: max 10MB, MIMEs aceitos (JPEG/PNG/WebP/PDF); erro inline específico (R-RCP-01, R-SAN-05) | `apps/api/.../expenses.service.ts` (`uploadReceipt`) + `expenses.controller.ts` (`fileFilter`); `apps/web/src/components/expenses/receipt-field.tsx` (via `FileUpload` de `@navestory/ui`) | `expenses.service.spec.ts` (mime/tamanho); `receipt-field.spec.tsx` (mensagens inline) | ✅ |
+| RF-05 | Thumbnail gerado server-side: 400px lado maior, JPEG 80%, `sharp` com `withoutEnlargement: true`; PDF → ícone estático (R-RCP-05) | `apps/api/.../expenses.service.ts` (`generateReceiptThumbnail`) | `expenses.service.spec.ts` "redimensiona 400px/JPEG 80%"; `receipt-viewer.spec.tsx` (PDF nunca "preparando prévia") | ✅ |
+| RF-06 | Thumbnail em `{user_id}/thumb_{uuid_v4}.jpg`, mesma policy RLS do original (R-RCP-06) | `apps/api/.../expenses.service.ts` (`generateReceiptThumbnail`) | `expenses.service.spec.ts` "salva thumb_{uuid}.jpg" | ✅ |
+| RF-07 | Audit log fire-and-forget: `RECEIPT_UPLOADED` e `RECEIPT_ACCESSED` em `audit_logs`; sem storage_key no campo `changes` (R-RCP-03, R-MON-01, R-MON-02, R-MON-05) | `apps/api/.../expenses.service.ts` (`uploadReceipt`, `getReceiptUrls`) | `expenses.service.spec.ts` (audita sem storage_key completo; audita RECEIPT_ACCESSED) | ✅ |
+| RF-08 | Soft-delete de despesa NÃO remove arquivo do bucket nem nulifica `receipt_storage_key` (R-RCP-04, R5) | Nenhuma alteração em `ExpensesService.remove` (soft-delete já não toca colunas de receipt) | validado por inspeção — `remove()` só seta `deleted_at`, cobertura pré-existente em `expenses.service.spec.ts` | ✅ |
+| RF-09 | Campos OCR inicializados como `receipt_ocr_status = 'not_applicable'`; jamais preenchidos por esta spec | `supabase/migrations/20260814160000_expenses_receipt_columns.sql` (`DEFAULT 'not_applicable'`) | nenhum código desta spec escreve `receipt_ocr_*` (verificado por revisão) | ✅ |
+| RF-10 | Campo de upload é opcional; formulário submete com ou sem comprovante | `apps/web/src/app/(app)/expenses/new/page.tsx` | `new/page.spec.tsx` "registra a despesa e redireciona" (sem arquivo) + "envia o comprovante selecionado" (com arquivo) | ✅ |
+| RF-11 | Loading state (spinner/barra) durante upload; submissão bloqueada enquanto upload em andamento | `receipt-field.tsx` (via `FileUpload`); botão "Registrar"/"Enviar comprovante" desabilitado durante `mutation.isPending` | coberto indiretamente pelos testes de `new/page.spec.tsx` e `[id]/page.spec.tsx` | ✅ |
+| RF-12 | Botão "Remover" na prévia: cancela upload em andamento ou remove arquivo do bucket já enviado | `apps/web/src/components/expenses/receipt-field.tsx` (remoção é só local — decisão de arquitetura moveu o upload para depois da criação da despesa, então nunca há arquivo já enviado a "cancelar" no cliente) | `receipt-field.spec.tsx` "'Remover' limpa o arquivo selecionado sem chamada ao servidor" | ✅ |
+
+**Requisito adicional (decisão de implementação, fora da tabela original da spec):** estado do thumbnail assíncrono — `receipt_thumbnail_key`/`receipt_thumbnail_status` (not_applicable/pending/completed/failed). Código: `expenses.service.ts` (`uploadReceipt`, `generateReceiptThumbnail`); `receipt-viewer.tsx` (fallback "preparando prévia" no listing/detalhe). Teste: `expenses.service.spec.ts` (`generateReceiptThumbnail` sucesso/falha) + `receipt-viewer.spec.tsx` (pending/completed/failed/PDF).
+
+---
+
+## SPEC-20260815-001 — Benchmark Interno de Frota (draft)
+
+> Spec em `specs/analytics/SPEC-20260815-001-benchmark-interno-frota.md`.
+> Compara consumo e custo de cada veículo contra a média (e percentil) da frota do mesmo
+> workspace, usando dados já existentes. Nenhuma infraestrutura nova requerida.
+> Regras: R-ANA-01, R-ANA-04, R-ANA-05, R-ANA-06, R-BENCH-01, R-BENCH-02, R-BENCH-03,
+> R-BENCH-04. Segurança: S1, S2, S7, S9, S18. Camadas: backend, database, frontend.
+> Criada em 2026-08-15. Nenhuma implementação ainda — todos os RFs pendentes.
+
+### Banco de dados — RPC `get_fleet_benchmark`
+
+| Req   | Descrição                                                                                                                                                                                                         | Código | Teste | Status |
+| ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ----- | ------ |
+| RF-01 | RPC `get_fleet_benchmark()` retorna por veículo: `vehicle_label`, `avg_km_per_liter` (null se < 5 full_tank), `avg_price_per_liter`, `cost_per_km` e percentis via `PERCENT_RANK() OVER (...)` para cada métrica | —      | —     | ⏳     |
+| RF-02 | RPC valida workspace do `auth.uid()` internamente; predicado de isolamento executado antes de qualquer JOIN costoso (R-BENCH-01, S18)                                                                             | —      | —     | ⏳     |
+| RF-02/S18 | `SECURITY DEFINER` + `SET search_path = ''` + `REVOKE FROM PUBLIC; GRANT TO authenticated` (S7, S9)                                                                                                          | —      | —     | ⏳     |
+
+### Backend — `AnalyticsModule` (`GET /analytics/benchmark`)
+
+| Req   | Descrição                                                                                                                                                         | Código | Teste | Status |
+| ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ----- | ------ |
+| RF-03 | Endpoint `GET /analytics/benchmark` chama RPC e retorna `{ vehicles, fleet_avg, vehicle_count, insufficient_data }`                                              | —      | —     | ⏳     |
+| RF-04 | Quando `vehicle_count < 2`: HTTP 200 com `{ insufficient_data: true, vehicles: [], fleet_avg: null }` (R-BENCH-02)                                               | —      | —     | ⏳     |
+| RF-05 | Médias da frota (`fleet_avg`) excluem veículos com `null` na métrica; `cost_per_km` null quando `total_km = 0` (R-ANA-04)                                        | —      | —     | ⏳     |
+| RF-06 | Cache com `staleTime: 3_600_000` ms no frontend; invalidação via `queryClient.invalidateQueries(['analytics', 'benchmark'])` ao criar/atualizar expense fuel ou manutenção (R-ANA-06) | — | — | ⏳ |
+
+### Frontend — Seção "Benchmark da Frota" em `/analytics`
+
+| Req   | Descrição                                                                                                                                                                       | Código | Teste | Status |
+| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ----- | ------ |
+| RF-07 | Seção "Benchmark da Frota" após as seções de TCO e Fuel Trend existentes; tabela veículos × métricas + linha de rodapé "Média da frota"; visível apenas quando `vehicle_count >= 2` | —  | —     | ⏳     |
+| RF-08 | Empty state informativo quando `insufficient_data: true`: "Benchmark disponível com 2 ou mais veículos na frota" (R-BENCH-02)                                                  | —      | —     | ⏳     |
+| RF-09 | Linha do veículo com `activeVehicleId` do contexto `single` destacada visualmente; sem destaque em contexto coletivo ou sem contexto                                            | —      | —     | ⏳     |
+| RF-10 | Percentil como chip semântico com label textual (Top 10% / Acima da média / Na média / Abaixo da média); sem ranking posicional; tokens R-DS-03 (R-BENCH-04)                   | —      | —     | ⏳     |
+| RF-11 | Células com `null` exibem "—" (em dash) com tooltip explicativo por métrica                                                                                                    | —      | —     | ⏳     |
 
 ---
 

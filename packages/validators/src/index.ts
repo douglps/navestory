@@ -3,7 +3,6 @@ export * from "./auth.schemas";
 export * from "./category.schemas";
 export * from "./dashboard.schemas";
 export * from "./expense.schemas";
-export * from "./expense-template.schemas";
 export * from "./fine.schemas";
 export * from "./maintenance.schemas";
 export * from "./odometer-cycle.schemas";

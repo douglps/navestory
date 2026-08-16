@@ -12,7 +12,6 @@ import { AuditLogsModule } from "./modules/audit-logs/audit-logs.module";
 import { AuthModule } from "./modules/auth/auth.module";
 import { CategoriesModule } from "./modules/categories/categories.module";
 import { DashboardModule } from "./modules/dashboard/dashboard.module";
-import { ExpenseTemplatesModule } from "./modules/expense-templates/expense-templates.module";
 import { ExpensesModule } from "./modules/expenses/expenses.module";
 import { FleetSettingsModule } from "./modules/fleet-settings/fleet-settings.module";
 import { FinesModule } from "./modules/fines/fines.module";
@@ -53,7 +52,6 @@ import { SupabaseModule } from "./shared/supabase/supabase.module";
     VehicleGroupsModule,
     CategoriesModule,
     ExpensesModule,
-    ExpenseTemplatesModule,
     FinesModule,
     MaintenancesModule,
     OdometerCyclesModule,

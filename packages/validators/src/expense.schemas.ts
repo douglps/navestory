@@ -155,3 +155,101 @@ export const consolidatedExportQuerySchema = z.object({
   vehicle_id: z.string().uuid().optional(),
 });
 export type ConsolidatedExportQuery = z.infer<typeof consolidatedExportQuerySchema>;
+
+/**
+ * @spec SPEC-20260814-002 RF-04, RNF-03
+ */
+export const fuelStatsQuerySchema = z.object({
+  vehicle_id: z.string().uuid(),
+});
+export type FuelStatsQuery = z.infer<typeof fuelStatsQuerySchema>;
+
+/**
+ * @spec SPEC-20260814-002 R-FUEL-11, RF-03
+ * @spec SPEC-20260807-004 RF-01, RF-05
+ * `avg_*` são `null` quando a amostra de abastecimentos com `full_tank = true` é insuficiente
+ * (< 3 — R-FUEL-11). `last_odometer_km` é o maior odômetro registrado para o veículo em
+ * `expenses` (fuel) ∪ `maintenances` — SPEC-20260807-004 RF-01 consolidado aqui para evitar 3ª
+ * chamada de rede. `favorite_fuel_type` vem de `vehicles.favorite_fuel_type` (RF-05), retornado
+ * junto do endpoint já carregado no mount do formulário.
+ */
+export interface FuelStats {
+  avg_price_per_liter: number | null;
+  avg_km_per_liter: number | null;
+  record_count: number;
+  /** @spec SPEC-20260807-004 RF-01 — MAX de expenses(fuel) ∪ maintenances */
+  last_odometer_km: number | null;
+  /**
+   * @spec SPEC-20260807-004 RF-05 — `vehicles.favorite_fuel_type`; null se não definido.
+   * Opcional para retrocompatibilidade com mocks e chamadas que não precisam deste campo
+   * (ex.: `fuel-realtime-calc` só usa `last_odometer_km` e `avg_*`).
+   */
+  favorite_fuel_type?: string | null;
+}
+
+/**
+ * @spec SPEC-20260814-003 RF-08
+ * `q` normalizado (trim + NFC) no service (R-SAN-01, R-SAN-02); aceito aqui como string livre.
+ */
+export const supplierSuggestionsQuerySchema = z.object({
+  q: z.string().max(100).optional(),
+  workspace_id: z.string().uuid().optional(),
+});
+export type SupplierSuggestionsQuery = z.infer<typeof supplierSuggestionsQuerySchema>;
+
+/**
+ * @spec SPEC-20260814-003 RF-01, RF-03, RF-06
+ */
+export interface SupplierSuggestion {
+  supplier: string;
+  source: "personal" | "workspace";
+  used_by_count?: number;
+  most_recent_user_name?: string | null;
+}
+
+/**
+ * @spec SPEC-20260814-004 RF-04, R-RCP-01
+ * Allowlist de MIME e limite de tamanho compartilhados entre cliente (validação client-side,
+ * RNF-07) e servidor (multer `fileFilter` + revalidação no service, R-SAN-05) — única fonte de
+ * verdade para não divergir cliente/servidor.
+ */
+export const RECEIPT_MAX_SIZE_BYTES = 10 * 1024 * 1024;
+
+export const RECEIPT_ALLOWED_MIME_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "application/pdf",
+] as const;
+export type ReceiptMimeType = (typeof RECEIPT_ALLOWED_MIME_TYPES)[number];
+
+/** @spec SPEC-20260814-004 RF-03, R-RCP-02 — extensão sempre inferida do MIME validado, nunca do nome original */
+export const RECEIPT_MIME_EXTENSION: Record<ReceiptMimeType, string> = {
+  "image/jpeg": "jpg",
+  "image/png": "png",
+  "image/webp": "webp",
+  "application/pdf": "pdf",
+};
+
+/**
+ * @spec SPEC-20260814-004 (decisão de implementação — geração assíncrona de thumbnail)
+ * `not_applicable`: sem comprovante, ou comprovante é PDF (nunca gera thumbnail — RF-05).
+ * `pending`: comprovante de imagem enviado, thumbnail ainda sendo gerado em job fire-and-forget.
+ * `completed`: `receipt_thumbnail_key` populado, pronto para exibição.
+ * `failed`: geração falhou — UI cai permanentemente no fallback estático (mesmo ícone do PDF).
+ */
+export const RECEIPT_THUMBNAIL_STATUSES = [
+  "not_applicable",
+  "pending",
+  "completed",
+  "failed",
+] as const;
+export type ReceiptThumbnailStatus = (typeof RECEIPT_THUMBNAIL_STATUSES)[number];
+
+/** @spec SPEC-20260814-004 RNF-03 — signed URLs, TTL 60min, geradas sob demanda (nunca persistidas) */
+export interface ReceiptUrls {
+  original_url: string;
+  thumbnail_url: string | null;
+  thumbnail_status: ReceiptThumbnailStatus;
+  is_pdf: boolean;
+}

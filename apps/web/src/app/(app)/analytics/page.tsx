@@ -31,6 +31,7 @@ import {
 } from "recharts";
 import {
   Alert,
+  ChartTooltip,
   ChartWrapper,
   Combobox,
   Container,
@@ -197,7 +198,22 @@ function FuelCorrelationSection({
             />
             <XAxis type="number" dataKey="x" name="Distância (km)" />
             <YAxis type="number" dataKey="y" name="Consumo (km/L)" />
-            <Tooltip cursor={{ strokeDasharray: "3 3" }} />
+            {/* @spec SPEC-20260813-001 RF-23 — ChartTooltip do design system em vez do tooltip
+                padrão do Recharts (perdia contraste no dark mode). */}
+            <Tooltip
+              cursor={{ strokeDasharray: "3 3" }}
+              content={({ active, payload }) => (
+                <ChartTooltip
+                  active={active}
+                  payload={payload}
+                  formatter={(value, name) =>
+                    name.includes("km/L")
+                      ? `${value.toFixed(1)} km/L`
+                      : `${value.toFixed(0)} km`
+                  }
+                />
+              )}
+            />
             <Scatter data={chartData} fill={CHART_CATEGORY_COLORS[0]} />
           </ScatterChart>
         </ResponsiveContainer>
@@ -398,7 +414,18 @@ function BenchmarkSection({
             />
             <XAxis type="number" />
             <YAxis type="category" dataKey="name" width={100} />
-            <Tooltip formatter={(value) => currency(Number(value))} />
+            {/* @spec SPEC-20260813-001 RF-23 — ChartTooltip do design system em vez do tooltip
+                padrão do Recharts (perdia contraste no dark mode). */}
+            <Tooltip
+              content={({ active, payload, label }) => (
+                <ChartTooltip
+                  active={active}
+                  payload={payload}
+                  label={label}
+                  formatter={(value) => currency(value)}
+                />
+              )}
+            />
             <Bar dataKey="cost_per_km" fill={CHART_CATEGORY_COLORS[0]} />
           </BarChart>
         </ResponsiveContainer>
@@ -504,7 +531,18 @@ function ForecastSection({
             />
             <XAxis dataKey="month" />
             <YAxis />
-            <Tooltip formatter={(value) => currency(Number(value))} />
+            {/* @spec SPEC-20260813-001 RF-23 — ChartTooltip do design system em vez do tooltip
+                padrão do Recharts (perdia contraste no dark mode). */}
+            <Tooltip
+              content={({ active, payload, label }) => (
+                <ChartTooltip
+                  active={active}
+                  payload={payload}
+                  label={label}
+                  formatter={(value) => currency(value)}
+                />
+              )}
+            />
             <Area
               type="monotone"
               dataKey="band"
@@ -707,7 +745,18 @@ function SimulationSection({
             />
             <XAxis dataKey="month" />
             <YAxis />
-            <Tooltip formatter={(value) => currency(Number(value))} />
+            {/* @spec SPEC-20260813-001 RF-23 — ChartTooltip do design system em vez do tooltip
+                padrão do Recharts (perdia contraste no dark mode). */}
+            <Tooltip
+              content={({ active, payload, label }) => (
+                <ChartTooltip
+                  active={active}
+                  payload={payload}
+                  label={label}
+                  formatter={(value) => currency(value)}
+                />
+              )}
+            />
             <Line
               type="monotone"
               dataKey="base"

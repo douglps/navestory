@@ -1,7 +1,7 @@
 ---
 id: SPEC-20260804-006
 title: "Dashboard — Acessibilidade, Correções de Dado e Polimento Visual"
-status: draft
+status: approved
 date: 2026-08-04
 author: Douglas Lopes (lps.doug@protonmail.com)
 rules: [R-DS-12, C-DS-01, R-KPI-04, R-KPI-01, R-KPI-02, R-ANA-02, R-DS-08, R-DS-10]
@@ -505,3 +505,11 @@ de documentos seja aberta automaticamente, para não precisar procurar a informa
   (R-HS-10: flags canônicas usadas por RF-15 para determinar aba inicial do VehicleSpotlight).
 - [SPEC-20260729-002](../design-system/SPEC-20260729-002-prata-fase-2-categoricos-urgencia-varredura.md) — Escala de urgência (R-DS-08: usada por RF-09 para os chips do UpcomingCostsWidget).
 - [SPEC-20260731-005](../design-system/SPEC-20260731-005-remapeamento-escala-text-tailwind.md) — Remapeamento da escala tipográfica (R-DS-12: governa RF-01).
+
+---
+
+## Changelog (pós-aprovação)
+
+| Data | O que mudou | Por quê |
+|------|-------------|---------|
+| 2026-08-14 | Spec transitada de `draft` para `approved` após gate técnico: todos os 20 RFs implementados na working tree, R-KPI-04 criada em RULES.md, entrada completa em `matrices/rastreabilidade.md`. RF-12 já estava satisfeito antes da spec (DEFAULT_DASHBOARD_KPI_IDS nunca incluiu `total_vehicles`). RF-17 (`KpiPicker`) foi tratado via remoção do componente do dashboard (SPEC-20260813-001 RF-20), não via divider — critério de aceitação ("usuário distingue o KpiPicker dos KPI cards") satisfeito pela remoção total do KpiPicker do dashboard; a configuração de KPIs agora vive em /settings/preferences. | Implementação completa confirmada por leitura do código. |

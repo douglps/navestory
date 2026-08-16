@@ -113,7 +113,9 @@ export function FinancialSubheader(): ReactNode {
   });
 
   return (
-    <div className="flex h-11 items-center gap-3 border-b border-border bg-card/90 px-4 text-card-foreground">
+    // @spec SPEC-20260813-001 RF-18 — sticky abaixo do Header (h-14/3.5rem), para não
+    // desaparecer com a rolagem da página; z-[19] fica abaixo do Header (z-20).
+    <div className="glass-card sticky top-14 z-[19] flex h-11 items-center gap-3 rounded-none border-x-0 border-t-0 px-4 text-card-foreground backdrop-blur-sm">
       <div className="flex flex-1 items-center gap-2 overflow-hidden">
         {isLoadingHighlights
           ? Array.from({ length: CHIP_SKELETON_COUNT }, (_, index) => (

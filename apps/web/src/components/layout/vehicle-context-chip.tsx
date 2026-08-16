@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 import { useState, type ReactNode } from "react";
-import { Skeleton } from "@navestory/ui";
+import { Car, Layers, SlidersHorizontal } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+import { Icon, Skeleton } from "@navestory/ui";
 import { CONTEXT_LABELS } from "@/lib/context/context-labels";
 import { useVehicleContext } from "@/lib/context/use-vehicle-context";
 import { useMediaQuery } from "@/lib/hooks/use-media-query";
@@ -10,12 +12,16 @@ import type { SelectionMode } from "@/lib/stores/use-dashboard-store";
 import { VehicleContextDialog } from "./vehicle-context-dialog";
 import { VehicleContextSheet } from "./vehicle-context-sheet";
 
-const MODE_ICONS: Record<SelectionMode, string> = {
-  none: "",
-  single: "🚗",
-  group: "⬡",
-  multi: "🚗",
-  attribute: "🎚️",
+/**
+ * @spec SPEC-20260813-001 RF-19 — ícone Lucide via wrapper <Icon>, interino até a integração
+ * de logo de marca do fabricante (Opção B, a implementar assim que houver fonte de dado viável).
+ */
+const MODE_ICONS: Record<SelectionMode, LucideIcon | null> = {
+  none: null,
+  single: Car,
+  group: Layers,
+  multi: Car,
+  attribute: SlidersHorizontal,
 };
 
 /**
@@ -86,6 +92,9 @@ export function VehicleContextChip(): ReactNode {
     );
   }
 
+  // eslint-disable-next-line security/detect-object-injection -- selectionMode é SelectionMode, union fixa de 5 literais
+  const modeIcon = MODE_ICONS[selectionMode];
+
   return (
     <>
       <div
@@ -101,13 +110,7 @@ export function VehicleContextChip(): ReactNode {
         aria-label={ariaLabel}
         className={`flex h-11 max-w-[140px] cursor-pointer items-center gap-1.5 rounded-lg px-2.5 text-sm transition-colors duration-200 hover:ring-1 hover:ring-border/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${getModeStyles(selectionMode)}`}
       >
-        {/* eslint-disable-next-line security/detect-object-injection -- selectionMode é SelectionMode, union fixa de 5 literais */}
-        {MODE_ICONS[selectionMode] && (
-          <span aria-hidden className="shrink-0 leading-none">
-            {/* eslint-disable-next-line security/detect-object-injection -- idem */}
-            {MODE_ICONS[selectionMode]}
-          </span>
-        )}
+        {modeIcon && <Icon icon={modeIcon} size="sm" className="shrink-0" />}
         <span className="truncate">{label}</span>
         {selectionMode !== "none" && (
           <button

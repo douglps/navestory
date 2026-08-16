@@ -7,6 +7,12 @@ import { cn } from "../lib/cn";
 export interface AvatarDropdownProps {
   name: string;
   email: string | null;
+  /**
+   * Nome do plano do usuário, exibido como badge no topo do popover.
+   * @spec SPEC-20260813-001 RF-22 — string livre (não enum de tier); a estrutura de tiers é
+   * responsabilidade da spec de monetização futura (Fase 9). Omitir para não exibir o badge.
+   */
+  plan?: string;
   accountHref?: string;
   onLogout: () => void;
   className?: string;
@@ -30,6 +36,7 @@ function getInitials(name: string): string {
 export function AvatarDropdown({
   name,
   email,
+  plan,
   accountHref = "/settings/account",
   onLogout,
   className,
@@ -60,6 +67,11 @@ export function AvatarDropdown({
           )}
         >
           <div className="px-2 py-1.5">
+            {plan && (
+              <span className="mb-1.5 inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
+                {plan}
+              </span>
+            )}
             <p className="text-sm font-medium text-foreground">{name}</p>
             <p className="text-xs text-muted-foreground">{email ?? "—"}</p>
           </div>

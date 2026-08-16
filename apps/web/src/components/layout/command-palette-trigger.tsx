@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
-import { Search } from "lucide-react";
+import { Keyboard, Search } from "lucide-react";
 import { Icon, type CommandPaletteItem } from "@navestory/ui";
 import { apiClient } from "@/lib/http/api-client";
 
@@ -184,13 +184,16 @@ export function CommandPaletteTrigger(): ReactNode {
           setHasOpenedOnce(true);
           setOpen(true);
         }}
-        className="flex h-9 items-center gap-2 rounded-md border border-border px-3 text-sm text-muted-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+        className="glass-card grid h-9 w-64 grid-cols-[auto_1fr_auto] items-center gap-2 rounded-full px-3 text-sm text-muted-foreground shadow-sm transition-colors hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
       >
         {/* @spec SPEC-20260813-001 RF-17 — emoji substituído pelo wrapper <Icon> do design system */}
-        <Icon icon={Search} size="sm" />
-        <span className="hidden sm:inline">Buscar...</span>
-        <kbd className="hidden rounded border border-border px-1.5 py-0.5 text-xs sm:inline">
-          Ctrl K
+        <Icon icon={Search} size="sm" className="shrink-0" />
+        <span className="hidden truncate text-center sm:inline">
+          Buscar...
+        </span>
+        <kbd className="hidden shrink-0 items-center gap-1 rounded-full border border-border/60 bg-background/40 px-2 py-1 text-xs font-medium text-muted-foreground sm:flex">
+          <Keyboard className="h-3 w-3" aria-hidden="true" />
+          Ctrl+K
         </kbd>
       </button>
 

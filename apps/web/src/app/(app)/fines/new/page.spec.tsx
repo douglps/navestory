@@ -68,7 +68,7 @@ describe("NewFinePage", () => {
   async function fillValidForm() {
     await waitForVehiclesLoaded();
     await selectCombobox("Veículo *", "Fiat Uno");
-    fireEvent.change(screen.getByLabelText("Descrição *"), {
+    fireEvent.change(screen.getByLabelText("Infração *"), {
       target: { value: "Excesso de velocidade" },
     });
     typeDigits(screen.getByLabelText("Valor (R$) *"), "19523");
@@ -82,7 +82,7 @@ describe("NewFinePage", () => {
     renderPage();
 
     await fillValidForm();
-    fireEvent.click(screen.getByRole("button", { name: "Registrar" }));
+    fireEvent.click(screen.getByRole("button", { name: "Salvar multa" }));
 
     await waitFor(() => expect(pushMock).toHaveBeenCalledWith("/fines"));
     expect(apiClient).toHaveBeenCalledWith(
@@ -104,9 +104,9 @@ describe("NewFinePage", () => {
     renderPage();
 
     await fillValidForm();
-    fireEvent.click(screen.getByRole("button", { name: "Detalhes da infração (opcional)" }));
+    fireEvent.click(screen.getByRole("button", { name: "Dados do auto de infração (opcional)" }));
     typeDigits(screen.getByLabelText("Valor com desconto"), "99999");
-    fireEvent.click(screen.getByRole("button", { name: "Registrar" }));
+    fireEvent.click(screen.getByRole("button", { name: "Salvar multa" }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent(
       "Valor com desconto não pode ser maior que o valor original",
@@ -157,7 +157,7 @@ describe("NewFinePage", () => {
     renderPage();
 
     await fillValidForm();
-    fireEvent.click(screen.getByRole("button", { name: "Registrar" }));
+    fireEvent.click(screen.getByRole("button", { name: "Salvar multa" }));
 
     await waitFor(() =>
       expect(screen.getByRole("alert")).toHaveTextContent(
@@ -174,7 +174,7 @@ describe("NewFinePage", () => {
 
     await waitForVehiclesLoaded();
     // Abre a seção de detalhes (cobre o onClick de setShowDetails)
-    fireEvent.click(screen.getByRole("button", { name: "Detalhes da infração (opcional)" }));
+    fireEvent.click(screen.getByRole("button", { name: "Dados do auto de infração (opcional)" }));
 
     // Altera os campos opcionais
     fireEvent.change(screen.getByLabelText("Número do auto de infração"), { target: { value: "AI-999" } });
@@ -192,7 +192,7 @@ describe("NewFinePage", () => {
     expect(screen.getByLabelText("Observações")).toHaveValue("Nota extra");
 
     // Fecha a seção (cobre a inversão do estado showDetails)
-    fireEvent.click(screen.getByRole("button", { name: "Ocultar detalhes da infração" }));
+    fireEvent.click(screen.getByRole("button", { name: "Ocultar dados do auto de infração" }));
     expect(screen.queryByLabelText("Número do auto de infração")).not.toBeInTheDocument();
   });
 });

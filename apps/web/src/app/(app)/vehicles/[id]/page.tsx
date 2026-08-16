@@ -22,6 +22,7 @@ import {
   AlertDialogTrigger,
   Alert,
   Button,
+  Card,
   Combobox,
   Container,
   Input,
@@ -223,7 +224,7 @@ export default function VehicleDetailPage({
   if (!form) return <main className="p-8">Carregando...</main>;
 
   return (
-    <Container size="sm">
+    <Container size="3xl">
       <h1 className="text-xl font-semibold">
         {vehicle.make} {vehicle.model} — {vehicle.plate}
       </h1>
@@ -265,6 +266,7 @@ export default function VehicleDetailPage({
       </section>
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+        <h2 className="mt-2 text-sm font-medium text-muted-foreground">Identificação</h2>
         <label htmlFor="plate">Placa</label>
         <PlateInput
           id="plate"
@@ -278,6 +280,25 @@ export default function VehicleDetailPage({
             {fieldErrors.plate}
           </p>
         )}
+
+        <label htmlFor="nickname">Apelido</label>
+        <Input
+          id="nickname"
+          value={form.nickname}
+          onChange={(event) => updateField("nickname", event.target.value)}
+        />
+
+        <label htmlFor="vehicleType" className="text-sm font-medium">Tipo</label>
+        <Combobox
+          id="vehicleType"
+          aria-label="Tipo"
+          options={VEHICLE_TYPE_OPTIONS}
+          value={form.vehicle_type}
+          onValueChange={(value) => updateField("vehicle_type", value)}
+          placeholder="Selecione um tipo"
+          searchPlaceholder="Buscar tipo..."
+          emptyMessage="Nenhum tipo encontrado"
+        />
 
         <label htmlFor="make">Marca</label>
         <Input
@@ -319,19 +340,17 @@ export default function VehicleDetailPage({
           </p>
         )}
 
-        <span className="text-sm font-medium">Tipo</span>
-        <Combobox
-          aria-label="Tipo"
-          options={VEHICLE_TYPE_OPTIONS}
-          value={form.vehicle_type}
-          onValueChange={(value) => updateField("vehicle_type", value)}
-          placeholder="Selecione um tipo"
-          searchPlaceholder="Buscar tipo..."
-          emptyMessage="Nenhum tipo encontrado"
+        <label htmlFor="color">Cor</label>
+        <Input
+          id="color"
+          value={form.color}
+          onChange={(event) => updateField("color", event.target.value)}
         />
 
-        <span className="text-sm font-medium">Combustível</span>
+        <h2 className="mt-2 text-sm font-medium text-muted-foreground">Operacional</h2>
+        <label htmlFor="fuelType" className="text-sm font-medium">Combustível</label>
         <Combobox
+          id="fuelType"
           aria-label="Combustível"
           options={FUEL_TYPE_OPTIONS}
           value={form.fuel_type}
@@ -354,20 +373,7 @@ export default function VehicleDetailPage({
           </p>
         )}
 
-        <label htmlFor="nickname">Apelido</label>
-        <Input
-          id="nickname"
-          value={form.nickname}
-          onChange={(event) => updateField("nickname", event.target.value)}
-        />
-
-        <label htmlFor="color">Cor</label>
-        <Input
-          id="color"
-          value={form.color}
-          onChange={(event) => updateField("color", event.target.value)}
-        />
-
+        <h2 className="mt-2 text-sm font-medium text-muted-foreground">Documentação</h2>
         <label htmlFor="ipva_due_date">Vencimento do IPVA</label>
         <Input
           id="ipva_due_date"
@@ -399,64 +405,80 @@ export default function VehicleDetailPage({
             description="Não foi possível atualizar o veículo."
           />
         )}
-        {updateMutation.isSuccess && <p>Veículo atualizado.</p>}
+        {updateMutation.isSuccess && (
+          <Alert variant="success" description="Alterações salvas." />
+        )}
 
-        <Button type="submit" disabled={updateMutation.isPending}>
-          {updateMutation.isPending ? "Salvando..." : "Salvar"}
-        </Button>
+        <div className="flex gap-2">
+          <Button type="submit" disabled={updateMutation.isPending}>
+            {updateMutation.isPending ? "Salvando..." : "Salvar"}
+          </Button>
+          <Button type="button" variant="outline" onClick={() => router.push("/vehicles")}>
+            Cancelar
+          </Button>
+        </div>
       </form>
 
-      <AlertDialog
-        open={deleteDialogOpen}
-        onOpenChange={(open) => {
-          setDeleteDialogOpen(open);
-          if (!open) setConfirmationPlate("");
-        }}
-      >
-        <AlertDialogTrigger asChild>
-          <Button type="button" variant="destructive">
-            Remover veículo
-          </Button>
-        </AlertDialogTrigger>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              Excluir {vehicle.nickname ?? `${vehicle.make} ${vehicle.model}`} (
-              {vehicle.plate})?
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              O histórico de despesas e manutenções também será ocultado. Esta ação não
-              pode ser desfeita facilmente. Digite a placa {vehicle.plate} para confirmar.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
+      <Card className="flex flex-col gap-3 border-danger/40 p-6">
+        <h2 className="text-lg font-medium text-danger">Zona de perigo</h2>
+        <p className="text-sm text-muted-foreground">
+          Remover este veículo é uma ação que não pode ser desfeita.
+        </p>
+        <div>
+          <AlertDialog
+            open={deleteDialogOpen}
+            onOpenChange={(open) => {
+              setDeleteDialogOpen(open);
+              if (!open) setConfirmationPlate("");
+            }}
+          >
+            <AlertDialogTrigger asChild>
+              <Button type="button" variant="destructive">
+                Remover veículo
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>
+                  Excluir {vehicle.nickname ?? `${vehicle.make} ${vehicle.model}`} (
+                  {vehicle.plate})?
+                </AlertDialogTitle>
+                <AlertDialogDescription>
+                  Esta ação não pode ser desfeita. Despesas, manutenções e multas
+                  vinculadas a este veículo também são removidas. Digite a placa{" "}
+                  {vehicle.plate} para confirmar.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
 
-          <label htmlFor="confirmation-plate" className="sr-only">
-            Digite {vehicle.plate} para confirmar
-          </label>
-          <PlateInput
-            id="confirmation-plate"
-            value={confirmationPlate}
-            onChange={setConfirmationPlate}
-            placeholder={`Digite ${vehicle.plate} para confirmar`}
+              <label htmlFor="confirmation-plate" className="sr-only">
+                Digite {vehicle.plate} para confirmar
+              </label>
+              <PlateInput
+                id="confirmation-plate"
+                value={confirmationPlate}
+                onChange={setConfirmationPlate}
+                placeholder={`Digite ${vehicle.plate} para confirmar`}
+              />
+
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                <AlertDialogAction
+                  disabled={!deleteConfirmationValid || deleteMutation.isPending}
+                  onClick={handleConfirmDelete}
+                >
+                  {deleteMutation.isPending ? "Removendo..." : "Excluir definitivamente"}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
+        {deleteMutation.isError && (
+          <Alert
+            variant="error"
+            description="Não foi possível remover o veículo."
           />
-
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction
-              disabled={!deleteConfirmationValid || deleteMutation.isPending}
-              onClick={handleConfirmDelete}
-            >
-              {deleteMutation.isPending ? "Removendo..." : "Excluir definitivamente"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-      {deleteMutation.isError && (
-        <Alert
-          variant="error"
-          description="Não foi possível remover o veículo."
-        />
-      )}
+        )}
+      </Card>
     </Container>
   );
 }

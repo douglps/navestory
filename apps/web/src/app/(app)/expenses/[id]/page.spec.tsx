@@ -45,31 +45,48 @@ interface MockOverrides {
   preferences?: Record<string, unknown>;
   patchResponse?: Record<string, unknown>;
   patchError?: Error;
-  templateResponse?: unknown;
+  /** @spec SPEC-20260814-004 RF-07 */
+  receiptUrls?: Record<string, unknown>;
 }
 
 function mockApi(overrides: MockOverrides = {}) {
-  vi.mocked(apiClient).mockImplementation((path: string, options?: { method?: string }) => {
-    const method = options?.method ?? "GET";
-    if (path === "/expenses/e1" && method === "GET") {
-      return Promise.resolve(overrides.expense ?? baseExpense) as never;
-    }
-    if (path === "/preferences") {
-      return Promise.resolve(overrides.preferences ?? { timezone: "UTC" }) as never;
-    }
-    if (path === "/expenses/suppliers") return Promise.resolve({ data: [] }) as never;
-    if (path === "/expenses/e1?strict=true" && method === "PATCH") {
-      if (overrides.patchError) return Promise.reject(overrides.patchError) as never;
-      return Promise.resolve(overrides.patchResponse ?? baseExpense) as never;
-    }
-    if (path === "/expenses/e1" && method === "DELETE") return Promise.resolve(undefined) as never;
-    if (path === "/expense-templates" && method === "POST") {
-      return Promise.resolve(
-        overrides.templateResponse ?? { data: { id: "t1", name: "Abastecimento Semanal" } },
-      ) as never;
-    }
-    return Promise.reject(new Error(`unexpected call: ${method} ${path}`));
-  });
+  vi.mocked(apiClient).mockImplementation(
+    (path: string, options?: { method?: string }) => {
+      const method = options?.method ?? "GET";
+      if (path === "/expenses/e1" && method === "GET") {
+        return Promise.resolve(overrides.expense ?? baseExpense) as never;
+      }
+      if (path === "/preferences") {
+        return Promise.resolve(
+          overrides.preferences ?? { timezone: "UTC" },
+        ) as never;
+      }
+      if (path === "/expenses/suppliers") return Promise.resolve([]) as never;
+      if (path === "/categories")
+        return Promise.resolve({
+          default: [{ value: "fuel", label: "Combustível" }],
+          custom: [],
+        }) as never;
+      if (path === "/expenses/e1?strict=true" && method === "PATCH") {
+        if (overrides.patchError)
+          return Promise.reject(overrides.patchError) as never;
+        return Promise.resolve(overrides.patchResponse ?? baseExpense) as never;
+      }
+      if (path === "/expenses/e1" && method === "DELETE")
+        return Promise.resolve(undefined) as never;
+      if (path === "/expenses/e1/receipt" && method === "GET") {
+        return Promise.resolve(
+          overrides.receiptUrls ?? {
+            original_url: "https://signed/original.jpg",
+            thumbnail_url: null,
+            thumbnail_status: "pending",
+            is_pdf: false,
+          },
+        ) as never;
+      }
+      return Promise.reject(new Error(`unexpected call: ${method} ${path}`));
+    },
+  );
 }
 
 describe("ExpenseDetailPage", () => {
@@ -87,12 +104,77 @@ describe("ExpenseDetailPage", () => {
 
   it("mostra 404 quando a despesa não é encontrada (CA-08)", async () => {
     vi.mocked(apiClient).mockImplementation((path: string) => {
-      if (path === "/expenses/e1") return Promise.reject(new Error("not found")) as never;
+      if (path === "/expenses/e1")
+        return Promise.reject(new Error("not found")) as never;
       return Promise.resolve({ timezone: "UTC" }) as never;
     });
     renderPage();
 
-    expect(await screen.findByRole("alert")).toHaveTextContent("Despesa não encontrada.");
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Despesa não encontrada.",
+    );
+  });
+
+  /**
+   * @spec SPEC-20260814-004 US-02, RF-07
+   */
+  it("mostra o ReceiptViewer quando a despesa já tem comprovante", async () => {
+    mockApi({
+      expense: { ...baseExpense, receipt_storage_key: "u1/abc.jpg" },
+      receiptUrls: {
+        original_url: "https://signed/original.jpg",
+        thumbnail_url: "https://signed/thumb.jpg",
+        thumbnail_status: "completed",
+        is_pdf: false,
+      },
+    });
+    renderPage();
+
+    const img = await screen.findByAltText("Prévia do comprovante");
+    expect(img).toHaveAttribute("src", "https://signed/thumb.jpg");
+    expect(
+      screen.queryByLabelText(/Comprovante \(opcional\)/),
+    ).not.toBeInTheDocument();
+  });
+
+  /**
+   * @spec SPEC-20260814-004 RF-01, RF-10, US-01
+   */
+  it("mostra o campo de upload quando a despesa ainda não tem comprovante", async () => {
+    mockApi({ expense: { ...baseExpense, receipt_storage_key: null } });
+    renderPage();
+
+    expect(
+      await screen.findByLabelText(/Comprovante \(opcional\)/),
+    ).toBeInTheDocument();
+  });
+
+  /**
+   * @spec SPEC-20260814-004 RF-01, RF-03 — fluxo de retry após falha no upload durante a criação
+   */
+  it("envia o comprovante selecionado depois via o botão 'Enviar comprovante'", async () => {
+    mockApi({ expense: { ...baseExpense, receipt_storage_key: null } });
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue({ ok: true, json: async () => ({}) });
+    vi.stubGlobal("fetch", fetchMock);
+    renderPage();
+
+    const input = await screen.findByLabelText(/Comprovante \(opcional\)/);
+    const file = new File(["x"], "cupom.pdf", { type: "application/pdf" });
+    fireEvent.change(input, { target: { files: [file] } });
+    fireEvent.click(
+      screen.getByRole("button", { name: "Enviar comprovante" }),
+    );
+
+    await waitFor(() =>
+      expect(fetchMock).toHaveBeenCalledWith(
+        "/api/backend/expenses/e1/receipt",
+        expect.objectContaining({ method: "POST", credentials: "include" }),
+      ),
+    );
+
+    vi.unstubAllGlobals();
   });
 
   it("atualiza campos parciais da despesa (RF-05, CA-13)", async () => {
@@ -100,62 +182,45 @@ describe("ExpenseDetailPage", () => {
     renderPage();
 
     const amountInput = await screen.findByLabelText("Valor (R$) *");
-    for (let i = 0; i < 5; i++) fireEvent.keyDown(amountInput, { key: "Backspace" });
+    for (let i = 0; i < 5; i++)
+      fireEvent.keyDown(amountInput, { key: "Backspace" });
     typeDigits(amountInput, "20000");
     fireEvent.click(screen.getByRole("button", { name: "Salvar" }));
 
     await waitFor(() =>
       expect(apiClient).toHaveBeenCalledWith(
         "/expenses/e1?strict=true",
-        expect.objectContaining({ method: "PATCH", body: expect.objectContaining({ amount: 200 }) }),
+        expect.objectContaining({
+          method: "PATCH",
+          body: expect.objectContaining({ amount: 200 }),
+        }),
       ),
     );
   });
 
   it("remove a despesa após confirmação e redireciona (RF-06, CA-11)", async () => {
-    vi.spyOn(window, "confirm").mockReturnValue(true);
     mockApi();
     renderPage();
 
-    fireEvent.click(await screen.findByRole("button", { name: "Remover despesa" }));
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Remover despesa" }),
+    );
+    fireEvent.click(await screen.findByRole("button", { name: "Remover" }));
 
     await waitFor(() => expect(pushMock).toHaveBeenCalledWith("/expenses"));
-    expect(apiClient).toHaveBeenCalledWith("/expenses/e1", { method: "DELETE" });
+    expect(apiClient).toHaveBeenCalledWith("/expenses/e1", {
+      method: "DELETE",
+    });
   });
 
   it("bloqueia edição e remoção quando a despesa é readonly (RF-07, R-LED-01)", async () => {
     mockApi({ expense: { ...baseExpense, is_readonly: true } });
     renderPage();
 
-    expect(await screen.findByRole("button", { name: "Remover despesa" })).toBeDisabled();
+    expect(
+      await screen.findByRole("button", { name: "Remover despesa" }),
+    ).toBeDisabled();
     expect(screen.getByRole("button", { name: "Salvar" })).toBeDisabled();
-  });
-
-  it("salva a despesa como modelo (SPEC-20260601-003 RF-06, CA-10)", async () => {
-    mockApi();
-    renderPage();
-
-    fireEvent.click(await screen.findByRole("button", { name: "Salvar como modelo" }));
-    fireEvent.change(screen.getByLabelText("Nome do modelo"), {
-      target: { value: "Abastecimento Semanal" },
-    });
-    fireEvent.click(screen.getByRole("button", { name: "Salvar modelo" }));
-
-    await waitFor(() =>
-      expect(apiClient).toHaveBeenCalledWith(
-        "/expense-templates",
-        expect.objectContaining({
-          method: "POST",
-          body: expect.objectContaining({
-            name: "Abastecimento Semanal",
-            vehicle_id: VEHICLE_ID,
-            category: "fuel",
-            amount: 150,
-          }),
-        }),
-      ),
-    );
-    expect(await screen.findByText("Modelo 'Abastecimento Semanal' criado com sucesso.")).toBeInTheDocument();
   });
 
   /**
@@ -166,40 +231,49 @@ describe("ExpenseDetailPage", () => {
     renderPage();
 
     await screen.findByLabelText("Data e hora *");
-    fireEvent.change(screen.getByLabelText("Ano"), { target: { value: "2020" } });
+    fireEvent.change(screen.getByLabelText("Ano"), {
+      target: { value: "2020" },
+    });
 
-    expect(screen.getByLabelText("Data e hora *")).toHaveValue("2020-07-14T00:00");
+    expect(screen.getByLabelText("Data e hora *")).toHaveValue(
+      "2020-07-14T00:00",
+    );
   });
 
   /**
    * @spec SPEC-20260612-001 RF-05.3
    */
-  it("exibe a linha-resumo quando amount/liters/price_per_liter estão consistentes", async () => {
+  it("calcula amount a partir de litros e valor por litro (RF-05.3)", async () => {
     mockApi({ expense: { ...baseExpense, amount: 50, liters: 10 } });
     renderPage();
 
     const priceInput = await screen.findByLabelText("Valor por litro");
     typeDigits(priceInput, "500");
 
-    expect(await screen.findByText("10 L × R$ 5/L = R$ 50")).toBeInTheDocument();
+    expect(screen.getByLabelText("Valor (R$) *")).toHaveValue("50,00");
   });
 
   /**
    * @spec SPEC-20260612-001 RF-06
    */
   it("exibe a mensagem de erro do servidor ao falhar a atualização (RF-06.3)", async () => {
-    const { ApiError } = await vi.importActual<typeof import("@/lib/http/api-client")>(
-      "@/lib/http/api-client",
-    );
+    const { ApiError } = await vi.importActual<
+      typeof import("@/lib/http/api-client")
+    >("@/lib/http/api-client");
     mockApi({
-      patchError: new ApiError("Odômetro inválido: informe um valor igual ou maior.", 400),
+      patchError: new ApiError(
+        "Odômetro inválido: informe um valor igual ou maior.",
+        400,
+      ),
     });
     renderPage();
 
     await screen.findByLabelText("Valor (R$) *");
     fireEvent.click(screen.getByRole("button", { name: "Salvar" }));
 
-    expect(await screen.findByRole("alert")).toHaveTextContent("Odômetro inválido");
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Odômetro inválido",
+    );
   });
 
   /**
@@ -271,26 +345,35 @@ describe("ExpenseDetailPage", () => {
   });
 
   it("exibe sugestões de fornecedores quando a API retorna suppliers (isFuel)", async () => {
-    vi.mocked(apiClient).mockImplementation((path: string, options?: { method?: string }) => {
-      if (path === "/expenses/e1" && (!options || options.method === undefined))
-        return Promise.resolve({ ...baseExpense, category: "fuel" }) as never;
-      if (path === "/preferences") return Promise.resolve({ timezone: "UTC" }) as never;
-      if (path === "/expenses/suppliers")
-        return Promise.resolve({ data: ["Posto Shell", "Posto Ipiranga"] }) as never;
-      if (path === "/expenses/e1?strict=true" && options?.method === "PATCH")
-        return Promise.resolve(baseExpense) as never;
-      if (path === "/expenses/e1" && options?.method === "DELETE")
+    vi.mocked(apiClient).mockImplementation(
+      (path: string, options?: { method?: string }) => {
+        if (
+          path === "/expenses/e1" &&
+          (!options || options.method === undefined)
+        )
+          return Promise.resolve({ ...baseExpense, category: "fuel" }) as never;
+        if (path === "/preferences")
+          return Promise.resolve({ timezone: "UTC" }) as never;
+        if (path === "/expenses/suppliers")
+          return Promise.resolve([
+            { supplier: "Posto Shell", source: "personal" },
+            { supplier: "Posto Ipiranga", source: "personal" },
+          ]) as never;
+        if (path === "/expenses/e1?strict=true" && options?.method === "PATCH")
+          return Promise.resolve(baseExpense) as never;
+        if (path === "/expenses/e1" && options?.method === "DELETE")
+          return Promise.resolve(undefined) as never;
         return Promise.resolve(undefined) as never;
-      if (path === "/expense-templates" && options?.method === "POST")
-        return Promise.resolve({ data: { id: "t1", name: "x" } }) as never;
-      return Promise.resolve(undefined) as never;
-    });
+      },
+    );
     renderPage();
 
     await screen.findByLabelText("Valor (R$) *");
     // Aguarda os suppliers carregarem no DOM (datalist options)
     await waitFor(() => {
-      const option = document.querySelector('datalist option[value="Posto Shell"]');
+      const option = document.querySelector(
+        'datalist option[value="Posto Shell"]',
+      );
       expect(option).toBeInTheDocument();
     });
   });

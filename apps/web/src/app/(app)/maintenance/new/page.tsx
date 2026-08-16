@@ -138,7 +138,7 @@ export default function NewMaintenancePage(): ReactNode {
 
   if (!vehiclesLoading && vehicles?.length === 0) {
     return (
-      <Container size="sm">
+      <Container size="3xl">
         <h1 className="text-xl font-semibold">Nova manutenção</h1>
         <EmptyState
           title="Nenhum veículo cadastrado"
@@ -154,7 +154,7 @@ export default function NewMaintenancePage(): ReactNode {
 
   return (
     <Container size="sm">
-      <h1 className="text-xl font-semibold">Nova manutenção</h1>
+      <h1 className="text-xl font-semibold">Agendar manutenção</h1>
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-3">
         {contextChangeNotice && (
@@ -185,8 +185,9 @@ export default function NewMaintenancePage(): ReactNode {
           </div>
         )}
 
-        <span className="text-sm font-medium">Veículo *</span>
+        <label htmlFor="maintenanceVehicle" className="text-sm font-medium">Veículo *</label>
         <Combobox
+          id="maintenanceVehicle"
           aria-label="Veículo *"
           options={filteredVehicles.map((vehicle) => ({
             value: vehicle.id,
@@ -208,12 +209,7 @@ export default function NewMaintenancePage(): ReactNode {
         />
         {isVehicleInherited && (
           <span className="text-xs text-foreground">
-            ↩ Herdado do contexto em foco
-          </span>
-        )}
-        {!isVehicleInherited && vehicleId && (
-          <span className="text-xs text-muted-foreground">
-            ✓ Selecionado manualmente
+            Preenchido automaticamente pelo veículo em destaque na barra do app
           </span>
         )}
         {vehicleContextHint && (
@@ -235,11 +231,12 @@ export default function NewMaintenancePage(): ReactNode {
           </div>
         )}
 
-        <label htmlFor="description">Descrição *</label>
+        <label htmlFor="description">O que será feito? *</label>
         <Input
           id="description"
           value={description}
           onChange={(event) => setDescription(event.target.value)}
+          placeholder="Ex: Troca de óleo, revisão dos 30.000 km..."
           required
         />
 
@@ -254,6 +251,9 @@ export default function NewMaintenancePage(): ReactNode {
 
         <label htmlFor="cost">Custo estimado (R$)</label>
         <CurrencyInput id="cost" value={cost} onChange={setCost} />
+        <p className="text-xs text-muted-foreground">
+          Atualize com o valor final após a manutenção ser concluída
+        </p>
 
         <label htmlFor="odometer_km">Odômetro (km)</label>
         <OdometerInput
@@ -285,7 +285,7 @@ export default function NewMaintenancePage(): ReactNode {
           <AlertDialogHeader>
             <AlertDialogTitle>Descartar alterações?</AlertDialogTitle>
             <AlertDialogDescription>
-              As alterações não salvas serão perdidas permanentemente.
+              Os dados preenchidos serão descartados se você sair agora.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

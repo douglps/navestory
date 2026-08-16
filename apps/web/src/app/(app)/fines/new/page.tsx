@@ -154,7 +154,7 @@ export default function NewFinePage(): ReactNode {
   /** @spec SPEC-20260722-005 RF-06 (R-FORM-07) */
   if (!vehiclesLoading && vehicles?.length === 0) {
     return (
-      <Container size="sm">
+      <Container size="3xl">
         <h1 className="text-xl font-semibold">Nova multa</h1>
         <EmptyState
           title="Nenhum veículo cadastrado"
@@ -171,6 +171,9 @@ export default function NewFinePage(): ReactNode {
   return (
     <Container size="sm">
       <h1 className="text-xl font-semibold">Nova multa</h1>
+      <p className="text-sm text-muted-foreground">
+        Registre para controle e acompanhamento — o pagamento não é feito pelo navestory.
+      </p>
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-3">
         {contextChangeNotice && (
@@ -201,8 +204,9 @@ export default function NewFinePage(): ReactNode {
           </div>
         )}
 
-        <span className="text-sm font-medium">Veículo *</span>
+        <label htmlFor="fineVehicle" className="text-sm font-medium">Veículo *</label>
         <Combobox
+          id="fineVehicle"
           aria-label="Veículo *"
           options={filteredVehicles.map((vehicle) => ({
             value: vehicle.id,
@@ -224,7 +228,7 @@ export default function NewFinePage(): ReactNode {
         />
         {isVehicleInherited && (
           <span className="text-xs text-foreground">
-            ↩ Herdado do contexto em foco
+            Preenchido automaticamente pelo veículo em destaque na barra do app
           </span>
         )}
         {vehicleContextHint && (
@@ -246,11 +250,12 @@ export default function NewFinePage(): ReactNode {
           </div>
         )}
 
-        <label htmlFor="description">Descrição *</label>
+        <label htmlFor="description">Infração *</label>
         <Input
           id="description"
           value={description}
           onChange={(event) => setDescription(event.target.value)}
+          placeholder="Ex: Excesso de velocidade, avanço de sinal, estacionamento irregular..."
           required
         />
 
@@ -278,13 +283,13 @@ export default function NewFinePage(): ReactNode {
           onClick={() => setShowDetails((prev) => !prev)}
         >
           {showDetails
-            ? "Ocultar detalhes da infração"
-            : "Detalhes da infração (opcional)"}
+            ? "Ocultar dados do auto de infração"
+            : "Dados do auto de infração (opcional)"}
         </Button>
 
         {showDetails && (
           <section
-            aria-label="Detalhes da infração"
+            aria-label="Dados do auto de infração"
             className="flex flex-col gap-3 rounded-md border border-border p-3"
           >
             <label htmlFor="auto_number">Número do auto de infração</label>
@@ -307,6 +312,17 @@ export default function NewFinePage(): ReactNode {
               value={amountWithDiscount}
               onChange={setAmountWithDiscount}
             />
+            {amount != null &&
+              amountWithDiscount != null &&
+              amountWithDiscount <= amount && (
+                <p className="text-xs text-muted-foreground">
+                  Economia de{" "}
+                  {(amount - amountWithDiscount).toLocaleString("pt-BR", {
+                    style: "currency",
+                    currency: "BRL",
+                  })}
+                </p>
+              )}
 
             <label htmlFor="due_date">Vencimento</label>
             <Input
@@ -364,7 +380,7 @@ export default function NewFinePage(): ReactNode {
 
         <div className="flex gap-2">
           <Button type="submit" disabled={mutation.isPending}>
-            {mutation.isPending ? "Salvando..." : "Registrar"}
+            {mutation.isPending ? "Salvando..." : "Salvar multa"}
           </Button>
           <Button type="button" variant="outline" onClick={handleCancel}>
             Cancelar
@@ -377,7 +393,7 @@ export default function NewFinePage(): ReactNode {
           <AlertDialogHeader>
             <AlertDialogTitle>Descartar alterações?</AlertDialogTitle>
             <AlertDialogDescription>
-              As alterações não salvas serão perdidas permanentemente.
+              Os dados preenchidos serão descartados se você sair agora.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

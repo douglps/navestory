@@ -7,6 +7,11 @@ import {
   Alert,
   Button,
   Container,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
   EmptyState,
   Input,
   Table,
@@ -26,6 +31,21 @@ interface OdometerCycle {
   starting_value: number;
   previous_cycle_max: number | null;
   reason: string;
+}
+
+interface VehicleSummary {
+  plate: string;
+  nickname: string | null;
+  make: string | null;
+  model: string | null;
+}
+
+function vehicleLabel(vehicle: VehicleSummary | undefined): string {
+  if (!vehicle) return "";
+  return (
+    vehicle.nickname ??
+    (`${vehicle.make ?? ""} ${vehicle.model ?? ""}`.trim() || vehicle.plate)
+  );
 }
 
 /**
@@ -51,6 +71,13 @@ export default function OdometerCyclesPage({
     queryKey: ["odometer-cycles", vehicleId],
     queryFn: () =>
       apiClient<OdometerCycle[]>(`/vehicles/${vehicleId}/odometer-cycles`),
+    enabled: vehicleId !== null,
+    retry: false,
+  });
+
+  const { data: vehicle } = useQuery({
+    queryKey: ["vehicles", vehicleId],
+    queryFn: () => apiClient<VehicleSummary>(`/vehicles/${vehicleId}`),
     enabled: vehicleId !== null,
     retry: false,
   });
@@ -107,20 +134,25 @@ export default function OdometerCyclesPage({
   return (
     <Container size="2xl">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold">Ciclos de odômetro</h1>
+        <div>
+          <h1 className="text-xl font-semibold">Ciclos de odômetro</h1>
+          {vehicle && (
+            <p className="text-sm text-muted-foreground">{vehicleLabel(vehicle)}</p>
+          )}
+        </div>
         <Button
           type="button"
           variant="outline"
           onClick={() => setIsModalOpen(true)}
         >
-          Reiniciar odômetro
+          Registrar reinício do odômetro
         </Button>
       </div>
 
       {cycles?.length === 0 && (
         <EmptyState
           title="Nenhum reinício de odômetro registrado"
-          description="Se o odômetro do veículo foi zerado (troca de painel, revenda, etc.), registre um novo ciclo para manter seus analytics precisos."
+          description="Se o odômetro foi zerado — troca de painel, revenda, etc. — registre um novo ciclo para manter seus analytics precisos."
         />
       )}
 
@@ -131,7 +163,7 @@ export default function OdometerCyclesPage({
               <TableHead>Ciclo</TableHead>
               <TableHead>Início</TableHead>
               <TableHead>Valor inicial (km)</TableHead>
-              <TableHead>Máximo anterior (km)</TableHead>
+              <TableHead>KM antes do reinício</TableHead>
               <TableHead>Motivo</TableHead>
             </TableRow>
           </TableHeader>
@@ -151,51 +183,57 @@ export default function OdometerCyclesPage({
         </Table>
       )}
 
-      {isModalOpen && (
-        <form
-          onSubmit={handleSubmit}
-          className="flex flex-col gap-3"
-          role="dialog"
-        >
-          <label htmlFor="starting_value">Valor inicial (km)</label>
-          <Input
-            id="starting_value"
-            type="number"
-            min={0}
-            value={startingValue}
-            onChange={(event) => setStartingValue(event.target.value)}
-          />
-
-          <label htmlFor="reason">Motivo</label>
-          <Textarea
-            id="reason"
-            value={reason}
-            onChange={(event) => setReason(event.target.value)}
-            required
-          />
-
-          {fieldError && <Alert variant="error" description={fieldError} />}
-          {mutation.isError && (
-            <Alert
-              variant="error"
-              description="Não foi possível registrar o novo ciclo."
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Registrar reinício do odômetro</DialogTitle>
+            <DialogDescription>
+              Use quando o odômetro do veículo foi zerado — troca de painel, revenda e
+              recompra, etc.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+            <label htmlFor="starting_value">Valor inicial (km)</label>
+            <Input
+              id="starting_value"
+              type="number"
+              min={0}
+              value={startingValue}
+              onChange={(event) => setStartingValue(event.target.value)}
             />
-          )}
 
-          <div className="flex gap-2">
-            <Button type="submit" disabled={mutation.isPending}>
-              {mutation.isPending ? "Salvando..." : "Confirmar"}
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setIsModalOpen(false)}
-            >
-              Cancelar
-            </Button>
-          </div>
-        </form>
-      )}
+            <label htmlFor="reason">Motivo</label>
+            <Textarea
+              id="reason"
+              value={reason}
+              onChange={(event) => setReason(event.target.value)}
+              placeholder="Ex: Troca do painel, veículo revendido e recomprado..."
+              required
+            />
+
+            {fieldError && <Alert variant="error" description={fieldError} />}
+            {mutation.isError && (
+              <Alert
+                variant="error"
+                description="Não foi possível registrar o novo ciclo."
+              />
+            )}
+
+            <div className="flex gap-2">
+              <Button type="submit" disabled={mutation.isPending}>
+                {mutation.isPending ? "Salvando..." : "Confirmar"}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsModalOpen(false)}
+              >
+                Cancelar
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </Container>
   );
 }

@@ -65,7 +65,7 @@ describe("NewMaintenancePage", () => {
 
     await waitForVehiclesLoaded();
     await selectCombobox("Veículo *", "Fiat Uno");
-    fireEvent.change(screen.getByLabelText("Descrição *"), {
+    fireEvent.change(screen.getByLabelText("O que será feito? *"), {
       target: { value: "Troca de óleo" },
     });
     fireEvent.change(screen.getByLabelText("Data e hora agendada *"), {
@@ -115,27 +115,29 @@ describe("NewMaintenancePage", () => {
   /**
    * @spec SPEC-20260602-001 RF-07, RF-08
    */
-  it("herda o veículo do contexto em foco (modo single) com indicador ↩", async () => {
+  it("herda o veículo do contexto em foco (modo single) com indicador de preenchimento automático", async () => {
     useDashboardStore.getState().setActiveVehicle(VEHICLE_ID);
     mockLookups();
     renderPage();
 
     await waitForVehiclesLoaded();
-    await screen.findByText(/Herdado do contexto em foco/);
+    await screen.findByText(/Preenchido automaticamente pelo veículo em destaque/);
     expect(screen.getByLabelText("Veículo *")).toHaveTextContent("Fiat Uno");
   });
 
   /**
    * @spec SPEC-20260602-001 RF-13
    */
-  it("troca para indicador ✓ ao selecionar o veículo manualmente", async () => {
+  it("remove o indicador de preenchimento automático ao selecionar o veículo manualmente", async () => {
     mockLookups();
     renderPage();
 
     await waitForVehiclesLoaded();
     await selectCombobox("Veículo *", "Fiat Uno");
 
-    expect(await screen.findByText(/Selecionado manualmente/)).toBeInTheDocument();
+    expect(
+      screen.queryByText(/Preenchido automaticamente pelo veículo em destaque/),
+    ).not.toBeInTheDocument();
   });
 
   it("SPEC-20260619-001 R-FORM-05: cancela sem confirmação quando o formulário está limpo", async () => {
@@ -156,7 +158,7 @@ describe("NewMaintenancePage", () => {
 
     await waitForVehiclesLoaded();
     // Torna o formulário sujo preenchendo a descrição
-    fireEvent.change(screen.getByLabelText("Descrição *"), { target: { value: "Troca de pneu" } });
+    fireEvent.change(screen.getByLabelText("O que será feito? *"), { target: { value: "Troca de pneu" } });
     fireEvent.click(screen.getByRole("button", { name: "Cancelar" }));
 
     expect(await screen.findByRole("alertdialog")).toHaveAccessibleName(
@@ -175,7 +177,7 @@ describe("NewMaintenancePage", () => {
 
     await waitForVehiclesLoaded();
     await selectCombobox("Veículo *", "Fiat Uno");
-    fireEvent.change(screen.getByLabelText("Descrição *"), { target: { value: "Revisão" } });
+    fireEvent.change(screen.getByLabelText("O que será feito? *"), { target: { value: "Revisão" } });
     fireEvent.change(screen.getByLabelText("Data e hora agendada *"), {
       target: { value: "2026-08-01T10:00" },
     });

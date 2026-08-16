@@ -96,7 +96,7 @@ describe("NewVehicleGroupPage", () => {
     // Cobre onClick do botão de preset de cor (primeiro preset disponível)
     const { PRESET_GROUP_COLORS } = await import("@navestory/validators");
     const secondPreset = PRESET_GROUP_COLORS[1];
-    fireEvent.click(screen.getByRole("button", { name: secondPreset }));
+    fireEvent.click(screen.getByRole("button", { name: "Vermelho" }));
 
     // Após clicar, o input deve refletir o preset selecionado
     await waitFor(() => expect(colorInput).toHaveValue(secondPreset));

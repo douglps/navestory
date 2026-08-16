@@ -110,11 +110,9 @@ describe("VehicleGroupDetailPage", () => {
     fireEvent.click(screen.getByRole("button", { name: "Salvar membros" }));
 
     const dialog = await screen.findByRole("alertdialog");
-    expect(dialog).toHaveAccessibleName("Confirmar alterações?");
-    expect(dialog).toHaveAccessibleDescription(
-      "Adicionar 0 veículo(s), remover 0 veículo(s).",
-    );
-    fireEvent.click(screen.getByRole("button", { name: "Confirmar" }));
+    expect(dialog).toHaveAccessibleName("Salvar alterações nos membros?");
+    expect(dialog).toHaveAccessibleDescription("Nenhuma alteração nos membros.");
+    fireEvent.click(screen.getByRole("button", { name: "Aplicar alterações" }));
 
     await waitFor(() =>
       expect(apiClient).toHaveBeenCalledWith(
@@ -139,7 +137,7 @@ describe("VehicleGroupDetailPage", () => {
     const dialog = await screen.findByRole("alertdialog");
     expect(dialog).toHaveAccessibleName("Remover todos os membros?");
     expect(dialog).toHaveAccessibleDescription(
-      "Isso removerá todos os 1 veículo(s) deste grupo.",
+      "Isso removerá o único veículo deste grupo.",
     );
     fireEvent.click(screen.getByRole("button", { name: "Confirmar" }));
 

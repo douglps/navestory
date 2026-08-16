@@ -96,14 +96,18 @@ describe("FineDetailPage", () => {
     expect(pushMock).not.toHaveBeenCalled();
   });
 
-  it("multa pendente exibe status 'Pendente' e as ações Pagar/Recorrer/Cancelar (CA-13)", async () => {
+  it("multa pendente exibe status 'Pendente' e as ações Marcar como paga/Registrar recurso/Cancelar (CA-13)", async () => {
     mockApi(makeFine({ status: "pending" }));
     renderPage();
 
     await screen.findByDisplayValue("Excesso de velocidade");
     expect(screen.getByText("Pendente")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Pagar" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Recorrer" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Marcar como paga" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Registrar recurso" }),
+    ).toBeInTheDocument();
     // "Cancelar" aparece duas vezes: ação de status (pending → cancelled) e botão do formulário.
     expect(screen.getAllByRole("button", { name: "Cancelar" })).toHaveLength(2);
   });
@@ -115,14 +119,19 @@ describe("FineDetailPage", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent("Multa não encontrada.");
   });
 
-  it("SPEC-20260722-005 RF-07: clica em 'Pagar' e chama PATCH com status=paid", async () => {
+  it("SPEC-20260722-005 RF-07: clica em 'Marcar como paga', confirma e chama PATCH com status=paid", async () => {
     const user = userEvent.setup();
     const fine = makeFine({ status: "pending" });
     mockApi(fine);
     renderPage();
 
     await screen.findByDisplayValue("Excesso de velocidade");
-    await user.click(screen.getByRole("button", { name: "Pagar" }));
+    await user.click(screen.getByRole("button", { name: "Marcar como paga" }));
+
+    expect(await screen.findByRole("alertdialog")).toHaveAccessibleName(
+      "Marcar esta multa como paga?",
+    );
+    await user.click(screen.getByRole("button", { name: "Confirmar" }));
 
     await waitFor(() =>
       expect(apiClient).toHaveBeenCalledWith(
@@ -132,15 +141,35 @@ describe("FineDetailPage", () => {
     );
   });
 
-  it("SPEC-20260722-005 RF-07: clica em 'Recorrer' e chama PATCH com status=appealing", async () => {
+  it("cancela a confirmação de 'Marcar como paga' sem chamar a API", async () => {
+    const user = userEvent.setup();
+    mockApi(makeFine({ status: "pending" }));
+    renderPage();
+
+    await screen.findByDisplayValue("Excesso de velocidade");
+    await user.click(screen.getByRole("button", { name: "Marcar como paga" }));
+    await screen.findByRole("alertdialog");
+    await user.click(screen.getByRole("button", { name: "Voltar" }));
+
+    await waitFor(() =>
+      expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument(),
+    );
+    expect(apiClient).not.toHaveBeenCalledWith(
+      "/fines/f1",
+      expect.objectContaining({ body: { status: "paid" } }),
+    );
+  });
+
+  it("SPEC-20260722-005 RF-07: clica em 'Registrar recurso' e chama PATCH com status=appealing sem confirmação", async () => {
     const user = userEvent.setup();
     const fine = makeFine({ status: "pending" });
     mockApi(fine);
     renderPage();
 
     await screen.findByDisplayValue("Excesso de velocidade");
-    await user.click(screen.getByRole("button", { name: "Recorrer" }));
+    await user.click(screen.getByRole("button", { name: "Registrar recurso" }));
 
+    expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
     await waitFor(() =>
       expect(apiClient).toHaveBeenCalledWith(
         "/fines/f1",
@@ -228,8 +257,12 @@ describe("FineDetailPage", () => {
     await screen.findByDisplayValue("Excesso de velocidade");
     expect(screen.getByText("Paga")).toBeInTheDocument();
     // Status terminal: nenhum botão de transição de status
-    expect(screen.queryByRole("button", { name: "Pagar" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Recorrer" })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Marcar como paga" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Registrar recurso" }),
+    ).not.toBeInTheDocument();
   });
 
   it("SPEC-20260722-005 RF-07: multa cancelada não exibe botões de ação (status terminal)", async () => {
@@ -240,7 +273,7 @@ describe("FineDetailPage", () => {
     expect(screen.getByText("Cancelada")).toBeInTheDocument();
   });
 
-  it("carrega multa com campos opcionais nulos sem erros", async () => {
+  it("carrega multa com campos opcionais nulos sem erros e sem auto-expandir os detalhes", async () => {
     mockApi(makeFine({
       auto_number: null,
       infraction_code: null,
@@ -254,9 +287,16 @@ describe("FineDetailPage", () => {
     }));
     renderPage();
 
-    // Campos opcionais nulos devem ser tratados como strings vazias
     await screen.findByDisplayValue("Excesso de velocidade");
-    // Múltiplos inputs com "" — verificar que o campo auto_number está vazio
+    // Sem nenhum campo opcional preenchido, a seção de detalhes começa colapsada.
+    expect(
+      document.querySelector<HTMLInputElement>("#auto_number"),
+    ).not.toBeInTheDocument();
+
+    // Campos opcionais nulos devem ser tratados como strings vazias ao expandir.
+    fireEvent.click(
+      screen.getByRole("button", { name: "Dados do auto de infração (opcional)" }),
+    );
     const autoNumberInput = document.querySelector<HTMLInputElement>("#auto_number");
     expect(autoNumberInput?.value).toBe("");
   });
@@ -267,13 +307,15 @@ describe("FineDetailPage", () => {
 
     await screen.findByDisplayValue("Excesso de velocidade");
     expect(screen.getByText("Em recurso")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Pagar" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Marcar como paga" }),
+    ).toBeInTheDocument();
     // Status "appealing" permite pagar ou cancelar
     const cancelBtns = screen.getAllByRole("button", { name: "Cancelar" });
     expect(cancelBtns.length).toBeGreaterThanOrEqual(1);
   });
 
-  it("altera campos opcionais da multa e exibe paid_at quando presente", async () => {
+  it("altera campos opcionais da multa e exibe a data de pagamento formatada quando presente", async () => {
     // Cobre: onChange de occurredAt, autoNumber, infractionCode, dueDate,
     // appealDeadline, location, driverName + branch paid_at
     mockApi(makeFine({ paid_at: "2026-07-05" }));
@@ -281,8 +323,10 @@ describe("FineDetailPage", () => {
 
     await screen.findByDisplayValue("Excesso de velocidade");
 
-    // Branch: paid_at preenchido → exibe "Pago em"
-    expect(screen.getByText(/Pago em 2026-07-05/)).toBeInTheDocument();
+    // Branch: paid_at preenchido → exibe a data de pagamento formatada em pt-BR
+    expect(
+      screen.getByText(/Data de pagamento registrada: 05\/07\/2026/),
+    ).toBeInTheDocument();
 
     // onChange handlers dos campos opcionais
     fireEvent.change(screen.getByLabelText("Data da infração *"), { target: { value: "2026-06-30" } });

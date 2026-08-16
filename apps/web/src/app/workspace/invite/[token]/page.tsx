@@ -58,12 +58,16 @@ export default function AcceptInvitePage({
 
   return (
     <Container size="sm" gap={4}>
-      <h2 className="text-lg font-semibold">Convite para {data.workspaceName}</h2>
+      <h2 className="text-lg font-semibold">Você foi convidado a fazer parte de {data.workspaceName}</h2>
       <p className="text-sm text-muted-foreground">
-        Você foi convidado como motorista do workspace <strong>{data.workspaceName}</strong>.
+        Ao aceitar, você poderá registrar abastecimentos e despesas vinculados aos veículos
+        desta frota.
       </p>
       {mutation.isError && (
-        <Alert variant="error" description="Não foi possível aceitar o convite. Verifique se você já pertence a outro workspace." />
+        <Alert
+          variant="error"
+          description="Você pode já pertencer a outra equipe, ou este convite pode ter expirado — peça ao administrador um novo link."
+        />
       )}
       <Button
         type="button"

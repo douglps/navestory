@@ -35,18 +35,6 @@ const categories = {
   custom: [],
 };
 
-const TEMPLATE_ID = "22222222-2222-4222-8222-222222222222";
-const templates = [
-  {
-    id: TEMPLATE_ID,
-    name: "Abastecimento Semanal",
-    vehicle_id: VEHICLE_ID,
-    category: "fuel",
-    amount: 120,
-    description: "Posto Ipiranga",
-  },
-];
-
 /** Digita dígito por dígito num CurrencyInput/OdometerInput (estilo caixa eletrônico). */
 function typeDigits(input: HTMLElement, digits: string): void {
   for (const digit of digits) {
@@ -73,15 +61,16 @@ async function waitForVehiclesLoaded(): Promise<void> {
   );
 }
 
-function mockLookups(options?: { templates?: typeof templates }) {
+function mockLookups() {
   vi.mocked(apiClient).mockImplementation((path: string) => {
     if (path === "/vehicles") return Promise.resolve(vehicles) as never;
     if (path === "/categories") return Promise.resolve(categories) as never;
-    if (path === "/expense-templates") {
-      return Promise.resolve({ data: options?.templates ?? [] }) as never;
-    }
-    if (path === "/expenses/suppliers")
-      return Promise.resolve({ data: [] }) as never;
+    if (path.startsWith("/expenses/suppliers"))
+      return Promise.resolve([]) as never;
+    if (path.startsWith("/expenses/fuel-stats"))
+      return Promise.resolve(null) as never;
+    if (path === "/workspaces/me")
+      return Promise.reject({ statusCode: 404 }) as never;
     return Promise.resolve({ id: "e1" }) as never;
   });
 }
@@ -152,37 +141,66 @@ describe("NewExpensePage", () => {
     );
   });
 
-  it("exibe estado vazio quando não há modelos (CA-02 da tray)", async () => {
+  /**
+   * @spec SPEC-20260814-004 RF-01, RF-03, RF-10
+   */
+  it("envia o comprovante selecionado depois que a despesa é criada", async () => {
     mockLookups();
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue({ ok: true, json: async () => ({}) });
+    vi.stubGlobal("fetch", fetchMock);
     renderPage();
 
-    expect(
-      await screen.findByText("Nenhum modelo ainda. Toque em + para criar."),
-    ).toBeInTheDocument();
+    await fillValidForm();
+    const file = new File(["x"], "cupom.pdf", { type: "application/pdf" });
+    await userEvent.upload(
+      screen.getByLabelText(/Comprovante \(opcional\)/),
+      file,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Registrar" }));
+
+    await waitFor(() => expect(pushMock).toHaveBeenCalledWith("/expenses"));
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/backend/expenses/e1/receipt",
+      expect.objectContaining({ method: "POST", credentials: "include" }),
+    );
+    const formData = fetchMock.mock.calls[0]?.[1]?.body as FormData;
+    expect(formData.get("file")).toBe(file);
+
+    vi.unstubAllGlobals();
   });
 
-  it("aplica modelo preenchendo os campos e dispara touch (RF-03, RF-04, RF-08)", async () => {
-    mockLookups({ templates });
+  /**
+   * @spec SPEC-20260814-004 RF-01, RF-03 — não-bloqueante: despesa já criada permanece válida
+   */
+  it("falha no upload do comprovante não desfaz a despesa criada e mostra aviso com link para retry", async () => {
+    mockLookups();
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: false,
+        json: async () => ({ message: "boom" }),
+      }),
+    );
     renderPage();
 
-    const card = await screen.findByRole("button", {
-      name: "Aplicar modelo Abastecimento Semanal",
-    });
-    fireEvent.click(card);
+    await fillValidForm();
+    await userEvent.upload(
+      screen.getByLabelText(/Comprovante \(opcional\)/),
+      new File(["x"], "cupom.pdf", { type: "application/pdf" }),
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Registrar" }));
 
-    await waitFor(() =>
-      expect(apiClient).toHaveBeenCalledWith(
-        `/expense-templates/${TEMPLATE_ID}/touch`,
-        {
-          method: "PATCH",
-        },
-      ),
-    );
-    expect(screen.getByLabelText("Veículo *")).toHaveTextContent("Fiat Uno");
-    expect(screen.getByLabelText("Categoria *")).toHaveTextContent(
-      "Combustível",
-    );
-    expect(screen.getByLabelText("Valor (R$) *")).toHaveValue("120,00");
+    expect(
+      await screen.findByText(/não foi possível enviar o comprovante/i),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "Ver despesa e tentar novamente" }),
+    ).toHaveAttribute("href", "/expenses/e1");
+    expect(pushMock).not.toHaveBeenCalled();
+
+    vi.unstubAllGlobals();
   });
 
   /**
@@ -193,10 +211,12 @@ describe("NewExpensePage", () => {
     vi.mocked(apiClient).mockImplementation((path: string) => {
       if (path === "/vehicles") return Promise.resolve(vehicles) as never;
       if (path === "/categories") return Promise.resolve(categories) as never;
-      if (path === "/expense-templates")
-        return Promise.resolve({ data: [] }) as never;
-      if (path === "/expenses/suppliers")
-        return Promise.resolve({ data: [] }) as never;
+      if (path.startsWith("/expenses/suppliers"))
+        return Promise.resolve([]) as never;
+      if (path.startsWith("/expenses/fuel-stats"))
+        return Promise.resolve(null) as never;
+      if (path === "/workspaces/me")
+        return Promise.reject({ statusCode: 404 }) as never;
       return Promise.resolve({
         id: "e1",
         duplicate_warning: true,
@@ -274,53 +294,13 @@ describe("NewExpensePage", () => {
   });
 
   /**
-   * @spec SPEC-20260612-001 RF-05.3
-   */
-  it("exibe a linha-resumo quando amount/liters/price_per_liter estão consistentes", async () => {
-    mockLookups();
-    renderPage();
-    await waitForVehiclesLoaded();
-    await selectCombobox("Categoria *", "Combustível");
-
-    typeDigits(screen.getByLabelText("Valor por litro"), "500");
-    typeDigits(screen.getByLabelText("Litros"), "1000");
-
-    expect(screen.getByText("10 L × R$ 5/L = R$ 50")).toBeInTheDocument();
-  });
-
-  it("cria um novo modelo a partir dos campos preenchidos no formulário", async () => {
-    mockLookups();
-    renderPage();
-
-    await fillValidForm();
-    fireEvent.click(screen.getByRole("button", { name: "Criar novo modelo" }));
-    fireEvent.change(screen.getByLabelText("Nome do modelo"), {
-      target: { value: "Modelo Teste" },
-    });
-    fireEvent.click(screen.getByRole("button", { name: "Salvar modelo" }));
-
-    await waitFor(() =>
-      expect(apiClient).toHaveBeenCalledWith(
-        "/expense-templates",
-        expect.objectContaining({
-          method: "POST",
-          body: expect.objectContaining({
-            name: "Modelo Teste",
-            vehicle_id: VEHICLE_ID,
-          }),
-        }),
-      ),
-    );
-  });
-
-  /**
    * @spec SPEC-20260619-001 R-FORM-07
    */
   it("exibe empty state com CTA quando não há veículos cadastrados", async () => {
     vi.mocked(apiClient).mockImplementation((path: string) => {
       if (path === "/vehicles") return Promise.resolve([]) as never;
       if (path === "/categories") return Promise.resolve(categories) as never;
-      return Promise.resolve({ data: [] }) as never;
+      return Promise.resolve([]) as never;
     });
     renderPage();
 
@@ -406,7 +386,7 @@ describe("NewExpensePage", () => {
     renderPage();
 
     await waitForVehiclesLoaded();
-    await screen.findByText(/Herdado do contexto em foco/);
+    await screen.findByText(/Preenchido automaticamente pelo veículo em destaque/);
     expect(screen.getByLabelText("Veículo *")).toHaveTextContent("Fiat Uno");
   });
 
@@ -421,10 +401,7 @@ describe("NewExpensePage", () => {
     await selectCombobox("Veículo *", "Fiat Uno");
 
     expect(
-      await screen.findByText(/Selecionado manualmente/),
-    ).toBeInTheDocument();
-    expect(
-      screen.queryByText(/Herdado do contexto em foco/),
+      screen.queryByText(/Preenchido automaticamente pelo veículo em destaque/),
     ).not.toBeInTheDocument();
   });
 

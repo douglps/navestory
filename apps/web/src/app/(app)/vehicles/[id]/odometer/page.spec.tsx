@@ -55,9 +55,9 @@ describe("VehicleOdometerPage", () => {
 
     expect(await screen.findByText(/Fiat Uno/)).toBeInTheDocument();
 
-    const input = screen.getByLabelText("Odômetro atual (km) *");
+    const input = screen.getByLabelText("Quilometragem atual *");
     typeDigits(input, "40500");
-    fireEvent.click(screen.getByRole("button", { name: "Salvar" }));
+    fireEvent.click(screen.getByRole("button", { name: "Atualizar quilometragem" }));
 
     await waitFor(() =>
       expect(apiClient).toHaveBeenCalledWith(

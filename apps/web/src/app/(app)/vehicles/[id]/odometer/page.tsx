@@ -82,7 +82,7 @@ export default function VehicleOdometerPage({
 
   if (isLoading || !vehicle) {
     return (
-      <Container size="sm">
+      <Container size="3xl">
         <p>Carregando…</p>
       </Container>
     );
@@ -94,8 +94,14 @@ export default function VehicleOdometerPage({
         Registrar KM — {vehicleLabel(vehicle)}
       </h1>
 
+      {vehicle.odometer != null && (
+        <p className="text-sm text-muted-foreground">
+          Registrado: {vehicle.odometer.toLocaleString("pt-BR")} km
+        </p>
+      )}
+
       <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-        <label htmlFor="odometer">Odômetro atual (km) *</label>
+        <label htmlFor="odometer">Quilometragem atual *</label>
         <OdometerInput
           id="odometer"
           value={odometer}
@@ -113,7 +119,7 @@ export default function VehicleOdometerPage({
 
         <div className="flex gap-2">
           <Button type="submit" disabled={mutation.isPending}>
-            {mutation.isPending ? "Salvando..." : "Salvar"}
+            {mutation.isPending ? "Salvando..." : "Atualizar quilometragem"}
           </Button>
           <Button
             type="button"

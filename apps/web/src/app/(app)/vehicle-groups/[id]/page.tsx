@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  PRESET_GROUP_COLORS,
   updateGroupInputSchema,
   type VehicleResponse as Vehicle,
 } from "@navestory/validators";
@@ -18,11 +19,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   Button,
+  Card,
   Checkbox,
   Container,
   Input,
 } from "@navestory/ui";
 import { apiClient } from "@/lib/http/api-client";
+import { PRESET_COLOR_NAMES } from "@/lib/vehicle-groups/colors";
 
 interface VehicleGroup {
   id: string;
@@ -81,6 +84,7 @@ export default function VehicleGroupDetailPage({
   const [confirmDialog, setConfirmDialog] = useState<{
     title: string;
     description?: string;
+    confirmLabel?: string;
     onConfirm: () => void;
   } | null>(null);
 
@@ -144,13 +148,18 @@ export default function VehicleGroupDetailPage({
     if (selectedVehicleIds.length === 0 && currentIds.length > 0) {
       setConfirmDialog({
         title: "Remover todos os membros?",
-        description: `Isso removerá todos os ${currentIds.length} veículo(s) deste grupo.`,
+        description: `Isso removerá ${currentIds.length === 1 ? "o único veículo" : `todos os ${currentIds.length} veículos`} deste grupo.`,
         onConfirm: () => setMembersMutation.mutate(),
       });
     } else {
+      const parts: string[] = [];
+      if (added > 0) parts.push(`adicionar ${added} veículo${added === 1 ? "" : "s"}`);
+      if (removed > 0) parts.push(`remover ${removed} veículo${removed === 1 ? "" : "s"}`);
       setConfirmDialog({
-        title: "Confirmar alterações?",
-        description: `Adicionar ${added} veículo(s), remover ${removed} veículo(s).`,
+        title: "Salvar alterações nos membros?",
+        description:
+          parts.length > 0 ? `Isso vai ${parts.join(" e ")}.` : "Nenhuma alteração nos membros.",
+        confirmLabel: "Aplicar alterações",
         onConfirm: () => setMembersMutation.mutate(),
       });
     }
@@ -193,6 +202,7 @@ export default function VehicleGroupDetailPage({
     <Container size="sm">
       <h1 className="text-xl font-semibold">{group.name}</h1>
 
+      <h2 className="text-sm font-medium text-muted-foreground">Informações do grupo</h2>
       <form onSubmit={handleSubmit} className="flex flex-col gap-3">
         <label htmlFor="name">Nome</label>
         <Input
@@ -202,6 +212,19 @@ export default function VehicleGroupDetailPage({
         />
 
         <label htmlFor="color">Cor</label>
+        <div className="flex gap-2">
+          {PRESET_GROUP_COLORS.map((preset) => (
+            <button
+              key={preset}
+              type="button"
+              aria-label={PRESET_COLOR_NAMES[preset] ?? preset}
+              aria-pressed={color === preset}
+              onClick={() => setColor(preset)}
+              className="h-6 w-6 rounded-full border border-border"
+              style={{ backgroundColor: preset }}
+            />
+          ))}
+        </div>
         <Input
           id="color"
           value={color}
@@ -215,15 +238,23 @@ export default function VehicleGroupDetailPage({
             description="Não foi possível atualizar o grupo."
           />
         )}
-        {updateMutation.isSuccess && <p>Grupo atualizado.</p>}
+        {updateMutation.isSuccess && (
+          <Alert variant="success" description="Alterações salvas." />
+        )}
 
-        <Button type="submit" disabled={updateMutation.isPending}>
-          {updateMutation.isPending ? "Salvando..." : "Salvar"}
-        </Button>
+        <div className="flex gap-2">
+          <Button type="submit" disabled={updateMutation.isPending}>
+            {updateMutation.isPending ? "Salvando..." : "Salvar"}
+          </Button>
+          <Button type="button" variant="outline" onClick={() => router.push("/vehicle-groups")}>
+            Cancelar
+          </Button>
+        </div>
       </form>
 
+      <h2 className="text-sm font-medium text-muted-foreground">Membros</h2>
       <fieldset className="flex flex-col gap-1">
-        <legend>Veículos membros</legend>
+        <legend className="sr-only">Veículos do grupo</legend>
         {vehicles?.map((vehicle) => (
           <label key={vehicle.id} className="flex items-center gap-2">
             <Checkbox
@@ -251,20 +282,29 @@ export default function VehicleGroupDetailPage({
         )}
       </fieldset>
 
-      <Button
-        type="button"
-        variant="destructive"
-        onClick={handleDelete}
-        disabled={deleteMutation.isPending}
-      >
-        {deleteMutation.isPending ? "Removendo..." : "Remover grupo"}
-      </Button>
-      {deleteMutation.isError && (
-        <Alert
-          variant="error"
-          description="Não foi possível remover o grupo."
-        />
-      )}
+      <Card className="flex flex-col gap-3 border-danger/40 p-6">
+        <h2 className="text-lg font-medium text-danger">Zona de perigo</h2>
+        <p className="text-sm text-muted-foreground">
+          Remover este grupo é uma ação que não pode ser desfeita. Os veículos membros não
+          serão afetados.
+        </p>
+        <div>
+          <Button
+            type="button"
+            variant="destructive"
+            onClick={handleDelete}
+            disabled={deleteMutation.isPending}
+          >
+            {deleteMutation.isPending ? "Removendo..." : "Remover grupo"}
+          </Button>
+        </div>
+        {deleteMutation.isError && (
+          <Alert
+            variant="error"
+            description="Não foi possível remover o grupo."
+          />
+        )}
+      </Card>
 
       <AlertDialog
         open={confirmDialog !== null}
@@ -289,7 +329,7 @@ export default function VehicleGroupDetailPage({
                 setConfirmDialog(null);
               }}
             >
-              Confirmar
+              {confirmDialog?.confirmLabel ?? "Confirmar"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

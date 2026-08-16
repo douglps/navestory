@@ -46,8 +46,8 @@ describe("RecoverPasswordPage", () => {
     fireEvent.change(screen.getByLabelText("E-mail"), {
       target: { value: "inexistente@example.com" },
     });
-    fireEvent.click(screen.getByRole("button", { name: "Enviar instruções" }));
+    fireEvent.click(screen.getByRole("button", { name: "Enviar link de redefinição" }));
 
-    await waitFor(() => expect(screen.getByRole("status")).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByRole("alert")).toBeInTheDocument());
   });
 });

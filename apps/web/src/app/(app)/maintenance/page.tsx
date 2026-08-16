@@ -4,18 +4,15 @@ import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import type { Maintenance, VehicleResponse as Vehicle } from "@navestory/validators";
-import {
-  Alert,
-  Badge,
-  Container,
-  EmptyState,
-  type BadgeProps,
-} from "@navestory/ui";
+import { Alert, Badge, Container, EmptyState } from "@navestory/ui";
 import { apiClient } from "@/lib/http/api-client";
 import { useVehicleContext } from "@/lib/context/use-vehicle-context";
 import { formatDateInTz } from "@/lib/datetime-tz";
 import { usePreferences } from "@/lib/hooks/use-preferences";
-
+import {
+  MAINTENANCE_STATUS_LABEL as STATUS_LABEL,
+  MAINTENANCE_STATUS_BADGE_VARIANT as STATUS_VARIANT,
+} from "@/lib/maintenance/status-badge";
 
 function vehicleLabel(vehicle: Vehicle | undefined): string {
   if (!vehicle) return "—";
@@ -28,23 +25,6 @@ function vehicleLabel(vehicle: Vehicle | undefined): string {
 function currency(value: number): string {
   return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
-
-const STATUS_LABEL: Record<Maintenance["status"], string> = {
-  scheduled: "Agendada",
-  in_progress: "Em andamento",
-  completed: "Concluída",
-  cancelled: "Cancelada",
-};
-
-const STATUS_VARIANT: Record<
-  Maintenance["status"],
-  NonNullable<BadgeProps["variant"]>
-> = {
-  scheduled: "info",
-  in_progress: "warning",
-  completed: "success",
-  cancelled: "neutral",
-};
 
 /**
  * @spec SPEC-20260715-001 RF-15

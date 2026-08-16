@@ -56,6 +56,7 @@ export interface ComboboxOption {
 }
 
 export interface ComboboxProps {
+  id?: string;
   options: ComboboxOption[];
   value?: string;
   onValueChange: (value: string) => void;
@@ -71,6 +72,7 @@ export interface ComboboxProps {
 
 /** @spec SPEC-20260525-001 §7.2 */
 export function Combobox({
+  id,
   options,
   value,
   onValueChange,
@@ -91,6 +93,7 @@ export function Combobox({
     <Popover.Root open={open} onOpenChange={setOpen}>
       <Popover.Trigger asChild>
         <button
+          id={id}
           type="button"
           role="combobox"
           aria-expanded={open}

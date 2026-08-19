@@ -198,12 +198,14 @@ export function DashboardKpiGrid({
         {primaryIds.map(renderCard)}
       </div>
       {secondaryIds.length > 0 && (
-        <>
-          <div className="border-t border-border" />
-          <div className="grid grid-cols-2 gap-3 opacity-75 sm:grid-cols-4">
+        <details className="border-t border-border pt-3">
+          <summary className="cursor-pointer text-sm font-medium text-muted-foreground sm:hidden">
+            Mais indicadores
+          </summary>
+          <div className="mt-3 grid grid-cols-2 gap-3 opacity-75 sm:mt-0 sm:grid-cols-4 sm:!grid">
             {secondaryIds.map(renderCard)}
           </div>
-        </>
+        </details>
       )}
     </div>
   );

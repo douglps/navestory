@@ -99,7 +99,7 @@ function ExportControls({
   return (
     <div className="flex flex-col gap-2 border-t pt-4">
       <h2 className="kicker">Exportar por período</h2>
-      <div className="flex flex-wrap items-end gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
         <label htmlFor="export-period" className="flex flex-col gap-1">
           <span>Mês</span>
           <Input
@@ -126,7 +126,7 @@ function ExportControls({
             placeholder="Todos os veículos"
             searchPlaceholder="Buscar veículo..."
             emptyMessage="Nenhum veículo encontrado"
-            className="w-56"
+            className="w-full sm:w-56"
           />
         </div>
 
@@ -414,7 +414,7 @@ function ByVehicleTab({
  */
 export default function ExpensesPage(): ReactNode {
   return (
-    <Suspense fallback={<Container size="4xl">Carregando...</Container>}>
+    <Suspense fallback={<Container size="4xl">Carregando…</Container>}>
       <ExpensesPageContent />
     </Suspense>
   );
@@ -509,6 +509,7 @@ function ExpensesPageContent(): ReactNode {
         <h1 className="text-xl font-semibold">Despesas</h1>
         <div className="flex items-center gap-3">
           <a
+            className="hidden sm:inline-flex"
             href="/api/backend/expenses/export"
             download="navestory-despesas-completo.csv"
           >
@@ -543,7 +544,7 @@ function ExpensesPageContent(): ReactNode {
 
       {activeTab === "lista" && (
         <>
-          {isLoading && <p>Carregando...</p>}
+          {isLoading && <p>Carregando…</p>}
           {isError && (
             <Alert
               variant="error"

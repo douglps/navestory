@@ -69,7 +69,7 @@ export default function VehiclesPage(): ReactNode {
         <Link href="/vehicles/new">Novo veículo</Link>
       </div>
 
-      {isLoading && <p>Carregando...</p>}
+      {isLoading && <p>Carregando…</p>}
       {isError && (
         <Alert
           variant="error"

@@ -270,7 +270,7 @@ export default function ExpenseDetailPage({
   }
 
   if (id === null || isLoading)
-    return <main className="p-8">Carregando...</main>;
+    return <main className="p-8">Carregando…</main>;
   if (isError || !expense)
     return (
       <main className="p-8">

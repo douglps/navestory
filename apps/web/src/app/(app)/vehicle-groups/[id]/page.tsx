@@ -190,7 +190,7 @@ export default function VehicleGroupDetailPage({
   }
 
   if (id === null || isLoading)
-    return <main className="p-8">Carregando...</main>;
+    return <main className="p-8">Carregando…</main>;
   if (isError || !group)
     return (
       <main className="p-8">

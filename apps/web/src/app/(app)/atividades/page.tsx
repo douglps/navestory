@@ -38,7 +38,7 @@ const DOMAIN_LABELS: Record<string, { label: string; icon: LucideIcon }> = {
   maintenances: { label: "Manutenção", icon: Wrench },
   fines: { label: "Multa", icon: ShieldAlert },
   recurring_costs: { label: "Custo Recorrente", icon: Repeat },
-  vehicle_odometer_cycles: { label: "Ciclo de Odômetro", icon: Gauge },
+  vehicle_odometer_cycles: { label: "Odômetro", icon: Gauge },
   auth: { label: "Conta", icon: User },
   users: { label: "Conta", icon: User },
 };

@@ -158,7 +158,7 @@ export default function MaintenanceDetailPage({
     router.push("/maintenance");
   }
 
-  if (isLoading) return <p className="p-8">Carregando...</p>;
+  if (isLoading) return <p className="p-8">Carregando…</p>;
   if (isError || !maintenance)
     return (
       <div className="p-8">

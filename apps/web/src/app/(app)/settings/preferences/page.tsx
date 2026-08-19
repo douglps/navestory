@@ -407,7 +407,7 @@ export default function PreferencesPage(): ReactNode {
     setContextError(null);
   }
 
-  if (isLoading) return <main className="p-8">Carregando...</main>;
+  if (isLoading) return <main className="p-8">Carregando…</main>;
   if (isError)
     return (
       <main className="p-8">

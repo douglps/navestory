@@ -89,7 +89,7 @@ export default function MaintenancePage(): ReactNode {
         <Link href="/maintenance/new">Nova manutenção</Link>
       </div>
 
-      {isLoading && <p>Carregando...</p>}
+      {isLoading && <p>Carregando…</p>}
       {isError && (
         <Alert
           variant="error"

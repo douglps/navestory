@@ -1092,7 +1092,7 @@ export default function AnalyticsPage(): ReactNode {
         isForecastLoading ||
         isSeasonalLoading ||
         isInsightsLoading) &&
-        Boolean(selectedVehicleId) && <p>Carregando...</p>}
+        Boolean(selectedVehicleId) && <p>Carregando…</p>}
       {(isTcoError ||
         isFuelError ||
         isCategorySeriesError ||

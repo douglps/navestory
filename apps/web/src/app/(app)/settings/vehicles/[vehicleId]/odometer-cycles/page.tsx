@@ -93,7 +93,7 @@ export default function OdometerCyclesPage({
   }
 
   if (vehicleId === null || isLoading)
-    return <main className="p-8">Carregando...</main>;
+    return <main className="p-8">Carregando…</main>;
   if (isError)
     return (
       <main className="p-8">

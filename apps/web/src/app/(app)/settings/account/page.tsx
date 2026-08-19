@@ -30,7 +30,7 @@ export default function AccountSettingsPage(): ReactNode {
     retry: false,
   });
 
-  if (isLoading) return <main className="p-8">Carregando...</main>;
+  if (isLoading) return <main className="p-8">Carregando…</main>;
   if (isError || !profile) {
     return (
       <main className="p-8">

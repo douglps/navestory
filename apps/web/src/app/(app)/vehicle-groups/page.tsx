@@ -34,7 +34,7 @@ export default function VehicleGroupsPage(): ReactNode {
         <Link href="/vehicle-groups/new">Novo grupo</Link>
       </div>
 
-      {isLoading && <p>Carregando...</p>}
+      {isLoading && <p>Carregando…</p>}
       {isError && (
         <Alert
           variant="error"

@@ -213,14 +213,14 @@ export default function VehicleDetailPage({
   }
 
   if (id === null || isLoading)
-    return <main className="p-8">Carregando...</main>;
+    return <main className="p-8">Carregando…</main>;
   if (isError || !vehicle)
     return (
       <main className="p-8">
         <Alert variant="error" description="Veículo não encontrado." />
       </main>
     );
-  if (!form) return <main className="p-8">Carregando...</main>;
+  if (!form) return <main className="p-8">Carregando…</main>;
 
   return (
     <Container size="sm">

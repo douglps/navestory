@@ -108,7 +108,7 @@ export function VehicleContextChip(): ReactNode {
           }
         }}
         aria-label={ariaLabel}
-        className={`flex h-11 max-w-[140px] cursor-pointer items-center gap-1.5 rounded-lg px-2.5 text-sm transition-colors duration-200 hover:ring-1 hover:ring-border/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${getModeStyles(selectionMode)}`}
+        className={`flex h-11 max-w-[120px] cursor-pointer items-center gap-1.5 rounded-lg px-2.5 text-sm transition-colors duration-200 hover:ring-1 hover:ring-border/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${getModeStyles(selectionMode)}`}
       >
         {modeIcon && <Icon icon={modeIcon} size="sm" className="shrink-0" />}
         <span className="truncate">{label}</span>

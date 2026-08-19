@@ -515,7 +515,9 @@ function ExpensesPageContent(): ReactNode {
           >
             Exportar CSV Completo
           </a>
-          <Link href="/expenses/new">Nova despesa</Link>
+          <Button asChild>
+            <Link href="/expenses/new">Nova despesa</Link>
+          </Button>
         </div>
       </div>
 

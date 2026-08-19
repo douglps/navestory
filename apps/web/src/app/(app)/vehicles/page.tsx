@@ -9,6 +9,7 @@ import type {
 } from "@navestory/validators";
 import {
   Alert,
+  Button,
   Container,
   EmptyState,
   VehicleHealthScore,
@@ -66,7 +67,9 @@ export default function VehiclesPage(): ReactNode {
     <Container size="2xl">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold">Meus veículos</h1>
-        <Link href="/vehicles/new">Novo veículo</Link>
+        <Button asChild>
+          <Link href="/vehicles/new">Novo veículo</Link>
+        </Button>
       </div>
 
       {isLoading && <p>Carregando…</p>}
@@ -84,18 +87,27 @@ export default function VehiclesPage(): ReactNode {
       )}
 
       <ul className="flex flex-col gap-2">
-        {sortedVehicles?.map((vehicle) => (
-          <li key={vehicle.id}>
-            <Link
-              href={`/vehicles/${vehicle.id}`}
-              className="flex items-center gap-2"
-            >
-              <VehicleHealthScore score={scores.get(vehicle.id)} size={28} />
-              {vehicle.nickname ?? `${vehicle.make} ${vehicle.model}`} —{" "}
-              {vehicle.plate}
-            </Link>
-          </li>
-        ))}
+        {sortedVehicles?.map((vehicle) => {
+          const score = scores.get(vehicle.id);
+          const scoreBg =
+            score !== undefined && score < 50
+              ? "bg-danger-pastel"
+              : score !== undefined && score < 70
+                ? "bg-warning-pastel"
+                : "";
+          return (
+            <li key={vehicle.id}>
+              <Link
+                href={`/vehicles/${vehicle.id}`}
+                className={`flex items-center gap-2 rounded ${scoreBg}`}
+              >
+                <VehicleHealthScore score={score} size={32} />
+                {vehicle.nickname ?? `${vehicle.make} ${vehicle.model}`} —{" "}
+                {vehicle.plate}
+              </Link>
+            </li>
+          );
+        })}
       </ul>
     </Container>
   );

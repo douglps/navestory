@@ -11,6 +11,7 @@ export interface VehicleSummary {
   plate: string;
   make: string | null;
   model: string | null;
+  nickname: string | null;
   vehicle_type: string;
 }
 
@@ -129,7 +130,7 @@ function getModeLabel(params: {
   switch (selectionMode) {
     case "single":
       return activeVehicle
-        ? `${VEHICLE_TYPE_ICONS[activeVehicle.vehicle_type] ?? "🚗"} ${activeVehicle.plate} · ${activeVehicle.model ?? activeVehicle.make ?? ""}`
+        ? `${VEHICLE_TYPE_ICONS[activeVehicle.vehicle_type] ?? "🚗"} ${activeVehicle.nickname ?? `${activeVehicle.plate} · ${activeVehicle.model ?? activeVehicle.make ?? ""}`}`
         : "…";
     case "group":
       return activeGroup ? `⬡ ${activeGroup.name} · ${activeGroup.member_count} membros` : "…";

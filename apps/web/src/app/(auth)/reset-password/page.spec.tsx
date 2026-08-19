@@ -33,6 +33,7 @@ describe("ResetPasswordPage", () => {
     );
 
     fireEvent.change(screen.getByLabelText("Nova senha"), { target: { value: "123" } });
+    fireEvent.change(screen.getByLabelText("Confirme a nova senha"), { target: { value: "123" } });
     fireEvent.click(screen.getByRole("button", { name: "Redefinir senha" }));
 
     expect(await screen.findByRole("alert")).toBeInTheDocument();
@@ -48,6 +49,7 @@ describe("ResetPasswordPage", () => {
     );
 
     fireEvent.change(screen.getByLabelText("Nova senha"), { target: { value: "abc12!" } });
+    fireEvent.change(screen.getByLabelText("Confirme a nova senha"), { target: { value: "abc12!" } });
     fireEvent.click(screen.getByRole("button", { name: "Redefinir senha" }));
 
     await waitFor(() => expect(pushMock).toHaveBeenCalledWith("/login"));
@@ -66,6 +68,7 @@ describe("ResetPasswordPage", () => {
     );
 
     fireEvent.change(screen.getByLabelText("Nova senha"), { target: { value: "abc12!" } });
+    fireEvent.change(screen.getByLabelText("Confirme a nova senha"), { target: { value: "abc12!" } });
     fireEvent.click(screen.getByRole("button", { name: "Redefinir senha" }));
 
     expect(await screen.findByText(/inválido ou expirado/)).toBeInTheDocument();

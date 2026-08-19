@@ -1,7 +1,7 @@
 ---
 id: SPEC-20260807-004
 title: "Formulário de Despesa: Hint de Odômetro e Pré-preenchimento de Combustível"
-status: draft
+status: approved
 date: 2026-08-07
 author: Douglas Lopes (lps.doug@protonmail.com)
 rules: [R-FUEL-07, R-FUEL-09, R-ODO-07, R-FORM-01, R-FORM-02, R4]
@@ -159,3 +159,4 @@ O hint deve usar `Intl.NumberFormat('pt-BR').format(value)` para garantir format
 | Data | O que mudou | Por quê |
 |------|-------------|---------|
 | 2026-08-13 | Corrigido conflito RF-07 x R-FUEL-07 (segundo nível de fallback alinhado à regra vigente — "último abastecimento", não template; fallback declarado fora de escopo deste ciclo); criada R-FUEL-09 em RULES.md para justificar RF-08 (citação corrigida de R-FUEL-08 para R-FUEL-09); removida incerteza sobre coluna `favorite_fuel_type` (existência confirmada em migration `20260712171830_core_tables.sql` linha 30); documentado desvio intencional de R-ODO-04 no hint de odômetro — resolução do gate técnico do tech-lead | Bloqueios de aprovação apontados pelo tech-lead antes da transição para `approved` |
+| 2026-08-14 | Spec transitada de `draft` para `approved`. Decisão de implementação: em vez de server actions separadas (`getOdometerHintAction`/`getFavoriteFuelTypeAction`), os dados foram consolidados no endpoint existente `GET /expenses/fuel-stats` (SPEC-20260814-002), adicionando `last_odometer_km` de expenses ∪ maintenances (RF-01) e `favorite_fuel_type` do veículo (RF-05) ao tipo `FuelStats`. Frontend: hint textual "Último registrado: N.NNN km" renderizado abaixo do campo odômetro com skeleton de loading (RF-02, RNF-05); `useEffect` de pre-fill de `fuelType` com proteção via `fuelTypeUserEdited` ref (RF-06, RF-08). Entrada adicionada em `matrices/rastreabilidade.md`. | Implementação realizada pelo tech-lead na mesma sessão de aprovação; desvio de implementação (consolidação de endpoints) documentado como decisão explícita, requisito funcional preservado na íntegra. |

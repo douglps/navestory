@@ -4,7 +4,22 @@ import {
   createVehicleInputSchema,
   type CreateVehicleInput,
 } from "@navestory/validators";
-import { Alert, Button, Combobox, Container, Input, PlateInput } from "@navestory/ui";
+import {
+  Alert,
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  Button,
+  Combobox,
+  Container,
+  Input,
+  PlateInput,
+} from "@navestory/ui";
 import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent, type ReactNode } from "react";
@@ -29,6 +44,7 @@ export default function NewVehiclePage(): ReactNode {
   const [vehicleType, setVehicleType] =
     useState<CreateVehicleInput["vehicle_type"]>("carro");
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [showDiscardDialog, setShowDiscardDialog] = useState(false);
 
   const mutation = useMutation({
     mutationFn: (input: CreateVehicleInput) =>
@@ -55,25 +71,39 @@ export default function NewVehiclePage(): ReactNode {
     mutation.mutate(result.data);
   }
 
+  const isDirty =
+    plate !== "" || make !== "" || model !== "" || year !== "" || vehicleType !== "carro";
+
+  function handleCancel(): void {
+    if (isDirty) {
+      setShowDiscardDialog(true);
+      return;
+    }
+    router.push("/vehicles");
+  }
+
   return (
     <Container size="sm">
       <h1 className="text-xl font-semibold">Cadastrar veículo</h1>
       <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-        <label htmlFor="plate">Placa</label>
+        <label htmlFor="plate">Placa *</label>
         <PlateInput
           id="plate"
           value={plate}
           onChange={setPlate}
           aria-invalid={Boolean(fieldErrors.plate)}
-          aria-describedby={fieldErrors.plate ? "plate-error" : undefined}
+          aria-describedby={fieldErrors.plate ? "plate-hint plate-error" : "plate-hint"}
         />
+        <p id="plate-hint" className="text-xs text-muted-foreground">
+          Formato antigo (ABC-1234) ou Mercosul (ABC1D23)
+        </p>
         {fieldErrors.plate && (
           <p id="plate-error" role="alert" className="text-sm text-danger">
             {fieldErrors.plate}
           </p>
         )}
 
-        <label htmlFor="make">Marca</label>
+        <label htmlFor="make">Marca *</label>
         <Input
           id="make"
           value={make}
@@ -86,7 +116,7 @@ export default function NewVehiclePage(): ReactNode {
           </p>
         )}
 
-        <label htmlFor="model">Modelo</label>
+        <label htmlFor="model">Modelo *</label>
         <Input
           id="model"
           value={model}
@@ -99,7 +129,7 @@ export default function NewVehiclePage(): ReactNode {
           </p>
         )}
 
-        <label htmlFor="year">Ano</label>
+        <label htmlFor="year">Ano *</label>
         <Input
           id="year"
           type="number"
@@ -113,8 +143,9 @@ export default function NewVehiclePage(): ReactNode {
           </p>
         )}
 
-        <span className="text-sm font-medium">Tipo</span>
+        <label htmlFor="vehicleType" className="text-sm font-medium">Tipo *</label>
         <Combobox
+          id="vehicleType"
           aria-label="Tipo"
           options={VEHICLE_TYPE_OPTIONS}
           value={vehicleType}
@@ -136,10 +167,32 @@ export default function NewVehiclePage(): ReactNode {
           />
         )}
 
-        <Button type="submit" disabled={mutation.isPending}>
-          {mutation.isPending ? "Salvando..." : "Cadastrar"}
-        </Button>
+        <div className="flex gap-2">
+          <Button type="submit" disabled={mutation.isPending}>
+            {mutation.isPending ? "Salvando..." : "Cadastrar"}
+          </Button>
+          <Button type="button" variant="outline" onClick={handleCancel}>
+            Cancelar
+          </Button>
+        </div>
       </form>
+
+      <AlertDialog open={showDiscardDialog} onOpenChange={setShowDiscardDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Descartar alterações?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Os dados preenchidos serão descartados se você sair agora.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Continuar editando</AlertDialogCancel>
+            <AlertDialogAction onClick={() => router.push("/vehicles")}>
+              Descartar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Container>
   );
 }

@@ -13,7 +13,7 @@ camadas: [frontend, backend, database]
 
 ## Contexto
 
-O plano Frota do navestory prevê dois papéis distintos: `workspace_owner` (gestor) e `workspace_member` (motorista convidado). O workspace_owner já pode convidar membros e atribuir veículos (BS-ACL-06, BS-ACL-07 — cf. SPEC-20260620-001, status: draft, não implementado). O que não existe hoje é qualquer mecanismo que garanta a qualidade e completude do cadastro dos motoristas da equipe.
+O plano Frota do navestory prevê dois papéis distintos: `workspace_owner` (gestor) e `workspace_member` (motorista convidado). O workspace_owner já pode convidar membros e atribuir veículos (BS-ACL-06, BS-ACL-07 — implementados em SPEC-20260804-004, workspace foundation, approved). O que não existe hoje é qualquer mecanismo que garanta a qualidade e completude do cadastro dos motoristas da equipe.
 
 Sem essa feature, o gestor não tem como exigir que motoristas preencham dados mínimos (CNH, validade, categoria, telefone) antes de começar a usar o sistema, nem visibilidade sobre quais motoristas estão com documentação em dia. O resultado é dado inconsistente na frota, cobrança manual fora do produto e risco operacional real (motorista com CNH vencida usando veículo da empresa sem que o gestor saiba).
 
@@ -106,7 +106,7 @@ Esta spec cobre exclusivamente o MVP de conformidade documental de motoristas. N
 
 | Tipo | Referência | Descrição |
 |------|-----------|-----------|
-| Spec | SPEC-20260620-001 | Define roles `workspace_owner`/`workspace_member`, BS-ACL-06 e BS-ACL-07 — pré-requisito: convite de membro e atribuição de veículo precisam existir para o onboarding ter contexto |
+| Spec | SPEC-20260804-004 | Implementa roles `workspace_owner`/`workspace_member`, convite de membro e atribuição de veículo (BS-ACL-06, BS-ACL-07) — pré-requisito efetivo desta spec; substitui a referência original a SPEC-20260620-001 (estratégia/roadmap), cujas regras foram materializadas por SPEC-20260804-004 |
 | Regra | R-TZ-01 | Cálculo de dias até vencimento de CNH usa fuso do owner, não UTC |
 | Regra | R-DS-08 | Escala de urgência por cor (4 níveis com label textual) — alertas de vencimento usam essa escala |
 | Regra | S1, S2, S12 | Autenticação, RLS e leitura de role via `app_metadata` (não `user_metadata`) |
@@ -163,3 +163,4 @@ O cálculo aplica R-TZ-01 para "hoje". Uma RPC ou view materializada pode ser ne
 | Data | O que mudou | Por quê |
 |------|-------------|---------|
 | 2026-08-04 | Status `draft` → `approved`; adicionada dependência `R-WS-04` ao frontmatter | Douglas aprovou a implementação; a dependência bloqueante de workspace (roles, convite, membership) foi resolvida com a criação de [SPEC-20260804-004](../workspace/SPEC-20260804-004-workspace-foundation.md), que esta spec passa a referenciar |
+| 2026-08-15 | Seção Dependências: referência a SPEC-20260620-001 substituída por SPEC-20260804-004 (Contexto e tabela de Dependências) | Correção de rastreabilidade: a dependência foi satisfeita por SPEC-20260804-004, não pela spec de estratégia (SPEC-20260620-001); mudança pequena/clarificação, não altera nenhum requisito |

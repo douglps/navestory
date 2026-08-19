@@ -69,6 +69,7 @@ export default function RegisterPage(): ReactNode {
             id="name"
             value={name}
             onChange={(event) => setName(event.target.value)}
+            placeholder="Como você prefere ser chamado"
             required
           />
 
@@ -85,11 +86,13 @@ export default function RegisterPage(): ReactNode {
           <PasswordInput
             id="password"
             aria-label="Senha"
-            placeholder="6+ caracteres, 1 letra, 1 número, 1 especial"
             value={password}
             onChange={(event) => setPassword(event.target.value)}
             required
           />
+          <p className="text-xs text-muted-foreground">
+            Mínimo 6 caracteres com letra, número e símbolo
+          </p>
 
           {fieldError && <Alert variant="error" description={fieldError} />}
 
@@ -141,8 +144,13 @@ export default function RegisterPage(): ReactNode {
           </label>
 
           <Button type="submit" disabled={mutation.isPending || !acceptedTerms}>
-            {mutation.isPending ? "Criando Conta..." : "Criar conta"}
+            {mutation.isPending ? "Criando conta..." : "Criar conta"}
           </Button>
+          {!acceptedTerms && (
+            <p className="text-xs text-muted-foreground">
+              Aceite os Termos de Uso e a Política de Privacidade para continuar.
+            </p>
+          )}
         </form>
 
         <LegalFooter />

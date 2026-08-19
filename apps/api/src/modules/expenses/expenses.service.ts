@@ -8,12 +8,21 @@ import {
   NotFoundException,
 } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
-import type {
-  ConsolidatedExportQuery,
-  ExpenseKpis,
-  UpcomingCostItem,
+import {
+  RECEIPT_ALLOWED_MIME_TYPES,
+  RECEIPT_MAX_SIZE_BYTES,
+  RECEIPT_MIME_EXTENSION,
+  type ConsolidatedExportQuery,
+  type ExpenseKpis,
+  type FuelStats,
+  type ReceiptMimeType,
+  type ReceiptUrls,
+  type SupplierSuggestion,
+  type UpcomingCostItem,
 } from "@navestory/validators";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { randomUUID } from "node:crypto";
+import sharp from "sharp";
 import { AuditService } from "../../shared/audit/audit.service";
 import { escapeCsvField } from "../../shared/csv/csv.util";
 import { createUserScopedClient } from "../../shared/supabase/create-user-scoped-client";
@@ -47,6 +56,15 @@ export interface Expense {
   source_type: string | null;
   source_id: string | null;
   is_readonly: boolean;
+  /** @spec SPEC-20260814-004 RF-01, RF-09 */
+  receipt_storage_key: string | null;
+  receipt_uploaded_at: string | null;
+  receipt_thumbnail_key: string | null;
+  receipt_thumbnail_status:
+    | "not_applicable"
+    | "pending"
+    | "completed"
+    | "failed";
   created_at: string;
   updated_at: string;
 }
@@ -70,12 +88,48 @@ export interface PaginatedExpenses {
 }
 
 const EXPENSE_COLUMNS = `id, user_id, vehicle_id, category, amount, occurred_at, description, odometer_km,
-  liters, fuel_type, full_tank, supplier, source_type, source_id, is_readonly, created_at, updated_at`;
+  liters, fuel_type, full_tank, supplier, source_type, source_id, is_readonly,
+  receipt_storage_key, receipt_uploaded_at, receipt_thumbnail_key, receipt_thumbnail_status,
+  created_at, updated_at`;
 
+/** @spec SPEC-20260814-004 R-RCP-06 */
+const RECEIPTS_BUCKET = "receipts";
+/** @spec SPEC-20260814-004 RNF-03 */
+const RECEIPT_SIGNED_URL_TTL_SECONDS = 60 * 60;
+/** @spec SPEC-20260814-004 RF-05 */
+const RECEIPT_THUMBNAIL_MAX_DIMENSION = 400;
+const RECEIPT_THUMBNAIL_JPEG_QUALITY = 80;
+
+/** @spec SPEC-20260814-003 RF-05, RF-09, RF-02, RF-03 */
 const SUPPLIER_SUGGESTION_LIMIT = 10;
+const SUPPLIER_SUGGESTION_LIMIT_EMPTY_QUERY = 5;
+const WORKSPACE_SUPPLIER_LIMIT = 5;
+const SUPPLIER_HISTORY_ROW_LIMIT = 500;
+
+/** @spec SPEC-20260814-002 R-FUEL-11 */
+const FUEL_STATS_MIN_RECORDS = 3;
+/**
+ * @spec SPEC-20260814-002
+ * Reavaliar se um usuário atingir > 500 abastecimentos de combustível: a query é ordenada por
+ * `occurred_at ASC`, então o corte passa a excluir os registros mais recentes, tornando as
+ * médias de anomalia (R-FUEL-11) progressivamente desatualizadas.
+ */
+const FUEL_STATS_ROW_LIMIT = 500;
 
 function round2(value: number): number {
   return Math.round(value * 100) / 100;
+}
+
+function round1(value: number): number {
+  return Math.round(value * 10) / 10;
+}
+
+/**
+ * @spec SPEC-20260814-003 RF-06, R-SUGG-02
+ * @spec SPEC-20260619-001 R-SAN-01, R-SAN-02
+ */
+function normalizeSupplierKey(value: string): string {
+  return value.trim().normalize("NFC").toLowerCase();
 }
 
 /**
@@ -390,19 +444,26 @@ export class ExpensesService {
   }
 
   /**
-   * @spec SPEC-20260606-002 RF-02
-   * Sugestões deduplicadas case-insensitive em memória (histórico do usuário é pequeno o bastante
-   * para não justificar DISTINCT no banco); mantém a capitalização original mais recente (R-FUEL-04).
+   * @spec SPEC-20260814-003 RF-02, RF-06, RF-09, R-SUGG-02
+   * Histórico pessoal deduplicado em memória (mesmo racional do R-SUGG-01 original: volume por
+   * usuário é pequeno o bastante para não justificar DISTINCT no banco — ver Notas Técnicas da
+   * spec). Forma canônica = primeira ocorrência cronológica (`MIN(occurred_at)`); ordenação da
+   * lista = uso mais recente (`MAX(occurred_at) DESC)`).
    */
-  async listSuppliers(accessToken: string, userId: string): Promise<string[]> {
+  private async findPersonalSupplierSuggestions(
+    accessToken: string,
+    userId: string,
+    normalizedQuery: string,
+  ): Promise<SupplierSuggestion[]> {
     const { data, error } = await this.clientForUser(accessToken)
       .from("expenses")
       .select("supplier, occurred_at")
       .eq("user_id", userId)
+      .eq("category", "fuel")
       .not("supplier", "is", null)
       .is("deleted_at", null)
-      .order("occurred_at", { ascending: false })
-      .limit(200);
+      .order("occurred_at", { ascending: true })
+      .limit(SUPPLIER_HISTORY_ROW_LIMIT);
 
     if (error) {
       this.logger.error("Falha ao listar fornecedores", error.message);
@@ -411,17 +472,342 @@ export class ExpensesService {
       );
     }
 
-    const seen = new Set<string>();
-    const suppliers: string[] = [];
-    for (const row of (data ?? []) as { supplier: string }[]) {
-      const key = row.supplier.toLowerCase();
-      if (!seen.has(key)) {
-        seen.add(key);
-        suppliers.push(row.supplier);
-        if (suppliers.length >= SUPPLIER_SUGGESTION_LIMIT) break;
+    const byKey = new Map<string, { canonical: string; lastUsedAt: string }>();
+    for (const row of (data ?? []) as {
+      supplier: string;
+      occurred_at: string;
+    }[]) {
+      const key = normalizeSupplierKey(row.supplier);
+      const existing = byKey.get(key);
+      if (!existing) {
+        // primeira ocorrência na ordenação ASC = forma canônica (R-SUGG-02)
+        byKey.set(key, {
+          canonical: row.supplier,
+          lastUsedAt: row.occurred_at,
+        });
+      } else if (row.occurred_at > existing.lastUsedAt) {
+        existing.lastUsedAt = row.occurred_at;
       }
     }
-    return suppliers;
+
+    const limit =
+      normalizedQuery === ""
+        ? SUPPLIER_SUGGESTION_LIMIT_EMPTY_QUERY
+        : SUPPLIER_SUGGESTION_LIMIT;
+
+    return Array.from(byKey.entries())
+      .filter(
+        ([key]) => normalizedQuery === "" || key.includes(normalizedQuery),
+      )
+      .sort((a, b) => (a[1].lastUsedAt < b[1].lastUsedAt ? 1 : -1))
+      .slice(0, limit)
+      .map(([, value]) => ({
+        supplier: value.canonical,
+        source: "personal" as const,
+      }));
+  }
+
+  /**
+   * @spec SPEC-20260814-003 RF-03, RNF-02
+   * Bypassa RLS via `SUPABASE_ADMIN_CLIENT` deliberadamente — sugestões de workspace exigem ler
+   * despesas de outros membros, que a RLS `expenses_select_own` nunca permitiria via client
+   * user-scoped (mesmo padrão de `WorkspaceAdminSupabaseService`). A posse do `workspaceId` é
+   * validada ANTES via RLS `workspace_members_self_select` (só enxerga a própria linha).
+   */
+  private async findWorkspaceSupplierSuggestions(
+    accessToken: string,
+    userId: string,
+    workspaceId: string,
+    normalizedQuery: string,
+  ): Promise<SupplierSuggestion[]> {
+    const { data: membership } = await this.clientForUser(accessToken)
+      .from("workspace_members")
+      .select("id")
+      .eq("workspace_id", workspaceId)
+      .eq("user_id", userId)
+      .is("removed_at", null)
+      .maybeSingle();
+
+    if (!membership) {
+      return [];
+    }
+
+    const { data: members, error: membersError } = await this.supabaseAdmin
+      .from("workspace_members")
+      .select("user_id, profiles(name)")
+      .eq("workspace_id", workspaceId)
+      .is("removed_at", null);
+
+    if (membersError || !members || members.length === 0) {
+      return [];
+    }
+
+    const nameByUserId = new Map<string, string | null>();
+    const userIds: string[] = [];
+    for (const row of members as unknown as {
+      user_id: string;
+      profiles: { name: string } | { name: string }[] | null;
+    }[]) {
+      const profile = Array.isArray(row.profiles)
+        ? row.profiles[0]
+        : row.profiles;
+      nameByUserId.set(row.user_id, profile?.name ?? null);
+      userIds.push(row.user_id);
+    }
+
+    const { data: rows, error: rowsError } = await this.supabaseAdmin
+      .from("expenses")
+      .select("user_id, supplier, occurred_at")
+      .in("user_id", userIds)
+      .eq("category", "fuel")
+      .not("supplier", "is", null)
+      .is("deleted_at", null)
+      .order("occurred_at", { ascending: false })
+      .limit(SUPPLIER_HISTORY_ROW_LIMIT);
+
+    if (rowsError) {
+      this.logger.error(
+        "Falha ao listar fornecedores do workspace",
+        rowsError.message,
+      );
+      return [];
+    }
+
+    const byKey = new Map<
+      string,
+      {
+        canonical: string;
+        canonicalAt: string;
+        occurrenceCount: number;
+        userIds: Set<string>;
+        mostRecentUserId: string;
+      }
+    >();
+    for (const row of (rows ?? []) as {
+      user_id: string;
+      supplier: string;
+      occurred_at: string;
+    }[]) {
+      const key = normalizeSupplierKey(row.supplier);
+      const existing = byKey.get(key);
+      if (!existing) {
+        // ordenação DESC: primeira ocorrência da chave = uso mais recente
+        byKey.set(key, {
+          canonical: row.supplier,
+          canonicalAt: row.occurred_at,
+          occurrenceCount: 1,
+          userIds: new Set([row.user_id]),
+          mostRecentUserId: row.user_id,
+        });
+      } else {
+        existing.occurrenceCount += 1;
+        existing.userIds.add(row.user_id);
+        if (row.occurred_at < existing.canonicalAt) {
+          // forma canônica = primeira ocorrência cronológica (R-SUGG-02)
+          existing.canonical = row.supplier;
+          existing.canonicalAt = row.occurred_at;
+        }
+      }
+    }
+
+    return Array.from(byKey.entries())
+      .filter(
+        ([key]) => normalizedQuery === "" || key.includes(normalizedQuery),
+      )
+      .sort((a, b) => b[1].occurrenceCount - a[1].occurrenceCount)
+      .slice(0, WORKSPACE_SUPPLIER_LIMIT)
+      .map(([, value]) => ({
+        supplier: value.canonical,
+        source: "workspace" as const,
+        used_by_count: value.userIds.size,
+        most_recent_user_name: nameByUserId.get(value.mostRecentUserId) ?? null,
+      }));
+  }
+
+  /**
+   * @spec SPEC-20260814-003 RF-01, RF-04, RF-05, RF-07, RF-08, RF-10, RNF-01, RNF-02
+   * Fire-and-forget (RF-10): qualquer falha nas buscas individuais já retorna lista vazia
+   * (tratada dentro de cada helper) — o campo de fornecedor nunca fica bloqueado.
+   */
+  async getSupplierSuggestions(
+    accessToken: string,
+    userId: string,
+    query?: string,
+    workspaceId?: string,
+  ): Promise<SupplierSuggestion[]> {
+    const normalizedQuery = (query ?? "").trim().normalize("NFC").toLowerCase();
+
+    const personal = await this.findPersonalSupplierSuggestions(
+      accessToken,
+      userId,
+      normalizedQuery,
+    );
+
+    const personalKeys = new Set(
+      personal.map((item) => normalizeSupplierKey(item.supplier)),
+    );
+
+    const workspace = workspaceId
+      ? await this.findWorkspaceSupplierSuggestions(
+          accessToken,
+          userId,
+          workspaceId,
+          normalizedQuery,
+        )
+      : [];
+
+    const combined = [
+      ...personal,
+      ...workspace.filter(
+        (item) => !personalKeys.has(normalizeSupplierKey(item.supplier)),
+      ),
+    ];
+
+    return combined.slice(0, SUPPLIER_SUGGESTION_LIMIT);
+  }
+
+  /**
+   * @spec SPEC-20260814-002 RF-03, RF-04, RNF-02, RNF-03, R-FUEL-11
+   * Mirror histórico de `computeFuelMetrics` (SPEC-20260606-001 R-FUEL-02, R-FUEL-03): nem
+   * `price_per_liter` nem `km_per_liter` são colunas persistidas (R-FUEL-03), então a média é
+   * recomputada a partir de `amount`/`liters`/`odometer_km` — não há query SQL de agregação
+   * direta sobre uma coluna inexistente. `last_odometer_km` também é devolvido aqui (ver doc do
+   * tipo `FuelStats` em `@navestory/validators`) para cobrir RF-03 sem introduzir uma 3ª chamada.
+   */
+  /**
+   * @spec SPEC-20260814-002 RF-03, RF-04, RNF-02, RNF-03, R-FUEL-11
+   * @spec SPEC-20260807-004 RF-01, RF-05, RNF-03
+   * Mirror histórico de `computeFuelMetrics` (SPEC-20260606-001 R-FUEL-02, R-FUEL-03): nem
+   * `price_per_liter` nem `km_per_liter` são colunas persistidas (R-FUEL-03), então a média é
+   * recomputada a partir de `amount`/`liters`/`odometer_km`. `last_odometer_km` retornado aqui
+   * cobre SPEC-20260807-004 RF-01 (MAX de expenses ∪ maintenances) — evita 3ª chamada de rede.
+   * `favorite_fuel_type` cobre SPEC-20260807-004 RF-05 — coluna do veículo, já consultado para
+   * validação de posse (S1+S2, RNF-03): apenas adiciona o campo ao SELECT.
+   */
+  async getFuelStats(
+    accessToken: string,
+    userId: string,
+    vehicleId: string,
+  ): Promise<FuelStats> {
+    const client = this.clientForUser(accessToken);
+
+    // @spec SPEC-20260807-004 RF-05, RNF-03 — favorite_fuel_type adicionado ao SELECT;
+    // a validação de posse (user_id eq + deleted_at is null) satisfaz S1+S2.
+    const { data: vehicle, error: vehicleError } = await client
+      .from("vehicles")
+      .select("id, favorite_fuel_type")
+      .eq("id", vehicleId)
+      .eq("user_id", userId)
+      .is("deleted_at", null)
+      .maybeSingle();
+
+    if (vehicleError) {
+      this.logger.error(
+        "Falha ao verificar veículo para estatísticas de combustível",
+        vehicleError.message,
+      );
+      throw new InternalServerErrorException(
+        "Não foi possível verificar o veículo",
+      );
+    }
+    if (!vehicle) {
+      throw new NotFoundException("Veículo não encontrado");
+    }
+
+    const { data, error } = await client
+      .from("expenses")
+      .select("odometer_km, liters, amount, full_tank, occurred_at")
+      .eq("vehicle_id", vehicleId)
+      .eq("user_id", userId)
+      .eq("category", "fuel")
+      .is("deleted_at", null)
+      .order("occurred_at", { ascending: true })
+      .limit(FUEL_STATS_ROW_LIMIT);
+
+    if (error) {
+      this.logger.error(
+        "Falha ao calcular estatísticas históricas de combustível",
+        error.message,
+      );
+      throw new InternalServerErrorException(
+        "Não foi possível calcular as estatísticas de combustível",
+      );
+    }
+
+    let prevOdometer: number | null = null;
+    let maxOdometerKm: number | null = null;
+    const priceSamples: number[] = [];
+    const kmSamples: number[] = [];
+
+    for (const row of (data ?? []) as {
+      odometer_km: number | null;
+      liters: number | null;
+      amount: number;
+      full_tank: boolean | null;
+    }[]) {
+      if (row.full_tank === true && row.liters != null && row.liters > 0) {
+        priceSamples.push(row.amount / row.liters);
+        if (prevOdometer != null && row.odometer_km != null) {
+          kmSamples.push((row.odometer_km - prevOdometer) / row.liters);
+        }
+      }
+      if (row.odometer_km != null) {
+        prevOdometer = row.odometer_km;
+        if (maxOdometerKm == null || row.odometer_km > maxOdometerKm) {
+          maxOdometerKm = row.odometer_km;
+        }
+      }
+    }
+
+    // @spec SPEC-20260807-004 RF-01 — ampliar MAX para incluir maintenances (UNION conforme
+    // SQL da spec). Desvio intencional de R-ODO-04 já documentado na spec (hint é referência
+    // visual, não bloqueio de validação).
+    const { data: maintenanceOdos, error: maintenanceError } = await client
+      .from("maintenances")
+      .select("odometer_km")
+      .eq("vehicle_id", vehicleId)
+      .eq("user_id", userId)
+      .is("deleted_at", null)
+      .not("odometer_km", "is", null);
+
+    if (!maintenanceError) {
+      for (const row of (maintenanceOdos ?? []) as {
+        odometer_km: number | null;
+      }[]) {
+        if (
+          row.odometer_km != null &&
+          (maxOdometerKm == null || row.odometer_km > maxOdometerKm)
+        ) {
+          maxOdometerKm = row.odometer_km;
+        }
+      }
+    }
+    // Erro em maintenances não lança — o hint é informativo; degradar silenciosamente
+    // (fire-and-forget de RF-09) e retornar maxOdometerKm de expenses apenas.
+
+    const recordCount = priceSamples.length;
+    const sampleIsSufficient = recordCount >= FUEL_STATS_MIN_RECORDS;
+
+    return {
+      avg_price_per_liter: sampleIsSufficient
+        ? round2(
+            priceSamples.reduce((sum, value) => sum + value, 0) / recordCount,
+          )
+        : null,
+      avg_km_per_liter:
+        sampleIsSufficient && kmSamples.length > 0
+          ? round1(
+              kmSamples.reduce((sum, value) => sum + value, 0) /
+                kmSamples.length,
+            )
+          : null,
+      record_count: recordCount,
+      last_odometer_km: maxOdometerKm,
+      // @spec SPEC-20260807-004 RF-05 — null se coluna não preenchida no veículo
+      favorite_fuel_type:
+        (vehicle as { id: string; favorite_fuel_type?: string | null })
+          .favorite_fuel_type ?? null,
+    };
   }
 
   /**
@@ -1050,5 +1436,228 @@ export class ExpensesService {
     });
 
     return [header, ...rows].join("\n") + "\n";
+  }
+
+  /**
+   * @spec SPEC-20260814-004 RF-03, RF-04, RF-05, RF-07, RF-09, RF-10, R-RCP-01, R-RCP-02,
+   * R-RCP-03, R-SAN-05
+   * Decisão de implementação (2026-08-14, Douglas): upload é SÍNCRONO (salva
+   * `receipt_storage_key`/`receipt_uploaded_at` e retorna antes de responder), thumbnail é
+   * ASSÍNCRONO (fire-and-forget, `generateReceiptThumbnail` abaixo) — enquanto não estiver
+   * pronto, `receipt_thumbnail_status = 'pending'` e a UI mostra fallback (RNF-02 original da
+   * spec previa isso só como caso de exceção ">5s"; a decisão do usuário generaliza esse
+   * comportamento para todo upload de imagem).
+   */
+  async uploadReceipt(
+    accessToken: string,
+    userId: string,
+    expenseId: string,
+    file: { buffer: Buffer; mimetype: string; size: number },
+  ): Promise<Expense> {
+    // valida ownership + existência (também recusa despesa soft-deletada, R5)
+    await this.findOne(accessToken, userId, expenseId);
+
+    // revalidação no servidor (R-SAN-05) — nunca confia só no fileFilter do multer/controller
+    if (!RECEIPT_ALLOWED_MIME_TYPES.includes(file.mimetype as ReceiptMimeType)) {
+      throw new BadRequestException(
+        "Tipo de arquivo não suportado. Use JPEG, PNG, WebP ou PDF.",
+      );
+    }
+    if (file.size > RECEIPT_MAX_SIZE_BYTES) {
+      throw new BadRequestException("Arquivo muito grande (máx. 10MB).");
+    }
+
+    const client = this.clientForUser(accessToken);
+    const mime = file.mimetype as ReceiptMimeType;
+    const isPdf = mime === "application/pdf";
+    // @spec SPEC-20260814-004 RF-03, R-RCP-02 — UUID gerado no servidor, extensão do MIME validado
+    const uuid = randomUUID();
+    // eslint-disable-next-line security/detect-object-injection -- mime já validado contra RECEIPT_ALLOWED_MIME_TYPES acima, não é input externo livre
+    const storageKey = `${userId}/${uuid}.${RECEIPT_MIME_EXTENSION[mime]}`;
+
+    const { error: uploadError } = await client.storage
+      .from(RECEIPTS_BUCKET)
+      .upload(storageKey, file.buffer, { contentType: mime, upsert: false });
+    if (uploadError) {
+      this.logger.error(
+        "Falha ao enviar comprovante para o storage",
+        uploadError.message,
+      );
+      throw new InternalServerErrorException(
+        "Não foi possível enviar o comprovante",
+      );
+    }
+
+    const { data, error } = await client
+      .from("expenses")
+      .update({
+        receipt_storage_key: storageKey,
+        receipt_uploaded_at: new Date().toISOString(),
+        // @spec SPEC-20260814-004 RF-05 — PDF nunca gera thumbnail (not_applicable definitivo)
+        receipt_thumbnail_status: isPdf ? "not_applicable" : "pending",
+      })
+      .eq("id", expenseId)
+      .eq("user_id", userId)
+      .is("deleted_at", null)
+      .select(EXPENSE_COLUMNS)
+      .maybeSingle();
+
+    if (error || !data) {
+      this.logger.error(
+        "Falha ao vincular comprovante à despesa",
+        error?.message,
+      );
+      throw new InternalServerErrorException(
+        "Não foi possível vincular o comprovante à despesa",
+      );
+    }
+
+    // @spec SPEC-20260814-004 RF-07, R-RCP-03, R-MON-01, R-MON-02 — fire-and-forget, sem
+    // storage_key completo (PII de path) no campo `changes`
+    void this.auditService.log({
+      userId,
+      action: "RECEIPT_UPLOADED",
+      tableName: "expenses",
+      recordId: expenseId,
+      changes: { mime_type: mime, size_bytes: file.size },
+    });
+
+    if (!isPdf) {
+      // fire-and-forget: nunca bloqueia a resposta do upload (decisão de thumbnail assíncrono)
+      void this.generateReceiptThumbnail(
+        accessToken,
+        userId,
+        expenseId,
+        storageKey,
+        file.buffer,
+      );
+    }
+
+    return data as Expense;
+  }
+
+  /**
+   * @spec SPEC-20260814-004 RF-05, RF-06, R-RCP-05, R-RCP-06
+   * Roda inteiramente fora do ciclo de resposta de `uploadReceipt` (fire-and-forget). Nunca
+   * propaga exceção — falha vira `receipt_thumbnail_status = 'failed'` e log de erro, mesmo
+   * princípio de `AuditService.log` (R-MON-01).
+   */
+  private async generateReceiptThumbnail(
+    accessToken: string,
+    userId: string,
+    expenseId: string,
+    storageKey: string,
+    buffer: Buffer,
+  ): Promise<void> {
+    const client = this.clientForUser(accessToken);
+    try {
+      const thumbnailBuffer = await sharp(buffer)
+        .resize(RECEIPT_THUMBNAIL_MAX_DIMENSION, RECEIPT_THUMBNAIL_MAX_DIMENSION, {
+          fit: "inside",
+          withoutEnlargement: true,
+        })
+        .jpeg({ quality: RECEIPT_THUMBNAIL_JPEG_QUALITY })
+        .toBuffer();
+
+      // mesmo UUID do arquivo original (extraído do storageKey) para correlação — sem gerar um
+      // segundo identificador desnecessário
+      const originalFilename = storageKey.split("/").pop() ?? storageKey;
+      const uuidPart = originalFilename.replace(/\.[^.]+$/, "");
+      const thumbnailKey = `${userId}/thumb_${uuidPart}.jpg`;
+
+      const { error: uploadError } = await client.storage
+        .from(RECEIPTS_BUCKET)
+        .upload(thumbnailKey, thumbnailBuffer, {
+          contentType: "image/jpeg",
+          upsert: false,
+        });
+      if (uploadError) throw new Error(uploadError.message);
+
+      const { error } = await client
+        .from("expenses")
+        .update({
+          receipt_thumbnail_key: thumbnailKey,
+          receipt_thumbnail_status: "completed",
+        })
+        .eq("id", expenseId)
+        .eq("user_id", userId)
+        .is("deleted_at", null);
+      if (error) throw new Error(error.message);
+    } catch (err) {
+      this.logger.error(
+        "Falha ao gerar thumbnail de comprovante",
+        (err as Error).message,
+      );
+      const { error } = await client
+        .from("expenses")
+        .update({ receipt_thumbnail_status: "failed" })
+        .eq("id", expenseId)
+        .eq("user_id", userId)
+        .is("deleted_at", null);
+      if (error) {
+        this.logger.error(
+          "Falha ao marcar thumbnail como failed",
+          error.message,
+        );
+      }
+    }
+  }
+
+  /**
+   * @spec SPEC-20260814-004 RF-07, RNF-03, R-RCP-03, R-RCP-06
+   * Signed URLs geradas sob demanda (nunca persistidas) — TTL 60min.
+   */
+  async getReceiptUrls(
+    accessToken: string,
+    userId: string,
+    expenseId: string,
+  ): Promise<ReceiptUrls> {
+    const expense = await this.findOne(accessToken, userId, expenseId);
+    if (!expense.receipt_storage_key) {
+      throw new NotFoundException("Despesa não possui comprovante anexado");
+    }
+
+    const client = this.clientForUser(accessToken);
+    const { data: originalSigned, error: originalError } = await client.storage
+      .from(RECEIPTS_BUCKET)
+      .createSignedUrl(
+        expense.receipt_storage_key,
+        RECEIPT_SIGNED_URL_TTL_SECONDS,
+      );
+    if (originalError || !originalSigned) {
+      this.logger.error(
+        "Falha ao gerar signed URL do comprovante",
+        originalError?.message,
+      );
+      throw new InternalServerErrorException(
+        "Não foi possível gerar o link do comprovante",
+      );
+    }
+
+    let thumbnailUrl: string | null = null;
+    if (expense.receipt_thumbnail_key) {
+      const { data: thumbSigned } = await client.storage
+        .from(RECEIPTS_BUCKET)
+        .createSignedUrl(
+          expense.receipt_thumbnail_key,
+          RECEIPT_SIGNED_URL_TTL_SECONDS,
+        );
+      thumbnailUrl = thumbSigned?.signedUrl ?? null;
+    }
+
+    // @spec SPEC-20260814-004 RF-07, R-RCP-03, R-MON-01, R-MON-02 — fire-and-forget
+    void this.auditService.log({
+      userId,
+      action: "RECEIPT_ACCESSED",
+      tableName: "expenses",
+      recordId: expenseId,
+    });
+
+    return {
+      original_url: originalSigned.signedUrl,
+      thumbnail_url: thumbnailUrl,
+      thumbnail_status: expense.receipt_thumbnail_status,
+      is_pdf: expense.receipt_storage_key.endsWith(".pdf"),
+    };
   }
 }

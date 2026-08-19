@@ -2,10 +2,7 @@
 
 import {
   createExpenseInputSchema,
-  createExpenseTemplateInputSchema,
   type CreateExpenseInput,
-  type CreateExpenseTemplateInput,
-  type ExpenseTemplate,
   type VehicleResponse as Vehicle,
 } from "@navestory/validators";
 import {
@@ -26,25 +23,30 @@ import {
   Input,
   OdometerInput,
 } from "@navestory/ui";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   Suspense,
   useEffect,
+  useRef,
   useState,
   type FormEvent,
   type ReactNode,
 } from "react";
+import { FuelRealtimeIndicators } from "@/components/expenses/fuel-realtime-indicators";
+import { ReceiptField } from "@/components/expenses/receipt-field";
+import { SupplierCombobox } from "@/components/expenses/supplier-combobox";
 import { ApiError, apiClient } from "@/lib/http/api-client";
+import { uploadExpenseReceipt } from "@/lib/http/upload-receipt";
 import { changeDateYear } from "@/lib/date-year";
 import { datetimeLocalToIso, nowInUserTz } from "@/lib/datetime-tz";
 import { FUEL_TYPE_OPTIONS } from "@/lib/fuel-types";
 import { useFuelCrossCalc } from "@/lib/hooks/use-fuel-cross-calc";
+import { useFuelHistoricalStats } from "@/lib/hooks/use-fuel-historical-stats";
 import { usePreferences } from "@/lib/hooks/use-preferences";
 import { useVehicleContextField } from "@/lib/hooks/use-vehicle-context-field";
-
-const TEMPLATE_LIMIT = 20;
+import { useUIStore } from "@/lib/stores/ui-store";
 
 interface CategoriesResponse {
   default: { value: string; label: string }[];
@@ -68,187 +70,14 @@ function vehicleLabel(vehicle: Vehicle): string {
 }
 
 /**
- * @spec SPEC-20260601-003 RF-01, RF-02, RF-03, RF-04, RF-05, RF-07, RF-08, RF-10, RF-11, RF-13
- */
-function ExpenseTemplatesTray({
-  vehicles,
-  onApply,
-  currentFields,
-}: {
-  vehicles: Vehicle[] | undefined;
-  onApply: (template: ExpenseTemplate, vehicleExists: boolean) => void;
-  currentFields: {
-    vehicleId: string;
-    category: string;
-    amount: number | undefined;
-    description: string;
-    fuelType: string;
-    supplier: string;
-  };
-}): ReactNode {
-  const queryClient = useQueryClient();
-  const [creating, setCreating] = useState(false);
-  const [templateName, setTemplateName] = useState("");
-  const [createError, setCreateError] = useState<string | null>(null);
-
-  const { data: templates } = useQuery({
-    queryKey: ["expense-templates"],
-    queryFn: () =>
-      apiClient<{ data: ExpenseTemplate[] }>("/expense-templates").then(
-        (r) => r.data,
-      ),
-    retry: false,
-  });
-
-  const touchMutation = useMutation({
-    mutationFn: (templateId: string) =>
-      apiClient(`/expense-templates/${templateId}/touch`, { method: "PATCH" }),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ["expense-templates"] });
-    },
-  });
-
-  const createMutation = useMutation({
-    mutationFn: (input: CreateExpenseTemplateInput) =>
-      apiClient<{ data: ExpenseTemplate }>("/expense-templates", {
-        method: "POST",
-        body: input,
-      }),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ["expense-templates"] });
-      setCreating(false);
-      setTemplateName("");
-    },
-    onError: () => setCreateError("Não foi possível criar o modelo."),
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: (templateId: string) =>
-      apiClient(`/expense-templates/${templateId}`, { method: "DELETE" }),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ["expense-templates"] });
-    },
-  });
-
-  const atLimit = (templates?.length ?? 0) >= TEMPLATE_LIMIT;
-
-  function handleApply(template: ExpenseTemplate): void {
-    const vehicleExists = (vehicles ?? []).some(
-      (v) => v.id === template.vehicle_id,
-    );
-    onApply(template, vehicleExists);
-    touchMutation.mutate(template.id);
-  }
-
-  function handleDelete(templateId: string): void {
-    if (window.confirm("Excluir este modelo?")) {
-      deleteMutation.mutate(templateId);
-    }
-  }
-
-  function handleCreateSubmit(event: FormEvent): void {
-    event.preventDefault();
-    setCreateError(null);
-
-    if (atLimit) {
-      setCreateError(
-        "Você atingiu o limite de 20 modelos. Exclua um para criar outro.",
-      );
-      return;
-    }
-
-    const result = createExpenseTemplateInputSchema.safeParse({
-      name: templateName,
-      vehicle_id: currentFields.vehicleId,
-      category: currentFields.category,
-      amount: currentFields.amount,
-      description: currentFields.description || null,
-      fuel_type: currentFields.fuelType || null,
-      supplier: currentFields.supplier || null,
-    });
-    if (!result.success) {
-      setCreateError(
-        result.error.issues[0]?.message ??
-          "Dados inválidos para criar o modelo",
-      );
-      return;
-    }
-
-    createMutation.mutate(result.data);
-  }
-
-  return (
-    <section aria-label="Modelos de despesa" className="flex flex-col gap-2">
-      <div className="flex gap-2 overflow-x-auto">
-        {templates?.length === 0 && !creating && (
-          <p>Nenhum modelo ainda. Toque em + para criar.</p>
-        )}
-        {templates?.map((template) => (
-          <div
-            key={template.id}
-            className="flex items-center gap-1 whitespace-nowrap"
-          >
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              aria-label={`Aplicar modelo ${template.name}`}
-              onClick={() => handleApply(template)}
-            >
-              {template.name}
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              aria-label={`Excluir modelo ${template.name}`}
-              onClick={() => handleDelete(template.id)}
-            >
-              ×
-            </Button>
-          </div>
-        ))}
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          aria-label="Criar novo modelo"
-          disabled={atLimit}
-          onClick={() => setCreating((prev) => !prev)}
-        >
-          +
-        </Button>
-      </div>
-
-      {creating && (
-        <form onSubmit={handleCreateSubmit} className="flex flex-col gap-2">
-          <label htmlFor="template_name">Nome do modelo</label>
-          <Input
-            id="template_name"
-            value={templateName}
-            onChange={(event) => setTemplateName(event.target.value)}
-            required
-          />
-          <p>
-            Usa os campos veículo, categoria, valor e descrição preenchidos no
-            formulário.
-          </p>
-          {createError && <Alert variant="error" description={createError} />}
-          <Button type="submit" disabled={createMutation.isPending}>
-            {createMutation.isPending ? "Salvando..." : "Salvar modelo"}
-          </Button>
-        </form>
-      )}
-    </section>
-  );
-}
-
-/**
  * @spec SPEC-20260714-001 RF-12
  * @spec SPEC-20260606-001 RF-01, RF-02, R-FUEL-05
  * @spec SPEC-20260606-002 RF-01, RF-02
  * @spec SPEC-20260612-001 RF-03, RF-04, RF-05, RF-06
  * @spec SPEC-20260612-002 RF-01, RF-02, RF-03, RF-04, RF-05
+ * @spec SPEC-20260807-004 RF-02, RF-03, RF-04, RF-06, RF-07, RF-08, RF-09
+ * @spec SPEC-20260814-002 RF-01, RF-02, RF-05, RF-06, RF-07, RF-08, RF-09, RF-11
+ * @spec SPEC-20260814-003 RF-01, RF-05, RF-07
  * Arquitetura: adaptado à stack real do projeto (client component + useState + TanStack
  * Query chamando `apps/api` via `apiClient`) — SPEC-20260619-001 descreve react-hook-form +
  * Server Actions, ainda não construídos neste projeto (ver changelog da spec).
@@ -260,6 +89,7 @@ function ExpenseTemplatesTray({
  */
 function NewExpensePageContent(): ReactNode {
   const router = useRouter();
+  const pushToast = useUIStore((state) => state.pushToast);
   const searchParams = useSearchParams();
   const initialCategory = searchParams.get("category") ?? "";
 
@@ -297,9 +127,19 @@ function NewExpensePageContent(): ReactNode {
   const [fullTank, setFullTank] = useState<boolean | null>(null);
   const [supplier, setSupplier] = useState("");
   const [fieldError, setFieldError] = useState<string | null>(null);
-  const [templateNotice, setTemplateNotice] = useState<string | null>(null);
   const [duplicateId, setDuplicateId] = useState<string | null>(null);
   const [showDiscardDialog, setShowDiscardDialog] = useState(false);
+  /** @spec SPEC-20260814-004 RF-01, RF-10, RF-12 */
+  const [receiptFile, setReceiptFile] = useState<File | null>(null);
+  const [receiptUploadFailedExpenseId, setReceiptUploadFailedExpenseId] =
+    useState<string | null>(null);
+  /**
+   * @spec SPEC-20260807-004 RF-08, R-FUEL-09
+   * Rastreia se o usuário editou manualmente o campo Tipo de Combustível. O pré-preenchimento
+   * por `favorite_fuel_type` (RF-06) só aplica se `false` — edição manual tem prioridade.
+   * Resetado para `false` quando o formulário é limpo ("Descartar alterações").
+   */
+  const fuelTypeUserEdited = useRef<boolean>(false);
   const fuelCalc = useFuelCrossCalc();
 
   /** @spec SPEC-20260715-002 RF-FE-03 — preenchimento automático da hora corrente no fuso do usuário */
@@ -314,18 +154,51 @@ function NewExpensePageContent(): ReactNode {
   const year = occurredAt ? Number(occurredAt.slice(0, 4)) : undefined;
 
   /**
-   * @spec SPEC-20260606-002 RF-02
+   * @spec SPEC-20260814-003 RNF-02
+   * `retry:false` + tratamento de 404 como "sem workspace" (mesmo padrão de `/workspace/page.tsx`)
+   * — usuário sem workspace segue vendo só sugestões pessoais (SupplierCombobox trata
+   * `workspaceId=undefined` como "sem seção de workspace").
    */
-  const { data: suppliers } = useQuery({
-    queryKey: ["expense-suppliers"],
-    queryFn: () =>
-      apiClient<{ data: string[] }>("/expenses/suppliers").then((r) => r.data),
+  const { data: myWorkspace } = useQuery({
+    queryKey: ["workspaces", "me"],
+    queryFn: () => apiClient<{ id: string }>("/workspaces/me"),
     enabled: isFuel,
     retry: false,
   });
 
   /**
+   * @spec SPEC-20260814-002 RF-04, RF-11
+   * @spec SPEC-20260807-004 RF-04, RF-09, RNF-05
+   * `isLoading` usado para exibir estado de carregamento do hint de odômetro (RNF-05).
+   * A query é fire-and-forget (RF-09): erro não bloqueia o formulário.
+   */
+  const { data: fuelStats, isLoading: fuelStatsLoading } =
+    useFuelHistoricalStats(vehicleId, isFuel);
+
+  /**
+   * @spec SPEC-20260807-004 RF-06, RF-07, RF-08, R-FUEL-07, R-FUEL-09
+   * Pré-preenchimento de tipo de combustível: aplica `favorite_fuel_type` do veículo ao
+   * selecionar / trocar veículo, mas SOMENTE se o usuário ainda não editou o campo manualmente
+   * (`fuelTypeUserEdited.current === false`). R-FUEL-07: priority máxima ao `favorite_fuel_type`
+   * do veículo; se null, campo permanece vazio. R-FUEL-09: edição manual não é sobrescrita.
+   */
+  useEffect(() => {
+    if (!isFuel) return;
+    if (fuelTypeUserEdited.current) return;
+    // fuelStats ainda carregando → aguardar (não limpar o campo)
+    if (fuelStatsLoading) return;
+    setFuelType(fuelStats?.favorite_fuel_type ?? "");
+  }, [fuelStats, fuelStatsLoading, isFuel]);
+
+  /**
    * @spec SPEC-20260720-002 RF-02 RF-05
+   */
+  /**
+   * @spec SPEC-20260814-004 RF-01, RF-03
+   * Decisão de arquitetura do gate técnico da spec: `POST /expenses/:id/receipt` exige uma
+   * despesa já existente — o upload roda DEPOIS que a despesa é criada, não antes. Falha no
+   * upload nunca desfaz a criação da despesa nem bloqueia a navegação (não-bloqueante,
+   * mesmo espírito de RF-10 "opcional"): apenas um aviso é mostrado.
    */
   const mutation = useMutation({
     mutationFn: (input: CreateExpenseInput) =>
@@ -333,13 +206,28 @@ function NewExpensePageContent(): ReactNode {
         method: "POST",
         body: input,
       }),
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
+      setReceiptUploadFailedExpenseId(null);
+      if (receiptFile) {
+        try {
+          await uploadExpenseReceipt(data.id, receiptFile);
+        } catch {
+          // não desfaz a criação da despesa nem navega — usuário decide tentar de novo
+          // (link para a despesa já criada) ou seguir sem o comprovante
+          setReceiptUploadFailedExpenseId(data.id);
+          return;
+        }
+      }
       if (data.duplicate_warning && data.duplicate_id) {
         setDuplicateId(data.duplicate_id);
         return;
       }
       if (data.future_date_warning) {
-        window.alert("Despesa registrada com data futura.");
+        pushToast({
+          variant: "warning",
+          title: "Despesa registrada com data futura.",
+          duration: 4000,
+        });
       }
       router.push("/expenses");
     },
@@ -352,25 +240,6 @@ function NewExpensePageContent(): ReactNode {
     ...(categories?.default ?? []),
     ...(categories?.custom ?? []),
   ];
-
-  /**
-   * @spec SPEC-20260601-003 RF-03, RF-04, EC-01
-   * @spec SPEC-20260606-001 R-FUEL-05
-   */
-  function handleApplyTemplate(
-    template: ExpenseTemplate,
-    vehicleExists: boolean,
-  ): void {
-    setVehicleId(vehicleExists ? template.vehicle_id : "");
-    setCategory(template.category);
-    fuelCalc.reset({ amount: template.amount });
-    setDescription(template.description ?? "");
-    setFuelType(template.fuel_type ?? "");
-    setSupplier(template.supplier ?? "");
-    setTemplateNotice(
-      vehicleExists ? null : "Veículo deste modelo não está mais disponível.",
-    );
-  }
 
   function handleYearChange(value: number | undefined): void {
     if (value == null || String(value).length !== 4) return;
@@ -418,7 +287,8 @@ function NewExpensePageContent(): ReactNode {
     fullTank !== null ||
     supplier !== "" ||
     fuelCalc.liters != null ||
-    fuelCalc.pricePerLiter != null;
+    fuelCalc.pricePerLiter != null ||
+    receiptFile != null;
 
   /**
    * @spec SPEC-20260807-005 RF-01
@@ -436,7 +306,7 @@ function NewExpensePageContent(): ReactNode {
    */
   if (!vehiclesLoading && vehicles?.length === 0) {
     return (
-      <Container size="sm">
+      <Container size="3xl">
         <h1 className="text-xl font-semibold">Nova despesa</h1>
         <EmptyState
           title="Nenhum veículo cadastrado"
@@ -450,33 +320,9 @@ function NewExpensePageContent(): ReactNode {
     );
   }
 
-  const summaryConsistent =
-    isFuel &&
-    fuelCalc.amount != null &&
-    fuelCalc.liters != null &&
-    fuelCalc.pricePerLiter != null &&
-    Math.abs(fuelCalc.liters * fuelCalc.pricePerLiter - fuelCalc.amount) <=
-      0.01;
-
   return (
-    <Container size="sm">
+    <Container size="3xl">
       <h1 className="text-xl font-semibold">Nova despesa</h1>
-
-      <ExpenseTemplatesTray
-        vehicles={vehicles}
-        onApply={handleApplyTemplate}
-        currentFields={{
-          vehicleId,
-          category,
-          amount: fuelCalc.amount,
-          description,
-          fuelType,
-          supplier,
-        }}
-      />
-      {templateNotice && (
-        <Alert variant="warning" description={templateNotice} />
-      )}
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-3">
         {contextChangeNotice && (
@@ -507,8 +353,9 @@ function NewExpensePageContent(): ReactNode {
           </div>
         )}
 
-        <span className="text-sm font-medium">Veículo *</span>
+        <label htmlFor="expenseVehicle" className="text-sm font-medium">Veículo *</label>
         <Combobox
+          id="expenseVehicle"
           aria-label="Veículo *"
           options={filteredVehicles.map((vehicle) => ({
             value: vehicle.id,
@@ -530,12 +377,7 @@ function NewExpensePageContent(): ReactNode {
         />
         {isVehicleInherited && (
           <span className="text-xs text-foreground">
-            ↩ Herdado do contexto em foco
-          </span>
-        )}
-        {!isVehicleInherited && vehicleId && (
-          <span className="text-xs text-muted-foreground">
-            ✓ Selecionado manualmente
+            Preenchido automaticamente pelo veículo em destaque na barra do app
           </span>
         )}
         {vehicleContextHint && (
@@ -557,8 +399,9 @@ function NewExpensePageContent(): ReactNode {
           </div>
         )}
 
-        <span className="text-sm font-medium">Categoria *</span>
+        <label htmlFor="expenseCategory" className="text-sm font-medium">Categoria *</label>
         <Combobox
+          id="expenseCategory"
           aria-label="Categoria *"
           options={allCategories.map((cat) => ({
             value: cat.value,
@@ -618,6 +461,19 @@ function NewExpensePageContent(): ReactNode {
               onChange={setOdometerKm}
               required
             />
+            {/* @spec SPEC-20260807-004 RF-02, RF-04, RNF-04, RNF-05 */}
+            {vehicleId !== "" &&
+              (fuelStatsLoading ? (
+                <p className="h-4 w-40 animate-pulse rounded bg-muted text-xs" />
+              ) : fuelStats?.last_odometer_km != null ? (
+                <p className="text-xs text-muted-foreground">
+                  Último registrado:{" "}
+                  {new Intl.NumberFormat("pt-BR").format(
+                    fuelStats.last_odometer_km,
+                  )}{" "}
+                  km
+                </p>
+              ) : null)}
           </>
         )}
 
@@ -633,85 +489,126 @@ function NewExpensePageContent(): ReactNode {
             aria-label="Dados do abastecimento"
             className="flex flex-col gap-3 rounded border p-3"
           >
-            <span className="text-sm font-medium">Tipo de combustível</span>
-            <Combobox
-              aria-label="Tipo de combustível"
-              options={FUEL_TYPE_OPTIONS.map((option) => ({
-                value: option.value,
-                label: option.label,
-              }))}
-              value={fuelType}
-              onValueChange={setFuelType}
-              placeholder="Selecione (opcional)"
-              searchPlaceholder="Buscar tipo..."
-              emptyMessage="Nenhum tipo encontrado"
-            />
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-x-4">
+              <div className="flex flex-col gap-1">
+                <span className="text-sm font-medium">Tipo de combustível</span>
+                {/* @spec SPEC-20260807-004 RF-06, RF-07, RF-08, R-FUEL-09 */}
+                <Combobox
+                  aria-label="Tipo de combustível"
+                  options={FUEL_TYPE_OPTIONS.map((option) => ({
+                    value: option.value,
+                    label: option.label,
+                  }))}
+                  value={fuelType}
+                  onValueChange={(value) => {
+                    // RF-08: marcar que o usuário editou manualmente —
+                    // impede sobrescrita pelo useEffect de pre-fill (R-FUEL-09).
+                    fuelTypeUserEdited.current = true;
+                    setFuelType(value);
+                  }}
+                  placeholder="Selecione (opcional)"
+                  searchPlaceholder="Buscar tipo..."
+                  emptyMessage="Nenhum tipo encontrado"
+                />
+              </div>
 
-            <span id="full_tank_label">Tanque cheio?</span>
-            <div
-              role="group"
-              aria-labelledby="full_tank_label"
-              className="flex gap-2"
-            >
-              <Button
-                type="button"
-                variant={fullTank === true ? "default" : "outline"}
-                size="sm"
-                aria-pressed={fullTank === true}
-                onClick={() =>
-                  setFullTank((current) => (current === true ? null : true))
-                }
-              >
-                Sim
-              </Button>
-              <Button
-                type="button"
-                variant={fullTank === false ? "default" : "outline"}
-                size="sm"
-                aria-pressed={fullTank === false}
-                onClick={() =>
-                  setFullTank((current) => (current === false ? null : false))
-                }
-              >
-                Não
-              </Button>
+              <div className="flex flex-col gap-1">
+                <span id="full_tank_label">Tanque cheio?</span>
+                <div
+                  role="group"
+                  aria-labelledby="full_tank_label"
+                  className="flex gap-2"
+                >
+                  <Button
+                    type="button"
+                    variant={fullTank === true ? "default" : "outline"}
+                    size="sm"
+                    aria-pressed={fullTank === true}
+                    onClick={() =>
+                      setFullTank((current) => (current === true ? null : true))
+                    }
+                  >
+                    Sim
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={fullTank === false ? "default" : "outline"}
+                    size="sm"
+                    aria-pressed={fullTank === false}
+                    onClick={() =>
+                      setFullTank((current) =>
+                        current === false ? null : false,
+                      )
+                    }
+                  >
+                    Não
+                  </Button>
+                </div>
+              </div>
             </div>
 
-            <label htmlFor="liters">Litros</label>
-            <CurrencyInput
-              id="liters"
-              prefix={null}
-              value={fuelCalc.liters}
-              onChange={fuelCalc.setLiters}
-            />
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-x-4">
+              <div className="flex flex-col gap-1">
+                <label htmlFor="liters">Litros</label>
+                <CurrencyInput
+                  id="liters"
+                  prefix={null}
+                  value={fuelCalc.liters}
+                  onChange={fuelCalc.setLiters}
+                />
+              </div>
 
-            <label htmlFor="price_per_liter">Valor por litro</label>
-            <CurrencyInput
-              id="price_per_liter"
-              value={fuelCalc.pricePerLiter}
-              onChange={fuelCalc.setPricePerLiter}
-            />
+              <div className="flex flex-col gap-1">
+                <label htmlFor="price_per_liter">Valor por litro</label>
+                <CurrencyInput
+                  id="price_per_liter"
+                  value={fuelCalc.pricePerLiter}
+                  onChange={fuelCalc.setPricePerLiter}
+                />
+              </div>
+            </div>
 
-            {summaryConsistent && (
-              <p className="text-sm text-muted-foreground">
-                {fuelCalc.liters} L × R$ {fuelCalc.pricePerLiter}/L = R${" "}
-                {fuelCalc.amount}
-              </p>
-            )}
+            {/* @spec SPEC-20260814-002 RF-02, RF-05, RF-06, RF-07, RF-08, RF-11 */}
+            <FuelRealtimeIndicators
+              amount={fuelCalc.amount}
+              liters={fuelCalc.liters}
+              fullTank={fullTank}
+              odometerKm={odometerKm}
+              historicalStats={fuelStats}
+            />
 
             <label htmlFor="supplier">Posto / Fornecedor</label>
-            <Input
+            <SupplierCombobox
               id="supplier"
-              list="supplier-suggestions"
               value={supplier}
-              onChange={(event) => setSupplier(event.target.value)}
+              onChange={setSupplier}
+              workspaceId={myWorkspace?.id}
             />
-            <datalist id="supplier-suggestions">
-              {suppliers?.map((name) => (
-                <option key={name} value={name} />
-              ))}
-            </datalist>
+
+            {/* @spec SPEC-20260814-004 RF-01, RF-04, RF-10, RF-11, RF-12 */}
+            <ReceiptField
+              file={receiptFile}
+              onChange={setReceiptFile}
+              disabled={mutation.isPending}
+            />
           </section>
+        )}
+
+        {receiptUploadFailedExpenseId && (
+          <div
+            role="alert"
+            className="flex flex-col gap-1 rounded-md border border-warning bg-warning-pastel p-3 text-sm"
+          >
+            <p>
+              Despesa registrada, mas não foi possível enviar o comprovante.
+            </p>
+            <Link
+              href={`/expenses/${receiptUploadFailedExpenseId}`}
+              className="underline"
+            >
+              Ver despesa e tentar novamente
+            </Link>
+          </div>
         )}
 
         {duplicateId ? (
@@ -770,12 +667,19 @@ function NewExpensePageContent(): ReactNode {
           <AlertDialogHeader>
             <AlertDialogTitle>Descartar alterações?</AlertDialogTitle>
             <AlertDialogDescription>
-              As alterações não salvas serão perdidas permanentemente.
+              Os dados preenchidos serão descartados se você sair agora.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Continuar editando</AlertDialogCancel>
-            <AlertDialogAction onClick={() => router.push("/expenses")}>
+            <AlertDialogAction
+              onClick={() => {
+                // @spec SPEC-20260807-004 RF-08 — resetar flag ao descartar:
+                // novo formulário começa sem histórico de edição manual.
+                fuelTypeUserEdited.current = false;
+                router.push("/expenses");
+              }}
+            >
               Descartar
             </AlertDialogAction>
           </AlertDialogFooter>

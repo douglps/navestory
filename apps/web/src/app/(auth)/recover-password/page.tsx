@@ -1,6 +1,6 @@
 "use client";
 
-import { Button, Container, Input } from "@navestory/ui";
+import { Alert, Button, Container, Input } from "@navestory/ui";
 import { useMutation } from "@tanstack/react-query";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useState, type FormEvent, type ReactNode } from "react";
@@ -54,20 +54,25 @@ function RecoverPasswordForm(): ReactNode {
             type="email"
             value={email}
             onChange={(event) => setEmail(event.target.value)}
+            disabled={mutation.isSuccess}
             required
           />
 
           {mutation.isSuccess && (
-            <p
-              role="status"
-              className="rounded-md bg-success-pastel p-3 text-sm text-foreground"
-            >
-              Se o e-mail existir, enviaremos instruções de redefinição.
-            </p>
+            <Alert
+              variant="success"
+              description="Se este e-mail estiver cadastrado, você vai receber um link para criar uma nova senha em instantes."
+            />
+          )}
+          {mutation.isError && (
+            <Alert
+              variant="error"
+              description="Não foi possível enviar o link agora. Tente novamente em instantes."
+            />
           )}
 
-          <Button type="submit" disabled={mutation.isPending}>
-            {mutation.isPending ? "Enviando..." : "Enviar instruções"}
+          <Button type="submit" disabled={mutation.isPending || mutation.isSuccess}>
+            {mutation.isPending ? "Enviando..." : "Enviar link de redefinição"}
           </Button>
 
           {/* @spec SPEC-20260731-004 RF-08 */}

@@ -1,6 +1,6 @@
 # Specs — Despesas
 
-Regras: R1, R2, R3, R4, R5, R6, R-CAT-01..04, R-FUEL-01..07, R-LED-01..05, R-HUB-01..02, R-REC-01..02, R-EXP-01, R-ODO-01..02, R-ODO-07
+Regras: R1, R2, R3, R4, R5, R6, R-CAT-01..04, R-FUEL-01..12, R-LED-01..05, R-HUB-01..02, R-REC-01..02, R-EXP-01, R-ODO-01..02, R-ODO-07, R-SUGG-01..03, R-RCP-01..06
 
 | Spec | Título | Status |
 |------|--------|--------|
@@ -22,6 +22,9 @@ Regras: R1, R2, R3, R4, R5, R6, R-CAT-01..04, R-FUEL-01..07, R-LED-01..05, R-HUB
 | [SPEC-20260612-002](SPEC-20260612-002-form-fields-adjustments.md) | Ajustes de Campos e Layout do Formulário de Despesas | Aprovada |
 | [SPEC-20260720-002](SPEC-20260720-002-duplicate-warning-ui.md) | Aviso de Duplicata no Formulário de Criação de Despesa | Aprovada |
 | [SPEC-20260807-004](SPEC-20260807-004-formulario-despesa-hint-combustivel.md) | Formulário de Despesa: Hint de Odômetro e Pré-preenchimento de Combustível | Draft |
+| [SPEC-20260814-002](SPEC-20260814-002-calculo-tempo-real-consumo-preco.md) | Formulário de Abastecimento: Cálculo em Tempo Real de Consumo e Preço por Litro | Draft |
+| [SPEC-20260814-003](SPEC-20260814-003-autocomplete-fornecedor.md) | Formulário de Abastecimento: Autocomplete de Fornecedor | Draft |
+| [SPEC-20260814-004](SPEC-20260814-004-captura-comprovante-abastecimento.md) | Formulário de Abastecimento: Captura de Comprovante (Upload com Schema Pronto para OCR) | Draft |
 
 Implementação em `apps/api/src/modules/expenses/`, `apps/api/src/modules/recurring-costs/`, `apps/web/app/(dashboard)/expenses/`, `apps/web/app/(dashboard)/recurring-costs/`.
 

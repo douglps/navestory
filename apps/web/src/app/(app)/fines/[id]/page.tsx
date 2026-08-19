@@ -41,10 +41,24 @@ const STATUS_LABEL: Record<FineStatus, string> = {
 const STATUS_VARIANT = FINE_STATUS_BADGE_VARIANT;
 
 const ACTION_LABEL: Record<FineStatus, string> = {
-  paid: "Pagar",
-  appealing: "Recorrer",
+  paid: "Marcar como paga",
+  appealing: "Registrar recurso",
   cancelled: "Cancelar",
   pending: "Pendente",
+};
+
+/** Transições terminais (sem volta) exigem confirmação antes de disparar a mutação. */
+const TERMINAL_ACTION_COPY: Partial<
+  Record<FineStatus, { title: string; confirmLabel: string }>
+> = {
+  paid: {
+    title: "Marcar esta multa como paga?",
+    confirmLabel: "Confirmar",
+  },
+  cancelled: {
+    title: "Cancelar esta multa?",
+    confirmLabel: "Confirmar",
+  },
 };
 
 /**
@@ -91,6 +105,9 @@ export default function FineDetailPage({
   const [notes, setNotes] = useState("");
   const [fieldError, setFieldError] = useState<string | null>(null);
   const [showDiscardDialog, setShowDiscardDialog] = useState(false);
+  const [showDetails, setShowDetails] = useState(false);
+  const [pendingStatusAction, setPendingStatusAction] =
+    useState<FineStatus | null>(null);
 
   useEffect(() => {
     if (fine) {
@@ -106,6 +123,20 @@ export default function FineDetailPage({
       setOdometerKm(fine.odometer_km ?? undefined);
       setDriverName(fine.driver_name ?? "");
       setNotes(fine.notes ?? "");
+      setShowDetails(
+        Boolean(
+          fine.auto_number ||
+            fine.infraction_code ||
+            fine.amount_with_discount != null ||
+            fine.due_date ||
+            fine.appeal_deadline ||
+            fine.paid_at ||
+            fine.location ||
+            fine.odometer_km != null ||
+            fine.driver_name ||
+            fine.notes,
+        ),
+      );
     }
   }, [fine]);
 
@@ -206,6 +237,21 @@ export default function FineDetailPage({
   const availableActions = FINE_STATUS_TRANSITIONS[fine.status];
   const isTerminal = availableActions.length === 0;
 
+  function handleStatusAction(nextStatus: FineStatus): void {
+    // eslint-disable-next-line security/detect-object-injection -- nextStatus vem de FINE_STATUS_TRANSITIONS, subconjunto fixo de FineStatus
+    if (TERMINAL_ACTION_COPY[nextStatus]) {
+      setPendingStatusAction(nextStatus);
+      return;
+    }
+    statusMutation.mutate(nextStatus);
+  }
+
+  let pendingActionCopy: { title: string; confirmLabel: string } | null = null;
+  if (pendingStatusAction) {
+    // eslint-disable-next-line security/detect-object-injection -- pendingStatusAction só é setado a partir de FineStatus vindo de FINE_STATUS_TRANSITIONS
+    pendingActionCopy = TERMINAL_ACTION_COPY[pendingStatusAction] ?? null;
+  }
+
   return (
     <Container size="sm">
       <div className="flex items-center justify-between">
@@ -227,7 +273,7 @@ export default function FineDetailPage({
               variant="outline"
               size="sm"
               disabled={statusMutation.isPending}
-              onClick={() => statusMutation.mutate(nextStatus)}
+              onClick={() => handleStatusAction(nextStatus)}
             >
               {ACTION_LABEL[nextStatus]}
             </Button>
@@ -237,11 +283,12 @@ export default function FineDetailPage({
       )}
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-        <label htmlFor="description">Descrição *</label>
+        <label htmlFor="description">Infração *</label>
         <Input
           id="description"
           value={description}
           onChange={(event) => setDescription(event.target.value)}
+          placeholder="Ex: Excesso de velocidade, avanço de sinal, estacionamento irregular..."
           required
         />
 
@@ -262,76 +309,108 @@ export default function FineDetailPage({
           required
         />
 
-        <label htmlFor="auto_number">Número do auto de infração</label>
-        <Input
-          id="auto_number"
-          value={autoNumber}
-          onChange={(event) => setAutoNumber(event.target.value)}
-        />
+        <Button
+          type="button"
+          variant="ghost"
+          className="justify-start"
+          onClick={() => setShowDetails((prev) => !prev)}
+        >
+          {showDetails
+            ? "Ocultar dados do auto de infração"
+            : "Dados do auto de infração (opcional)"}
+        </Button>
 
-        <label htmlFor="infraction_code">Código da infração</label>
-        <Input
-          id="infraction_code"
-          value={infractionCode}
-          onChange={(event) => setInfractionCode(event.target.value)}
-        />
+        {showDetails && (
+          <section
+            aria-label="Dados do auto de infração"
+            className="flex flex-col gap-3 rounded-md border border-border p-3"
+          >
+            <label htmlFor="auto_number">Número do auto de infração</label>
+            <Input
+              id="auto_number"
+              value={autoNumber}
+              onChange={(event) => setAutoNumber(event.target.value)}
+            />
 
-        <label htmlFor="amount_with_discount">Valor com desconto</label>
-        <CurrencyInput
-          id="amount_with_discount"
-          value={amountWithDiscount}
-          onChange={setAmountWithDiscount}
-        />
+            <label htmlFor="infraction_code">Código da infração</label>
+            <Input
+              id="infraction_code"
+              value={infractionCode}
+              onChange={(event) => setInfractionCode(event.target.value)}
+            />
 
-        <label htmlFor="due_date">Vencimento</label>
-        <Input
-          id="due_date"
-          type="date"
-          value={dueDate}
-          onChange={(event) => setDueDate(event.target.value)}
-        />
+            <label htmlFor="amount_with_discount">Valor com desconto</label>
+            <CurrencyInput
+              id="amount_with_discount"
+              value={amountWithDiscount}
+              onChange={setAmountWithDiscount}
+            />
+            {amount != null &&
+              amountWithDiscount != null &&
+              amountWithDiscount <= amount && (
+                <p className="text-xs text-muted-foreground">
+                  Economia de{" "}
+                  {(amount - amountWithDiscount).toLocaleString("pt-BR", {
+                    style: "currency",
+                    currency: "BRL",
+                  })}
+                </p>
+              )}
 
-        <label htmlFor="appeal_deadline">Prazo para recurso</label>
-        <Input
-          id="appeal_deadline"
-          type="date"
-          value={appealDeadline}
-          onChange={(event) => setAppealDeadline(event.target.value)}
-        />
+            <label htmlFor="due_date">Vencimento</label>
+            <Input
+              id="due_date"
+              type="date"
+              value={dueDate}
+              onChange={(event) => setDueDate(event.target.value)}
+            />
 
-        {fine.paid_at && (
-          <p className="text-sm text-muted-foreground">
-            Pago em {fine.paid_at}
-          </p>
+            <label htmlFor="appeal_deadline">Prazo para recurso</label>
+            <Input
+              id="appeal_deadline"
+              type="date"
+              value={appealDeadline}
+              onChange={(event) => setAppealDeadline(event.target.value)}
+            />
+
+            {fine.paid_at && (
+              <p className="text-sm text-muted-foreground">
+                Data de pagamento registrada:{" "}
+                {new Date(`${fine.paid_at}T00:00:00`).toLocaleDateString(
+                  "pt-BR",
+                )}
+              </p>
+            )}
+
+            <label htmlFor="location">Local</label>
+            <Input
+              id="location"
+              value={location}
+              onChange={(event) => setLocation(event.target.value)}
+            />
+
+            <label htmlFor="odometer_km">Odômetro (km)</label>
+            <OdometerInput
+              id="odometer_km"
+              value={odometerKm}
+              onChange={setOdometerKm}
+            />
+
+            <label htmlFor="driver_name">Condutor</label>
+            <Input
+              id="driver_name"
+              value={driverName}
+              onChange={(event) => setDriverName(event.target.value)}
+            />
+
+            <label htmlFor="notes">Observações</label>
+            <Input
+              id="notes"
+              value={notes}
+              onChange={(event) => setNotes(event.target.value)}
+            />
+          </section>
         )}
-
-        <label htmlFor="location">Local</label>
-        <Input
-          id="location"
-          value={location}
-          onChange={(event) => setLocation(event.target.value)}
-        />
-
-        <label htmlFor="odometer_km">Odômetro (km)</label>
-        <OdometerInput
-          id="odometer_km"
-          value={odometerKm}
-          onChange={setOdometerKm}
-        />
-
-        <label htmlFor="driver_name">Condutor</label>
-        <Input
-          id="driver_name"
-          value={driverName}
-          onChange={(event) => setDriverName(event.target.value)}
-        />
-
-        <label htmlFor="notes">Observações</label>
-        <Input
-          id="notes"
-          value={notes}
-          onChange={(event) => setNotes(event.target.value)}
-        />
 
         {fieldError && <Alert variant="error" description={fieldError} />}
         {updateMutation.isError && !fieldError && (
@@ -341,7 +420,7 @@ export default function FineDetailPage({
           />
         )}
         {updateMutation.isSuccess && (
-          <Alert variant="success" description="Multa atualizada." />
+          <Alert variant="success" description="Alterações salvas." />
         )}
 
         <div className="flex gap-2">
@@ -359,13 +438,42 @@ export default function FineDetailPage({
           <AlertDialogHeader>
             <AlertDialogTitle>Descartar alterações?</AlertDialogTitle>
             <AlertDialogDescription>
-              As alterações não salvas serão perdidas permanentemente.
+              Os dados preenchidos serão descartados se você sair agora.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Continuar editando</AlertDialogCancel>
             <AlertDialogAction onClick={() => router.push("/fines")}>
               Descartar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog
+        open={pendingStatusAction !== null}
+        onOpenChange={(open) => {
+          if (!open) setPendingStatusAction(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{pendingActionCopy?.title ?? ""}</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Voltar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (pendingStatusAction) {
+                  statusMutation.mutate(pendingStatusAction);
+                  setPendingStatusAction(null);
+                }
+              }}
+            >
+              {pendingActionCopy?.confirmLabel ?? ""}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

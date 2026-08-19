@@ -437,40 +437,6 @@ async function seedRecurringCosts(userId, vehicle) {
   console.log(`  ${rows.length} custos recorrentes criados.`);
 }
 
-async function seedExpenseTemplates(userId, vehicle) {
-  const { count } = await supabase
-    .from("expense_templates")
-    .select("id", { count: "exact", head: true })
-    .eq("user_id", userId);
-  if ((count ?? 0) >= 18) {
-    console.log("  Limite de templates próximo do máximo (20) — pulando.");
-    return;
-  }
-
-  const rows = [
-    {
-      name: "Abastecimento padrão",
-      category: "fuel",
-      amount: randFloat(180, 300),
-      liters: randFloat(35, 45),
-      fuel_type: vehicle.fuel_type ?? "gasoline",
-    },
-    {
-      name: "Troca de óleo",
-      category: "maintenance",
-      amount: randFloat(200, 450),
-    },
-    {
-      name: "Lavagem completa",
-      category: "washing",
-      amount: randFloat(40, 80),
-    },
-  ].map((t) => ({ user_id: userId, vehicle_id: vehicle.id, ...t }));
-
-  const { error } = await supabase.from("expense_templates").insert(rows);
-  if (error) throw error;
-  console.log(`  ${rows.length} templates de despesa criados.`);
-}
 
 async function seedUserCategories(userId) {
   const candidates = [
@@ -528,7 +494,6 @@ async function main() {
     await seedMaintenances(userId, vehicle);
     await seedFines(userId, vehicle);
     await seedRecurringCosts(userId, vehicle);
-    await seedExpenseTemplates(userId, vehicle);
   }
 
   await seedUserCategories(userId);

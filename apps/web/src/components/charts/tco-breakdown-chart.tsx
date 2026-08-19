@@ -9,6 +9,7 @@ import {
   YAxis,
 } from "recharts";
 import type { VehicleTco } from "@navestory/validators";
+import { ChartTooltip } from "@navestory/ui";
 import { CHART_CATEGORY_COLORS } from "@/lib/chart-colors";
 
 function currency(value: number): string {
@@ -63,7 +64,19 @@ export function TcoBreakdownChart({
             />
             <XAxis dataKey="category" />
             <YAxis />
-            <Tooltip formatter={(value) => currency(Number(value))} />
+            {/* @spec SPEC-20260813-001 RF-23 — ChartTooltip do design system em vez do tooltip
+                padrão do Recharts (perdia contraste no dark mode). */}
+            <Tooltip
+              content={({ active, payload, label }) => (
+                <ChartTooltip
+                  active={active}
+                  payload={payload}
+                  label={label}
+                  formatter={(value) => currency(value)}
+                />
+              )}
+              allowEscapeViewBox={{ x: false, y: false }}
+            />
             <Bar dataKey="amount" fill={CHART_CATEGORY_COLORS[0]} />
           </BarChart>
         </ResponsiveContainer>

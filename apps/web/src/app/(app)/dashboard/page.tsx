@@ -18,7 +18,6 @@ import {
   type FleetAlertItem,
 } from "@/components/dashboard/FleetAlertBar";
 import { FleetChartsSection } from "@/components/dashboard/FleetCharts";
-import { KpiPicker } from "@/components/dashboard/KpiPicker";
 import { UpcomingCostsWidget } from "@/components/dashboard/UpcomingCostsWidget";
 import {
   VehicleHealthCard,
@@ -207,6 +206,8 @@ export default function DashboardPage(): ReactNode {
   /** @spec SPEC-20260813-001 RF-11 */
   const isMultiVehicle = (vehicles?.length ?? 0) >= 2;
 
+  // @spec SPEC-20260813-001 RF-20 — "Personalizar KPIs" removido do dashboard; a configuração
+  // agora vive em /settings/preferences (mesma mutation, novo ponto de entrada).
   const kpiSection = (
     <div>
       <h2 className="kicker pb-2">Indicadores</h2>
@@ -215,9 +216,6 @@ export default function DashboardPage(): ReactNode {
         activeIds={activeKpiIds}
         isFleetContext={selectionMode !== "single"}
       />
-      <div className="mt-3 flex justify-end border-t border-border pt-2">
-        <KpiPicker activeIds={activeKpiIds} />
-      </div>
     </div>
   );
 
@@ -240,8 +238,10 @@ export default function DashboardPage(): ReactNode {
 
       {/* @spec SPEC-20260813-001 RF-04 — ActionDock desktop sai do fim da página (abaixo de 5
           seções, fora do alcance sem scroll) para uma barra sticky logo abaixo do header, com
-          acesso imediato às 4 ações mais frequentes. Mobile mantém o FAB inalterado. */}
-      <div className="sticky top-14 z-10 mb-4 flex items-center justify-end border-b border-border bg-background/95 py-2 backdrop-blur-sm">
+          acesso imediato às 4 ações mais frequentes. Mobile mantém o FAB inalterado.
+          @spec SPEC-20260813-001 RF-18 — top-[6.25rem] (h-14 do Header + h-11 do
+          FinancialSubheader, agora também sticky) evita sobreposição entre as duas barras. */}
+      <div className="sticky top-[6.25rem] z-10 mb-4 flex items-center justify-end border-b border-border bg-background/95 py-2 backdrop-blur-sm">
         <ActionDock />
       </div>
 

@@ -115,12 +115,16 @@ function LoginForm(): ReactNode {
             Lembrar de mim
           </label>
 
+          <Link href="/recover-password" className="text-sm underline">
+            Esqueci minha senha
+          </Link>
+
           {mutation.isError && (
             <Alert
               variant="error"
               description={
                 isLocked
-                  ? "Conta temporariamente bloqueada por excesso de tentativas. Tente novamente mais tarde."
+                  ? "Conta temporariamente bloqueada por excesso de tentativas. Aguarde alguns minutos e tente novamente."
                   : "E-mail ou senha inválidos."
               }
             />
@@ -129,16 +133,12 @@ function LoginForm(): ReactNode {
           <Button type="submit" disabled={mutation.isPending}>
             {mutation.isPending ? "Entrando..." : "Entrar"}
           </Button>
-
-          <Link href="/recover-password" className="text-sm underline">
-            Esqueci minha senha
-          </Link>
         </form>
 
         <p className="text-sm">
-          Ainda não tem conta?{" "}
+          Novo no navestory?{" "}
           <Link href="/register" className="underline">
-            Criar conta
+            Criar conta grátis
           </Link>
         </p>
 

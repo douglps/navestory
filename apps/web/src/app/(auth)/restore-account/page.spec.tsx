@@ -94,7 +94,7 @@ describe("RestoreAccountPage", () => {
     renderPage();
 
     fireEvent.click(
-      screen.getByRole("button", { name: "Continuar com a exclusão" }),
+      screen.getByRole("button", { name: "Sair sem cancelar a exclusão" }),
     );
 
     expect(logoutMock).toHaveBeenCalled();

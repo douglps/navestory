@@ -60,7 +60,7 @@ describe("OdometerCyclesPage", () => {
     });
     renderPage();
 
-    fireEvent.click(await screen.findByRole("button", { name: "Reiniciar odômetro" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Registrar reinício do odômetro" }));
     fireEvent.change(screen.getByLabelText("Motivo"), {
       target: { value: "Troca de painel após colisão" },
     });
@@ -78,7 +78,7 @@ describe("OdometerCyclesPage", () => {
     vi.mocked(apiClient).mockResolvedValue([]);
     renderPage();
 
-    fireEvent.click(await screen.findByRole("button", { name: "Reiniciar odômetro" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Registrar reinício do odômetro" }));
     fireEvent.change(screen.getByLabelText("Motivo"), { target: { value: "ok" } });
     fireEvent.click(screen.getByRole("button", { name: "Confirmar" }));
 

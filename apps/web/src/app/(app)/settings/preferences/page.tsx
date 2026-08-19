@@ -3,7 +3,9 @@
 import {
   CHIP_FIELDS,
   DEFAULT_CHIP_FIELDS,
+  DEFAULT_DASHBOARD_KPI_IDS,
   DEFAULT_SPENDING_WINDOW_DAYS,
+  MAX_ACTIVE_DASHBOARD_KPIS,
   SPENDING_WINDOW_DAYS_OPTIONS,
   chipFieldsSchema,
   spendingWindowDaysSchema,
@@ -11,6 +13,7 @@ import {
   updatePreferencesInputSchema,
   type ChipField,
   type ContextType,
+  type KpiCatalogId,
   type SpendingWindowDays,
   type UpdatePreferencesInput,
 } from "@navestory/validators";
@@ -18,6 +21,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState, type ReactNode } from "react";
 import { Alert, Button, Checkbox, Container, Input } from "@navestory/ui";
 import { apiClient } from "@/lib/http/api-client";
+import { KpiPicker } from "@/components/dashboard/KpiPicker";
 import type {
   VehicleGroupSummary,
   VehicleSummary,
@@ -33,6 +37,8 @@ interface UserPreferencesResponse {
   /** @spec SPEC-20260804-002 RF-06 */
   default_context_type?: ContextType | null;
   default_context_id?: string | null;
+  /** @spec SPEC-20260721-002 RF-01 */
+  dashboard_kpi_ids?: KpiCatalogId[];
 }
 
 /** @spec SPEC-20260804-002 RF-07 */
@@ -432,8 +438,8 @@ export default function PreferencesPage(): ReactNode {
           Rascunho automático
         </label>
         <p className="text-sm text-muted-foreground">
-          Salva automaticamente os dados não enviados de formulários ao fechar a
-          aba ou expirar a sessão.
+          Preserva o que você digitou em formulários caso a aba seja fechada ou a
+          sessão expire antes de você salvar.
         </p>
 
         <div className="flex items-center gap-2">
@@ -452,15 +458,15 @@ export default function PreferencesPage(): ReactNode {
           >
             Cancelar
           </Button>
-          {draftSaveState === "saved" && !isDraftDirty && <span>✓ Salvo</span>}
+          {draftSaveState === "saved" && !isDraftDirty && <Alert variant="success" description="Salvo." />}
         </div>
       </section>
 
       <section className="flex flex-col gap-3">
         <h2 className="text-lg font-medium">Exibição do veículo</h2>
         <p className="text-sm text-muted-foreground">
-          Escolha quais campos aparecem no chip de contexto do veículo. A placa
-          é sempre exibida.
+          Escolha quais campos aparecem na barra de identificação do veículo no
+          topo do app. A placa é sempre exibida.
         </p>
 
         <div className="flex flex-col gap-1">
@@ -538,7 +544,7 @@ export default function PreferencesPage(): ReactNode {
           >
             Cancelar
           </Button>
-          {chipSaveState === "saved" && !isChipDirty && <span>✓ Salvo</span>}
+          {chipSaveState === "saved" && !isChipDirty && <Alert variant="success" description="Salvo." />}
         </div>
       </section>
 
@@ -587,16 +593,31 @@ export default function PreferencesPage(): ReactNode {
           >
             Cancelar
           </Button>
-          {tzSaveState === "saved" && !isTzDirty && <span>✓ Salvo</span>}
+          {tzSaveState === "saved" && !isTzDirty && <Alert variant="success" description="Salvo." />}
+        </div>
+      </section>
+
+      {/* @spec SPEC-20260813-001 RF-20 — ponto de entrada movido do dashboard para cá; mesma
+          mutation ["preferences"] PATCH dashboard_kpi_ids já usada pelo KpiPicker. */}
+      <section className="flex flex-col gap-3">
+        <h2 className="text-lg font-medium">Indicadores exibidos no dashboard</h2>
+        <p className="text-sm text-muted-foreground">
+          Escolha quais KPIs aparecem no topo do dashboard (até{" "}
+          {MAX_ACTIVE_DASHBOARD_KPIS} simultâneos).
+        </p>
+        <div>
+          <KpiPicker
+            activeIds={preferences?.dashboard_kpi_ids ?? DEFAULT_DASHBOARD_KPI_IDS}
+          />
         </div>
       </section>
 
       {/* @spec SPEC-20260804-001 RF-05 */}
       <section className="flex flex-col gap-3">
-        <h2 className="text-lg font-medium">KPIs do Dashboard</h2>
+        <h2 className="text-lg font-medium">Período para &quot;Gastos recentes&quot;</h2>
         <p className="text-sm text-muted-foreground">
-          Janela do KPI &quot;Gastos recentes&quot;: soma as despesas dos
-          últimos dias corridos, terminados hoje.
+          Quantos dias o dashboard considera ao calcular &quot;Gastos
+          recentes&quot;.
         </p>
 
         <div className="flex items-center gap-2" role="radiogroup" aria-label="Janela do KPI de gastos recentes">
@@ -632,7 +653,7 @@ export default function PreferencesPage(): ReactNode {
             Cancelar
           </Button>
           {windowSaveState === "saved" && !isWindowDirty && (
-            <span>✓ Salvo</span>
+            <Alert variant="success" description="Salvo." />
           )}
         </div>
       </section>
@@ -718,7 +739,7 @@ export default function PreferencesPage(): ReactNode {
             Cancelar
           </Button>
           {contextSaveState === "saved" && !isContextDirty && (
-            <span>✓ Salvo</span>
+            <Alert variant="success" description="Salvo." />
           )}
         </div>
       </section>

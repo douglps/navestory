@@ -119,40 +119,54 @@ export default function WorkspaceOnboardingPage(): ReactNode {
       ) : (
         <Alert
           variant="warning"
-          description={`Ainda faltam: ${pending.join(", ")}.`}
+          description={`Para finalizar o cadastro, preencha também: ${pending.join(", ")}.`}
         />
       )}
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-3">
         {settings.requireCnhNumber && (
-          <Input
-            placeholder="Número da CNH"
-            value={form.cnhNumber ?? ""}
-            onChange={(event) => setForm((prev) => ({ ...prev, cnhNumber: event.target.value }))}
-          />
+          <div className="flex flex-col gap-1">
+            <label htmlFor="cnhNumber">Número da CNH</label>
+            <Input
+              id="cnhNumber"
+              value={form.cnhNumber ?? ""}
+              onChange={(event) => setForm((prev) => ({ ...prev, cnhNumber: event.target.value }))}
+            />
+          </div>
         )}
         {settings.requireCnhCategory && (
-          <Input
-            placeholder="Categoria da habilitação (ex: B, E)"
-            maxLength={5}
-            value={form.cnhCategory ?? ""}
-            onChange={(event) => setForm((prev) => ({ ...prev, cnhCategory: event.target.value }))}
-          />
+          <div className="flex flex-col gap-1">
+            <label htmlFor="cnhCategory">Categoria da habilitação</label>
+            <Input
+              id="cnhCategory"
+              placeholder="Ex: B, E"
+              maxLength={5}
+              value={form.cnhCategory ?? ""}
+              onChange={(event) => setForm((prev) => ({ ...prev, cnhCategory: event.target.value }))}
+            />
+          </div>
         )}
         {settings.requireCnhExpiry && (
-          <Input
-            type="date"
-            value={form.cnhExpiresAt ?? ""}
-            onChange={(event) => setForm((prev) => ({ ...prev, cnhExpiresAt: event.target.value }))}
-          />
+          <div className="flex flex-col gap-1">
+            <label htmlFor="cnhExpiresAt">Validade da CNH</label>
+            <Input
+              id="cnhExpiresAt"
+              type="date"
+              value={form.cnhExpiresAt ?? ""}
+              onChange={(event) => setForm((prev) => ({ ...prev, cnhExpiresAt: event.target.value }))}
+            />
+          </div>
         )}
         {settings.requirePhone && (
-          <Input
-            type="tel"
-            placeholder="Telefone de contato"
-            value={form.phone ?? ""}
-            onChange={(event) => setForm((prev) => ({ ...prev, phone: event.target.value }))}
-          />
+          <div className="flex flex-col gap-1">
+            <label htmlFor="phone">Telefone de contato</label>
+            <Input
+              id="phone"
+              type="tel"
+              value={form.phone ?? ""}
+              onChange={(event) => setForm((prev) => ({ ...prev, phone: event.target.value }))}
+            />
+          </div>
         )}
 
         {mutation.isError && <Alert variant="error" description="Não foi possível salvar o cadastro." />}

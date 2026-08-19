@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -13,15 +14,23 @@ import {
   Res,
   UnauthorizedException,
   UseGuards,
+  UseInterceptors,
+  UploadedFile,
   UsePipes,
 } from "@nestjs/common";
 import {
   ApiBearerAuth,
+  ApiConsumes,
   ApiOperation,
   ApiResponse,
   ApiTags,
 } from "@nestjs/swagger";
+import { FileInterceptor } from "@nestjs/platform-express";
 import { Throttle } from "@nestjs/throttler";
+import {
+  RECEIPT_ALLOWED_MIME_TYPES,
+  RECEIPT_MAX_SIZE_BYTES,
+} from "@navestory/validators";
 import type { Request, Response } from "express";
 import { UserId } from "../../common/decorators/user-id.decorator";
 import { SupabaseAuthGuard } from "../../common/guards/supabase-auth.guard";
@@ -38,10 +47,15 @@ import {
   expenseKpisDtoSchema,
   type ExpenseKpisDto,
 } from "./dto/expense-kpis.dto";
+import { fuelStatsDtoSchema, type FuelStatsDto } from "./dto/fuel-stats.dto";
 import {
   listExpensesDtoSchema,
   type ListExpensesDto,
 } from "./dto/list-expenses.dto";
+import {
+  supplierSuggestionsDtoSchema,
+  type SupplierSuggestionsDto,
+} from "./dto/supplier-suggestions.dto";
 import {
   upcomingCostsDtoSchema,
   type UpcomingCostsDto,
@@ -100,19 +114,53 @@ export class ExpensesController {
 
   @Get("suppliers")
   @ApiOperation({
-    summary: "Sugestões de fornecedores/postos já usados pelo usuário",
+    summary:
+      "Sugestões de fornecedores/postos: histórico pessoal (10) + workspace (5)",
   })
   @ApiResponse({
     status: 200,
-    description: "Lista de fornecedores (até 10, mais recentes primeiro)",
+    description:
+      "Lista de sugestões de fornecedor (até 10, pessoais têm precedência)",
   })
-  async listSuppliers(@Req() req: Request, @UserId() userId: string) {
+  async listSuppliers(
+    @Req() req: Request,
+    @UserId() userId: string,
+    @Query(new ZodValidationPipe(supplierSuggestionsDtoSchema))
+    query: SupplierSuggestionsDto,
+  ) {
     const accessToken = this.extractAccessToken(req);
-    const suppliers = await this.expensesService.listSuppliers(
+    const suppliers = await this.expensesService.getSupplierSuggestions(
       accessToken,
       userId,
+      query.q,
+      query.workspace_id,
     );
     return { data: suppliers };
+  }
+
+  @Get("fuel-stats")
+  @ApiOperation({
+    summary:
+      "Médias históricas de preço/litro e consumo (km/L) para feedback em tempo real",
+  })
+  @ApiResponse({
+    status: 200,
+    description:
+      "Médias do veículo (null se amostra < 3 abastecimentos com tanque cheio)",
+  })
+  @ApiResponse({ status: 404, description: "Veículo não encontrado" })
+  async getFuelStats(
+    @Req() req: Request,
+    @UserId() userId: string,
+    @Query(new ZodValidationPipe(fuelStatsDtoSchema)) query: FuelStatsDto,
+  ) {
+    const accessToken = this.extractAccessToken(req);
+    const stats = await this.expensesService.getFuelStats(
+      accessToken,
+      userId,
+      query.vehicle_id,
+    );
+    return { data: stats };
   }
 
   @Get("upcoming")
@@ -227,6 +275,86 @@ export class ExpensesController {
     return { data: expense };
   }
 
+  /**
+   * @spec SPEC-20260814-004 RF-03, RF-04, RF-09, R-SAN-05
+   * `FileInterceptor` sem `storage` configurado usa memória (multer) — `file.buffer` disponível
+   * sem gravar em disco. `fileFilter`/`limits` são a 1ª camada de validação (client-facing,
+   * mensagens específicas); `ExpensesService.uploadReceipt` revalida (defesa em profundidade,
+   * cobre chamadas que não passem pelo interceptor).
+   */
+  @Post(":id/receipt")
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
+  @UseInterceptors(
+    FileInterceptor("file", {
+      limits: { fileSize: RECEIPT_MAX_SIZE_BYTES },
+      fileFilter: (_req, file, callback) => {
+        if (
+          !RECEIPT_ALLOWED_MIME_TYPES.includes(
+            file.mimetype as (typeof RECEIPT_ALLOWED_MIME_TYPES)[number],
+          )
+        ) {
+          callback(
+            new BadRequestException(
+              "Tipo de arquivo não suportado. Use JPEG, PNG, WebP ou PDF.",
+            ),
+            false,
+          );
+          return;
+        }
+        callback(null, true);
+      },
+    }),
+  )
+  @ApiConsumes("multipart/form-data")
+  @ApiOperation({ summary: "Anexar comprovante de abastecimento à despesa" })
+  @ApiResponse({ status: 201, description: "Comprovante vinculado à despesa" })
+  @ApiResponse({
+    status: 400,
+    description: "Arquivo ausente, tipo não suportado ou acima de 10MB",
+  })
+  @ApiResponse({ status: 404, description: "Despesa não encontrada" })
+  async uploadReceipt(
+    @Req() req: Request,
+    @UserId() userId: string,
+    @Param("id") id: string,
+    @UploadedFile() file?: Express.Multer.File,
+  ) {
+    if (!file) {
+      throw new BadRequestException("Nenhum arquivo enviado");
+    }
+    const accessToken = this.extractAccessToken(req);
+    const expense = await this.expensesService.uploadReceipt(
+      accessToken,
+      userId,
+      id,
+      { buffer: file.buffer, mimetype: file.mimetype, size: file.size },
+    );
+    return { data: expense };
+  }
+
+  /**
+   * @spec SPEC-20260814-004 RF-07, RNF-03
+   */
+  @Get(":id/receipt")
+  @ApiOperation({
+    summary: "Obter URLs assinadas (60min) do comprovante e thumbnail",
+  })
+  @ApiResponse({ status: 200, description: "URLs assinadas do comprovante" })
+  @ApiResponse({ status: 404, description: "Despesa sem comprovante" })
+  async getReceipt(
+    @Req() req: Request,
+    @UserId() userId: string,
+    @Param("id") id: string,
+  ) {
+    const accessToken = this.extractAccessToken(req);
+    const urls = await this.expensesService.getReceiptUrls(
+      accessToken,
+      userId,
+      id,
+    );
+    return { data: urls };
+  }
+
   @Delete(":id")
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: "Remover despesa (soft-delete)" })
@@ -251,8 +379,7 @@ export class ExpensesController {
       return header.slice("Bearer ".length);
     }
     const cookieToken = req.cookies?.navestory_access_token as
-      | string
-      | undefined;
+      string | undefined;
     if (cookieToken) {
       return cookieToken;
     }

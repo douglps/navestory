@@ -77,6 +77,41 @@ describe("ExpensesPage", () => {
     expect(await screen.findByText(/Fiat Uno/)).toBeInTheDocument();
   });
 
+  /**
+   * @spec SPEC-20260814-004 US-02
+   */
+  it("mostra o indicador de comprovante apenas nas despesas que têm receipt_storage_key", async () => {
+    mockApi({
+      expenses: [
+        {
+          id: "e1",
+          vehicle_id: "v1",
+          category: "fuel",
+          amount: 150,
+          occurred_at: "2026-07-14",
+          description: null,
+          receipt_storage_key: "u1/abc.jpg",
+        },
+        {
+          id: "e2",
+          vehicle_id: "v1",
+          category: "fuel",
+          amount: 90,
+          occurred_at: "2026-07-13",
+          description: null,
+          receipt_storage_key: null,
+        },
+      ],
+      vehicles: [{ id: "v1", plate: "ABC1234", make: "Fiat", model: "Uno", nickname: null }],
+    });
+    renderPage();
+
+    await screen.findAllByText(/Fiat Uno/);
+    expect(
+      screen.getAllByLabelText("Despesa com comprovante anexado"),
+    ).toHaveLength(1);
+  });
+
   it("mostra estado vazio quando não há despesas", async () => {
     mockApi();
     renderPage();

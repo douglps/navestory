@@ -5,11 +5,26 @@ import {
   PRESET_GROUP_COLORS,
   type VehicleResponse as Vehicle,
 } from "@navestory/validators";
-import { Alert, Button, Checkbox, Container, Input } from "@navestory/ui";
+import {
+  Alert,
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  Button,
+  Checkbox,
+  Container,
+  Input,
+} from "@navestory/ui";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent, type ReactNode } from "react";
 import { apiClient } from "@/lib/http/api-client";
+import { PRESET_COLOR_NAMES } from "@/lib/vehicle-groups/colors";
 
 interface GroupResponse {
   id: string;
@@ -24,6 +39,7 @@ export default function NewVehicleGroupPage(): ReactNode {
   const [color, setColor] = useState<string>(PRESET_GROUP_COLORS[0]);
   const [selectedVehicleIds, setSelectedVehicleIds] = useState<string[]>([]);
   const [fieldError, setFieldError] = useState<string | null>(null);
+  const [showDiscardDialog, setShowDiscardDialog] = useState(false);
 
   const { data: vehicles } = useQuery({
     queryKey: ["vehicles"],
@@ -69,6 +85,17 @@ export default function NewVehicleGroupPage(): ReactNode {
     mutation.mutate();
   }
 
+  const isDirty =
+    name !== "" || color !== PRESET_GROUP_COLORS[0] || selectedVehicleIds.length > 0;
+
+  function handleCancel(): void {
+    if (isDirty) {
+      setShowDiscardDialog(true);
+      return;
+    }
+    router.push("/vehicle-groups");
+  }
+
   return (
     <Container size="sm">
       <h1 className="text-xl font-semibold">Novo grupo de veículos</h1>
@@ -78,6 +105,7 @@ export default function NewVehicleGroupPage(): ReactNode {
           id="name"
           value={name}
           onChange={(event) => setName(event.target.value)}
+          placeholder="Ex: Frota de entregas, Veículos SP, Caminhões pesados..."
           required
         />
 
@@ -87,7 +115,7 @@ export default function NewVehicleGroupPage(): ReactNode {
             <button
               key={preset}
               type="button"
-              aria-label={preset}
+              aria-label={PRESET_COLOR_NAMES[preset] ?? preset}
               aria-pressed={color === preset}
               onClick={() => setColor(preset)}
               className="h-6 w-6 rounded-full border border-border"
@@ -100,9 +128,18 @@ export default function NewVehicleGroupPage(): ReactNode {
           value={color}
           onChange={(event) => setColor(event.target.value)}
         />
+        <p className="text-xs text-muted-foreground">
+          Aparece na listagem de grupos e nos filtros do dashboard
+        </p>
 
         <fieldset className="flex flex-col gap-1">
-          <legend>Veículos membros</legend>
+          <legend>
+            Veículos do grupo
+            {selectedVehicleIds.length > 0 && ` (${selectedVehicleIds.length} selecionados)`}
+          </legend>
+          <p className="text-xs text-muted-foreground">
+            Opcional — você pode adicionar mais veículos depois
+          </p>
           {vehicles?.map((vehicle) => (
             <label key={vehicle.id} className="flex items-center gap-2">
               <Checkbox
@@ -122,10 +159,32 @@ export default function NewVehicleGroupPage(): ReactNode {
           />
         )}
 
-        <Button type="submit" disabled={mutation.isPending}>
-          {mutation.isPending ? "Salvando..." : "Criar grupo"}
-        </Button>
+        <div className="flex gap-2">
+          <Button type="submit" disabled={mutation.isPending}>
+            {mutation.isPending ? "Salvando..." : "Criar grupo"}
+          </Button>
+          <Button type="button" variant="outline" onClick={handleCancel}>
+            Cancelar
+          </Button>
+        </div>
       </form>
+
+      <AlertDialog open={showDiscardDialog} onOpenChange={setShowDiscardDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Descartar alterações?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Os dados preenchidos serão descartados se você sair agora.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Continuar editando</AlertDialogCancel>
+            <AlertDialogAction onClick={() => router.push("/vehicle-groups")}>
+              Descartar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Container>
   );
 }

@@ -71,7 +71,7 @@ describe("MaintenanceDetailPage", () => {
     renderPage();
 
     await screen.findByDisplayValue("Troca de óleo");
-    await userEvent.click(screen.getByLabelText("Mudar status"));
+    await userEvent.click(screen.getByLabelText("Atualizar status"));
 
     expect(screen.getByRole("option", { name: "Manter status atual" })).toBeInTheDocument();
     expect(screen.getByRole("option", { name: "Em andamento" })).toBeInTheDocument();
@@ -84,7 +84,7 @@ describe("MaintenanceDetailPage", () => {
     renderPage();
 
     await screen.findByDisplayValue("Troca de óleo");
-    expect(screen.queryByLabelText("Mudar status")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Atualizar status")).not.toBeInTheDocument();
   });
 
   it("envia a transição de status escolhida e redireciona (RF-07)", async () => {
@@ -92,7 +92,7 @@ describe("MaintenanceDetailPage", () => {
     renderPage();
 
     await screen.findByDisplayValue("Troca de óleo");
-    await userEvent.click(screen.getByLabelText("Mudar status"));
+    await userEvent.click(screen.getByLabelText("Atualizar status"));
     await userEvent.click(screen.getByRole("option", { name: "Em andamento" }));
     fireEvent.click(screen.getByRole("button", { name: "Salvar" }));
 
@@ -152,7 +152,7 @@ describe("MaintenanceDetailPage", () => {
     renderPage();
 
     await screen.findByDisplayValue("Troca de óleo");
-    await userEvent.type(screen.getByLabelText("Descrição *"), " revisada");
+    await userEvent.type(screen.getByLabelText("O que será feito? *"), " revisada");
     await userEvent.click(screen.getByRole("button", { name: "Cancelar" }));
 
     expect(await screen.findByRole("alertdialog")).toHaveAccessibleName(
@@ -172,7 +172,7 @@ describe("MaintenanceDetailPage", () => {
     renderPage();
 
     await screen.findByDisplayValue("Troca de óleo");
-    await userEvent.type(screen.getByLabelText("Descrição *"), " revisada");
+    await userEvent.type(screen.getByLabelText("O que será feito? *"), " revisada");
     await userEvent.click(screen.getByRole("button", { name: "Cancelar" }));
     await screen.findByRole("alertdialog");
     await userEvent.click(screen.getByRole("button", { name: "Descartar" }));
@@ -202,6 +202,6 @@ describe("MaintenanceDetailPage", () => {
 
     await screen.findByText("Concluída");
     // Manutenção concluída não tem seletor de status (terminal)
-    expect(screen.queryByLabelText("Mudar status")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Atualizar status")).not.toBeInTheDocument();
   });
 });

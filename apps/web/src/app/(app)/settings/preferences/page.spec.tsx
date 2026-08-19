@@ -69,7 +69,7 @@ describe("PreferencesPage", () => {
         expect.objectContaining({ method: "PATCH", body: { auto_draft_enabled: true } }),
       ),
     );
-    expect(await screen.findByText("✓ Salvo")).toBeInTheDocument();
+    expect(await screen.findByText("Salvo.")).toBeInTheDocument();
   });
 
   it("mostra erro quando o salvamento falha", async () => {
@@ -237,7 +237,7 @@ describe("PreferencesPage — exibição do veículo (SPEC-20260603-003)", () =>
         expect.objectContaining({ method: "PATCH", body: { timezone: "America/Manaus" } }),
       ),
     );
-    expect(await screen.findByText("✓ Salvo")).toBeInTheDocument();
+    expect(await screen.findByText("Salvo.")).toBeInTheDocument();
   });
 
   it("cancela alterações de fuso horário (handleCancelTimezone)", async () => {
@@ -320,7 +320,7 @@ describe("PreferencesPage — janela do KPI de gastos recentes (SPEC-20260804-00
         expect.objectContaining({ method: "PATCH", body: { spending_window_days: 14 } }),
       ),
     );
-    expect(await screen.findByText("✓ Salvo")).toBeInTheDocument();
+    expect(await screen.findByText("Salvo.")).toBeInTheDocument();
   });
 
   it("cancela alteração da janela sem salvar (handleCancelWindow)", async () => {

@@ -49,7 +49,7 @@ export function Header(): ReactNode {
   }, [isMobileNavOpen]);
 
   return (
-    <header className="sticky top-0 z-20 flex h-14 w-full items-center gap-3 border-b border-border bg-card px-4 text-card-foreground">
+    <header className="sticky top-0 z-20 flex h-14 w-full items-center gap-3 border-b border-border bg-card px-4 text-card-foreground relative">
       <button
         ref={hamburgerRef}
         type="button"
@@ -90,8 +90,12 @@ export function Header(): ReactNode {
       <span className="text-base font-semibold">navestory</span>
       {/* @spec SPEC-20260813-001 RF-02 — chip de contexto de veículo movido para o
           FinancialSubheader (lado direito, junto da data). */}
-      <div className="hidden items-center gap-3 md:flex">
-        <CommandPaletteTrigger />
+      {/* Busca centralizada no header (posicionamento absoluto, independente da largura de
+          logo/hamburger à esquerda e dos ícones de ação à direita). */}
+      <div className="pointer-events-none absolute inset-x-0 hidden justify-center md:flex">
+        <div className="pointer-events-auto">
+          <CommandPaletteTrigger />
+        </div>
       </div>
       <div className="ml-auto flex items-center gap-1">
         {/* @spec SPEC-20260813-001 RF-05 — sino de alertas, visível em todos os breakpoints. */}
@@ -116,6 +120,9 @@ export function Header(): ReactNode {
           <AvatarDropdown
             name={profile.name}
             email={profile.email}
+            // @spec SPEC-20260813-001 RF-22 — fallback "Beta" até a Fase 9 de monetização expor
+            // o plano real via GET /users/me (endpoint não retorna esse campo hoje).
+            plan="Beta"
             onLogout={() => void logout()}
           />
         ) : (

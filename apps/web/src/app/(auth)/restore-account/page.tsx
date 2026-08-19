@@ -81,7 +81,7 @@ function RestoreAccountContent(): ReactNode {
       <PublicHeader />
       <Container size="md">
         <h1 className="text-xl font-semibold">
-          Sua conta está marcada para exclusão
+          Sua conta está agendada para exclusão
         </h1>
 
         <Alert
@@ -123,13 +123,14 @@ function RestoreAccountContent(): ReactNode {
             : "Cancelar exclusão e restaurar minha conta"}
         </Button>
 
+        <p className="mt-2 text-sm text-muted-foreground">Não quer restaurar?</p>
         <Button
           type="button"
           variant="outline"
           onClick={() => void logout()}
           disabled={restoreMutation.isPending}
         >
-          Continuar com a exclusão
+          Sair sem cancelar a exclusão
         </Button>
 
         {/* @spec SPEC-20260731-004 RF-10 */}

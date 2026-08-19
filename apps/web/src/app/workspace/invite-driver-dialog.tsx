@@ -56,7 +56,7 @@ export function InviteDriverDialog({ workspaceId, open, onOpenChange }: InviteDr
   async function copyLink(): Promise<void> {
     if (!inviteUrl) return;
     await navigator.clipboard.writeText(inviteUrl);
-    pushToast({ variant: "success", title: "Link copiado", duration: 3000 });
+    pushToast({ variant: "success", title: "Link copiado para a área de transferência", duration: 3000 });
   }
 
   return (
@@ -71,7 +71,10 @@ export function InviteDriverDialog({ workspaceId, open, onOpenChange }: InviteDr
 
         {inviteUrl ? (
           <div className="flex flex-col gap-3">
-            <Alert variant="success" description="Convite criado. Copie o link e envie ao motorista." />
+            <Alert
+              variant="success"
+              description="Link gerado. Compartilhe com o motorista pelo WhatsApp, e-mail ou como preferir."
+            />
             <div className="flex gap-2">
               <Input value={inviteUrl} readOnly />
               <Button type="button" variant="outline" onClick={copyLink}>
@@ -81,9 +84,10 @@ export function InviteDriverDialog({ workspaceId, open, onOpenChange }: InviteDr
           </div>
         ) : (
           <div className="flex flex-col gap-3">
+            <label htmlFor="driverEmail">E-mail do motorista</label>
             <Input
+              id="driverEmail"
               type="email"
-              placeholder="e-mail do motorista"
               value={email}
               onChange={(event) => setEmail(event.target.value)}
               required

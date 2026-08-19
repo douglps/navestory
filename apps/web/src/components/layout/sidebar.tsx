@@ -20,6 +20,7 @@ import {
   Receipt,
   Settings,
   Shield,
+  Sparkles,
   Ticket,
   User,
   Wrench,
@@ -393,10 +394,14 @@ export function Sidebar(): ReactNode {
               />
             ))}
           </ul>
+        </div>
 
-          {/* @spec SPEC-20260730-002 RF-17 — divisória entre seção 1 (Navegação) e seção 2
-              (Configurações); visível tanto expandida quanto colapsada. */}
-          <ul className="flex w-full flex-col gap-1 border-t border-border pt-3">
+        {/* @spec SPEC-20260813-001 RF-21 — bloco de rodapé (Configurações + Upgrade + Sair)
+            movido para fora do container flex-1/overflow-y-auto acima, para ficar ancorado ao
+            fundo da sidebar (mesmo mecanismo de flexbox que já ancorava o botão Sair: o
+            navListRef flex-1 absorve o espaço disponível, empurrando este bloco para o final). */}
+        <div className="flex w-full shrink-0 flex-col gap-1 border-t border-border pt-3">
+          <ul className="flex w-full flex-col gap-1">
             {SETTINGS_ITEMS.map((item) => (
               <SidebarNavItem
                 key={item.href}
@@ -406,6 +411,33 @@ export function Sidebar(): ReactNode {
               />
             ))}
           </ul>
+        </div>
+
+        {/* @spec SPEC-20260813-001 RF-21 — CTA "Upgrade" isolado em seção própria (linhas
+            divisórias acima/abaixo + cor de destaque primária), para se diferenciar visualmente
+            da navegação utilitária de Configurações/Sair. Linka para /upgrade (página
+            placeholder — monetização real é Fase 9, ver R-NAV-13). */}
+        <div className="w-full shrink-0 border-y border-border py-3">
+          {(() => {
+            const upgradeLink = (
+              <Link
+                href="/upgrade"
+                className={`flex min-h-[44px] items-center gap-2 rounded-md px-2 text-sm font-medium text-primary hover:bg-primary/10 md:min-h-0 md:py-1.5 ${
+                  effectiveCollapsed ? "md:justify-center md:text-center" : ""
+                }`}
+              >
+                <Icon icon={Sparkles} size="lg" className="shrink-0" />
+                {!effectiveCollapsed && "Upgrade"}
+              </Link>
+            );
+            return effectiveCollapsed ? (
+              <Tooltip content="Upgrade" side="right">
+                {upgradeLink}
+              </Tooltip>
+            ) : (
+              upgradeLink
+            );
+          })()}
         </div>
 
         {/* @spec SPEC-20260602-001 RF-19, SPEC-20260603-001 RF-17 — logout já limpa o
@@ -422,7 +454,7 @@ export function Sidebar(): ReactNode {
               aria-label="Segure para sair"
               aria-busy={isHoldingLogout}
               {...holdLogoutHandlers}
-              className={`relative mt-auto flex min-h-[44px] w-full shrink-0 items-center overflow-hidden border-t border-border px-2 pt-3 text-left text-sm text-foreground hover:bg-muted md:min-h-0 md:py-1.5 ${
+              className={`relative mt-auto flex min-h-[44px] w-full shrink-0 items-center overflow-hidden px-2 pt-3 text-left text-sm text-foreground hover:bg-muted md:min-h-0 md:py-1.5 ${
                 isCollapsed ? "md:justify-center md:text-center" : ""
               }`}
             >

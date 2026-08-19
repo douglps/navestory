@@ -17,6 +17,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
+  Badge,
   Button,
   Combobox,
   Container,
@@ -30,13 +31,11 @@ import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { ApiError, apiClient } from "@/lib/http/api-client";
 import { datetimeLocalToIso, isoToDatetimeLocal } from "@/lib/datetime-tz";
 import { usePreferences } from "@/lib/hooks/use-preferences";
-
-const STATUS_LABEL: Record<MaintenanceStatus, string> = {
-  scheduled: "Agendada",
-  in_progress: "Em andamento",
-  completed: "Concluída",
-  cancelled: "Cancelada",
-};
+import { useUIStore } from "@/lib/stores/ui-store";
+import {
+  MAINTENANCE_STATUS_LABEL as STATUS_LABEL,
+  MAINTENANCE_STATUS_BADGE_VARIANT as STATUS_VARIANT,
+} from "@/lib/maintenance/status-badge";
 
 /**
  * @spec SPEC-20260715-001 RF-17
@@ -52,6 +51,7 @@ export default function MaintenanceDetailPage({
   const [id, setId] = useState<string | null>(null);
   const router = useRouter();
   const queryClient = useQueryClient();
+  const pushToast = useUIStore((state) => state.pushToast);
 
   useEffect(() => {
     void params.then((resolved) => setId(resolved.id));
@@ -101,6 +101,7 @@ export default function MaintenanceDetailPage({
       }),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["maintenances"] });
+      pushToast({ variant: "success", title: "Alterações salvas.", duration: 3000 });
       router.push("/maintenance");
     },
     onError: (error) => {
@@ -168,15 +169,43 @@ export default function MaintenanceDetailPage({
   const allowedNext = MAINTENANCE_STATUS_TRANSITIONS[maintenance.status];
   const isTerminal = allowedNext.length === 0;
 
+  const willBeCompleted =
+    maintenance.status === "completed" || nextStatus === "completed";
+
   return (
     <Container size="sm">
-      <h1 className="text-xl font-semibold">Manutenção</h1>
-      <p className="text-sm text-muted-foreground">
-        Status atual: <strong>{STATUS_LABEL[maintenance.status]}</strong>
-      </p>
+      <div className="flex items-center justify-between">
+        <h1 className="text-xl font-semibold">{maintenance.description}</h1>
+        <Badge variant={STATUS_VARIANT[maintenance.status]}>
+          {STATUS_LABEL[maintenance.status]}
+        </Badge>
+      </div>
+
+      {!isTerminal && (
+        <>
+          <label htmlFor="nextStatus" className="text-sm font-medium">Atualizar status</label>
+          <Combobox
+            id="nextStatus"
+            aria-label="Atualizar status"
+            options={[
+              { value: "", label: "Manter status atual" },
+              ...allowedNext.map((status) => ({
+                value: status,
+                // eslint-disable-next-line security/detect-object-injection -- status vem de allowedNext, subconjunto fixo de MaintenanceStatus
+                label: STATUS_LABEL[status],
+              })),
+            ]}
+            value={nextStatus}
+            onValueChange={(value) => setNextStatus(value as MaintenanceStatus | "")}
+            placeholder="Manter status atual"
+            searchPlaceholder="Buscar status..."
+            emptyMessage="Nenhum status encontrado"
+          />
+        </>
+      )}
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-        <label htmlFor="description">Descrição *</label>
+        <label htmlFor="description">O que será feito? *</label>
         <Input
           id="description"
           value={description}
@@ -193,15 +222,19 @@ export default function MaintenanceDetailPage({
           required
         />
 
-        <label htmlFor="completion_date">Data e hora de conclusão</label>
-        <Input
-          id="completion_date"
-          type="datetime-local"
-          value={completionDate}
-          onChange={(event) => setCompletionDate(event.target.value)}
-        />
+        {willBeCompleted && (
+          <>
+            <label htmlFor="completion_date">Data e hora de conclusão</label>
+            <Input
+              id="completion_date"
+              type="datetime-local"
+              value={completionDate}
+              onChange={(event) => setCompletionDate(event.target.value)}
+            />
+          </>
+        )}
 
-        <label htmlFor="cost">Custo (R$)</label>
+        <label htmlFor="cost">{willBeCompleted ? "Custo final (R$)" : "Custo estimado (R$)"}</label>
         <CurrencyInput id="cost" value={cost} onChange={setCost} />
 
         <label htmlFor="odometer_km">Odômetro (km)</label>
@@ -210,30 +243,6 @@ export default function MaintenanceDetailPage({
           value={odometerKm}
           onChange={setOdometerKm}
         />
-
-        {!isTerminal && (
-          <>
-            <span className="text-sm font-medium">Mudar status</span>
-            <Combobox
-              aria-label="Mudar status"
-              options={[
-                { value: "", label: "Manter status atual" },
-                ...allowedNext.map((status) => ({
-                  value: status,
-                  // eslint-disable-next-line security/detect-object-injection -- status vem de allowedNext, subconjunto fixo de MaintenanceStatus
-                  label: STATUS_LABEL[status],
-                })),
-              ]}
-              value={nextStatus}
-              onValueChange={(value) =>
-                setNextStatus(value as MaintenanceStatus | "")
-              }
-              placeholder="Manter status atual"
-              searchPlaceholder="Buscar status..."
-              emptyMessage="Nenhum status encontrado"
-            />
-          </>
-        )}
 
         {fieldError && <Alert variant="error" description={fieldError} />}
         {mutation.isError && !fieldError && (
@@ -258,7 +267,7 @@ export default function MaintenanceDetailPage({
           <AlertDialogHeader>
             <AlertDialogTitle>Descartar alterações?</AlertDialogTitle>
             <AlertDialogDescription>
-              As alterações não salvas serão perdidas permanentemente.
+              Os dados preenchidos serão descartados se você sair agora.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

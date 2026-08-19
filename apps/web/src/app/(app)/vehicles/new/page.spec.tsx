@@ -32,20 +32,20 @@ describe("NewVehiclePage", () => {
   }
 
   async function fillValidForm(user: ReturnType<typeof userEvent.setup>) {
-    await user.type(screen.getByLabelText("Placa"), "abc1234");
-    fireEvent.change(screen.getByLabelText("Marca"), { target: { value: "Fiat" } });
-    fireEvent.change(screen.getByLabelText("Modelo"), { target: { value: "Uno" } });
-    fireEvent.change(screen.getByLabelText("Ano"), { target: { value: "2020" } });
+    await user.type(screen.getByLabelText("Placa *"), "abc1234");
+    fireEvent.change(screen.getByLabelText("Marca *"), { target: { value: "Fiat" } });
+    fireEvent.change(screen.getByLabelText("Modelo *"), { target: { value: "Uno" } });
+    fireEvent.change(screen.getByLabelText("Ano *"), { target: { value: "2020" } });
   }
 
   it("mostra erro de validação client-side com placa inválida (CA-02)", async () => {
     const user = userEvent.setup();
     renderPage();
 
-    await user.type(screen.getByLabelText("Placa"), "ab1234");
-    fireEvent.change(screen.getByLabelText("Marca"), { target: { value: "Fiat" } });
-    fireEvent.change(screen.getByLabelText("Modelo"), { target: { value: "Uno" } });
-    fireEvent.change(screen.getByLabelText("Ano"), { target: { value: "2020" } });
+    await user.type(screen.getByLabelText("Placa *"), "ab1234");
+    fireEvent.change(screen.getByLabelText("Marca *"), { target: { value: "Fiat" } });
+    fireEvent.change(screen.getByLabelText("Modelo *"), { target: { value: "Uno" } });
+    fireEvent.change(screen.getByLabelText("Ano *"), { target: { value: "2020" } });
     fireEvent.click(screen.getByRole("button", { name: "Cadastrar" }));
 
     expect(await screen.findByRole("alert")).toBeInTheDocument();
@@ -77,9 +77,9 @@ describe("NewVehiclePage", () => {
     const user = userEvent.setup();
     renderPage();
 
-    await user.type(screen.getByLabelText("Placa"), "abc1234");
+    await user.type(screen.getByLabelText("Placa *"), "abc1234");
 
-    expect(screen.getByLabelText("Placa")).toHaveValue("ABC-1234");
+    expect(screen.getByLabelText("Placa *")).toHaveValue("ABC-1234");
   });
 
   /**
@@ -88,7 +88,7 @@ describe("NewVehiclePage", () => {
   it("exibe todos os erros de validação simultaneamente (RF-08)", async () => {
     renderPage();
 
-    fireEvent.change(screen.getByLabelText("Ano"), { target: { value: "1000" } });
+    fireEvent.change(screen.getByLabelText("Ano *"), { target: { value: "1000" } });
     fireEvent.click(screen.getByRole("button", { name: "Cadastrar" }));
 
     expect(await screen.findAllByRole("alert")).toHaveLength(4);

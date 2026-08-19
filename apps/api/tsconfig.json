@@ -11,7 +11,7 @@
     "declaration": false,
     "declarationMap": false,
     "isolatedModules": false,
-    "types": ["node", "express", "cookie-parser", "passport-jwt", "jest", "supertest"]
+    "types": ["node", "express", "multer", "cookie-parser", "passport-jwt", "jest", "supertest"]
   },
   "include": ["src"]
 }

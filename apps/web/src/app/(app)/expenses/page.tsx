@@ -19,6 +19,7 @@ import {
   KpiCard,
   Tabs,
 } from "@navestory/ui";
+import { ReceiptIndicator } from "@/components/expenses/receipt-viewer";
 import { apiClient } from "@/lib/http/api-client";
 import { useVehicleContext } from "@/lib/context/use-vehicle-context";
 import { formatDateInTz } from "@/lib/datetime-tz";
@@ -31,6 +32,8 @@ interface Expense {
   amount: number;
   occurred_at: string;
   description: string | null;
+  /** @spec SPEC-20260814-004 RF-01, US-02 */
+  receipt_storage_key: string | null;
 }
 
 
@@ -384,9 +387,10 @@ function ByVehicleTab({
                   href={`/expenses/${expense.id}`}
                   className="flex justify-between gap-4"
                 >
-                  <span>
+                  <span className="flex items-center gap-2">
                     {formatDateInTz(expense.occurred_at, tz)} —{" "}
                     {expense.category}
+                    {expense.receipt_storage_key && <ReceiptIndicator />}
                   </span>
                   <span>{currency(expense.amount)}</span>
                 </Link>
@@ -410,7 +414,7 @@ function ByVehicleTab({
  */
 export default function ExpensesPage(): ReactNode {
   return (
-    <Suspense fallback={<Container size="2xl">Carregando...</Container>}>
+    <Suspense fallback={<Container size="4xl">Carregando...</Container>}>
       <ExpensesPageContent />
     </Suspense>
   );
@@ -500,7 +504,7 @@ function ExpensesPageContent(): ReactNode {
     : allExpenses;
 
   return (
-    <Container size="2xl">
+    <Container size="4xl">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold">Despesas</h1>
         <div className="flex items-center gap-3">
@@ -557,10 +561,11 @@ function ExpensesPageContent(): ReactNode {
                   href={`/expenses/${expense.id}`}
                   className="flex justify-between gap-4"
                 >
-                  <span>
+                  <span className="flex items-center gap-2">
                     {formatDateInTz(expense.occurred_at, tz)} —{" "}
                     {expense.category} —{" "}
                     {vehicleLabel(vehicleById.get(expense.vehicle_id))}
+                    {expense.receipt_storage_key && <ReceiptIndicator />}
                   </span>
                   <span>{currency(expense.amount)}</span>
                 </Link>

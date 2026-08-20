@@ -113,8 +113,11 @@ export function FinancialSubheader(): ReactNode {
   });
 
   return (
-    <div className="flex h-11 items-center gap-3 border-b border-border bg-card/90 px-4 text-card-foreground">
-      <div className="flex flex-1 items-center gap-2 overflow-hidden">
+    // @spec SPEC-20260813-001 RF-18 — sticky abaixo do Header (h-14/3.5rem), para não
+    // desaparecer com a rolagem da página; z-[19] fica abaixo do Header (z-20).
+    <div className="glass-card sticky top-14 z-[19] flex h-11 items-center gap-3 rounded-none border-x-0 border-t-0 px-4 text-card-foreground backdrop-blur-sm">
+      <div className="relative flex flex-1 items-center gap-2 overflow-x-auto">
+        <div className="pointer-events-none absolute right-0 top-0 h-full w-12 bg-gradient-to-l from-glass-card to-transparent" aria-hidden />
         {isLoadingHighlights
           ? Array.from({ length: CHIP_SKELETON_COUNT }, (_, index) => (
               <Skeleton
@@ -147,7 +150,9 @@ export function FinancialSubheader(): ReactNode {
           apenas o contexto do momento: veículo ativo + data. */}
       <div className="flex shrink-0 items-center gap-3 text-sm">
         <VehicleContextChip />
-        <DashboardDateChip />
+        <div className="hidden sm:flex">
+          <DashboardDateChip />
+        </div>
       </div>
     </div>
   );

@@ -64,7 +64,7 @@ async function selectCombobox(
   await user.click(await screen.findByRole("option", { name: optionText }));
 }
 
-/** Aguarda a lista de veículos carregar (Combobox sai do estado "Carregando..."). */
+/** Aguarda a lista de veículos carregar (Combobox sai do estado "Carregando…"). */
 async function waitForVehiclesLoaded(): Promise<void> {
   await waitFor(() =>
     expect(screen.getByLabelText("Veículo *")).not.toHaveTextContent(

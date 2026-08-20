@@ -218,7 +218,7 @@ export default function FinesPage(): ReactNode {
         aria-label="Seções de multas"
       />
 
-      {isLoading && <p>Carregando...</p>}
+      {isLoading && <p>Carregando…</p>}
       {isError && (
         <Alert
           variant="error"

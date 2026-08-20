@@ -11,6 +11,8 @@ import type {
 } from "@navestory/validators";
 import { Alert, ChartWrapper, EmptyState, Tabs } from "@navestory/ui";
 import { apiClient } from "@/lib/http/api-client";
+import { formatDateInTz } from "@/lib/datetime-tz";
+import { usePreferences } from "@/lib/hooks/use-preferences";
 import { useMediaQuery } from "@/lib/hooks/use-media-query";
 import { TcoBreakdownChart } from "@/components/charts/tco-breakdown-chart";
 import { FuelTrendChart } from "@/components/charts/fuel-trend-chart";
@@ -27,16 +29,12 @@ type SpotlightTab = "expenses" | "fuel" | "docs" | "history";
 const TABS: { id: SpotlightTab; label: string }[] = [
   { id: "expenses", label: "Despesas" },
   { id: "fuel", label: "Consumo" },
-  { id: "docs", label: "Docs" },
+  { id: "docs", label: "Documentos" },
   { id: "history", label: "Histórico" },
 ];
 
 function currency(value: number): string {
   return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-}
-
-function formatDate(value: string): string {
-  return new Date(`${value}T00:00:00`).toLocaleDateString("pt-BR");
 }
 
 export interface SpotlightVehicle {
@@ -111,7 +109,7 @@ function NoActiveVehicleEmptyState(): ReactNode {
   return (
     <EmptyState
       icon="↑"
-      title="Selecione um veículo acima para ver a análise detalhada"
+      title="Escolha um veículo para ver despesas, consumo e documentos"
     />
   );
 }
@@ -293,6 +291,8 @@ function DocsSection({
  * @spec SPEC-20260531-001 RF-DB-07
  */
 function HistorySection({ vehicleId }: { vehicleId: string }): ReactNode {
+  const { data: preferences } = usePreferences();
+  const tz = preferences?.timezone;
   const { data, isLoading, isError } = useQuery({
     queryKey: ["dashboard", "vehicle-history", vehicleId],
     queryFn: () =>
@@ -331,7 +331,7 @@ function HistorySection({ vehicleId }: { vehicleId: string }): ReactNode {
             <span className="flex flex-col">
               <span>{item.description}</span>
               <span className="text-xs text-muted-foreground">
-                {formatDate(item.date)}
+                {formatDateInTz(item.date, tz)}
               </span>
             </span>
             <span className="shrink-0 font-medium">
@@ -342,13 +342,13 @@ function HistorySection({ vehicleId }: { vehicleId: string }): ReactNode {
       </ul>
       <div className="flex gap-3 text-sm">
         <Link href={`/expenses?vehicleId=${vehicleId}`} className="underline">
-          ver todas as despesas
+          Ver todas as despesas
         </Link>
         <Link
           href={`/maintenance?vehicleId=${vehicleId}`}
           className="underline"
         >
-          ver todas as manutenções
+          Ver todas as manutenções
         </Link>
       </div>
     </div>

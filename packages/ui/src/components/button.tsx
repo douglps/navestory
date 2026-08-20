@@ -1,6 +1,7 @@
 "use client";
 
 import { type ButtonHTMLAttributes, forwardRef } from "react";
+import { Slot } from "@radix-ui/react-slot";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "../lib/cn";
 
@@ -35,15 +36,36 @@ export interface ButtonProps
   extends ButtonHTMLAttributes<HTMLButtonElement>,
     VariantProps<typeof buttonVariants> {
   loading?: boolean;
+  /**
+   * Quando `true`, o Button delega a renderização ao seu filho direto (ex: Link do Next.js),
+   * mesclando classes e eventos — evita aninhamento inválido de <a><button>. Baseado no
+   * padrão Radix Slot. Incompatível com `loading` (ignorado quando asChild=true).
+   */
+  asChild?: boolean;
 }
 
 /** @spec SPEC-20260525-001 §4.2 */
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, loading = false, disabled, children, ...props }, ref) => {
+  (
+    { className, variant, size, loading = false, disabled, asChild = false, children, ...props },
+    ref,
+  ) => {
+    const variantClass = cn(buttonVariants({ variant, size }), className);
+
+    if (asChild) {
+      // Slot mescla as props (className, onClick, etc.) com o filho direto.
+      // `loading` é ignorado nesse modo — o elemento filho controla seu próprio estado.
+      return (
+        <Slot ref={ref} className={variantClass} {...props}>
+          {children}
+        </Slot>
+      );
+    }
+
     return (
       <button
         ref={ref}
-        className={cn(buttonVariants({ variant, size }), className)}
+        className={variantClass}
         disabled={disabled || loading}
         aria-busy={loading || undefined}
         {...props}

@@ -65,7 +65,7 @@ describe("VehicleSpotlight", () => {
     );
 
     expect(
-      screen.getByText("Selecione um veículo acima para ver a análise detalhada"),
+      screen.getByText("Escolha um veículo para ver despesas, consumo e documentos"),
     ).toBeInTheDocument();
   });
 
@@ -89,7 +89,7 @@ describe("VehicleSpotlight", () => {
     renderSpotlight({ flags: [{ type: "ipva_expiring", days: 7 }] });
 
     await waitFor(() =>
-      expect(screen.getByRole("tab", { name: "Docs" })).toHaveAttribute(
+      expect(screen.getByRole("tab", { name: "Documentos" })).toHaveAttribute(
         "aria-selected",
         "true",
       ),
@@ -101,7 +101,7 @@ describe("VehicleSpotlight", () => {
     renderSpotlight({ flags: [{ type: "maintenance_overdue", count: 2 }] });
 
     await waitFor(() =>
-      expect(screen.getByRole("tab", { name: "Docs" })).toHaveAttribute(
+      expect(screen.getByRole("tab", { name: "Documentos" })).toHaveAttribute(
         "aria-selected",
         "true",
       ),
@@ -124,7 +124,7 @@ describe("VehicleSpotlight", () => {
     mockApi({ recurringCosts: [{ cost_type: "ipva", paid_at: "2026-01-10" }] });
     renderSpotlight();
 
-    await userEvent.click(screen.getByRole("tab", { name: "Docs" }));
+    await userEvent.click(screen.getByRole("tab", { name: "Documentos" }));
 
     await waitFor(() => expect(screen.getByText("Pago")).toBeInTheDocument());
   });
@@ -133,7 +133,7 @@ describe("VehicleSpotlight", () => {
     mockApi({ recurringCosts: [] });
     renderSpotlight();
 
-    await userEvent.click(screen.getByRole("tab", { name: "Docs" }));
+    await userEvent.click(screen.getByRole("tab", { name: "Documentos" }));
 
     await waitFor(() => expect(screen.getByText("Vencido")).toBeInTheDocument());
   });
@@ -158,11 +158,11 @@ describe("VehicleSpotlight", () => {
     await userEvent.click(screen.getByRole("tab", { name: "Histórico" }));
 
     await waitFor(() => expect(screen.getByText("Combustível")).toBeInTheDocument());
-    expect(screen.getByRole("link", { name: "ver todas as despesas" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Ver todas as despesas" })).toHaveAttribute(
       "href",
       "/expenses?vehicleId=v1",
     );
-    expect(screen.getByRole("link", { name: "ver todas as manutenções" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Ver todas as manutenções" })).toHaveAttribute(
       "href",
       "/maintenance?vehicleId=v1",
     );

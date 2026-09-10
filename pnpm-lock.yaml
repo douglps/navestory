@@ -101,8 +101,8 @@ importers:
         specifier: ^8.0.0
         version: 8.3.0
       joi:
-        specifier: ^17.13.3
-        version: 17.13.4
+        specifier: ^17.13.6
+        version: 17.13.6
       jose:
         specifier: ^5.9.6
         version: 5.10.0
@@ -275,7 +275,7 @@ importers:
         version: 8.5.25
       serwist:
         specifier: ^9.5.11
-        version: 9.5.11(browserslist@4.28.2)(typescript@5.9.3)
+        version: 9.5.11(browserslist@4.28.6)(typescript@5.9.3)
       tailwindcss:
         specifier: ^4.1.18
         version: 4.3.3
@@ -4492,6 +4492,7 @@ packages:
   eslint@9.39.5:
     resolution: {integrity: sha512-DgZS62aPLXKlnxILS/AYCoRvHaZeXceIzlXPkkGGzJWSow1aEk0lbTlxUSlyjC8jcaKxAdOnTDz+o1JFSBsyjw==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+    deprecated: This version is no longer supported. Please see https://eslint.org/version-support for other options.
     hasBin: true
     peerDependencies:
       jiti: '*'
@@ -5276,8 +5277,8 @@ packages:
     resolution: {integrity: sha512-AC/7JofJvZGrrneWNaEnJeOLUx+JlGt7tNa0wZiRPT4MY1wmfKjt2+6O2p2uz2+skll8OZZmJMNqeke7kKbNgQ==}
     hasBin: true
 
-  joi@17.13.4:
-    resolution: {integrity: sha512-1RuuER6kmt8K8I3nIWvPZKi5RQCb568ZPyY4Pwjlua+yo+63ZTmIwxLZH0heBmiKN4uxjvCiarDrjaeH84xicQ==}
+  joi@17.13.6:
+    resolution: {integrity: sha512-ImNZaq/LSysofih+xIGYfR0WUXMA9GLUNB//YTCSrZptoRmVgaNAdJyi6K1kXi9pkLEoSkoI8I4UwtNiu/D7nw==}
 
   jose@5.10.0:
     resolution: {integrity: sha512-s+3Al/p9g32Iq+oqXxkW//7jk2Vig6FF1CFqzVXoTUXt2qz89YWbL+OwS17NFYEvxC35n0FKeGO2LGYSxeM2Gg==}
@@ -9654,6 +9655,10 @@ snapshots:
     optionalDependencies:
       browserslist: 4.28.2
 
+  '@serwist/utils@9.5.11(browserslist@4.28.6)':
+    optionalDependencies:
+      browserslist: 4.28.6
+
   '@serwist/window@9.5.11(browserslist@4.28.2)(typescript@5.9.3)':
     dependencies:
       '@types/trusted-types': 2.0.7
@@ -12566,7 +12571,7 @@ snapshots:
 
   jiti@2.7.0: {}
 
-  joi@17.13.4:
+  joi@17.13.6:
     dependencies:
       '@hapi/hoek': 9.3.0
       '@hapi/topo': 5.1.0
@@ -14102,6 +14107,15 @@ snapshots:
   serwist@9.5.11(browserslist@4.28.2)(typescript@5.9.3):
     dependencies:
       '@serwist/utils': 9.5.11(browserslist@4.28.2)
+      idb: 8.0.3
+    optionalDependencies:
+      typescript: 5.9.3
+    transitivePeerDependencies:
+      - browserslist
+
+  serwist@9.5.11(browserslist@4.28.6)(typescript@5.9.3):
+    dependencies:
+      '@serwist/utils': 9.5.11(browserslist@4.28.6)
       idb: 8.0.3
     optionalDependencies:
       typescript: 5.9.3

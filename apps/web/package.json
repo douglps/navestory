@@ -50,6 +50,6 @@
     "serwist": "^9.5.11",
     "tailwindcss": "^4.1.18",
     "typescript": "^5.7.0",
-    "vitest": "^3.2.6"
+    "vitest": "^4.1.11"
   }
 }
